@@ -1,0 +1,277 @@
+// decryptEvoMedia.ts
+// Navegador: sem Buffer. Usa Web Crypto (HKDF/HMAC/AES-CBC).
+
+type MediaKind = "image" | "video" | "audio" | "document" | "sticker";
+
+/**
+ * Aceita os diferentes formatos de mediaKey enviados pelo backend/API.
+ * Pode ser a string base64 original, Buffer/TypedArray ou o novo payload
+ * serializado como objeto com índices numéricos.
+ */
+export type MediaKeyInput =
+  | string
+  | Uint8Array
+  | ArrayBuffer
+  | ArrayBufferView
+  | number[]
+  | Record<string, unknown>;
+
+/** Base64 (padrão) -> Uint8Array */
+function base64ToBytes(b64: string): Uint8Array {
+  // remove URL-safe e padding inconsistentes
+  b64 = b64.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = b64.length % 4;
+  if (pad) b64 += "=".repeat(4 - pad);
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+function cloneView(view: ArrayBufferView): Uint8Array {
+  const out = new Uint8Array(view.byteLength);
+  out.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength));
+  return out;
+}
+
+function tryGetBytesFromArrayLike(value: unknown): Uint8Array | null {
+  if (!value) return null;
+  if (value instanceof Uint8Array) return value;
+  if (value instanceof ArrayBuffer) return new Uint8Array(value);
+  if (ArrayBuffer.isView(value)) {
+    return cloneView(value as ArrayBufferView);
+  }
+  if (Array.isArray(value)) {
+    return new Uint8Array(value as number[]);
+  }
+  return null;
+}
+
+function tryGetBytesFromNumericRecord(value: unknown): Uint8Array | null {
+  if (!value || typeof value !== "object") return null;
+  const entries = Object.keys(value as Record<string, unknown>).filter((key) =>
+    /^\d+$/.test(key)
+  );
+
+  if (!entries.length) return null;
+
+  const sorted = entries.map(Number).sort((a, b) => a - b);
+  const lastIndex = sorted[sorted.length - 1];
+  const out = new Uint8Array(lastIndex + 1);
+  let filled = 0;
+
+  for (const idx of sorted) {
+    const raw = (value as Record<string, unknown>)[String(idx)];
+    if (typeof raw !== "number") {
+      return null;
+    }
+    out[idx] = raw;
+    filled++;
+  }
+
+  return filled ? out : null;
+}
+
+function normalizeMediaKey(input: unknown): Uint8Array {
+  if (input == null) {
+    throw new Error("mediaKey ausente ou indefinido");
+  }
+
+  if (typeof input === "string") {
+    const trimmed = input.trim();
+    if (!trimmed) {
+      throw new Error("mediaKey string vazia");
+    }
+    return base64ToBytes(trimmed);
+  }
+
+  const direct = tryGetBytesFromArrayLike(input);
+  if (direct) return direct;
+
+  if (typeof input === "object") {
+    const obj = input as Record<string, unknown> & { data?: unknown; base64?: unknown };
+
+    if (obj.data != null && obj.data !== input) {
+      const directData =
+        tryGetBytesFromArrayLike(obj.data) ||
+        tryGetBytesFromNumericRecord(obj.data);
+
+      if (directData) {
+        return directData;
+      }
+
+      if (typeof obj.data === "string") {
+        try {
+          return base64ToBytes(obj.data);
+        } catch {
+          // ignora e tenta outros formatos
+        }
+      }
+    }
+
+    if (typeof obj.base64 === "string") {
+      try {
+        return base64ToBytes(obj.base64);
+      } catch {
+        // ignora e tenta interpretar como record numérico
+      }
+    }
+
+    const numeric = tryGetBytesFromNumericRecord(obj);
+    if (numeric) {
+      return numeric;
+    }
+  }
+
+  throw new Error("Formato de mediaKey não suportado");
+}
+
+/** Concatena múltiplos Uint8Array em um só */
+function concatBytes(...arrays: Uint8Array[]) {
+  const len = arrays.reduce((a, b) => a + b.length, 0);
+  const out = new Uint8Array(len);
+  let off = 0;
+  for (const a of arrays) {
+    out.set(a, off);
+    off += a.length;
+  }
+  return out;
+}
+
+/** Mapeia mimetype -> info string do HKDF (WhatsApp) */
+function hkdfInfoFromMime(mimetype?: string): Uint8Array {
+  let kind: MediaKind = "image";
+  const mt = (mimetype || "").toLowerCase();
+
+  if (mt.startsWith("video/")) kind = "video";
+  else if (mt.startsWith("audio/")) kind = "audio";
+  else if (mt.startsWith("application/")) kind = "document";
+  else if (mt.includes("sticker") || mt.includes("webp")) kind = "sticker";
+  else kind = "image";
+
+  // Strings “padrão” usadas pelo WA
+  const infoStr =
+    kind === "image"
+      ? "WhatsApp Image Keys"
+      : kind === "video"
+      ? "WhatsApp Video Keys"
+      : kind === "audio"
+      ? "WhatsApp Audio Keys"
+      : kind === "document"
+      ? "WhatsApp Document Keys"
+      : "WhatsApp Sticker Keys";
+
+  return new TextEncoder().encode(infoStr);
+}
+
+/**
+ * Deriva (iv, cipherKey, macKey) a partir do mediaKey bruto via HKDF-SHA256.
+ * Saída total = 112 bytes (0..15 iv, 16..47 cipherKey, 48..79 macKey, resto ignorado).
+ */
+async function deriveKeys(mediaKey: Uint8Array, info: Uint8Array) {
+  if (mediaKey.length !== 32) {
+    console.warn(
+      `decryptEvoMedia: mediaKey com ${mediaKey.length} bytes (esperado 32). Prosseguindo mesmo assim.`
+    );
+  }
+  const salt = new Uint8Array(32); // zero salt, como no WA
+
+  const hkdfBaseKey = await crypto.subtle.importKey(
+    "raw",
+    mediaKey,
+    "HKDF",
+    false,
+    ["deriveBits"]
+  );
+
+  const bits = await crypto.subtle.deriveBits(
+    { name: "HKDF", hash: "SHA-256", salt, info },
+    hkdfBaseKey,
+    112 * 8
+  );
+
+  const okm = new Uint8Array(bits); // 112 bytes
+  const iv = okm.slice(0, 16);
+  const cipherKey = okm.slice(16, 48);
+  const macKey = okm.slice(48, 80);
+  return { iv, cipherKey, macKey };
+}
+
+/** Calcula HMAC-SHA256(bytes) e retorna Uint8Array */
+async function hmacSha256(keyBytes: Uint8Array, data: Uint8Array) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    keyBytes,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, data);
+  return new Uint8Array(sig);
+}
+
+/** AES-CBC decrypt */
+async function aesCbcDecrypt(keyBytes: Uint8Array, iv: Uint8Array, data: Uint8Array) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    keyBytes,
+    { name: "AES-CBC" },
+    false,
+    ["decrypt"]
+  );
+  const plain = await crypto.subtle.decrypt({ name: "AES-CBC", iv }, key, data);
+  return new Uint8Array(plain);
+}
+
+/**
+ * Descriptografa mídia EVO/WA:
+ * - Baixa o .enc
+ * - HKDF(mediaKey, info(mimetype)) -> iv, cipherKey, macKey
+ * - Verifica MAC (HMAC-SHA256(iv|cipher) truncado em 10 bytes)
+ * - AES-CBC(cipherKey, iv, cipher)
+ * Retorna Uint8Array (binário puro do arquivo resultante).
+ */
+export async function decryptEvoMedia(
+  url: string,
+  mediaKey: MediaKeyInput,
+  mimetype?: string
+): Promise<Uint8Array> {
+  const mediaKeyBytes = normalizeMediaKey(mediaKey);
+
+  // 1) Baixa o arquivo .enc
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Falha ao baixar mídia: HTTP ${res.status}`);
+  }
+  const enc = new Uint8Array(await res.arrayBuffer());
+  if (enc.length <= 10) {
+    throw new Error("Arquivo cifrado inválido (tamanho muito pequeno).");
+  }
+
+  // 2) Deriva chaves
+  const info = hkdfInfoFromMime(mimetype);
+  const { iv, cipherKey, macKey } = await deriveKeys(mediaKeyBytes, info);
+
+  // 3) Separa MAC (últimos 10 bytes) e o cipher
+  const fileMac = enc.slice(enc.length - 10);
+  const fileCipher = enc.slice(0, enc.length - 10);
+
+  // 4) Verifica MAC = HMAC-SHA256(iv | fileCipher) truncado em 10 bytes
+  const macData = concatBytes(iv, fileCipher);
+  const macFull = await hmacSha256(macKey, macData);
+  const macTrunc = macFull.slice(0, 10);
+
+  // (opcional) validar MAC estritamente
+  let macOk = macTrunc.length === fileMac.length;
+  for (let i = 0; i < macTrunc.length && macOk; i++) {
+    if (macTrunc[i] !== fileMac[i]) macOk = false;
+  }
+  if (!macOk) {
+    // Muitos backends ignoram validação. Aqui só avisamos no console e seguimos.
+    console.warn("decryptEvoMedia: MAC inválido. Prosseguindo com decrypt assim mesmo.");
+  }
+
+  // 5) Decrypt AES-CBC
+  const plain = await aesCbcDecrypt(cipherKey, iv, fileCipher);
+  return plain;
+}

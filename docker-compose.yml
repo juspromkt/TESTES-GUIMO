@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  prospectai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: prospectai
+    restart: unless-stopped
+    networks:
+      - prospectai
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.prospectai.rule=Host(`app.guimoo.com.br`)
+      - traefik.http.routers.prospectai.entrypoints=web,websecure
+      - traefik.http.routers.prospectai.tls.certresolver=leresolver
+      - traefik.http.routers.prospectai.service=prospectai
+      - traefik.http.services.prospectai.loadbalancer.server.port=80
+      - traefik.http.services.prospectai.loadbalancer.passHostHeader=true
+  ws-relay:
+    build:
+      context: .
+      dockerfile: Dockerfile.ws
+    container_name: ws-relay
+    restart: unless-stopped
+    networks:
+      - prospectai
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.ws-relay.rule=Host(`ws.lumendigital.com.br`)
+      - traefik.http.routers.ws-relay.entrypoints=web,websecure
+      - traefik.http.routers.ws-relay.tls.certresolver=leresolver
+      - traefik.http.routers.ws-relay.service=ws-relay
+      - traefik.http.services.ws-relay.loadbalancer.server.port=3000
+networks:
+  prospectai:
