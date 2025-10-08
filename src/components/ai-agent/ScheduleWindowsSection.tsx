@@ -262,7 +262,7 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
 
   return (
     <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Horários Disponíveis (apenas para agenda interna)</h2>
+      <h2 className="text-xl font-semibold text-gray-900 mb-6">Horários Disponíveis (Funciona na agenda interna e Google Agenda)</h2>
       {days.map((day) => (
         <div key={day} className="mb-6">
           <div className="flex items-center justify-between mb-2">

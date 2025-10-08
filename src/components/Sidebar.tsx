@@ -570,7 +570,7 @@ const Sidebar = () => {
                 alt="Logo" 
                 className={`transition-all duration-300 ${
                   isExpanded 
-                    ? 'w-[220px] h-[75px] object-contain group-hover:scale-105' 
+                    ? 'w-[180px] h-[60px] object-contain group-hover:scale-105' 
                     : 'w-12 h-10 object-contain group-hover:scale-110'
                 } filter drop-shadow-lg`}
               />
