@@ -60,7 +60,11 @@ const [modalLoading, setModalLoading] = React.useState(false);
             <textarea
               value={personality.descricao}
               onChange={(e) => setPersonality({ ...personality, descricao: e.target.value })}
-              placeholder="Ex: Um assistente profissional e amigável, especializado em vendas e atendimento ao cliente..."
+              placeholder="Ex: Você é Clara, analista jurídica do escritório Sales Caetano Advogados. Conduza o atendimento com empatia e clareza.
+
+Você é inteligente e consegue interpretar e responder o que a lead fala, responda e retorne ao fluxo com leveza.
+
+Consulte a base fornecida para dúvidas relacionadas ao escritório, procedimentos internos e informações. Se a informação não estiver na base fornecida , não invente. Apenas diga que essa informação não nos foi repassada e siga com o fluxo de atendimento padrão."
               className="w-full px-4 py-3 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 min-h-[120px]"
               readOnly={!canEdit}
             />
@@ -78,7 +82,7 @@ const [modalLoading, setModalLoading] = React.useState(false);
             <textarea
               value={personality.area}
               onChange={(e) => setPersonality({ ...personality, area: e.target.value })}
-              placeholder="Ex: Conhecimento profundo em vendas B2B, prospecção de clientes e negociação..."
+              placeholder="Ex: Coloque todos os motivos para uma rescisão indireta, ou as deficiências/doenças que são válidas para o BPC/Loas"
               className="w-full px-4 py-3 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 min-h-[120px]"
               readOnly={!canEdit}
             />

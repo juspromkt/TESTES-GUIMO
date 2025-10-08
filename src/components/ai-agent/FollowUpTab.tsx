@@ -76,7 +76,9 @@ export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
     { value: '1 hora', label: '1 hora' },
     { value: '2 horas', label: '2 horas' },
     { value: '6 horas', label: '6 horas' },
-    { value: '24 horas', label: '24 horas' }
+    { value: '24 horas', label: '24 horas' },
+    { value: '48 horas', label: '48 horas' },
+    { value: '72 horas', label: '72 horas' }
   ];
 
   useEffect(() => {
@@ -588,7 +590,7 @@ const fetchHistory = async (isRefreshing = false) => {
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Prompt de Follow-up
+                Prompt de Follow-up (explique quando e como o follow-up deve ser enviado)
               </label>
 {canViewAgent && (
 

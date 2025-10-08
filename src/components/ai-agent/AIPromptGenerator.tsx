@@ -81,16 +81,15 @@ export default function AIPromptGenerator({ token, onApplyModel, canEdit }: AIPr
       <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 mb-6 border border-indigo-100">
         <h3 className="text-lg font-medium text-indigo-800 mb-3">Como funciona?</h3>
         <p className="text-gray-700 mb-4">
-          Descreva seu negócio, serviços e necessidades em detalhes. Nossa IA irá gerar um prompt personalizado 
+          Descreva o que você quer que o seu agente faça, em detalhes. Nossa IA irá gerar um prompt personalizado 
           para seu agente, incluindo personalidade, regras, etapas de atendimento e perguntas frequentes.
         </p>
         <div className="bg-amber-50 border-l-4 border-amber-500 p-4 text-amber-700">
           <p className="font-medium">Dicas para obter melhores resultados:</p>
           <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-            <li>Especifique seu setor de atuação (ex: advocacia, odontologia, academia)</li>
+            <li>Especifique sua área de atuação (ex: BPC/Loas, Trabalhista, Bancário )</li>
             <li>Mencione se precisa de agendamento ou não</li>
-            <li>Descreva o tom de voz desejado (formal, casual, amigável)</li>
-            <li>Informe serviços específicos que você oferece</li>
+            <li>Descreva o tom de voz desejado (formal, casual, amigável)</li>          
             <li>Mencione qualquer fluxo de atendimento específico que deseja implementar</li>
           </ul>
         </div>
@@ -99,13 +98,13 @@ export default function AIPromptGenerator({ token, onApplyModel, canEdit }: AIPr
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Descrição do seu negócio e necessidades
+            Descrição do seu escritório e necessidades
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full px-4 py-3 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-h-[150px]"
-            placeholder="Ex: Gere um prompt para minha clínica odontológica especializada em tratamentos estéticos, com agendamento de consultas. Quero um tom amigável e acolhedor..."
+            placeholder="Ex: Gere um prompt para meu escritório de advocacia especializado em BPC/Loas, com recepção, análise de viabilidade, oferta do contrato, envio do link para assinatura e agendamento de reunião..."
             disabled={!canEdit}
           />
         </div>

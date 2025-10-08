@@ -359,7 +359,7 @@ const AIAgent = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Agente de IA</h1>
-            <p className="text-sm text-gray-500 mt-1">Configure o comportamento do seu agente inteligente</p>
+            <p className="text-sm text-gray-500 mt-1">Configure seu agente</p>
           </div>
         </div>
 

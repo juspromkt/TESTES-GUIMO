@@ -289,10 +289,10 @@ export default function FAQSection({
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">
-            Perguntas Frequentes
+            Perguntas frequentes e informações do seu escritório
           </h2>
           <p className="text-sm text-gray-500">
-            Configure as perguntas que o agente deve responder
+            Adicione as principais informações do seu escritório e as perguntas mais frequentes que a IA deve saber responder
           </p>
         </div>
         {canEdit && (

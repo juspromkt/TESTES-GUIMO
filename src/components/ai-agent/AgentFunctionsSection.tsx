@@ -1034,13 +1034,13 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
           </div>
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
-              Funções do Agente
+              Notificações no Whatsapp
               <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
                 BETA
               </span>
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              Gerencie funções externas que o agente pode executar (máximo 5 funções; atributos variam por tipo)
+              Gerencie as notificações que você quer receber (máximo 5 notificações cadastradas)
             </p>
           </div>
         </div>
@@ -1059,16 +1059,16 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
 
         {canEdit && (
           <div className="bg-gray-50 rounded-lg p-6 mb-8">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Criar Nova Função</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Criar Nova Notificação</h3>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nome da Função *
+                    Nome da Notificação *
                   </label>
                   <input
                     type="text"
-                    placeholder="Ex: Enviar E-mail"
+                    placeholder="Ex: Contrato Enviado"
                     value={newFunction.nome}
                     onChange={e => setNewFunction({ ...newFunction, nome: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
@@ -1152,7 +1152,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                       Mensagem da Notificação
                     </p>
                     <p className="text-xs text-emerald-600">
-                      Esse é o texto que será enviado quando a função for acionada.
+                      Esse é o texto que será enviado quando a notificação for acionada.
                     </p>
                   </div>
                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-white text-emerald-600 border border-emerald-200">
@@ -1175,7 +1175,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                   <textarea
                     ref={newMessageRef}
                     rows={4}
-                    placeholder="Lead qualificado! Nome: {{nome}}. Telefone: {{telefone}}. Resumo da conversa: {{resumo}}"                    
+                    placeholder="Contrato enviado! Nome: {{nome}}. Telefone: {{telefone}}. Resumo da conversa: {{resumo}}"                    
                     value={newFunction.mensagem}
                     onChange={e => setNewFunction({ ...newFunction, mensagem: e.target.value })}
                     className="w-full px-4 py-3 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-vertical bg-white"
@@ -1196,7 +1196,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
             >
               <div className="flex items-start justify-between gap-3 mb-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Descrição do Contexto *
+                  Explique para a IA quando ela deve te enviar essa notificação *
                 </label>
                 {newFunction.tipo === 'NOTIFICACAO' && (
                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-200">
@@ -1206,7 +1206,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
               </div>
               <textarea
                 rows={3}
-                placeholder="Ex: Use esta função quando o usuário solicitar envio de e-mails ou quando precisar notificar alguém por e-mail. A função enviará um e-mail com o conteúdo especificado para o destinatário informado."
+                placeholder="Ex: Use esta função quando o lead receber o link do contrato para assinatura."
                 value={newFunction.descricao}
                 onChange={e => setNewFunction({ ...newFunction, descricao: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-vertical bg-white"
@@ -1234,7 +1234,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                 className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                {saving ? 'Criando...' : 'Criar Função'}
+                {saving ? 'Criando...' : 'Criar Notificação'}
               </button>
             </div>
           </div>
@@ -1243,7 +1243,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium text-gray-900">
-              Funções Cadastradas ({functions.length}/5)
+              Notificações Cadastradas ({functions.length}/5)
             </h3>
           </div>
 
@@ -1252,11 +1252,11 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
               <Zap className="w-16 h-16 mx-auto mb-4 text-gray-300" />
               <h4 className="text-lg font-medium text-gray-900 mb-2">Não existem funções cadastradas</h4>
               <p className="text-gray-500 mb-4">
-                As funções permitem que o agente execute ações externas automaticamente.
+                As Notificações permitem que você ou membros da sua equipe sejam notificados sobre atividades dos leads.
               </p>
               {canEdit && (
                 <p className="text-sm text-gray-400">
-                  Use o formulário acima para criar sua primeira função.
+                  Use o formulário acima para criar sua primeira notificação.
                 </p>
               )}
             </div>
@@ -1269,11 +1269,11 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                 <div key={func.id} className="border border-gray-200 rounded-lg p-6">
                 {editingFunction === func.id ? (
                   <div className="space-y-4 mb-6">
-                    <h4 className="font-semibold text-gray-900">Editando Função</h4>
+                    <h4 className="font-semibold text-gray-900">Editando Notificação</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Nome da Função *
+                          Nome da Notificação *
                         </label>
                         <input
                           type="text"
@@ -1368,7 +1368,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                               Mensagem da Notificação
                             </p>
                             <p className="text-xs text-emerald-600">
-                              Conteúdo enviado ao lead quando esta função for ativada.
+                              Conteúdo enviado quando esta notificação for ativada.
                             </p>
                           </div>
                           <span className="px-2 py-1 text-xs font-medium rounded-full bg-white text-emerald-600 border border-emerald-200">
@@ -1433,7 +1433,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                         maxLength={500}
                       />
                       <p className="text-xs text-gray-500 mt-2">
-                        Explique quando e como a IA deve usar esta função (mínimo 10 caracteres)
+                        Explique quando e como a IA deve usar esta notificação (mínimo 10 caracteres)
                       </p>
                     </div>
                     <div className="flex items-center gap-2">

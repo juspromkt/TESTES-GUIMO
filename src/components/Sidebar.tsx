@@ -18,7 +18,8 @@ import {
   MessageSquare,
   Sun,
   Moon,
-  Users
+  Users,
+  BookOpen
 } from 'lucide-react';
 import { DomainConfig } from '../utils/DomainConfig';
 import Modal from './Modal';
@@ -53,7 +54,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ path, text, icon: Icon, isActive, i
   return (
     <button
       onClick={() => navigate(path)}
-      className={`group relative flex items-center gap-3 px-2 py-2 mx-2 my-1 rounded-xl transition-all duration-300 ${
+      className={`group relative flex items-center gap-1 px-2 py-0 mx-2 my-0 rounded-lg transition-all duration-200 ${
         isActive
           ? `${domainConfig.getActiveBg()} ${domainConfig.getActiveColor()} shadow-lg transform scale-[1.02] before:absolute before:inset-0 before:bg-white/10 before:rounded-xl`
           : `${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} hover:transform hover:scale-[1.02] hover:shadow-md`
@@ -101,6 +102,7 @@ const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(true); // Sempre inicia reduzida
   const [isHovered, setIsHovered] = useState(false); // Novo estado para hover
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isTutorialModalOpen, setIsTutorialModalOpen] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -501,15 +503,23 @@ const Sidebar = () => {
     if (!permissionsLoaded) return [];
     
     const menuItems = [
-      { path: '/dashboard', text: 'Dashboard', icon: LayoutDashboard, permission: true },
-      { path: '/conversas', text: 'Conversas', icon: MessageSquare, permission: hasPermission('can_view_menu_chat'), isBeta: true },
-      { path: '/ai-agent', text: 'Agente de IA', icon: Bot, permission: hasPermission('can_view_menu_agent') },
-      { path: '/crm', text: 'CRM', icon: GitBranch, permission: hasPermission('can_view_menu_crm') },
-      { path: '/agendamentos', text: 'Agendamentos', icon: CalendarDays, permission: hasPermission('can_view_menu_schedule') },
-      { path: '/contatos', text: 'Contatos', icon: ContactsIcon, permission: hasPermission('can_view_menu_contacts') },
-      { path: '/conexao', text: 'Conexão', icon: Link, permission: hasPermission('can_view_menu_connection') },
-      { path: '/configuracoes', text: 'Configurações', icon: Settings, permission: hasPermission('can_view_menu_settings') }
-    ];
+  { path: '/dashboard', text: 'Dashboard', icon: LayoutDashboard, permission: true },
+  { path: '/conversas', text: 'Conversas', icon: MessageSquare, permission: hasPermission('can_view_menu_chat')},
+  { path: '/ai-agent', text: 'Agente de IA', icon: Bot, permission: hasPermission('can_view_menu_agent') },
+  { path: '/crm', text: 'CRM', icon: GitBranch, permission: hasPermission('can_view_menu_crm') },
+  { path: '/agendamentos', text: 'Agendamentos', icon: CalendarDays, permission: hasPermission('can_view_menu_schedule') },
+  { path: '/contatos', text: 'Contatos', icon: ContactsIcon, permission: hasPermission('can_view_menu_contacts') },
+  { path: '/conexao', text: 'Conexão', icon: Link, permission: hasPermission('can_view_menu_connection') },
+  { path: '/configuracoes', text: 'Configurações', icon: Settings, permission: hasPermission('can_view_menu_settings') },
+  {
+    text: 'Tutoriais',
+    icon: BookOpen, // você pode importar do lucide-react
+    external: true,
+    path: 'https://tutorial.guimoo.com.br/',
+    permission: true,
+  },
+];
+
     
     return menuItems.filter(item => item.permission);
   };
@@ -540,7 +550,7 @@ const Sidebar = () => {
         className={`relative transition-all duration-500 ease-in-out ${domainConfig.getSidebarColor()} ${
           isMobile
             ? 'fixed top-0 left-0 h-20 w-full flex flex-row items-center justify-between px-6 z-50 backdrop-blur-sm border-b border-white/10'
-            : `fixed top-0 left-0 bottom-0 flex flex-col z-50 backdrop-blur-md border-r border-white/10 ${isExpanded ? 'w-64' : 'w-20'}`
+            : `fixed top-0 left-0 bottom-0 flex flex-col z-50 backdrop-blur-md border-r border-white/10 ${isExpanded ? 'w-56' : 'w-16'}`
         }`}
         style={{ 
           height: isMobile ? '80px' : '100%',
@@ -558,10 +568,10 @@ const Sidebar = () => {
               <img 
                 src={isExpanded ? logos.full : logos.reduced}
                 alt="Logo" 
-                className={`transition-all duration-500 ${
+                className={`transition-all duration-300 ${
                   isExpanded 
-                    ? 'w-[180px] h-[60px] object-contain group-hover:scale-105' 
-                    : 'w-10 h-10 object-contain group-hover:scale-110'
+                    ? 'w-[220px] h-[75px] object-contain group-hover:scale-105' 
+                    : 'w-12 h-10 object-contain group-hover:scale-110'
                 } filter drop-shadow-lg`}
               />
               {/* Glow effect */}
@@ -651,7 +661,7 @@ const Sidebar = () => {
                       type="text"
                       value={linkedAccountsSearch}
                       onChange={(event) => setLinkedAccountsSearch(event.target.value)}
-                      placeholder="Buscar por cliente ou usuário"
+                      placeholder="Buscar Workspace..."
                       className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-gray-200 bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
                     />
                   </div>
@@ -672,64 +682,42 @@ const Sidebar = () => {
                       style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(148, 163, 184, 0.6) transparent' }}
                     >
                       {filteredLinkedAccounts.map((account, index) => {
-                        const accountKey = `${account.id_cliente ?? 'n'}-${account.id_usuario ?? 'n'}-${index}`;
-                        const isClienteAtivo = account.cliente_ativo !== false;
-                        const isUsuarioAtivo = account.usuario_ativo !== false;
-                        const hasIdentifiers = account.id_cliente !== undefined && account.id_usuario !== undefined;
-                        const isDisabled = !isClienteAtivo || !isUsuarioAtivo || !hasIdentifiers;
-                        const isCurrentAccount =
-                          hasIdentifiers &&
-                          account.id_cliente === currentClientId &&
-                          account.id_usuario === currentUserId;
-                        const isSwitching = switchingAccountKey === accountKey;
+  const accountKey = `${account.id_cliente ?? 'n'}-${account.id_usuario ?? 'n'}-${index}`;
+  const hasIdentifiers = account.id_cliente !== undefined && account.id_usuario !== undefined;
+  const isCurrentAccount =
+    hasIdentifiers &&
+    account.id_cliente === currentClientId &&
+    account.id_usuario === currentUserId;
+  const isSwitching = switchingAccountKey === accountKey;
 
-                        const buttonStateClasses = isDisabled
-                          ? 'bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed'
-                          : isCurrentAccount
-                            ? 'bg-emerald-50 border border-emerald-300 text-emerald-900 shadow-sm'
-                            : 'bg-white border border-gray-200 text-gray-900 hover:border-emerald-400 hover:shadow-md hover:scale-[1.01]';
+  const buttonStateClasses = isCurrentAccount
+    ? 'bg-emerald-50 border border-emerald-300 text-emerald-900 shadow-sm'
+    : 'bg-white border border-gray-200 text-gray-800 hover:bg-emerald-50/60 hover:border-emerald-400 hover:shadow-sm';
 
-                        return (
-                          <button
-                            key={accountKey}
-                            onClick={() => handleWorkspaceSwitch(account, accountKey)}
-                            disabled={isDisabled || isSwitching || isCurrentAccount}
-                            className={`w-full text-left p-3 rounded-lg transition-all duration-300 ${buttonStateClasses}`}
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="space-y-1">
-                                <p className="text-sm font-semibold leading-tight">
-                                  {account.nome_cliente ?? 'Cliente não informado'}
-                                </p>
-                                <p className="text-[11px] text-gray-500 leading-tight">
-                                  ID do Cliente: {account.id_cliente ?? 'N/A'}
-                                </p>
-                              </div>
-                              {isCurrentAccount && (
-                                <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-600">
-                                  Atual
-                                </span>
-                              )}
-                              {isSwitching && <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />}
-                            </div>
-                            <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-gray-600">
-                              <span className="font-medium text-gray-600">Usuário:</span>
-                              <span className="text-gray-800">
-                                {account.nome_usuario ?? 'Não informado'}
-                                {account.id_usuario !== undefined ? ` (#${account.id_usuario})` : ''}
-                              </span>
-                              <span className="font-medium text-gray-600">Cliente ativo:</span>
-                              <span className={isClienteAtivo ? 'text-emerald-600 font-semibold' : 'text-rose-500 font-semibold'}>
-                                {isClienteAtivo ? 'Sim' : 'Não'}
-                              </span>
-                              <span className="font-medium text-gray-600">Usuário ativo:</span>
-                              <span className={isUsuarioAtivo ? 'text-emerald-600 font-semibold' : 'text-rose-500 font-semibold'}>
-                                {isUsuarioAtivo ? 'Sim' : 'Não'}
-                              </span>
-                            </div>
-                          </button>
-                        );
-                      })}
+  return (
+    <button
+      key={accountKey}
+      onClick={() => handleWorkspaceSwitch(account, accountKey)}
+      disabled={isSwitching || isCurrentAccount}
+      className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${buttonStateClasses}`}
+    >
+      <div className="flex items-center justify-between">
+        <span className="truncate">{account.nome_cliente ?? 'Sem nome'}</span>
+
+        {isSwitching && (
+          <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+        )}
+
+        {isCurrentAccount && (
+          <span className="text-[10px] text-emerald-600 font-bold uppercase ml-2">
+            Atual
+          </span>
+        )}
+      </div>
+    </button>
+  );
+})}
+
                     </div>
                   )}
                   {workspaceSwitchError && (
@@ -739,21 +727,88 @@ const Sidebar = () => {
               )}
             </div>
 
-            {getMenuItems().map((item) => (
-              <MenuItem
-                key={item.path}
-                path={item.path}
-                text={item.text}
-                icon={item.icon}
-                isActive={currentPath.startsWith(item.path)}
-                isCollapsed={!isExpanded}
-                isMobile={isMobile}
-                domainConfig={domainConfig}
-                isBeta={item.isBeta}
-              />
-            ))}
+{getMenuItems().map((item) =>
+  item.text === 'Tutoriais' ? (
+    <>
+      {/* Divisor antes do Tutoriais */}
+      <hr className="mx-3 my-2 border-t border-gray-200/40" />
+
+      {/* Botão Tutoriais */}
+      <a
+        key={item.text}
+        href="https://tutorial.guimoo.com.br/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`group relative flex items-center gap-3 px-2 py-1.5 mx-2 my-[2px] rounded-lg transition-all duration-200 ${
+          domainConfig.getDefaultColor()
+        } ${domainConfig.getHoverBg()} hover:transform hover:scale-[1.02] hover:shadow-md ${
+          !isExpanded ? 'justify-center px-2' : ''
+        }`}
+        title={!isExpanded ? item.text : undefined}
+      >
+        <div className="relative z-10 p-2 rounded-lg group-hover:bg-white/10 group-hover:scale-110 transition-all duration-300">
+          <item.icon className="w-6 h-6 transition-transform duration-300" />
+        </div>
+
+        {isExpanded && !isMobile && (
+          <div className="relative z-10 flex items-center gap-2 flex-1">
+            <span className="text-sm font-semibold tracking-wide">
+              {item.text}
+            </span>
           </div>
-        </nav>
+        )}
+      </a>
+
+      {/* Botão de Suporte via WhatsApp */}
+      <a
+        href="https://wa.me/553892590370"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`group relative flex items-center gap-3 px-2 py-1.5 mx-2 my-[2px] rounded-lg transition-all duration-200
+          text-emerald-700 hover:text-white hover:bg-emerald-500 hover:shadow-md
+          ${!isExpanded ? 'justify-center px-2' : ''}
+        `}
+        title={!isExpanded ? 'Suporte' : undefined}
+      >
+        <div className="relative z-10 p-2 rounded-lg bg-emerald-50 group-hover:bg-emerald-600/90 group-hover:text-white transition-all duration-300">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+            className="w-5 h-5"
+          >
+            <path d="M16.61 14.18c-.27-.14-1.62-.8-1.87-.9-.25-.09-.43-.14-.61.14-.18.27-.7.9-.85 1.09-.16.18-.31.2-.58.07-.27-.14-1.15-.43-2.19-1.37-.81-.72-1.36-1.61-1.52-1.88-.16-.27-.02-.42.12-.56.13-.13.27-.31.4-.47.13-.16.18-.27.27-.45.09-.18.05-.34-.02-.48-.07-.14-.61-1.47-.84-2.02-.22-.53-.45-.45-.61-.45-.16 0-.34-.02-.52-.02s-.48.07-.73.34c-.25.27-.96.93-.96 2.27s.98 2.64 1.12 2.82c.13.18 1.93 2.95 4.68 4.14.65.28 1.16.45 1.56.58.65.21 1.24.18 1.71.11.52-.08 1.62-.66 1.85-1.3.23-.65.23-1.2.16-1.32-.06-.12-.25-.2-.52-.34z" />
+            <path d="M12.04 2C6.51 2 2 6.5 2 12c0 2.06.68 3.97 1.83 5.52L2 22l4.61-1.77A9.93 9.93 0 0 0 12.04 22c5.53 0 10.04-4.5 10.04-10S17.57 2 12.04 2zm0 18.09a8.1 8.1 0 0 1-4.13-1.15l-.3-.18-2.73 1.05.73-2.64-.18-.27A8.07 8.07 0 1 1 12.04 20.1z" />
+          </svg>
+        </div>
+
+        {isExpanded && !isMobile && (
+          <span className="text-sm font-semibold tracking-wide relative z-10">
+            Suporte
+          </span>
+        )}
+      </a>
+    </>
+  ) : (
+    <MenuItem
+      key={item.path}
+      path={item.path}
+      text={item.text}
+      icon={item.icon}
+      isActive={currentPath.startsWith(item.path)}
+      isCollapsed={!isExpanded}
+      isMobile={isMobile}
+      domainConfig={domainConfig}
+      isBeta={item.isBeta}
+    />
+  )
+)}
+
+
+
+</div>
+</nav>
+
 
         {!isMobile && (
           <div className="relative z-10 p-3 border-t border-white/10 backdrop-blur-sm">
@@ -934,7 +989,7 @@ const Sidebar = () => {
             </div>
           </form>
         </div>
-      </Modal>
+      </Modal>    
     </> 
   );
 };

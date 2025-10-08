@@ -98,7 +98,7 @@ export default function AudioSettingsSection({ token, canEdit }: AudioSettingsSe
     <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
         <Mic className="w-6 h-6 text-emerald-600" />
-        Configurações de Áudio
+        Configurações de Áudio (Seu agente pode enviar e responder com áudio)
       </h2>
 
       <div className="space-y-6">
@@ -116,7 +116,7 @@ export default function AudioSettingsSection({ token, canEdit }: AudioSettingsSe
             >
               <span className="absolute top-[2px] left-[2px] h-5 w-5 bg-white border border-gray-300 rounded-full transition-transform duration-200 peer-checked:translate-x-5" />
             </div>
-            <span className="ml-3 text-gray-700">Ativar geração de áudio com IA</span>
+            <span className="ml-3 text-gray-700">Ativar geração de áudio com IA (esse item deve estar ativado para que funcione)</span>
           </label>
         </div>
 
@@ -135,7 +135,7 @@ export default function AudioSettingsSection({ token, canEdit }: AudioSettingsSe
             >
               <span className="absolute top-[2px] left-[2px] h-5 w-5 bg-white border border-gray-300 rounded-full transition-transform duration-200 peer-checked:translate-x-5" />
             </div>
-            <span className="ml-3 text-gray-700">Responder áudio com áudio</span>
+            <span className="ml-3 text-gray-700">Responder áudio com áudio (Se o lead enviar texto, ele responderá com texto. Se enviar áudio, responderá com áudio)</span>
           </label>
         </div>
 
@@ -153,7 +153,7 @@ export default function AudioSettingsSection({ token, canEdit }: AudioSettingsSe
             >
               <span className="absolute top-[2px] left-[2px] h-5 w-5 bg-white border border-gray-300 rounded-full transition-transform duration-200 peer-checked:translate-x-5" />
             </div>
-            <span className="ml-3 text-gray-700">Sempre responder com áudio</span>
+            <span className="ml-3 text-gray-700">Sempre responder com áudio (A IA sempre responderá com áudio (não recomendado, mas a escolha é sua)</span>
           </label>
         </div>
 
@@ -181,7 +181,7 @@ export default function AudioSettingsSection({ token, canEdit }: AudioSettingsSe
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1 flex justify-between">
-            <span>Velocidade</span>
+            <span>Velocidade (mais rápido pode deixar a conversa natural, como nós falamos normalmente)</span>
             <span className="text-gray-500">{rate.toFixed(1)}x</span>
           </label>
           <input

@@ -135,7 +135,7 @@ if (Array.isArray(data) && data.length > 0) {
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-5 h-5 text-gray-500" />
             <label className="block text-sm font-medium text-gray-700">
-              Tempo de Debounce (segundos)
+              Tempo de Delay (segundos)
             </label>
           </div>
 <input
@@ -147,8 +147,8 @@ if (Array.isArray(data) && data.length > 0) {
 />
 
           <p className="mt-2 text-sm text-gray-500">
-            Tempo que o agente aguarda antes de processar mensagens consecutivas. Isso evita que múltiplas 
-            mensagens enviadas rapidamente criem várias filas de resposta simultâneas. Recomendado: 5-15 segundos.
+            Tempo que a IA aguarda antes de processar mensagens consecutivas. Isso evita que múltiplas 
+            mensagens enviadas rapidamente criem várias filas de resposta simultâneas. Recomendado: 15-30 segundos. (quando um lead mandar uma mensagem, ela vai aguardar X segundos antes de responder - Deixe 20)
           </p>
         </div>
 
@@ -168,8 +168,8 @@ if (Array.isArray(data) && data.length > 0) {
 />
 
           <p className="mt-2 text-sm text-gray-500">
-            Quando um humano intervém na conversa, o agente ficará inativo por este período.
-            Isso evita que o agente e o atendente humano respondam simultaneamente. Recomendado: 15-60 minutos.
+            Quando um humano intervém na conversa da IA, o agente ficará inativo por este período.
+            Isso evita que a IA e o atendente humano respondam simultaneamente. Recomendado: 9999999999 minutos.
           </p>
         </div>
 

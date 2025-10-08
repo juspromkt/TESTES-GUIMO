@@ -87,13 +87,13 @@ export default function AgentConfigTab({
   const [activeSubTab, setActiveSubTab] = useState<ConfigSubTab>('personality');
 
   const subTabs = [
-    { id: 'personality', label: 'Personalidade do Agente' },
-    { id: 'rules', label: 'Regras Gerais' },
-    { id: 'steps', label: 'Etapas de Atendimento' },
-    { id: 'faq', label: 'Perguntas Frequentes' },
-    { id: 'functions', label: 'Funções do Agente' },
+    { id: 'personality', label: 'Personalidade do Agente (1)' },
+    { id: 'rules', label: 'Regras Gerais (2)' },
+    { id: 'steps', label: 'Etapas de Atendimento (3)' },
+    { id: 'faq', label: 'Perguntas Frequentes (4)' },
+    { id: 'functions', label: 'Notificações no Whatsapp' },
     { id: 'scheduling', label: 'Configurações de Agendamento' },
-    { id: 'default-models', label: 'Modelos' },
+    { id: 'default-models', label: 'Modelos de Agentes' },
     { id: 'trigger', label: 'Gatilho de Acionamento' },
     { id: 'audio', label: 'Configurações de Áudio' },
     { id: 'operating-hours', label: 'Horário de Funcionamento' },

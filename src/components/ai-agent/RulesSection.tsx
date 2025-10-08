@@ -197,7 +197,7 @@ async function handleSaveRules() {
         </div>
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Regras Gerais</h2>
-          <p className="text-sm text-gray-500 mt-1">Defina as regras gerais de comportamento do agente</p>
+          <p className="text-sm text-gray-500 mt-1">Defina as regras gerais de comportamento do agente (o que ele pode e não pode fazer)</p>
         </div>
       </div>
 

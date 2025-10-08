@@ -1,25 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  Users,
-  Brain,
   GitBranch,
-  BarChart3,
-  RefreshCw,
-  MessageSquare,
-  Coins,
-  Send,
+  PieChart as PieIcon,
+  BarChart as BarIcon,
   Calendar,
-  DollarSign,
   AlertCircle,
-  Loader2,
-  Search,
-  PieChart,
-  TrendingUp,
-  BarChart,
-  ArrowUpRight,
-  ArrowDownRight,
-  ChevronDown,
-  ChevronUp,
+  Filter,
+  X,
+  Sparkles,
 } from "lucide-react";
 import {
   Chart as ChartJS,
@@ -33,9 +21,7 @@ import {
   PointElement,
   LineElement,
 } from "chart.js";
-
-
-import { Bar, Pie, Doughnut, Line } from "react-chartjs-2";
+import { Bar, Doughnut, Line } from "react-chartjs-2";
 import { hasPermission } from "../utils/permissions";
 
 ChartJS.register(
@@ -50,6 +36,7 @@ ChartJS.register(
   LineElement
 );
 
+// ==================== Types ====================
 interface DashboardMetrics {
   isWhatsAppAtivo: boolean;
   tokens: number;
@@ -58,11 +45,6 @@ interface DashboardMetrics {
   numeroLeads: number;
   numeroProspeccoes: number;
   numeroDisparos: number;
-}
-
-interface MonthlyData {
-  mes: string;
-  quantidade: number;
 }
 
 interface DealMetrics {
@@ -85,234 +67,13 @@ interface StageDeals {
   quantidade: number;
 }
 
-interface FunnelStage {
-  id: number;
-  nome: string;
-  quantidade: number;
-  valor_total: number;
-}
+type LabeledValue = { label: string; value: number };
 
-interface FunnelData {
-  id_funil: number;
-  nome_funil: string;
-  total_negociacoes: number;
-  total_abertas: number;
-  total_ganhas: number;
-  total_perdidas: number;
-  valor_total: number;
-  estagios: FunnelStage[];
-}
+// ==================== Constants ====================
+const CACHE_KEY = "dashboard_simple_v2";
+const CACHE_EXPIRY = 3 * 60 * 1000;
 
-const CACHE_KEY = "dashboard_data";
-const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
-
-interface CachedData {
-  timestamp: number;
-  metrics: DashboardMetrics;
-  monthlyDispatches: MonthlyData[];
-  monthlyProspections: MonthlyData[];
-  dealMetrics: DealMetrics;
-  dailyDeals: DailyDeals[];
-  stageDeals: StageDeals[];
-  funnelData: FunnelData[];
-  startDate: string;
-  endDate: string;
-}
-
-export default function Dashboard() {
-  const [metrics, setMetrics] = useState<DashboardMetrics>({
-    isWhatsAppAtivo: false,
-    tokens: 0,
-    disparoEmAndamento: false,
-    numeroLeads: 0,
-    numeroProspeccoes: 0,
-    numeroDisparos: 0,
-  });
-
-  const [dealMetrics, setDealMetrics] = useState<DealMetrics>({
-    quantidade: 0,
-    valorMedio: 0,
-    quantidadeMedia: 0,
-    receitaGanha: 0,
-    receitaPerdida: 0,
-    qtdContatos: 0,
-    tokensGerais: 0,
-  });
-
-  const [funnelData, setFunnelData] = useState<FunnelData[]>([]);
-  const [activeFunnelIndex, setActiveFunnelIndex] = useState<number>(0);
-  const [expandedFunnels, setExpandedFunnels] = useState<number[]>([]);
-
-  const canViewCRMDashboard = hasPermission("can_view_dashboard_crm");
-  const canViewProspectDashboard = hasPermission(
-    "can_view_dashboard_prospeccao"
-  );
-  const [monthlyDispatches, setMonthlyDispatches] = useState<MonthlyData[]>([]);
-  const [monthlyProspections, setMonthlyProspections] = useState<MonthlyData[]>(
-    []
-  );
-  const [dailyDeals, setDailyDeals] = useState<DailyDeals[]>([]);
-  const [stageDeals, setStageDeals] = useState<StageDeals[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
-
-  const defaultEndDate = new Date().toISOString().slice(0, 10);
-  const defaultStart = new Date();
-  defaultStart.setDate(defaultStart.getDate() - 30);
-  const defaultStartDate = defaultStart.toISOString().slice(0, 10);
-
-  const [startDate, setStartDate] = useState<string>(defaultStartDate);
-  const [endDate, setEndDate] = useState<string>(defaultEndDate);
-
-  const user = localStorage.getItem("user");
-  const token = user ? JSON.parse(user).token : null;
-
-  const loadCachedData = () => {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      const data: CachedData = JSON.parse(cached);
-      const now = Date.now();
-      if (
-        now - data.timestamp < CACHE_EXPIRY &&
-        data.startDate === startDate &&
-        data.endDate === endDate
-      ) {
-        setMetrics(data.metrics);
-        setMonthlyDispatches(data.monthlyDispatches);
-        setMonthlyProspections(data.monthlyProspections);
-        setDealMetrics(data.dealMetrics);
-        setDailyDeals(data.dailyDeals);
-        setStageDeals(data.stageDeals);
-        if (data.funnelData) {
-          setFunnelData(data.funnelData);
-        }
-        setLoading(false);
-        return true;
-      }
-    }
-    return false;
-  };
-
-  const cacheData = (data: Partial<CachedData>) => {
-    const payload: CachedData = {
-      timestamp: Date.now(),
-      startDate,
-      endDate,
-      metrics: data.metrics ?? metrics,
-      monthlyDispatches: data.monthlyDispatches ?? [],
-      monthlyProspections: data.monthlyProspections ?? [],
-      dealMetrics: data.dealMetrics ?? dealMetrics,
-      dailyDeals: data.dailyDeals ?? [],
-      stageDeals: data.stageDeals ?? [],
-      funnelData: data.funnelData ?? [],
-    };
-    localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
-  };
-
-  const fetchData = async (isRefreshing = false) => {
-    if (!isRefreshing && loadCachedData()) {
-      return;
-    }
-
-    try {
-      if (isRefreshing) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-      setError("");
-
-      const crmResponse = await fetch(
-        "https://n8n.lumendigital.com.br/webhook/relatorio/crm/jus",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { token } : {}),
-          },
-          body: JSON.stringify({ dataInicio: startDate, dataFinal: endDate }),
-        }
-      );
-
-      const crmData = await crmResponse.json();
-
-      const crmMetrics = Array.isArray(crmData)
-        ? crmData.reduce((acc: any, cur: any) => ({ ...acc, ...cur }), {})
-        : crmData ?? {};
-
-      const newMetrics: DashboardMetrics = {
-        isWhatsAppAtivo: Boolean(crmMetrics.isWhatsAppAtivo),
-        tokens: Number(crmMetrics.tokens) || 0,
-        disparoEmAndamento: Boolean(crmMetrics.disparoEmAndamento),
-        qtdDisparosJaRealizados:
-          Number(crmMetrics.qtdDisparosJaRealizados) || 0,
-        numeroLeads: Number(crmMetrics.qtdContatos) || 0,
-        // Se removeu prospecção, deixe 0 (ou mapeie se existir no CRM)
-        numeroProspeccoes: 0,
-        numeroDisparos: Number(crmMetrics.qtdDisparosJaRealizados) || 0,
-      };
-
-      const newDealMetrics: DealMetrics = {
-        quantidade: Number(crmMetrics.qtdNegociacoes) || 0,
-        qtdContatos: Number(crmMetrics.qtdContatos) || 0,
-        tokensGerais: Number(crmMetrics.tokens) || 0,
-        valorMedio: Number(crmMetrics.valorMedioNegociacoes) || 0,
-        quantidadeMedia: Number(crmMetrics.qtdMediaNegociacoesDia) || 0,
-        receitaGanha: Number(crmMetrics.receita_ganha) || 0,
-        receitaPerdida: Number(crmMetrics.receita_perdida) || 0,
-      };
-
-      const dailyDealsData: DailyDeals[] = Array.isArray(
-        crmMetrics.negociacoesUltimos7Dias
-      )
-        ? crmMetrics.negociacoesUltimos7Dias
-        : [];
-
-      const stageDealsData: StageDeals[] = Array.isArray(
-        crmMetrics.negociacoesAbertasPorEstagio
-      )
-        ? crmMetrics.negociacoesAbertasPorEstagio
-        : [];
-      setMetrics(newMetrics);
-      setDealMetrics(newDealMetrics);
-      setDailyDeals(Array.isArray(dailyDealsData) ? dailyDealsData : []);
-      setStageDeals(Array.isArray(stageDealsData) ? stageDealsData : []);
-
-      // Cache the new data
-      cacheData({
-        metrics: newMetrics,
-        dealMetrics: newDealMetrics,
-        dailyDeals: dailyDealsData,
-        stageDeals: stageDealsData,
-        funnelData: [], // se não usa mais
-      });
-    } catch (err) {
-      console.error("Erro ao carregar dados:", err);
-      setError("Erro ao carregar informações do dashboard");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [startDate, endDate]);
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });;
-  };
-
-  // 1) Construa o range de datas com base no filtro e force o gráfico a usar exatamente esse range
+// ==================== Utils ====================
 const buildDateRange = (start: string, end: string) => {
   const out: string[] = [];
   const d = new Date(start);
@@ -324,433 +85,600 @@ const buildDateRange = (start: string, end: string) => {
   return out;
 };
 
-const dateRange = buildDateRange(startDate, endDate);
-const dealsByDay = new Map(dailyDeals.map(d => [d.dia, d.qtdLeads]));
-const dailyLabels = dateRange; // garante início e fim iguais ao filtro
-const dailyValues = dailyLabels.map(d => dealsByDay.get(d) ?? 0);
+const formatBR = (d: string) =>
+  new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 
-const dailyDealsChartData = {
-  labels: dailyLabels,
-  datasets: [
-    {
-      label: "Contatos",
-      data: dailyValues,
-      backgroundColor: "rgba(59, 130, 246, 0.7)",
-      borderColor: "rgb(59, 130, 246)",
-      borderWidth: 1,
-    },
-  ],
-};
+// ==================== Component ====================
+export default function Dashboard() {
+  const canViewCRMDashboard = hasPermission("can_view_dashboard_crm");
 
-  const stageDealsChartData = {
-    labels: stageDeals.map((s) => s.estagio),
+  // datas padrão: últimos 30 dias
+  const defaultEnd = new Date();
+  const defaultStart = new Date();
+  defaultStart.setDate(defaultStart.getDate() - 30);
+
+  const [startDate, setStartDate] = useState<string | null>(
+    defaultStart.toISOString().slice(0, 10)
+  );
+  const [endDate, setEndDate] = useState<string | null>(
+    defaultEnd.toISOString().slice(0, 10)
+  );
+
+  const [metrics, setMetrics] = useState<DashboardMetrics>({
+    isWhatsAppAtivo: false,
+    tokens: 0,
+    disparoEmAndamento: false,
+    numeroLeads: 0,
+    numeroProspeccoes: 0,
+    numeroDisparos: 0,
+  });
+  const [dealMetrics, setDealMetrics] = useState<DealMetrics>({
+    quantidade: 0,
+    valorMedio: 0,
+    quantidadeMedia: 0,
+    receitaGanha: 0,
+    receitaPerdida: 0,
+    qtdContatos: 0,
+    tokensGerais: 0,
+  });
+  const [dailyDeals, setDailyDeals] = useState<DailyDeals[]>([]);
+  const [stageDeals, setStageDeals] = useState<StageDeals[]>([]);
+  const [etiquetas, setEtiquetas] = useState<LabeledValue[]>([]);
+  const [error, setError] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showDateModal, setShowDateModal] = useState(false);
+
+  const user = localStorage.getItem("user");
+  const token = user ? JSON.parse(user).token : null;
+
+  // cache
+  const tryLoadCache = () => {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return false;
+    try {
+      const c = JSON.parse(raw);
+      const fresh = Date.now() - c.timestamp < CACHE_EXPIRY;
+      if (fresh) {
+        setMetrics(c.metrics);
+        setDealMetrics(c.dealMetrics);
+        setDailyDeals(c.dailyDeals);
+        setStageDeals(c.stageDeals);
+        setEtiquetas(c.etiquetas);
+        return true;
+      }
+    } catch {}
+    return false;
+  };
+
+  const saveCache = (data: any) => {
+    const payload = {
+      timestamp: Date.now(),
+      startDate,
+      endDate,
+      ...data,
+    };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+  };
+
+  useEffect(() => {
+    const hadCache = tryLoadCache();
+    fetchData(true, hadCache);
+  }, []);
+
+  useEffect(() => {
+    fetchData(true);
+  }, [startDate, endDate]);
+
+  // fetch principal
+  const fetchData = async (light = true, ignoreLoading = false) => {
+    try {
+      if (light && !ignoreLoading) setIsRefreshing(true);
+      setError("");
+
+      const body: any = {};
+      if (startDate) body.dataInicio = startDate;
+      if (endDate) body.dataFinal = endDate;
+
+      const res = await fetch(
+        "https://n8n.lumendigital.com.br/webhook/relatorio/crm/jus",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { token } : {}),
+          },
+          body: JSON.stringify(body),
+        }
+      );
+      const data = await res.json();
+      const crm = Array.isArray(data)
+        ? data.reduce((acc: any, cur: any) => ({ ...acc, ...cur }), {})
+        : data ?? {};
+
+      const newMetrics: DashboardMetrics = {
+        isWhatsAppAtivo: !!crm.isWhatsAppAtivo,
+        tokens: Number(crm.tokens) || 0,
+        disparoEmAndamento: !!crm.disparoEmAndamento,
+        qtdDisparosJaRealizados: Number(crm.qtdDisparosJaRealizados) || 0,
+        numeroLeads: Number(crm.qtdContatos) || 0,
+        numeroProspeccoes: 0,
+        numeroDisparos: Number(crm.qtdDisparosJaRealizados) || 0,
+      };
+
+      const newDeal: DealMetrics = {
+        quantidade: Number(crm.qtdNegociacoes) || 0,
+        qtdContatos: Number(crm.qtdContatos) || 0,
+        tokensGerais: Number(crm.tokens) || 0,
+        valorMedio: Number(crm.valorMedioNegociacoes) || 0,
+        quantidadeMedia: Number(crm.qtdMediaNegociacoesDia) || 0,
+        receitaGanha: Number(crm.receita_ganha) || 0,
+        receitaPerdida: Number(crm.receita_perdida) || 0,
+      };
+
+      const newDaily: DailyDeals[] = Array.isArray(crm.negociacoesUltimos7Dias)
+        ? crm.negociacoesUltimos7Dias
+        : [];
+      const newStages: StageDeals[] = Array.isArray(
+        crm.negociacoesAbertasPorEstagio
+      )
+        ? crm.negociacoesAbertasPorEstagio
+        : [];
+      const newEtiquetas: LabeledValue[] = Array.isArray(crm.etiquetas)
+        ? crm.etiquetas
+        : [];
+
+      setMetrics(newMetrics);
+      setDealMetrics(newDeal);
+      setDailyDeals(newDaily);
+      setStageDeals(newStages);
+      setEtiquetas(newEtiquetas);
+
+      saveCache({
+        metrics: newMetrics,
+        dealMetrics: newDeal,
+        dailyDeals: newDaily,
+        stageDeals: newStages,
+        etiquetas: newEtiquetas,
+      });
+    } catch (e) {
+      console.error(e);
+      setError("Erro ao carregar informações do dashboard");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // ===== Volume de conversas =====
+  const dateRange = useMemo(() => {
+    if (!startDate || !endDate) return dailyDeals.map((d) => d.dia);
+    return buildDateRange(startDate, endDate);
+  }, [startDate, endDate, dailyDeals]);
+
+  const dealsByDay = new Map(dailyDeals.map((d) => [d.dia, d.qtdLeads]));
+  const dailyValues = dateRange.map((d) => dealsByDay.get(d) ?? 0);
+
+  const lineData = {
+    labels: dateRange.map(formatBR),
     datasets: [
       {
-        label: "Quantidade",
-        data: stageDeals.map((s) => s.quantidade),
-        backgroundColor: "rgba(16, 185, 129, 0.7)",
-        borderColor: "rgb(16, 185, 129)",
-        borderWidth: 1,
+        label: "Volume de conversas",
+        data: dailyValues,
+        borderColor: "#1d4ed8",
+        borderWidth: 2.5,
+        tension: 0.4,
+        fill: true,
+        pointRadius: 0,
+        backgroundColor: (ctx: any) => {
+          const { chart } = ctx;
+          const { ctx: c, chartArea } = chart;
+          if (!chartArea) return "rgba(29,78,216,0.25)";
+          const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          g.addColorStop(0, "rgba(29,78,216,0.25)");
+          g.addColorStop(1, "rgba(29,78,216,0.02)");
+          return g;
+        },
       },
     ],
   };
 
-  const generateFunnelPieData = (funnel: FunnelData) => {
-    return {
-      labels: ["Em aberto", "Ganhos", "Perdidos"],
-      datasets: [
-        {
-          data: [
-            funnel.total_abertas,
-            funnel.total_ganhas,
-            funnel.total_perdidas,
-          ],
-          backgroundColor: [
-            "rgba(59, 130, 246, 0.7)", // Azul para abertos
-            "rgba(16, 185, 129, 0.7)", // Verde para ganhos
-            "rgba(239, 68, 68, 0.7)", // Vermelho para perdidos
-          ],
-          borderColor: [
-            "rgb(59, 130, 246)",
-            "rgb(16, 185, 129)",
-            "rgb(239, 68, 68)",
-          ],
-          borderWidth: 1,
-        },
-      ],
-    };
-  };
-
-  const generateFunnelStagesData = (funnel: FunnelData) => {
-    return {
-      labels: funnel.estagios.map((s) => s.nome),
-      datasets: [
-        {
-          label: "Quantidade",
-          data: funnel.estagios.map((s) => s.quantidade),
-          backgroundColor: "rgba(59, 130, 246, 0.7)",
-          borderColor: "rgb(59, 130, 246)",
-          borderWidth: 1,
-        },
-      ],
-    };
-  };
-
-  const generateFunnelValuesData = (funnel: FunnelData) => {
-    return {
-      labels: funnel.estagios.map((s) => s.nome),
-      datasets: [
-        {
-          label: "Valor (R$)",
-          data: funnel.estagios.map((s) => s.valor_total),
-          backgroundColor: "rgba(16, 185, 129, 0.7)",
-          borderColor: "rgb(16, 185, 129)",
-          borderWidth: 1,
-        },
-      ],
-    };
-  };
-
-  const chartOptions = {
+  const lineOptions: any = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: { mode: "index", intersect: false },
     plugins: {
-      legend: {
-        position: "top" as const,
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: "rgba(0,0,0,0.7)",
+        titleFont: { size: 12 },
+        bodyFont: { size: 13 },
+        padding: 10,
+        displayColors: false,
+        callbacks: {
+          label: (ctx: any) => `${ctx.parsed.y.toLocaleString()} conversas`,
+        },
       },
     },
     scales: {
       y: {
         beginAtZero: true,
-        ticks: {
-          precision: 0,
-        },
+        ticks: { precision: 0, color: "#94a3b8", font: { size: 11 } },
+        grid: { color: "rgba(148,163,184,0.15)" },
+      },
+      x: {
+        ticks: { color: "#94a3b8", font: { size: 11 } },
+        grid: { display: false },
       },
     },
   };
 
-  const pieChartOptions = {
+  // Status
+  const statusLabels = stageDeals.map((s) => s.estagio);
+  const statusValues = stageDeals.map((s) => s.quantidade || 0);
+  const statusData = {
+    labels: statusLabels,
+    datasets: [
+      {
+        data: statusValues,
+        backgroundColor: "#0ea5e9",
+        borderRadius: 999,
+        borderSkipped: false,
+        barThickness: 18,
+      },
+    ],
+  };
+  const statusOptions: any = {
+    indexAxis: "y",
+    plugins: { legend: { display: false }, tooltip: { intersect: false } },
     responsive: true,
     maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "right" as const,
-      },
-    },
-  };
-
-  const funnelChartOptions = {
-    ...chartOptions,
-    indexAxis: "y" as const,
-    elements: {
-      bar: {
-        borderWidth: 2,
-      },
-    },
-    responsive: true,
-    plugins: {
-      legend: {
-        display: false,
-      },
-      title: {
-        display: true,
-        text: "Leads por Estágio",
-      },
-    },
     scales: {
-      x: {
-        grid: {
-          display: false,
-        },
-      },
-      y: {
-        grid: {
-          display: false,
-        },
-      },
+      x: { grid: { display: false }, ticks: { precision: 0 } },
+      y: { grid: { display: false } },
     },
   };
 
-  if (loading) {
+  // Etiquetas
+  const etiquetasData = {
+    labels: etiquetas.map((e) => e.label),
+    datasets: [
+      {
+        data: etiquetas.map((e) => e.value),
+        backgroundColor: [
+          "#8b5cf6",
+          "#f43f5e",
+          "#22c55e",
+          "#60a5fa",
+          "#f59e0b",
+          "#06b6d4",
+          "#d946ef",
+        ],
+        borderColor: "#fff",
+        borderWidth: 3,
+        hoverOffset: 8,
+      },
+    ],
+  };
+  const etiquetasOptions: any = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: "right" } },
+    cutout: "60%",
+  };
+
+  // atalhos de período
+  const setToday = () => {
+    const d = new Date();
+    const v = d.toISOString().slice(0, 10);
+    setStartDate(v);
+    setEndDate(v);
+  };
+  const setLast7 = () => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - 6);
+    setStartDate(start.toISOString().slice(0, 10));
+    setEndDate(end.toISOString().slice(0, 10));
+  };
+  const setLast30 = () => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - 29);
+    setStartDate(start.toISOString().slice(0, 10));
+    setEndDate(end.toISOString().slice(0, 10));
+  };
+  const setThisMonth = () => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    setStartDate(start.toISOString().slice(0, 10));
+    setEndDate(end.toISOString().slice(0, 10));
+  };
+  const setLastMonth = () => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const end = new Date(now.getFullYear(), now.getMonth(), 0);
+    setStartDate(start.toISOString().slice(0, 10));
+    setEndDate(end.toISOString().slice(0, 10));
+  };
+
+  if (!canViewCRMDashboard) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="flex items-center justify-center h-[calc(100vh-6rem)] px-6">
+        <div className="text-center text-gray-700 bg-white/80 backdrop-blur border border-gray-200 rounded-2xl p-6 shadow-sm">
+          <AlertCircle className="w-12 h-12 mx-auto mb-3 text-amber-500" />
+          <p className="font-medium">
+            Você não tem permissão para visualizar o Dashboard.
+          </p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-        <div className="text-center text-red-600">
-          <AlertCircle className="w-12 h-12 mx-auto mb-4" />
-          <p>{error}</p>
-          <button
-            onClick={() => fetchData(true)}
-            className="mt-4 px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Tentar novamente
-          </button>
+      <div className="flex items-center justify-center h-[calc(100vh-6rem)] px-6">
+        <div className="text-center text-red-600 bg-red-50 border border-red-200 rounded-2xl p-6">
+          <AlertCircle className="w-12 h-12 mx-auto mb-3" />
+          <p className="font-medium">{error}</p>
+          <p className="text-sm text-red-500 mt-1">
+            Tente novamente em alguns instantes.
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <div className="px-6 py-8 space-y-12">
-        {/* Dados de Negociações */}
-        {canViewCRMDashboard && (
-          <section className="space-y-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
-                  <Users className="w-5 h-5 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-800">Contatos</h2>
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-600" htmlFor="start-date">
-                  Início:
-                </label>
-                <input
-                  id="start-date"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-1 text-sm"
-                />
-                <label className="text-sm text-gray-600" htmlFor="end-date">
-                  Fim:
-                </label>
-                <input
-                  id="end-date"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-1 text-sm"
-                />
-                <button
-            onClick={() => fetchData(true)}
-            disabled={refreshing}
-            className="group flex items-center gap-2 px-4 py-2 bg-white/60 hover:bg-white/80 border border-white/40 rounded-xl transition-all duration-200 disabled:opacity-50 shadow-sm hover:shadow-md"
-            title="Atualizar dados"
+    <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-indigo-50">
+      {/* Header */}
+      <div className="px-6 pt-8 pb-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+                Dashboard
+              </h1>
+              <p className="text-sm text-gray-500 -mt-0.5">
+                Visão geral das conversas e contatos
+              </p>
+            </div>
+            {isRefreshing && (
+              <span className="ml-2 text-[11px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                Atualizando…
+              </span>
+            )}
+          </div>
+
+          {/* Filtro de período */}
+          <button
+            onClick={() => setShowDateModal(true)}
+            className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 bg-white hover:bg-gray-50 shadow-sm"
           >
-            <RefreshCw
-              className={`w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors ${
-                refreshing ? "animate-spin" : ""
-              }`}
-            />
-            <span className="hidden sm:inline text-gray-600 group-hover:text-blue-600 font-medium">
-              {refreshing ? "Atualizando..." : "Atualizar"}
-            </span>
+            <Filter className="w-4 h-4 text-gray-500" />
+            <span className="text-sm">Período</span>
           </button>
-              </div>
-            </div>
+        </div>
+      </div>
 
-            {/* KPIs Principais + Métricas Secundárias */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Card - Média Diária */}
-              <div className="group bg-white rounded-2xl p-6 shadow-sm border border-purple-100 hover:shadow-xl hover:border-purple-200 transition-all duration-300">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-purple-600 uppercase tracking-wide">
-                      Média Diária
-                    </p>
-                    <p className="text-3xl font-bold text-gray-900">
-                      {dealMetrics.quantidadeMedia.toFixed(2)}
-                    </p>
-                    <div className="flex items-center gap-1 text-purple-600">
-                      <Calendar className="w-4 h-4" />
-                      <span className="text-xs font-medium">Contatos/dia</span>
-                    </div>
-                  </div>
-                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                    <Calendar className="w-6 h-6 text-purple-600" />
-                  </div>
+      {/* KPIs */}
+      <div className="px-6 pb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="group bg-white rounded-2xl p-6 shadow-sm border border-blue-100 hover:shadow-lg hover:border-blue-200 transition-all duration-300">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-blue-600 uppercase tracking-wide">
+                  Média Diária
+                </p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {dealMetrics.quantidadeMedia.toFixed(2)}
+                </p>
+                <div className="flex items-center gap-1 text-blue-600">
+                  <Calendar className="w-4 h-4" />
+                  <span className="text-xs font-medium">Contatos/dia</span>
                 </div>
               </div>
-
-              {/* Card - Total de Negociações */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 mb-2">
-                      Total de Contatos
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {dealMetrics.quantidade.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <GitBranch className="w-5 h-5 text-gray-600" />
-                  </div>
-                </div>
+              <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                <Calendar className="w-6 h-6 text-blue-600" />
               </div>
-            </div>
-
-            {/* Gráficos de Vendas */}
-<div className="grid grid-cols-1 gap-6">              <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                <div className="bg-white px-6 py-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                        <BarChart className="w-6 h-6 text-gray-900" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900">
-                          Contatos
-                        </h3>
-<p className="text-xs text-gray-500 mt-0.5">
-  {`${new Date(startDate).toLocaleDateString('pt-BR')} — ${new Date(endDate).toLocaleDateString('pt-BR')} (${Math.max(1, Math.floor((new Date(endDate).getTime()-new Date(startDate).getTime())/86400000)+1)} dias)`}
-</p>
-
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-6 bg-gradient-to-b from-gray-50 to-white">
-                  <div className="h-80">
-                    {dailyDeals.length > 0 ? (
-                      <Line
-options={{
-  ...chartOptions,
-  scales: {
-    x: {
-      ticks: {
-        callback: function (val) {
-          const date = new Date(this.getLabelForValue(val as number));
-          return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-        },
-      },
-    },
-  },
-  elements: {
-    line: { tension: 0.4, borderWidth: 3 },
-    point: { radius: 5, hoverRadius: 7, backgroundColor: "#fff", borderWidth: 3 },
-  },
-}}
-
-
-                        data={{
-                          ...dailyDealsChartData,
-                          datasets: dailyDealsChartData.datasets.map(
-                            (dataset) => ({
-                              ...dataset,
-                              fill: true,
-                              backgroundColor: "rgba(99, 102, 241, 0.1)",
-                              borderColor: "rgb(99, 102, 241)",
-                            })
-                          ),
-                        }}
-                      />
-                    ) : (
-                      <div className="h-full flex flex-col items-center justify-center">
-                        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                          <BarChart className="w-10 h-10 text-gray-300" />
-                        </div>
-                        <p className="text-sm font-medium text-gray-500">
-                          Nenhum dado disponível
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          Os dados aparecerão aqui
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                <div className="bg-white px-6 py-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                        <PieChart className="w-6 h-6 text-gray-900" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900">
-                          Distribuição
-                        </h3>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          Por estágio do funil
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-6 bg-gradient-to-b from-gray-50 to-white">
-  <div className="flex flex-col lg:flex-row gap-6 items-center justify-center">
-    {/* Gráfico */}
-    <div className="h-80 w-80 flex items-center justify-center">
-      <Doughnut
-        options={{
-          ...funnelChartOptions,
-          cutout: "65%",
-          plugins: {
-            ...funnelChartOptions.plugins,
-            legend: { display: false }, // escondemos a legenda nativa
-          },
-        }}
-        data={{
-          ...stageDealsChartData,
-          datasets: stageDealsChartData.datasets.map((dataset) => ({
-            ...dataset,
-            backgroundColor: [
-              "rgba(147, 51, 234, 0.8)",
-              "rgba(236, 72, 153, 0.8)",
-              "rgba(59, 130, 246, 0.8)",
-              "rgba(16, 185, 129, 0.8)",
-              "rgba(251, 146, 60, 0.8)",
-            ],
-            borderColor: "#fff",
-            borderWidth: 3,
-            hoverOffset: 8,
-          })),
-        }}
-      />
-    </div>
-
-    {/* Lista de distribuição */}
-    <div className="flex-1 space-y-3">
-      {stageDealsChartData.labels.map((label, i) => {
-        const total = stageDealsChartData.datasets[0].data.reduce(
-          (acc, val) => acc + val,
-          0
-        );
-        const value = stageDealsChartData.datasets[0].data[i];
-        const percent = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-
-        return (
-          <div
-            key={label}
-            className="flex items-center justify-between bg-white border rounded-lg p-3 shadow-sm"
-          >
-            <div className="flex items-center gap-2">
-              <span
-                className="w-3 h-3 rounded-full"
-                style={{
-                  backgroundColor:
-                    stageDealsChartData.datasets[0].backgroundColor[i],
-                }}
-              />
-              <span className="text-sm font-medium text-gray-700">{label}</span>
-            </div>
-            <div className="text-sm text-gray-600">
-              {value} ({percent}%)
             </div>
           </div>
-        );
-      })}
-    </div>
-  </div>
-</div>
 
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-2">
+                  Total de Contatos
+                </p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {dealMetrics.quantidade.toLocaleString()}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center">
+                <GitBranch className="w-6 h-6 text-gray-600" />
               </div>
             </div>
-          </section>
-        )}
+          </div>
+        </div>
       </div>
+
+      {/* Charts */}
+      <div className="px-6 pb-10">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_380px] gap-6">
+          {/* Left */}
+          <div className="space-y-6">
+            {/* Conversas */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-white px-6 py-5 flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                  <BarIcon className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Volume de conversas
+                </h3>
+              </div>
+              <div className="p-6 bg-gradient-to-b from-gray-50 to-white">
+                <div className="h-80">
+                  {lineData.labels.length ? (
+                    <Line data={lineData} options={lineOptions} />
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-sm text-gray-500">
+                      Sem dados para o período selecionado.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Etiquetas */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-white px-6 py-5 flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
+                  <PieIcon className="w-6 h-6 text-purple-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">Etiquetas</h3>
+              </div>
+              <div className="px-6 pb-6">
+                {etiquetasData.datasets[0].data.some((v) => v > 0) ? (
+                  <div className="mx-auto" style={{ width: 240, height: 240 }}>
+                    <Doughnut data={etiquetasData} options={etiquetasOptions} />
+                  </div>
+                ) : (
+                  <div className="h-44 flex items-center justify-center text-sm text-gray-500">
+                    Nenhum dado de etiquetas no período.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Status */}
+          <aside className="space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-white px-6 py-5 flex items-center gap-3">
+                <div className="w-10 h-10 bg-cyan-50 rounded-xl flex items-center justify-center">
+                  <GitBranch className="w-6 h-6 text-cyan-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">Status</h3>
+              </div>
+              <div className="p-6">
+                <div className="h-[360px]">
+                  {statusData.datasets[0].data.some((v) => v > 0) ? (
+                    <Bar data={statusData} options={statusOptions} />
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-sm text-gray-500">
+                      Nenhum dado de status no período.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      {/* Modal de período */}
+      {showDateModal && (
+        <div className="fixed inset-0 z-[9999]">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowDateModal(false)}
+          />
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-blue-700" />
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Selecionar Período
+                  </h3>
+                </div>
+                <button
+                  className="p-2 rounded hover:bg-gray-100"
+                  onClick={() => setShowDateModal(false)}
+                >
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-6 py-6">
+                {/* Atalhos */}
+                <div className="md:col-span-1">
+                  <p className="text-sm font-medium text-gray-700 mb-3">
+                    Filtro rápido
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-1 gap-2">
+                    <button
+                      onClick={setToday}
+                      className="px-3 py-2 text-sm bg-white border rounded-lg hover:bg-gray-50"
+                    >
+                      Hoje
+                    </button>
+                    <button
+                      onClick={setLast7}
+                      className="px-3 py-2 text-sm bg-white border rounded-lg hover:bg-gray-50"
+                    >
+                      Últimos 7 dias
+                    </button>
+                    <button
+                      onClick={setLast30}
+                      className="px-3 py-2 text-sm bg-white border rounded-lg hover:bg-gray-50"
+                    >
+                      Últimos 30 dias
+                    </button>
+                    <button
+                      onClick={setThisMonth}
+                      className="px-3 py-2 text-sm bg-white border rounded-lg hover:bg-gray-50"
+                    >
+                      Este mês
+                    </button>
+                    <button
+                      onClick={setLastMonth}
+                      className="px-3 py-2 text-sm bg-white border rounded-lg hover:bg-gray-50"
+                    >
+                      Mês passado
+                    </button>
+                  </div>
+                </div>
+
+                {/* Seleção manual */}
+                <div className="md:col-span-2 bg-gray-50 rounded-xl p-4 border">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs text-gray-600">Início</label>
+                      <input
+                        type="date"
+                        value={startDate ?? ""}
+                        onChange={(e) => setStartDate(e.target.value || null)}
+                        className="w-full px-3 py-2 text-sm border rounded-lg bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-600">Fim</label>
+                      <input
+                        type="date"
+                        value={endDate ?? ""}
+                        onChange={(e) => setEndDate(e.target.value || null)}
+                        className="w-full px-3 py-2 text-sm border rounded-lg bg-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center justify-end gap-2">
+                    <button
+                      className="text-sm px-4 py-2 rounded-lg border hover:bg-white"
+                      onClick={() => setShowDateModal(false)}
+                    >
+                      Aplicar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

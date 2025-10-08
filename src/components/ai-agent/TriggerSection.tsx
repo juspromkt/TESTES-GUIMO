@@ -111,7 +111,7 @@ export default function TriggerSection({ token, canEdit }: TriggerSectionProps) 
         </div>
         <div className="flex-1">
           <h2 className="text-xl font-semibold text-gray-900">Gatilho de Acionamento</h2>
-          <p className="text-sm text-gray-500 mt-1">Configure o gatilho que ativará o agente</p>
+          <p className="text-sm text-gray-500 mt-1">Configure o gatilho que ativará a IA (é recomendado deixar o gatilho desativado para que a IA ative em todos os leads que entrarem em contato)</p>
         </div>
               {canEdit && (
         <label className="relative inline-flex items-center cursor-pointer">

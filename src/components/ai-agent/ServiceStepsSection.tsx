@@ -496,7 +496,7 @@ export default function ServiceStepsSection({
                                   className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50 mb-2"
                                 >
                                   <Upload className="w-4 h-4" />
-                                  Adicionar Mídia
+                                  Adicionar Mídia - Suporta imagens, vídeos, áudios e PDFs (máx. 63MB)
                                 </button>
                               </>
                             )}
@@ -564,7 +564,7 @@ export default function ServiceStepsSection({
                                     <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></div>
                                   </div>
                                   <span className="text-sm text-gray-700">
-                                    Atribuir automaticamente usuário ao lead
+                                    Transferir o atendimento para um usuário (use junto com "Desativar a IA nessa etapa")
                                   </span>
                                 </label>
                               </div>
@@ -696,7 +696,7 @@ export default function ServiceStepsSection({
                                   <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-orange-500 transition-colors"></div>
                                   <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></div>
                                 </div>
-                                <span className="text-sm text-gray-700">Interromper agente nessa etapa</span>
+                                <span className="text-sm text-gray-700">Desativar a IA nessa etapa</span>
                               </label>
                             </div>
                           )}
