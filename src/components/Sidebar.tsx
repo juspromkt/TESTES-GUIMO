@@ -103,6 +103,7 @@ const Sidebar = () => {
   const [isHovered, setIsHovered] = useState(false); // Novo estado para hover
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isTutorialModalOpen, setIsTutorialModalOpen] = useState(false);
+  const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -143,6 +144,10 @@ const Sidebar = () => {
   const currentUserId = storedUser?.id_usuario;
   const currentClientId = storedUser?.id_cliente;
 
+  const currentWorkspaceName =
+  storedUser?.nome_cliente ??
+  'Desconhecido';
+
   const isMobile = window.innerWidth < 768;
 
   // Determina se a sidebar deve aparecer expandida (hover ou não colapsada)
@@ -176,7 +181,7 @@ const Sidebar = () => {
       return 'left-full top-0 ml-4 w-72';
     }
 
-    return 'left-0 top-full w-full';
+    return 'left-0 top-full w-[22rem]';
   }, [isMobile, isCollapsed, isHovered]);
 
   const hasLinkedAccountSearch = linkedAccountsSearch.trim().length > 0;
@@ -547,7 +552,7 @@ const Sidebar = () => {
         id="sidebar-container"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className={`relative transition-all duration-500 ease-in-out ${domainConfig.getSidebarColor()} ${
+        className={`relative transition-all duration-500 ease-in-out bg-[#f9fafb] ${
           isMobile
             ? 'fixed top-0 left-0 h-20 w-full flex flex-row items-center justify-between px-6 z-50 backdrop-blur-sm border-b border-white/10'
             : `fixed top-0 left-0 bottom-0 flex flex-col z-50 backdrop-blur-md border-r border-white/10 ${isExpanded ? 'w-56' : 'w-16'}`
@@ -608,123 +613,9 @@ const Sidebar = () => {
               ref={linkedAccountsRef}
               className={`${isMobile ? 'relative flex-shrink-0' : 'relative w-full'}`}
             >
-              <button
-                onClick={handleLinkedAccountsClick}
-                className={`group relative w-full flex items-center gap-3 px-3 py-3 mx-1 my-0.5 rounded-xl transition-all duration-300 ${
-                  isLinkedAccountsOpen
-                    ? `${domainConfig.getActiveBg()} ${domainConfig.getActiveColor()} shadow-lg transform scale-[1.02]`
-                    : `${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} hover:transform hover:scale-[1.02] hover:shadow-md`
-                } ${isExpanded ? '' : 'justify-center px-3'}`}
-                title={isExpanded ? undefined : 'Workspacess'}
-              >
-                {isLinkedAccountsOpen && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-xl opacity-80"></div>
-                )}
-                <div
-                  className={`relative z-10 p-2 rounded-lg transition-all duration-300 ${
-                    isLinkedAccountsOpen
-                      ? 'bg-white/20 shadow-md transform rotate-3'
-                      : 'group-hover:bg-white/10 group-hover:scale-110'
-                  }`}
-                >
-                  <Users className="w-6 h-6 transition-transform duration-300" />
-                </div>
-                {isExpanded && (
-                  <div className="relative z-10 flex items-center justify-between gap-2 flex-1">
-                    <span className="text-sm font-semibold tracking-wide">
-                      Workspaces
-                    </span>
-                    <ChevronDown
-                      className={`w-4 h-4 transition-transform duration-300 ${
-                        isLinkedAccountsOpen ? 'rotate-180' : ''
-                      }`}
-                    />
-                  </div>
-                )}
-              </button>
 
-              {isLinkedAccountsOpen && (
-                <div
-                  className={`${linkedAccountsPanelPositionClasses} absolute z-50 mt-2 rounded-xl border border-gray-200/60 shadow-2xl bg-white/95 backdrop-blur-xl p-4`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[11px] uppercase tracking-wider font-semibold text-gray-500">
-                      Workspaces
-                    </p>
-                    <span className="text-[11px] font-medium text-gray-400">
-                      {linkedAccounts.length}
-                    </span>
-                  </div>
-                  <div className="relative mb-3">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      value={linkedAccountsSearch}
-                      onChange={(event) => setLinkedAccountsSearch(event.target.value)}
-                      placeholder="Buscar Workspace..."
-                      className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-gray-200 bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                    />
-                  </div>
-                  {linkedAccountsLoading ? (
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Carregando contas...</span>
-                    </div>
-                  ) : linkedAccountsError ? (
-                    <p className="text-xs text-rose-500">{linkedAccountsError}</p>
-                  ) : linkedAccounts.length === 0 ? (
-                    <p className="text-xs text-gray-500">Nenhuma conta vinculada disponível.</p>
-                  ) : filteredLinkedAccounts.length === 0 && hasLinkedAccountSearch ? (
-                    <p className="text-xs text-gray-500">Nenhuma conta corresponde à pesquisa.</p>
-                  ) : (
-                    <div
-                      className="space-y-2 max-h-56 overflow-y-auto pr-1"
-                      style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(148, 163, 184, 0.6) transparent' }}
-                    >
-                      {filteredLinkedAccounts.map((account, index) => {
-  const accountKey = `${account.id_cliente ?? 'n'}-${account.id_usuario ?? 'n'}-${index}`;
-  const hasIdentifiers = account.id_cliente !== undefined && account.id_usuario !== undefined;
-  const isCurrentAccount =
-    hasIdentifiers &&
-    account.id_cliente === currentClientId &&
-    account.id_usuario === currentUserId;
-  const isSwitching = switchingAccountKey === accountKey;
 
-  const buttonStateClasses = isCurrentAccount
-    ? 'bg-emerald-50 border border-emerald-300 text-emerald-900 shadow-sm'
-    : 'bg-white border border-gray-200 text-gray-800 hover:bg-emerald-50/60 hover:border-emerald-400 hover:shadow-sm';
 
-  return (
-    <button
-      key={accountKey}
-      onClick={() => handleWorkspaceSwitch(account, accountKey)}
-      disabled={isSwitching || isCurrentAccount}
-      className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${buttonStateClasses}`}
-    >
-      <div className="flex items-center justify-between">
-        <span className="truncate">{account.nome_cliente ?? 'Sem nome'}</span>
-
-        {isSwitching && (
-          <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
-        )}
-
-        {isCurrentAccount && (
-          <span className="text-[10px] text-emerald-600 font-bold uppercase ml-2">
-            Atual
-          </span>
-        )}
-      </div>
-    </button>
-  );
-})}
-
-                    </div>
-                  )}
-                  {workspaceSwitchError && (
-                    <p className="mt-3 text-[11px] font-medium text-rose-500">{workspaceSwitchError}</p>
-                  )}
-                </div>
-              )}
             </div>
 
 {getMenuItems().map((item) =>
@@ -782,6 +673,8 @@ const Sidebar = () => {
           </svg>
         </div>
 
+        
+
         {isExpanded && !isMobile && (
           <span className="text-sm font-semibold tracking-wide relative z-10">
             Suporte
@@ -812,6 +705,32 @@ const Sidebar = () => {
 
         {!isMobile && (
           <div className="relative z-10 p-3 border-t border-white/10 backdrop-blur-sm">
+            {/* Novo botão Workspaces */}
+<div className="relative mb-4">
+  <button
+    onClick={() => setIsWorkspaceModalOpen(true)}
+    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl
+               bg-white/60 backdrop-blur-sm border border-gray-200/70
+               hover:bg-white hover:shadow-md
+               transition-all duration-300 text-gray-800 group"
+  >
+    <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors duration-300">
+      <Users className="w-5 h-5" />
+    </div>
+    {isExpanded && (
+      <div className="flex flex-col items-start text-left">
+        <span className="text-[13px] font-semibold tracking-tight group-hover:text-emerald-700">
+          Workspace
+        </span>
+        <span className="text-xs text-gray-500 truncate mt-[2px]">
+          {currentWorkspaceName ?? 'Desconhecido'}
+        </span>
+      </div>
+    )}
+  </button>
+</div>
+
+
             {isExpanded && (
               <div className="relative">
                 <button
@@ -989,7 +908,132 @@ const Sidebar = () => {
             </div>
           </form>
         </div>
-      </Modal>    
+      </Modal>
+<Modal
+  isOpen={isWorkspaceModalOpen}
+  onClose={() => setIsWorkspaceModalOpen(false)}
+  title="Selecionar Workspace"
+  maxWidth="lg"
+>
+  <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200/50 p-6 space-y-6">
+    {/* 🧭 BLOCO SUPERIOR - WORKSPACE ATUAL */}
+    <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl flex items-start gap-3">
+      <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+        <GitBranch className="w-5 h-5" />
+      </div>
+      <div className="flex flex-col">
+        <span className="text-sm font-medium text-gray-700">
+          Você está no workspace:
+        </span>
+        <span className="text-base font-semibold text-emerald-700">
+          {storedUser?.nome_cliente ?? 'Desconhecido'}
+        </span>
+        <p className="text-xs text-gray-500 mt-1">
+          Selecione outro workspace abaixo para mudar.
+        </p>
+      </div>
+    </div>
+
+    {/* 🧭 CABEÇALHO */}
+    <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+      <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+        <Users className="w-5 h-5 text-emerald-600" />
+        Workspaces
+      </h2>
+      <span className="text-sm text-gray-400">{linkedAccounts.length}</span>
+    </div>
+
+    {/* 🔍 CAMPO DE BUSCA */}
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <input
+        type="text"
+        value={linkedAccountsSearch}
+        onChange={(e) => setLinkedAccountsSearch(e.target.value)}
+        placeholder="Buscar workspace..."
+        className="w-full pl-9 pr-3 py-2.5 text-sm rounded-lg border border-gray-200 bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+      />
+    </div>
+
+    {/* 🧾 LISTA DE WORKSPACES */}
+    <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
+      {linkedAccountsLoading ? (
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Carregando contas...</span>
+        </div>
+      ) : linkedAccountsError ? (
+        <p className="text-sm text-rose-500">{linkedAccountsError}</p>
+      ) : filteredLinkedAccounts.length === 0 ? (
+        <p className="text-sm text-gray-500">Nenhuma conta encontrada.</p>
+      ) : (
+        filteredLinkedAccounts.map((account, index) => {
+          // Normaliza IDs
+          const accClientId =
+            account.id_cliente ??
+            account.id_cliente_atual ??
+            account.cliente_id ??
+            account.company_id;
+
+          const accUserId =
+            account.id_usuario ??
+            account.id_usuario_atual ??
+            account.usuario_id ??
+            account.user_id;
+
+          const accountKey = `${accClientId ?? 'n'}-${accUserId ?? 'n'}-${index}`;
+          const isCurrent =
+            String(accClientId) === String(currentClientId) &&
+            String(accUserId) === String(currentUserId);
+          const isSwitching = switchingAccountKey === accountKey;
+
+          return (
+            <button
+              key={accountKey}
+              onClick={() => handleWorkspaceSwitch(account, accountKey)}
+              disabled={isSwitching || isCurrent}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium border transition-all duration-200 ${
+                isCurrent
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-800 shadow-sm'
+                  : 'bg-white border-gray-200 text-gray-700 hover:bg-emerald-50/70 hover:border-emerald-400 hover:shadow-sm'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                    isCurrent ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  <GitBranch className="w-4 h-4" />
+                </div>
+                <span className="truncate">{account.nome_cliente ?? 'Sem nome'}</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {isSwitching && <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />}
+                {isCurrent && (
+                  <span className="text-[11px] font-bold text-emerald-600 uppercase bg-emerald-100 px-2 py-1 rounded-lg">
+                    Ativo
+                  </span>
+                )}
+              </div>
+            </button>
+          );
+        })
+      )}
+    </div>
+
+    {/* ⚠️ MENSAGEM DE ERRO */}
+    {workspaceSwitchError && (
+      <p className="mt-3 text-sm font-medium text-rose-500">{workspaceSwitchError}</p>
+    )}
+  </div>
+</Modal>
+
+
+
+
+    
     </> 
   );
 };

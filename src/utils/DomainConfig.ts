@@ -2,22 +2,36 @@ export class DomainConfig {
   private static instance: DomainConfig;
   private isCustomDomain: boolean;
   private readonly STORAGE_KEY = 'domain_config';
-  private readonly CUSTOM_DOMAINS = ['app.gestao10x.com', 'crm.converteai.app.br', 'app.closeia.pro', 'app.atomdigital.com.br', 'crm.sharkinteligenciacomercial.com.br', 'app.agentesia.com.br', 'app.renoveia.com', 'crm.lumendigital.com.br', 'app.aivia.chat', 'admin.prospectax.site'];
+  private readonly CUSTOM_DOMAINS = [
+    'app.gestao10x.com',
+    'crm.converteai.app.br',
+    'app.closeia.pro',
+    'app.atomdigital.com.br',
+    'crm.sharkinteligenciacomercial.com.br',
+    'app.agentesia.com.br',
+    'app.renoveia.com',
+    'crm.lumendigital.com.br',
+    'app.aivia.chat',
+    'admin.prospectax.site'
+  ];
 
   private readonly DOMAIN_THEMES = {
     'default': {
-      gradient: 'from-[#f0f0f0] to-[#f0f0f0]',
+      gradient: 'from-[#f9fafb] to-[#f9fafb]',
       path: '/guimoo',
-      activeColor: 'text-white',
-      defaultColor: 'text-dark',
-      hoverBg: 'hover:bg-white/30',
-      activeBg: 'bg-[#762297]',
-      sidebarBg: 'bg-gradient-to-b from-[#f0f0f0] to-[#f0f0f0]',
-      profileBg: 'bg-white/10',
-      textLoginColor: 'text-white/100',
+
+      // 🎨 Cores neutras
+      activeColor: 'text-gray-900',
+      defaultColor: 'text-gray-700',
+      hoverBg: 'hover:bg-gray-100',
+      activeBg: 'bg-white border border-gray-200 shadow-sm',
+      sidebarBg: 'bg-[#f9fafb]',
+      profileBg: 'bg-gray-100',
+      textLoginColor: 'text-gray-900',
+
       colors: {
-        primary: 'blue',
-        secondary: 'purple',
+        primary: 'gray',
+        secondary: 'slate',
         accent: 'emerald'
       }
     }
@@ -57,7 +71,7 @@ export class DomainConfig {
     return this.isCustomDomain;
   }
 
-    getTextLoginColor(): string {
+  getTextLoginColor(): string {
     return this.getDomainTheme().textLoginColor;
   }
 
