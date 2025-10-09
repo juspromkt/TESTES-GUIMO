@@ -12,7 +12,7 @@ const MainLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const isChatPage = location.pathname === '/conversas';
 
-  // Detect if mobile
+  // Detecta se é mobile
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -22,27 +22,27 @@ const MainLayout = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Verify session and refresh permissions
+  // Verifica sessão e permissões
   useEffect(() => {
     const checkSession = () => {
       if (checkSessionExpiration()) {
         navigate('/');
         return;
       }
-      
-      // Refresh permissions on page reload/navigation
+
       const user = localStorage.getItem('user');
       if (user) {
         const token = JSON.parse(user).token;
         fetchUserPermissions(token);
       }
     };
+
     checkSession();
     const interval = setInterval(checkSession, 60000);
     return () => clearInterval(interval);
   }, [navigate]);
 
-  // Listen for sidebar collapsed state changes
+  // Monitora o estado de colapso da sidebar
   useEffect(() => {
     const checkCollapsedState = () => {
       const sidebarContainer = document.getElementById('sidebar-container');
@@ -52,19 +52,15 @@ const MainLayout = () => {
       }
     };
 
-    // Check immediately
     checkCollapsedState();
-
-    // Check on mouse events for hover detection
     const interval = setInterval(checkCollapsedState, 50);
-    
     return () => clearInterval(interval);
   }, [location.pathname]);
 
   return (
     <>
       {isMobile ? (
-        // MOBILE: tudo em coluna, Sidebar no topo e conteúdo abaixo
+        // 📱 MOBILE: Sidebar no topo, conteúdo abaixo
         <div className="flex flex-col min-h-screen w-full overflow-x-hidden">
           <div className="fixed top-0 left-0 right-0 z-50">
             <Sidebar />
@@ -75,55 +71,46 @@ const MainLayout = () => {
           </main>
         </div>
       ) : (
-        // DESKTOP: sidebar à esquerda fixa e conteúdo ao lado
-<div className="flex w-full">
-  {/* Sidebar fixa */}
-  <div className="sticky top-0 h-screen">
+        // 💻 DESKTOP: Sidebar fixa e sobreposta
+        <div className="relative w-full min-h-screen">
+          {/* Sidebar fixa sobreposta (não empurra conteúdo) */}
           <Sidebar />
-                  </div>
 
-          {/* Main Content Area */} 
-          <div 
-            className={`flex-1 min-h-screen transition-all duration-300 ${
-              sidebarCollapsed ? 'ml-0' : 'ml-0'
-            } ${isChatPage ? 'p-0' : 'mr-2'}`}
-            style={{
-              marginLeft: sidebarCollapsed ? '' : '',
-            }}
-          >
-            <main className={`w-full min-h-screen ${
-              isChatPage
-                ? 'p-0'
-                : 'p-4 md:p-6 lg:p-8'
-            }`}>
-              <DemoBanner />
-              <div className="w-full max-w-none">
-                <Outlet />
-              </div>
-            </main>
-          </div>
+          {/* Conteúdo principal ocupando toda a tela */}
+          <main
+  className={`w-full min-h-screen relative z-0 transition-all duration-300 ${
+    isChatPage
+      ? 'p-0 pl-16' // Chat precisa só de espaço fixo
+      : 'p-4 md:p-6 lg:p-8 pl-20' // dá margem à esquerda
+  }`}
+  style={{
+    paddingLeft: '4.5rem', // garante espaço quando a sidebar está sobreposta
+  }}
+>
+            <DemoBanner />
+            <div className="w-full max-w-none">
+              <Outlet />
+            </div>
+          </main>
         </div>
       )}
-      
-      {/* Custom Styles for smooth transitions */}
+
+      {/* 🎨 Estilos extras */}
       <style jsx>{`
-        /* Ensure smooth sidebar transitions */
         #sidebar-container {
           transition: width 0.3s ease-in-out;
         }
-        
-        /* Prevent horizontal overflow */
+
         body {
           overflow-x: hidden;
         }
-        
-        /* Responsive adjustments */
+
         @media (max-width: 768px) {
           .sidebar-desktop {
             display: none;
           }
         }
-        
+
         @media (min-width: 769px) {
           .sidebar-mobile {
             display: none;

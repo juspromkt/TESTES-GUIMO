@@ -547,21 +547,22 @@ const Sidebar = () => {
 
   return (
     <>
-      <div 
-        ref={sidebarRef}
-        id="sidebar-container"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        className={`relative transition-all duration-500 ease-in-out bg-[#f9fafb] ${
-          isMobile
-            ? 'fixed top-0 left-0 h-20 w-full flex flex-row items-center justify-between px-6 z-50 backdrop-blur-sm border-b border-white/10'
-            : `fixed top-0 left-0 bottom-0 flex flex-col z-50 backdrop-blur-md border-r border-white/10 ${isExpanded ? 'w-56' : 'w-16'}`
-        }`}
-        style={{ 
-          height: isMobile ? '80px' : '100%',
-          minHeight: isMobile ? '80px' : '100vh'
-        }}
-      >
+<div
+  ref={sidebarRef}
+  id="sidebar-container"
+  onMouseEnter={handleMouseEnter}
+  onMouseLeave={handleMouseLeave}
+  className={`fixed top-0 left-0 bottom-0 z-[9999] transition-all duration-500 ease-in-out transform ${
+    domainConfig.getSidebarColor()
+  } border-r border-gray-100 backdrop-blur-md shadow-xl
+  ${isExpanded ? 'w-56' : 'w-16'}
+  `}
+  style={{
+    willChange: 'width, transform',
+  }}
+>
+
+
         {/* Background overlay */}
         {!isMobile && (
           <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-white/2 backdrop-blur-sm"></div>
@@ -704,7 +705,7 @@ const Sidebar = () => {
 
 
         {!isMobile && (
-          <div className="relative z-10 p-3 border-t border-white/10 backdrop-blur-sm">
+          <div className="absolute bottom-0 left-0 w-full z-20 border-t border-white/10 backdrop-blur-sm bg-white/30 p-3">
             {/* Novo botão Workspaces */}
 <div className="relative mb-4">
   <button
