@@ -483,148 +483,149 @@ const canEditContacts = hasPermission('can_edit_contacts');
         </div>
       )}
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-<div className="bg-white rounded-lg shadow-lg overflow-hidden max-w-2xl mx-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {selectedContato ? 'Editar Contato' : 'Novo Contato'}
-              </h2>
-              <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  resetForm();
-                }}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <X className="w-5 h-5" />
-              </button>
+     {isModalOpen && (
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
+      {/* Cabeçalho */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-900">
+          {selectedContato ? 'Editar Contato' : 'Novo Contato'}
+        </h2>
+        <button
+          onClick={() => {
+            setIsModalOpen(false);
+            resetForm();
+          }}
+          className="text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Conteúdo */}
+      {isConfirmingDelete ? (
+        <div className="p-6">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+              <AlertCircle className="w-6 h-6 text-red-600" />
             </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Confirmar Exclusão
+              </h3>
+              <p className="text-gray-500 mt-1">
+                Tem certeza que deseja excluir o contato "{selectedContato?.nome}"?
+              </p>
+            </div>
+          </div>
 
-            {isConfirmingDelete ? (
-              <div className="p-6">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                    <AlertCircle className="w-6 h-6 text-red-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      Confirmar Exclusão
-                    </h3>
-                    <p className="text-gray-500 mt-1">
-                      Tem certeza que deseja excluir o contato "{selectedContato?.nome}"?
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => setIsConfirmingDelete(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md"
-                  >
-                    Sim, Excluir
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="p-6">
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-2">
-                      Nome *
-                    </label>
-                    <input
-                      type="text"
-                      id="nome"
-                      value={formData.nome}
-                      onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                      className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      placeholder="Digite o nome do contato..."
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      value={formData.Email}
-                      onChange={(e) => setFormData({ ...formData, Email: e.target.value })}
-                      className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      placeholder="Digite o email do contato..."
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 mb-2">
-                      Telefone
-                    </label>
-                    <input
-                      type="tel"
-                      id="telefone"
-                      value={formData.telefone}
-                      onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                      className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      placeholder="Digite o telefone do contato..."
-                    />
-                  </div>
-
-                  <div className="flex justify-between items-center pt-4">
-                    {selectedContato && (
-                      <button
-                        type="button"
-                        onClick={() => setIsConfirmingDelete(true)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 border border-red-300 rounded-md"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Excluir
-                      </button>
-                    )}
-                    <div className="flex gap-3 ml-auto">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsModalOpen(false);
-                          resetForm();
-                        }}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md"
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={submitting}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
-                      >
-                        {submitting ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>Salvando...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Check className="w-4 h-4" />
-                            <span>Salvar</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </form>
-            )}
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setIsConfirmingDelete(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg transition-all"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleDelete}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all"
+            >
+              Sim, Excluir
+            </button>
           </div>
         </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {/* Nome */}
+          <div>
+            <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">
+              Nome *
+            </label>
+            <input
+              type="text"
+              id="nome"
+              value={formData.nome}
+              onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 placeholder-gray-400"
+              placeholder="Digite o nome do contato..."
+              required
+            />
+          </div>
+
+          {/* Email */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              value={formData.Email}
+              onChange={(e) => setFormData({ ...formData, Email: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 placeholder-gray-400"
+              placeholder="Digite o email do contato..."
+            />
+          </div>
+
+          {/* Telefone */}
+          <div>
+            <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 mb-1">
+              Telefone
+            </label>
+            <input
+              type="tel"
+              id="telefone"
+              value={formData.telefone}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, '');
+                if (raw.length <= 13) {
+                  setFormData({ ...formData, telefone: raw });
+                }
+              }}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 placeholder-gray-400"
+              placeholder="55 XX XXXXXXXXX"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              O número deve estar no formato (ex: 5511999999999). Apenas números.
+            </p>
+          </div>
+
+          {/* Botões */}
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setIsModalOpen(false);
+                resetForm();
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 transition-all"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Salvando...</span>
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Salvar</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       )}
+    </div>
+  </div>
+)}
+
 
       <Modal
         isOpen={isImportModalOpen}

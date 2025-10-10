@@ -216,58 +216,80 @@ useEffect(() => {
     }
   };
 
-  const fetchDeals = async (page: number) => {
-    if (!selectedFunil) return;
+const fetchDeals = async (page: number) => {
+  if (!selectedFunil) return;
 
-    try {
-      if (page === 1) {
-        setLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
-
-      const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/get', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          token
-        },
-        body: JSON.stringify({
-          page,
-          offset: itemsPerPage
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Erro ao carregar negociações');
-      }
-
-      const data = await response.json();
-      
-      // Ensure data is an array before mapping
-      const dealsArray = Array.isArray(data) ? data : [];
-      
-      // Map contacts from the already loaded contacts list
-      const dealsWithContacts = dealsArray.map(deal => {
-        const contact = contatos.find(c => c.Id === deal.id_contato);
-        return {
-          ...deal,
-          contato: contact || null // Ensure contato is null if not found
-        };
-      });
-      
-      const filteredDeals = dealsWithContacts.filter(deal => deal.id_funil === selectedFunil.id);
-
-      setDeals(prevDeals => page === 1 ? filteredDeals : [...prevDeals, ...filteredDeals]);
-      setHasMore(page * itemsPerPage < dealsArray.length);
-    } catch (err) {
-      console.error('Erro ao carregar negociações:', err);
-      setError('Erro ao carregar negociações');
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
+  try {
+    if (page === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
     }
-  };
+
+    // 🔹 Busca negociações do funil selecionado
+    const responseFunil = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/get', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        token
+      },
+      body: JSON.stringify({
+        page,
+        offset: itemsPerPage,
+        id_funil: selectedFunil.id
+      })
+    });
+
+    // 🔹 Busca negociações sem funil (para "Sem status")
+    const responseSemFunil = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/get', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        token
+      },
+      body: JSON.stringify({
+        page,
+        offset: itemsPerPage,
+        id_funil: null
+      })
+    });
+
+    if (!responseFunil.ok || !responseSemFunil.ok) {
+      throw new Error('Erro ao carregar negociações');
+    }
+
+    const dataFunil = await responseFunil.json();
+    const dataSemFunil = await responseSemFunil.json();
+
+    const allDeals = [
+      ...(Array.isArray(dataFunil) ? dataFunil : []),
+      ...(Array.isArray(dataSemFunil) ? dataSemFunil : [])
+    ];
+
+    console.log("📊 Todas as negociações (com e sem funil):", allDeals);
+
+    // Mapeia contatos com base nos contatos já carregados
+    const dealsWithContacts = allDeals.map(deal => {
+      const contact = contatos.find(c => c.Id === deal.id_contato);
+      return {
+        ...deal,
+        contato: contact || null
+      };
+    });
+
+    // Atualiza o estado de deals
+    setDeals(page === 1 ? dealsWithContacts : [...deals, ...dealsWithContacts]);
+    setHasMore(page * itemsPerPage < allDeals.length);
+
+  } catch (err) {
+    console.error('Erro ao carregar negociações:', err);
+    setError('Erro ao carregar negociações');
+  } finally {
+    setLoading(false);
+    setLoadingMore(false);
+  }
+};
+
 
   const handleLoadMore = () => {
     if (!loadingMore && hasMore) {
@@ -346,32 +368,49 @@ useEffect(() => {
     }
   };
 
-  const handleCreateDeal = async (dealData: Record<string, unknown>) => {
-    try {
-      const payload = { ...dealData };
-      if (!payload.id_fonte) delete payload.id_fonte;
-      if (!payload.id_usuario) delete payload.id_usuario;
+const handleCreateDeal = async (dealData: Record<string, unknown>) => {
+  try {
+    // Cria o payload com os dados recebidos do formulário
+    const payload = { ...dealData };
 
-      const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/create', {
+    // 🧩 Garante que novos leads sem funil/estágio caiam em "Sem status"
+    if (!payload.id_funil) {
+      payload.id_funil = null;
+    }
+    if (!payload.id_estagio) {
+      payload.id_estagio = null;
+    }
+
+    // Remove campos opcionais vazios
+    if (!payload.id_fonte) delete payload.id_fonte;
+    if (!payload.id_usuario) delete payload.id_usuario;
+
+    // Envia a requisição para criar o lead/negociação
+    const response = await fetch(
+      'https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/create',
+      {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          token
+          token,
         },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao criar negociação');
+        body: JSON.stringify(payload),
       }
+    );
 
-      setCurrentPage(1);
-      await fetchDeals(1);
-    } catch (err) {
-      console.error('Erro ao criar negociação:', err);
+    if (!response.ok) {
       throw new Error('Erro ao criar negociação');
     }
-  };
+
+    // Atualiza o CRM após criar o lead
+    setCurrentPage(1);
+    await fetchDeals(1);
+  } catch (err) {
+    console.error('Erro ao criar negociação:', err);
+    throw new Error('Erro ao criar negociação');
+  }
+};
+
 
   const handleCreateContact = async (
     contactData: { nome: string; Email: string; telefone: string }

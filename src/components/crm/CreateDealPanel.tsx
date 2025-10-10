@@ -77,31 +77,39 @@ export default function CreateDealPanel({
   const userOptions = users.map(u => ({ id: u.Id, label: u.nome }));
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.id_funil || !formData.id_contato) return;
+  e.preventDefault();
 
-    setSubmitting(true);
-    setError(null);
+  // 🔹 Agora só exige o contato, o funil é opcional
+  if (!formData.id_contato) return;
 
-    try {
-      const payload: any = {
-        id_funil: formData.id_funil,
-        id_contato: formData.id_contato,
-        titulo: formData.titulo,
-        descricao: formData.descricao
-      };
-      if (formData.id_fonte) payload.id_fonte = formData.id_fonte;
-      if (formData.id_usuario) payload.id_usuario = formData.id_usuario;
+  setSubmitting(true);
+  setError(null);
 
-      await onCreateDeal(payload);
-      resetForm();
-      onClose();
-    } catch (err) {
-      setError('Erro ao criar negociação');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  try {
+    // Prepara os dados da negociação
+    const payload: any = {
+      id_funil: formData.id_funil || null, // permite null
+      id_contato: formData.id_contato,
+      titulo: formData.titulo,
+      descricao: formData.descricao,
+    };
+
+    if (formData.id_fonte) payload.id_fonte = formData.id_fonte;
+    if (formData.id_usuario) payload.id_usuario = formData.id_usuario;
+
+    // Chama o método do CRM.tsx
+    await onCreateDeal(payload);
+
+    // Reseta e fecha o painel
+    resetForm();
+    onClose();
+  } catch (err) {
+    setError('Erro ao criar negociação');
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -241,10 +249,11 @@ export default function CreateDealPanel({
 
             <div className="border-t pt-6">
               <button
-                type="submit"
-                disabled={submitting || !formData.id_funil || !formData.id_contato}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 font-medium"
-              >
+  type="submit"
+  disabled={submitting || !formData.id_contato}
+  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 font-medium"
+>
+
                 {submitting ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />

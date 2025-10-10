@@ -8,11 +8,11 @@ export default function EmptyFunnelState() {
       <div className="bg-gray-50 p-8 rounded-xl shadow-sm border border-gray-200 max-w-lg">
         <GitBranch className="w-16 h-16 text-blue-500 mx-auto mb-4" />
         <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-          Você ainda não configurou nenhum funil
+          Você ainda não configurou/ativou seu CRM
         </h2>
         <p className="text-gray-600 mb-6">
-          Para começar a gerenciar suas negociações, você precisa configurar seus funis de venda primeiro.
-          Vá até Configurações → CRM → FUNIS e configure agora.
+          Para começar a gerenciar seus leads, você precisa configurar os Status do Lead primeiro.
+          Vá até Configurações → Status do Lead e configure agora.
         </p>
         <Link
           to="/configuracoes"
