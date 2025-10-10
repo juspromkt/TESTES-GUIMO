@@ -1,251 +1,474 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, X, Loader2, AlertCircle } from 'lucide-react';
-import type { Tag } from '../../types/tag';
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Plus, MoreVertical, Edit3, Copy, Trash2, Users as UsersIcon,
+  GripVertical, Loader2, AlertTriangle,
+} from "lucide-react";
+import { createPortal } from "react-dom";
+import type { Tag } from "../../types/tag";
+import Modal from "../Modal";
 
 interface TagsSectionProps {
   isActive: boolean;
   canEdit: boolean;
 }
 
+const DESC_KEY = "guimoo_tag_desc_v1";
+type DescMap = Record<string, string>;
+
+function readDescMap(): DescMap {
+  try {
+    const raw = localStorage.getItem(DESC_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+function writeDescMap(map: DescMap) {
+  try {
+    localStorage.setItem(DESC_KEY, JSON.stringify(map));
+  } catch {}
+}
+
 export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
   const [tags, setTags] = useState<Tag[]>([]);
+  const [descMap, setDescMap] = useState<DescMap>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTag, setEditingTag] = useState<Tag | null>(null);
-  const [formData, setFormData] = useState({ nome: '', cor: '#000000', cor_texto: '#ffffff' });
-  const [submitting, setSubmitting] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
 
-  const user = localStorage.getItem('user');
+  const [query, setQuery] = useState("");
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingTag, setEditingTag] = useState<Tag | null>(null);
+  const [formNome, setFormNome] = useState("");
+  const [formDescricao, setFormDescricao] = useState("");
+  const [formCor, setFormCor] = useState("#000000");
+  const [submitting, setSubmitting] = useState(false);
+
+  const [deleteTarget, setDeleteTarget] = useState<Tag | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
+
+  const user = localStorage.getItem("user");
   const token = user ? JSON.parse(user).token : null;
 
   useEffect(() => {
-    if (isActive) {
-      fetchTags();
-    }
+    if (!isActive) return;
+    setLoading(true);
+    fetchTags();
+    setDescMap(readDescMap());
   }, [isActive]);
+
+  useEffect(() => {
+    const close = (e: MouseEvent) => {
+      const el = e.target as HTMLElement;
+      if (!el.closest("[data-tag-actions]")) setOpenMenuId(null);
+    };
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, []);
 
   const fetchTags = async () => {
     try {
-      const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/tag/list', { headers: { token } });
-      if (!response.ok) throw new Error('Erro ao carregar etiquetas');
-      const data = await response.json();
+      const res = await fetch("https://n8n.lumendigital.com.br/webhook/prospecta/tag/list", { headers: { token } });
+      const data = await res.json();
       setTags(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError('Erro ao carregar etiquetas');
+    } catch {
+      setError("Erro ao carregar etiquetas");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const setTagDescription = (id: number, desc: string) => {
+    const next = { ...descMap };
+    if (desc.trim()) next[id] = desc;
+    else delete next[id];
+    setDescMap(next);
+    writeDescMap(next);
+  };
+
+  const handleCreateEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const endpoint = editingTag ?
-        'https://n8n.lumendigital.com.br/webhook/prospecta/tag/update' :
-        'https://n8n.lumendigital.com.br/webhook/prospecta/tag/create';
-      const method = editingTag ? 'PUT' : 'POST';
-      const body = editingTag ? { ...formData, Id: editingTag.Id } : formData;
-      const response = await fetch(endpoint, {
+      const isEdit = !!editingTag;
+      const endpoint = isEdit
+        ? "https://n8n.lumendigital.com.br/webhook/prospecta/tag/update"
+        : "https://n8n.lumendigital.com.br/webhook/prospecta/tag/create";
+      const method = isEdit ? "PUT" : "POST";
+      const body = isEdit
+        ? { Id: editingTag!.Id, nome: formNome, cor: formCor, cor_texto: "#fff" }
+        : { nome: formNome, cor: formCor, cor_texto: "#fff" };
+
+      const res = await fetch(endpoint, {
         method,
-        headers: { 'Content-Type': 'application/json', token },
-        body: JSON.stringify(body)
+        headers: { "Content-Type": "application/json", token },
+        body: JSON.stringify(body),
       });
-      if (!response.ok) throw new Error('Erro ao salvar etiqueta');
+      if (!res.ok) throw new Error("Erro ao salvar etiqueta");
+
       await fetchTags();
-      setIsModalOpen(false);
-      setEditingTag(null);
-      setFormData({ nome: '', cor: '#000000', cor_texto: '#ffffff' });
-    } catch (err) {
-      setError('Erro ao salvar etiqueta');
+      if (isEdit) setTagDescription(editingTag!.Id, formDescricao);
+      setIsFormOpen(false);
+    } catch {
+      setError("Erro ao salvar etiqueta");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!selectedTag) return;
+  const handleDuplicate = async (tag: Tag) => {
     try {
-      const response = await fetch(`https://n8n.lumendigital.com.br/webhook/prospecta/tag/delete?id=${selectedTag.Id}`, {
-        method: 'DELETE',
-        headers: { token }
+      const res = await fetch("https://n8n.lumendigital.com.br/webhook/prospecta/tag/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", token },
+        body: JSON.stringify({
+          nome: `${tag.nome} (cópia)`,
+          cor: tag.cor,
+          cor_texto: tag.cor_texto,
+        }),
       });
-      if (!response.ok) throw new Error('Erro ao excluir etiqueta');
+      if (!res.ok) throw new Error();
       await fetchTags();
-      setIsDeleteModalOpen(false);
-      setSelectedTag(null);
-    } catch (err) {
-      setError('Erro ao excluir etiqueta');
+    } catch {
+      setError("Erro ao duplicar etiqueta");
     }
   };
 
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await fetch(`https://n8n.lumendigital.com.br/webhook/prospecta/tag/delete?id=${deleteTarget.Id}`, {
+        method: "DELETE",
+        headers: { token },
+      });
+      const next = { ...descMap };
+      delete next[deleteTarget.Id];
+      writeDescMap(next);
+      setDescMap(next);
+      await fetchTags();
+      setDeleteTarget(null);
+    } catch {
+      setError("Erro ao excluir etiqueta");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return tags;
+    return tags.filter(
+      (t) =>
+        t.nome.toLowerCase().includes(q) ||
+        (descMap[t.Id]?.toLowerCase().includes(q) ?? false)
+    );
+  }, [tags, query, descMap]);
+
   if (!isActive) return null;
 
-  return (
+  /* Portal do menu de ações */
+  const menuPortal =
+    openMenuId !== null && menuPosition
+      ? createPortal(
+          <div
+            className="fixed z-[9999] w-44 rounded-lg border border-gray-200 bg-white shadow-xl"
+            style={{
+              left: menuPosition.x,
+              top: menuPosition.y,
+            }}
+          >
+            <button
+              onClick={() => {
+                setOpenMenuId(null);
+                const t = tags.find((t) => t.Id === openMenuId);
+                if (t) {
+                  setEditingTag(t);
+                  setFormNome(t.nome);
+                  setFormDescricao(descMap[t.Id] || "");
+                  setFormCor(t.cor);
+                  setIsFormOpen(true);
+                }
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-700 hover:bg-gray-50"
+            >
+              <Edit3 className="h-4 w-4" /> Editar
+            </button>
+            <button
+              onClick={() => {
+                setOpenMenuId(null);
+                const t = tags.find((t) => t.Id === openMenuId);
+                if (t) handleDuplicate(t);
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-700 hover:bg-gray-50"
+            >
+              <Copy className="h-4 w-4" /> Duplicar
+            </button>
+            <button
+              onClick={() => {
+                setOpenMenuId(null);
+                const t = tags.find((t) => t.Id === openMenuId);
+                if (t) setDeleteTarget(t);
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-red-600 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" /> Excluir
+            </button>
+          </div>,
+          document.body
+        )
+      : null;
+
+ return (
     <div className="mt-8">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">Etiquetas</h2>
+        <div className="flex items-center gap-2">
+  <h2 className="text-xl font-semibold text-gray-900">Etiquetas</h2>
+
+  {/* Botão de informação */}
+  <div className="relative group">
+    <button
+      className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-colors"
+      title=""
+    >
+      ?
+    </button>
+
+    {/* Tooltip */}
+    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10">
+      As <strong>etiquetas</strong> servem para organizar e acompanhar os leads dentro do sistema. Durante o atendimento a IA ou a equipe podem atribuir ou remover etiquetas automaticamente, conforma as ações do lead. <strong>O recomendado é que use o STATUS DO LEAD como principal controle</strong>, e as Etiquetas como um apoio visual e organizacional.
+    </div>
+  </div>
+</div>
+
         {canEdit && (
           <button
             onClick={() => {
               setEditingTag(null);
-              setFormData({ nome: '', cor: '#000000', cor_texto: '#ffffff' });
-              setIsModalOpen(true);
+              setFormNome("");
+              setFormDescricao("");
+              setFormCor("#000000");
+              setIsFormOpen(true);
             }}
-            className="flex items-center gap-2 bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700"
           >
-            <Plus size={20} /> Nova Etiqueta
+            <Plus size={18} /> Criar Etiqueta
           </button>
         )}
       </div>
+
+      <div className="relative mb-4 max-w-lg">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Pesquisar etiquetas..."
+          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 pl-10 outline-none focus:ring-2 focus:ring-blue-300"
+        />
+        <svg
+          className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+      </div>
+
       {loading ? (
-        <div className="flex items-center justify-center h-32">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <div className="flex h-32 items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
         </div>
-      ) : error ? (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">{error}</div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <table className="min-w-full">
+            <thead className="bg-gray-50 text-xs uppercase text-gray-500">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Visualização</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                <th className="w-10 px-4 py-3"></th>
+                <th className="px-4 py-3 text-left">Nome</th>
+                <th className="px-4 py-3 text-left">Descrição</th>
+                <th className="px-4 py-3 text-left">
+                  <div className="flex items-center gap-1">
+                    <UsersIcon size={14} /> Contatos
+                  </div>
+                </th>
+                <th className="w-16 px-4 py-3 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {tags.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="text-center text-gray-500 py-6 text-sm">Nenhuma etiqueta cadastrada.</td>
+            <tbody className="divide-y divide-gray-100 text-sm">
+              {filtered.map((t) => (
+                <tr key={t.Id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 text-gray-400">
+                    <GripVertical className="h-4 w-4" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className="inline-block rounded-full px-3 py-1 text-xs font-semibold"
+                      style={{ backgroundColor: t.cor, color: "#fff" }}
+                    >
+                      {t.nome}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {descMap[t.Id] ? (
+                      <span className="text-gray-700">{descMap[t.Id]}</span>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">0</td>
+                  <td className="px-4 py-3 text-right relative" data-tag-actions>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                        setOpenMenuId(openMenuId === t.Id ? null : t.Id);
+                        setMenuPosition({
+                          x: rect.right - 160,
+                          y: rect.bottom + window.scrollY,
+                        });
+                      }}
+                      className="rounded-md p-1 hover:bg-gray-100"
+                    >
+                      <MoreVertical className="h-5 w-5 text-gray-600" />
+                    </button>
+                  </td>
                 </tr>
-              ) : (
-                tags.map(tag => (
-                  <tr key={tag.Id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{tag.Id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{tag.nome}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 rounded text-xs" style={{ backgroundColor: tag.cor, color: tag.cor_texto }}>{tag.nome}</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right flex gap-2 justify-end">
-                      {canEdit && (
-                        <>
-                          <button
-                            onClick={() => {
-                              setEditingTag(tag);
-                              setFormData({ nome: tag.nome, cor: tag.cor, cor_texto: tag.cor_texto });
-                              setIsModalOpen(true);
-                            }}
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            <Pencil className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setSelectedTag(tag);
-                              setIsDeleteModalOpen(true);
-                            }}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))
+              ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
+                    Nenhuma etiqueta encontrada.
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
       )}
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">{editingTag ? 'Editar' : 'Nova'} Etiqueta</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-500">
-                <X size={20} />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nome</label>
-                <input
-                  type="text"
-                  value={formData.nome}
-                  onChange={e => setFormData({ ...formData, nome: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <label className="flex flex-col items-center gap-1">
-                  <span className="text-xs text-gray-600">Cor Fundo</span>
-                  <input
-                    type="color"
-                    value={formData.cor}
-                    onChange={e => setFormData({ ...formData, cor: e.target.value })}
-                    className="w-10 h-10 rounded border"
-                  />
-                </label>
-                <label className="flex flex-col items-center gap-1">
-                  <span className="text-xs text-gray-600">Cor Texto</span>
-                  <input
-                    type="color"
-                    value={formData.cor_texto}
-                    onChange={e => setFormData({ ...formData, cor_texto: e.target.value })}
-                    className="w-10 h-10 rounded border"
-                  />
-                </label>
-              </div>
-              <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
-                  Cancelar
-                </button>
-                <button type="submit" disabled={submitting} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckIcon />} {editingTag ? 'Salvar' : 'Criar'}
-                </button>
-              </div>
-            </form>
+      {/* Modal Criar / Editar */}
+      <Modal
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        title={`${editingTag ? "Editar" : "Criar"} Etiqueta`}
+        maxWidth="md"
+      >
+        <form onSubmit={handleCreateEdit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nome
+            </label>
+            <input
+              value={formNome}
+              onChange={(e) => setFormNome(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-300"
+              required
+            />
           </div>
-        </div>
-      )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Descrição
+            </label>
+            <textarea
+              value={formDescricao}
+              onChange={(e) => setFormDescricao(e.target.value)}
+              rows={3}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-300"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Cor
+            </label>
+            <ColorGrid value={formCor} onChange={setFormCor} />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsFormOpen(false)}
+              className="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-60"
+            >
+              {submitting ? "Salvando..." : editingTag ? "Salvar" : "Criar"}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
-      {isDeleteModalOpen && selectedTag && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-red-600" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Confirmar Exclusão</h2>
-                  <p className="text-gray-500 mt-1">Tem certeza que deseja excluir a etiqueta "{selectedTag.nome}"?</p>
-                </div>
-              </div>
-              <div className="flex justify-end gap-3 mt-6">
-                <button onClick={() => { setIsDeleteModalOpen(false); setSelectedTag(null); }} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md">
-                  Cancelar
-                </button>
-                <button onClick={handleDelete} className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md">
-                  Sim, Excluir
-                </button>
-              </div>
-            </div>
+      {/* Modal Excluir */}
+      <Modal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Excluir etiqueta"
+        maxWidth="sm"
+      >
+        <div className="flex items-start gap-3">
+          <div className="rounded-full bg-red-100 p-2">
+            <AlertTriangle className="h-5 w-5 text-red-600" />
           </div>
+          <p className="text-gray-700">
+            Deseja realmente excluir{" "}
+            <strong>{deleteTarget?.nome}</strong>?
+          </p>
         </div>
-      )}
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            onClick={() => setDeleteTarget(null)}
+            className="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleDeleteConfirm}
+            disabled={deleting}
+            className="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-60"
+          >
+            {deleting ? "Excluindo..." : "Excluir"}
+          </button>
+        </div>
+      </Modal>
+
+      {menuPortal}
     </div>
   );
 }
 
-function CheckIcon() {
-  return <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>;
+/* ------------------------------- Paleta de cores ------------------------------ */
+const COLORS = [
+  "#000000", "#4b5563", "#6b7280", "#9ca3af", "#d1d5db",
+  "#dc2626", "#ea580c", "#f59e0b", "#84cc16", "#22c55e",
+  "#0ea5e9", "#3b82f6", "#6366f1", "#a855f7", "#ec4899",
+];
+
+function ColorGrid({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {COLORS.map((c) => (
+        <button
+          key={c}
+          type="button"
+          onClick={() => onChange(c)}
+          className={`h-7 w-7 rounded-md border ${
+            value === c ? "ring-2 ring-blue-500" : ""
+          }`}
+          style={{ backgroundColor: c }}
+        />
+      ))}
+    </div>
+  );
 }

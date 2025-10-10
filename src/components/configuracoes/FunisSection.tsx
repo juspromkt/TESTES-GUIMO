@@ -25,6 +25,8 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
   const user = localStorage.getItem('user');
   const token = user ? JSON.parse(user).token : null;
 
+  
+
   useEffect(() => {
     if (isActive) {
       fetchFunis();
@@ -177,6 +179,8 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
     }
   };
 
+  
+
   const handleUpdateStageConfig = async (stage: Estagio, config: Partial<Estagio>) => {
     const field = Object.keys(config)[0] as keyof Estagio;
     setLoadingField({ id: stage.Id, field });
@@ -206,6 +210,8 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
       setLoadingField(null);
     }
   };
+
+  
 
   // Função para abrir o modal de edição
   const handleEditFunil = (funil: Funil) => {
@@ -237,22 +243,48 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
     );
   }
 
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-3 sm:p-6">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-white/20 shadow-xl gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-white/20 shadow-xl gap-4 overflow-visible">
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="p-2 sm:p-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg">
               <GitBranch className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                Gerenciamento de Funis
-              </h2>
-              <p className="text-gray-500 text-xs sm:text-sm">Configure e gerencie seus funis de vendas</p>
+              <h2 className="flex items-center gap-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+  Status do Lead - Funis
+  <div className="relative group overflow-visible z-[9999]">
+    <button
+      className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-colors"
+      title=""
+    >
+      ?
+    </button>
+
+    {/* Tooltip */}
+<div className="absolute left-6 top-1/2 -translate-y-1/2
+                w-[30rem] md:w-[34rem] max-w-[90vw]
+                p-4 bg-gray-800 text-white text-sm rounded-lg
+                opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                pointer-events-none shadow-2xl z-[99999]
+                whitespace-normal leading-relaxed break-words">
+  Cada funil representa um fluxo de atendimento, e cada estágio dentro do funil representa uma etapa desse fluxo. 
+  É recomendado ter apenas um funil ativo. Cada lead pode ser movido entre os estágios conforme avança no atendimento 
+  (de forma automática pela IA - nas configurações de Agente, Movimentações automáticas - ou manual pelo cartão CRM do lead).
+</div>
+  </div>
+</h2>
+
+
+              <p className="text-gray-500 text-xs sm:text-sm">Defina os status do lead em cada etapa do seu funil</p>
             </div>
           </div>
+
+          
+          
           {canEdit && (
             <button
               onClick={handleOpenCreateModal}
@@ -264,6 +296,8 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
             </button>
           )}
         </div>
+
+        
 
         {/* Error Alert */}
         {error && (
@@ -370,7 +404,7 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
                           <div className="space-y-2 sm:space-y-3">
                             {['isFollowUp'].map((fieldKey) => {
                               const fieldConfig = {
-                                isFollowUp: { label: 'Follow-up', color: 'from-blue-500 to-cyan-500', }
+                                isFollowUp: { label: 'Ativar follow-up para esta etapa?', color: 'from-blue-500 to-cyan-500', }
                               }[fieldKey];
 
                               return (
@@ -442,7 +476,7 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
                     value={newFunilName}
                     onChange={(e) => setNewFunilName(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                    placeholder="Ex: Funil de Vendas B2B"
+                    placeholder="Ex: Funil Trabalhista"
                     required
                   />
                 </div>

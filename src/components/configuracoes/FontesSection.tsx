@@ -118,10 +118,27 @@ const fetchFontes = async () => {
 
   if (!isActive) return null;
 
-  return (
+ return (
     <div className="mt-8">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">Fontes</h2>
+        <div className="flex items-center gap-2">
+  <h2 className="text-xl font-semibold text-gray-900">Origem do Lead</h2>
+
+  {/* Botão de informação */}
+  <div className="relative group">
+    <button
+      className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-colors"
+      title=""
+    >
+      ?
+    </button>
+
+    {/* Tooltip */}
+    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10">
+      A <strong>origem do lead</strong> é preenchida de forma automática pelo sistema, você não precisa configurar. Automaticamente o sistema identificará de onde o lead veio (ex: facebook ads) e mostrará essa informação aqui (e no cartão CRM do lead). Se o lead não tiver uma origem identificada, será mostrado como <em>Indefinida</em>. Se você quiser ter controle total da fonte, fale com seu gestor de tráfego - ele saberá configurar, caso necessário.
+    </div>
+  </div>
+</div>
         {canEdit && (
   <button
     onClick={() => setIsModalOpen(true)}

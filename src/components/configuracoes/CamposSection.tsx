@@ -159,7 +159,26 @@ export default function CamposSection({ isActive, canEdit }: CamposSectionProps)
   return (
     <div className="mt-8">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">Campos personalizados</h2>
+        <div className="flex items-center gap-2">
+  <h2 className="text-xl font-semibold text-gray-900">Campos personalizados</h2>
+
+  {/* Botão de informação */}
+  <div className="relative group">
+    <button
+      className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-colors"
+      title=""
+    >
+      ?
+    </button>
+
+    {/* Tooltip */}
+    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10">
+      Os <strong>campos personalizados</strong> servem para armazenar informações específicas que a IA coleta durante o atendimento com o lead. Durante a conversa, a IA identifica as respostas do lead e preenche esses campos automaticamente no sistema - por exemplo: O lead tem carteira assinada?
+    </div>
+  </div>
+</div>
+
+
         {canEdit && (
           <button
             onClick={() => setIsModalOpen(true)}

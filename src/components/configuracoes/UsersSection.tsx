@@ -252,6 +252,24 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
     });
   };
 
+  // Qual opção está ativa: 'all' ou 'assigned'
+const leadVisibility: 'all' | 'assigned' =
+  userPermissions?.can_view_all_leads
+    ? 'all'
+    : userPermissions?.can_view_assigned_leads
+    ? 'assigned'
+    : 'all'; // default seguro
+
+// Troca mutuamente exclusiva
+const setLeadVisibility = (value: 'all' | 'assigned') => {
+  if (!userPermissions) return;
+  setUserPermissions({
+    ...userPermissions,
+    can_view_all_leads: value === 'all',
+    can_view_assigned_leads: value === 'assigned',
+  });
+};
+
   const handleOpenEditUser = (user: User) => {
     setError('');
     setSuccess('');
@@ -394,13 +412,27 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
 
   if (!isActive) return null;
 
-  return (
+ return (
     <div className="mt-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <Users className="w-5 h-5 text-gray-500" />
-          <h2 className="text-lg font-semibold">Usuários</h2>
-        </div>
+  <h2 className="text-xl font-semibold text-gray-900">Usuários</h2>
+
+  {/* Botão de informação */}
+  <div className="relative group">
+    <button
+      className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-colors"
+      title=""
+    >
+      ?
+    </button>
+
+    {/* Tooltip */}
+    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10">
+      A <strong>gestão de usuários</strong> permite que você adicione, edite e gerencie os usuários que têm acesso ao sistema.
+    </div>
+  </div>
+</div>
         {canEdit && (
           <button
             onClick={() => setIsModalOpen(true)}
@@ -667,14 +699,16 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
               <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 mb-1">
                 Telefone
               </label>
-              <input
-                type="tel"
-                id="telefone"
-                value={formData.telefone}
-                onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
+<input
+  type="tel"
+  id="telefone"
+  value={formData.telefone}
+  onChange={(e) => setFormData({ ...formData, telefone: e.target.value.replace(/\D/g, "") })}
+  placeholder="+55 (11) 98888-8888 — apenas números"
+  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 placeholder:text-gray-400 text-sm"
+  required
+/>
+
             </div>
 
             <div>
@@ -759,14 +793,21 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                 <label htmlFor="edit-telefone" className="block text-sm font-medium text-gray-700 mb-1">
                   Telefone
                 </label>
-                <input
-                  type="tel"
-                  id="edit-telefone"
-                  value={editFormData.telefone}
-                  onChange={(e) => setEditFormData({ ...editFormData, telefone: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
+<input
+  type="tel"
+  id="edit-telefone"
+  value={editFormData.telefone}
+  onChange={(e) =>
+    setEditFormData({
+      ...editFormData,
+      telefone: e.target.value.replace(/\D/g, ""), // mantém apenas números
+    })
+  }
+  placeholder="+55 (11) 98888-8888 — apenas números"
+  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 placeholder:text-gray-400 text-sm"
+  required
+/>
+
               </div>
 
               <div>
@@ -834,259 +875,198 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
             <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
           </div>
         ) : (
-          <div className="p-6 space-y-6">
-            {/* Dashboard Permissions */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Permissões de Dashboard</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_view_dashboard_crm || false}
-                    onChange={(e) => handlePermissionChange('can_view_dashboard_crm', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Ver Dashboard CRM</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_view_dashboard_prospeccao || false}
-                    onChange={(e) => handlePermissionChange('can_view_dashboard_prospeccao', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Ver Dashboard Prospecção</span>
-                </label>
-              </div>
-            </div>
+<div className="p-6 space-y-8 bg-gray-50 rounded-b-xl max-h-[75vh] overflow-y-auto">
 
-            {/* Menu Visibility Permissions */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Visibilidade de Menus</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_view_menu_chat || false}
-                    onChange={(e) => handlePermissionChange('can_view_menu_chat', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Menu Chat</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_view_menu_agent || false}
-                    onChange={(e) => handlePermissionChange('can_view_menu_agent', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Menu Agente de IA</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_view_menu_crm || false}
-                    onChange={(e) => handlePermissionChange('can_view_menu_crm', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Menu CRM</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_view_menu_schedule || false}
-                    onChange={(e) => handlePermissionChange('can_view_menu_schedule', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Menu Agendamentos</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_view_menu_prospect || false}
-                    onChange={(e) => handlePermissionChange('can_view_menu_prospect', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Menu Prospectar</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_view_menu_contacts || false}
-                    onChange={(e) => handlePermissionChange('can_view_menu_contacts', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Menu Contatos</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_view_menu_connection || false}
-                    onChange={(e) => handlePermissionChange('can_view_menu_connection', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Menu Conexão</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_view_menu_settings || false}
-                    onChange={(e) => handlePermissionChange('can_view_menu_settings', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Menu Configurações</span>
-                </label>
-              </div>
-            </div>
+  {/* === DASHBOARD === */}
+  <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+    <div className="flex items-center gap-2 mb-4">
+      <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+        📊
+      </div>
+      <h3 className="text-base font-semibold text-gray-900">Permissões de Dashboard</h3>
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <label className="flex items-center gap-2 text-sm text-gray-700">
+        <input
+          type="checkbox"
+          checked={userPermissions?.can_view_dashboard_crm || false}
+          onChange={(e) =>
+            handlePermissionChange('can_view_dashboard_crm', e.target.checked)
+          }
+          className="accent-blue-600 w-4 h-4"
+        />
+        Ver Dashboard CRM
+      </label>
+    </div>
+  </section>
 
-            {/* Edit Permissions */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Permissões de Edição</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_edit_agent || false}
-                    onChange={(e) => handlePermissionChange('can_edit_agent', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Editar Agente de IA</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_edit_crm || false}
-                    onChange={(e) => handlePermissionChange('can_edit_crm', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Editar CRM</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_edit_schedule || false}
-                    onChange={(e) => handlePermissionChange('can_edit_schedule', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Editar Agendamentos</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_edit_prospect || false}
-                    onChange={(e) => handlePermissionChange('can_edit_prospect', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Editar Prospecção</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_edit_contacts || false}
-                    onChange={(e) => handlePermissionChange('can_edit_contacts', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Editar Contatos</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_edit_connection || false}
-                    onChange={(e) => handlePermissionChange('can_edit_connection', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Editar Conexão</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_edit_settings || false}
-                    onChange={(e) => handlePermissionChange('can_edit_settings', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Editar Configurações</span>
-                </label>
-              </div>
-            </div>
+  {/* === VISIBILIDADE DE MENUS === */}
+  <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+    <div className="flex items-center gap-2 mb-4">
+      <div className="w-8 h-8 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center">
+        🧭
+      </div>
+      <h3 className="text-base font-semibold text-gray-900">Visibilidade de Menus</h3>
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {[
+        ['can_view_menu_chat', 'Menu Chat'],
+        ['can_view_menu_agent', 'Menu Agente de IA'],
+        ['can_view_menu_crm', 'Menu CRM'],
+        ['can_view_menu_schedule', 'Menu Agendamentos'],
+        ['can_view_menu_contacts', 'Menu Contatos'],
+        ['can_view_menu_connection', 'Menu Conexão'],
+        ['can_view_menu_settings', 'Menu Configurações'],
+      ].map(([key, label]) => (
+        <label key={key} className="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={(userPermissions as any)?.[key] || false}
+            onChange={(e) =>
+              handlePermissionChange(key as keyof UserPermissions, e.target.checked)
+            }
+            className="accent-purple-600 w-4 h-4"
+          />
+          {label}
+        </label>
+      ))}
+    </div>
+  </section>
 
-            {/* Lead Visibility Permissions */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Visibilidade de Leads</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_view_all_leads || false}
-                    onChange={(e) => handlePermissionChange('can_view_all_leads', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Ver Todos os Leads</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_view_assigned_leads || false}
-                    onChange={(e) => handlePermissionChange('can_view_assigned_leads', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Ver Apenas Leads Atribuídos</span>
-                </label>
-              </div>
-            </div>
+  {/* === PERMISSÕES DE EDIÇÃO === */}
+  <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+    <div className="flex items-center gap-2 mb-4">
+      <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center">
+        ✏️
+      </div>
+      <h3 className="text-base font-semibold text-gray-900">Permissões de Edição</h3>
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {[
+        ['can_edit_agent', 'Editar Agente de IA'],
+        ['can_edit_crm', 'Editar CRM'],
+        ['can_edit_schedule', 'Editar Agendamentos'],
+        ['can_edit_prospect', 'Editar Prospecção'],
+        ['can_edit_contacts', 'Editar Contatos'],
+        ['can_edit_connection', 'Editar Conexão'],
+        ['can_edit_settings', 'Editar Configurações'],
+      ].map(([key, label]) => (
+        <label key={key} className="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={(userPermissions as any)?.[key] || false}
+            onChange={(e) =>
+              handlePermissionChange(key as keyof UserPermissions, e.target.checked)
+            }
+            className="accent-emerald-600 w-4 h-4"
+          />
+          {label}
+        </label>
+      ))}
+    </div>
+  </section>
 
-            {/* Prospeccao Permissions */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Permissões de Prospecção</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_view_prospeccao_busca || false}
-                    onChange={(e) => handlePermissionChange('can_view_prospeccao_busca', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Menu Prospecção</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={userPermissions?.can_view_prospeccao_dd || false}
-                    onChange={(e) => handlePermissionChange('can_view_prospeccao_dd', e.target.checked)}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700">Menu Disparo Direto</span>
-                </label>
-              </div>
-            </div>
+  {/* === VISIBILIDADE DE LEADS === */}
+  <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+  <div className="flex items-center gap-2 mb-4">
+    <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center">
+      👥
+    </div>
+    <h3 className="text-base font-semibold text-gray-900">Visibilidade de Leads</h3>
+  </div>
 
-            <div className="flex justify-end gap-3 pt-4">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsPermissionsModalOpen(false);
-                  setSelectedUser(null);
-                  setUserPermissions(null);
-                }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSavePermissions}
-                disabled={savingPermissions}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
-              >
-                {savingPermissions ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Salvando...</span>
-                  </>
-                ) : (
-                  'Salvar Permissões'
-                )}
-              </button>
-            </div>
-          </div>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <label className="flex items-center gap-2 text-sm text-gray-700">
+      <input
+        type="radio"
+        name="leadVisibility"
+        className="accent-amber-600 w-4 h-4"
+        checked={leadVisibility === 'all'}
+        onChange={() => setLeadVisibility('all')}
+      />
+      Ver Todos os Leads
+    </label>
+
+    <label className="flex items-center gap-2 text-sm text-gray-700">
+      <input
+        type="radio"
+        name="leadVisibility"
+        className="accent-amber-600 w-4 h-4"
+        checked={leadVisibility === 'assigned'}
+        onChange={() => setLeadVisibility('assigned')}
+      />
+      Ver Apenas Leads Atribuídos
+    </label>
+  </div>
+</section>
+
+
+  {/* === PERMISSÕES DE PROSPECÇÃO === */}
+  <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+    <div className="flex items-center gap-2 mb-4">
+      <div className="w-8 h-8 bg-pink-100 text-pink-600 rounded-lg flex items-center justify-center">
+        🚀
+      </div>
+      <h3 className="text-base font-semibold text-gray-900">Permissões de Prospecção</h3>
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <label className="flex items-center gap-2 text-sm text-gray-700">
+        <input
+          type="checkbox"
+          checked={userPermissions?.can_view_prospeccao_busca || false}
+          onChange={(e) =>
+            handlePermissionChange('can_view_prospeccao_busca', e.target.checked)
+          }
+          className="accent-pink-600 w-4 h-4"
+        />
+        Menu Prospecção
+      </label>
+      <label className="flex items-center gap-2 text-sm text-gray-700">
+        <input
+          type="checkbox"
+          checked={userPermissions?.can_view_prospeccao_dd || false}
+          onChange={(e) =>
+            handlePermissionChange('can_view_prospeccao_dd', e.target.checked)
+          }
+          className="accent-pink-600 w-4 h-4"
+        />
+        Menu Disparo Direto
+      </label>
+    </div>
+  </section>
+
+  {/* === BOTÕES === */}
+  <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+    <button
+      type="button"
+      onClick={() => {
+        setIsPermissionsModalOpen(false);
+        setSelectedUser(null);
+        setUserPermissions(null);
+      }}
+      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+    >
+      Cancelar
+    </button>
+    <button
+      onClick={handleSavePermissions}
+      disabled={savingPermissions}
+      className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
+    >
+      {savingPermissions ? (
+        <>
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Salvando...</span>
+        </>
+      ) : (
+        'Salvar Permissões'
+      )}
+    </button>
+  </div>
+</div>
+
+
+
         )}
       </Modal>
     </div>

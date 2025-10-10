@@ -270,23 +270,36 @@ return (
               <h3 className="text-lg font-semibold text-gray-900">Configurações do Funil</h3>
               
               <label className="flex items-center gap-2">
-                <input 
-                  type="checkbox" 
-                  checked={isDefaultFunnel} 
-                  onChange={handleToggleDefaultFunnel} 
-                  disabled={updatingDefault}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">
-                  {updatingDefault ? (
-                    <span className="flex items-center gap-1">
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      Atualizando...
-                    </span>
-                  ) : (
-                    'Funil Padrão'
-                  )}
-                </span>
+<div className="flex items-center gap-4">
+  {/* Switch bonito */}
+  <button
+    onClick={handleToggleDefaultFunnel}
+    disabled={updatingDefault}
+    className={`relative w-14 h-8 flex items-center rounded-full transition-all duration-300 shadow-sm
+      ${isDefaultFunnel ? 'bg-blue-600' : 'bg-gray-300'}
+      ${updatingDefault ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+  >
+    <div
+      className={`absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300
+        ${isDefaultFunnel ? 'translate-x-6' : ''}`}
+    ></div>
+  </button>
+
+  {/* Texto ao lado */}
+  <span className="text-sm text-gray-700">
+    {updatingDefault ? (
+      <span className="flex items-center gap-1">
+        <Loader2 className="w-3 h-3 animate-spin" />
+        Atualizando...
+      </span>
+    ) : (
+      <>
+        <strong className="text-gray-900">Funil Padrão</strong> — Deixe ativado para que novos leads sejam adicionados automaticamente a este funil.
+      </>
+    )}
+  </span>
+</div>
+
               </label>
             </div>
             
