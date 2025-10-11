@@ -769,3 +769,91 @@ select {
   background-color: transparent !important;
 }
 
+/* === Estilo personalizado para o React DatePicker === */
+
+.react-datepicker {
+  border: none !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  background: white !important;
+  font-family: 'Inter', sans-serif;
+}
+
+.react-datepicker__month-container {
+  border-radius: 1rem !important;
+  overflow: hidden;
+}
+
+.react-datepicker__header {
+  background-color: white !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  padding-top: 0.75rem !important;
+  border-radius: 1rem 1rem 0 0 !important;
+}
+
+.react-datepicker__current-month {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #111827;
+}
+
+.react-datepicker__day-name {
+  color: #64748b;
+  font-weight: 500;
+  width: 2rem;
+}
+
+.react-datepicker__day {
+  width: 2rem;
+  height: 2rem;
+  line-height: 2rem;
+  border-radius: 9999px !important;
+  margin: 0.15rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.react-datepicker__day--selected {
+  background-color: #2563eb !important;
+  color: white !important;
+  font-weight: 600;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background-color: #2563eb !important;
+  color: white !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: #eff6ff !important;
+  color: #1e3a8a !important;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: #2563eb !important;
+}
+
+.react-datepicker__navigation:hover *::before {
+  border-color: #1e40af !important;
+}
+
+.react-datepicker__month-dropdown,
+.react-datepicker__year-dropdown {
+  border-radius: 0.75rem !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+  padding: 0.5rem !important;
+}
+
+/* === Corrige visual do gradiente nos gráficos === */
+canvas {
+  background: transparent !important;
+  isolation: isolate; /* evita mistura com bg dos containers */
+}
+
+.dark .chart-gradient {
+  background: none !important;
+}
+
+canvas {
+  background: none !important;
+  opacity: 1 !important;
+}

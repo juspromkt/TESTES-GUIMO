@@ -113,7 +113,7 @@ export class DomainConfig {
     const currentDomain = this.getCurrentDomain();
     switch (currentDomain) {
       default:
-        return 'Agente de IA + CRM';
+        return 'Guimoo - IA para Advogados';
     }
   }
 
