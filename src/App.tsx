@@ -3,14 +3,14 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
-import Conexao from './pages/Conexao';
 import Prospectar from './pages/Prospectar';
 import ProspeccaoDetalhes from './pages/ProspeccaoDetalhes';
 import DirectDispatchDetails from './pages/DirectDispatchDetails';
 import Configuracoes from './pages/Configuracoes';
 import AIAgent from './pages/AIAgent';
 import Contatos from './pages/Contatos';
-import CRM from './pages/CRM';
+import CRMLayoutPage from './pages/CRMLayoutPage'; // ✅ usa o layout com abas
+import Conexao from './pages/Conexao';
 import DealDetails from './pages/DealDetails';
 import Appointments from './pages/Appointments';
 import ChatProprio from './pages/ChatProprio';
@@ -28,7 +28,6 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
         await fetchUserPermissions(user.token);
       }
     };
-    
     loadPermissions();
   }, [isAuthenticated]);
   
@@ -58,8 +57,11 @@ function App() {
           <Route path="prospectar/dd/:id" element={<DirectDispatchDetails />} />
           <Route path="ai-agent" element={<AIAgent />} />
           <Route path="contatos" element={<Contatos />} />
-          <Route path="crm" element={<CRM />} />
+          
+          {/* 👇 Substituí o CRM antigo pelo layout com abas */}
+          <Route path="crm" element={<CRMLayoutPage />} />
           <Route path="crm/:id" element={<DealDetails />} />
+          
           <Route path="agendamentos" element={<Appointments />} />
           <Route path="configuracoes" element={<Configuracoes />} />
           <Route path="conversas" element={<ChatProprio />} />

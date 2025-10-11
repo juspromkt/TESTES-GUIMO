@@ -81,7 +81,71 @@ export default function DirectDispatchDetails() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [manualLeads, setManualLeads] = useState("");
+  const [manualError, setManualError] = useState("");
+  const [importingManual, setImportingManual] = useState(false);
 const canEditProspect = hasPermission('can_edit_prospect');
+
+const handleManualImport = async () => {
+  try {
+    setManualError("");
+    setImportingManual(true);
+
+    const lines = manualLeads
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    if (lines.length === 0) {
+      setManualError("Nenhum dado encontrado. Verifique o formato.");
+      return;
+    }
+
+    const contatos = lines
+      .map((line) => {
+        const [nome, telefone] = line.split(",").map((s) => s.trim());
+        return nome && telefone ? { nome, telefone } : null;
+      })
+      .filter(Boolean) as { nome: string; telefone: string }[];
+
+    if (contatos.length === 0) {
+      setManualError("Formato inválido. Use: nome,telefone");
+      return;
+    }
+
+    const response = await fetch(
+      "https://n8n.lumendigital.com.br/webhook/prospecta/dd/lead/create",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          token,
+        },
+        body: JSON.stringify({
+          id_disparo: parseInt(id!),
+          contatos,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Erro ao importar leads manualmente");
+    }
+
+    await fetchData();
+    setIsManualModalOpen(false);
+    setManualLeads("");
+    setSuccess("Leads adicionados com sucesso!");
+    setTimeout(() => setSuccess(""), 3000);
+  } catch (err) {
+    console.error("Erro ao importar leads manualmente:", err);
+    setManualError("Erro ao importar leads. Verifique o formato e tente novamente.");
+  } finally {
+    setImportingManual(false);
+  }
+};
+
 
 
   // Pagination and sorting state
@@ -161,7 +225,7 @@ const canEditProspect = hasPermission('can_edit_prospect');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       console.error('Erro ao processar arquivo:', err);
-      setUploadError(err instanceof Error ? err.message : 'Erro ao processar arquivo');
+      setUploadError(err instanceof Error ? err.message : 'Erro ao processar arquivo (verifique o formato)');
     } finally {
       setUploading(false);
     }
@@ -429,7 +493,7 @@ const filteredAndSortedLeads = [...leads]
 
     if (ordemDisparo.status === 'open') {
       return {
-        text: 'Parar disparo',
+        text: 'Parar envio',
         color: 'bg-red-600 hover:bg-red-700',
         icon: <Square className="w-5 h-5" />,
         disabled: false
@@ -437,7 +501,7 @@ const filteredAndSortedLeads = [...leads]
     }
 
     return {
-      text: 'Reiniciar disparo',
+      text: 'Reiniciar envio',
       color: 'bg-blue-600 hover:bg-blue-700',
       icon: <Play className="w-5 h-5" />,
       disabled: false
@@ -511,7 +575,7 @@ const filteredAndSortedLeads = [...leads]
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Total de Leads</p>
+                <p className="text-sm font-medium text-gray-500">Total de Leads na lista</p>
                 <p className="mt-2 text-3xl font-bold text-gray-900">{dispatch.qtdLeads}</p>
               </div>
               <Users className="w-8 h-8 text-blue-500" />
@@ -521,7 +585,7 @@ const filteredAndSortedLeads = [...leads]
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Disparos Realizados</p>
+                <p className="text-sm font-medium text-gray-500">Envios Realizados</p>
                 <p className="mt-2 text-3xl font-bold text-gray-900">{dispatch.qtdDisparosRealizados}</p>
               </div>
               <Send className="w-8 h-8 text-green-500" />
@@ -559,16 +623,27 @@ const filteredAndSortedLeads = [...leads]
         ) : (
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Leads Importados</h2>
-                <button
-                  onClick={() => setIsUploadModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Upload className="w-5 h-5" />
-                  Importar Mais Leads
-                </button>
-              </div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold">Leads Importados</h2>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setIsUploadModalOpen(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <Upload className="w-5 h-5" />
+                      Importar leads via CSV
+                    </button>
+
+                    <button
+                      onClick={() => setIsManualModalOpen(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                    >
+                      <Send className="w-5 h-5" />
+                      Importar Manualmente
+                    </button>
+                  </div>
+                </div>
+
 
               <div className="flex items-center gap-4">
                 <div className="flex-1">
@@ -657,7 +732,7 @@ const filteredAndSortedLeads = [...leads]
             <div className="p-6 border-t border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold">Controle de Disparo</h2>
+                  <h2 className="text-lg font-semibold">Controle de Envios</h2>
                   {ordemDisparo && (
                     <p className="text-sm text-gray-500 mt-1">
                       Último disparo: {formatDate(ordemDisparo.data)}
@@ -691,8 +766,8 @@ const filteredAndSortedLeads = [...leads]
             <h3 className="text-sm font-medium text-gray-700 mb-2">Instruções:</h3>
             <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
               <li>O arquivo deve estar no formato CSV separado por vírgula</li>
-              <li>As colunas necessárias são: nome e telefone</li>
-              <li>Certifique-se que os números de telefone estão no formato correto</li>
+              <li>Dados necessários são: nome e telefone (João,5511999999999)</li>
+              <li>Certifique-se que os números de telefone estão no formato correto (55xx912345678)</li>
             </ul>
             <div className="mt-4">
               <a
@@ -742,6 +817,60 @@ const filteredAndSortedLeads = [...leads]
           )}
         </div>
       </Modal>
+
+      <Modal
+        isOpen={isManualModalOpen}
+        onClose={() => setIsManualModalOpen(false)}
+        title="Importar Leads Manualmente"
+      >
+        <div className="p-6 space-y-4">
+          <p className="text-sm text-gray-600">
+            Cole abaixo os nomes e telefones, um por linha, no formato <b>nome,telefone</b>:
+          </p>
+
+          <textarea
+            value={manualLeads}
+            onChange={(e) => setManualLeads(e.target.value)}
+            placeholder={`Exemplo:\njoao,5511912345678\npedro paulo,551231231231`}
+            rows={8}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono text-sm"
+          />
+
+          {manualError && (
+            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-2">
+              {manualError}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              onClick={() => setIsManualModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleManualImport}
+              disabled={importingManual || !manualLeads.trim()}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md disabled:opacity-50"
+            >
+              {importingManual ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Importando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  Importar
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+
 
       <Modal
         isOpen={isModeloModalOpen}
@@ -794,7 +923,7 @@ const filteredAndSortedLeads = [...leads]
               disabled={!selectedModeloId}
               className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md disabled:opacity-50"
             >
-              Iniciar Disparo
+              Iniciar Envio
             </button>
           </div>
         </form>

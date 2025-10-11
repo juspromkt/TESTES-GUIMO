@@ -877,28 +877,6 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
         ) : (
 <div className="p-6 space-y-8 bg-gray-50 rounded-b-xl max-h-[75vh] overflow-y-auto">
 
-  {/* === DASHBOARD === */}
-  <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-    <div className="flex items-center gap-2 mb-4">
-      <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
-        📊
-      </div>
-      <h3 className="text-base font-semibold text-gray-900">Permissões de Dashboard</h3>
-    </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <label className="flex items-center gap-2 text-sm text-gray-700">
-        <input
-          type="checkbox"
-          checked={userPermissions?.can_view_dashboard_crm || false}
-          onChange={(e) =>
-            handlePermissionChange('can_view_dashboard_crm', e.target.checked)
-          }
-          className="accent-blue-600 w-4 h-4"
-        />
-        Ver Dashboard CRM
-      </label>
-    </div>
-  </section>
 
   {/* === VISIBILIDADE DE MENUS === */}
   <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
@@ -910,13 +888,14 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
     </div>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {[
-        ['can_view_menu_chat', 'Menu Chat'],
-        ['can_view_menu_agent', 'Menu Agente de IA'],
-        ['can_view_menu_crm', 'Menu CRM'],
-        ['can_view_menu_schedule', 'Menu Agendamentos'],
-        ['can_view_menu_contacts', 'Menu Contatos'],
-        ['can_view_menu_connection', 'Menu Conexão'],
-        ['can_view_menu_settings', 'Menu Configurações'],
+        ['can_view_menu_chat', 'Conversas'],
+        ['can_view_menu_agent', 'Agente de IA'],
+        ['can_view_menu_crm', 'CRM'],
+        ['can_view_menu_schedule', 'Agendamentos'],
+        ['can_view_menu_contacts', 'Contatos'],
+        ['can_view_menu_connection', 'Conexão'],
+        ['can_view_menu_prospect', 'Envios em Massa'],
+        ['can_view_menu_settings', 'Configurações'],
       ].map(([key, label]) => (
         <label key={key} className="flex items-center gap-2 text-sm text-gray-700">
           <input
@@ -946,7 +925,6 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
         ['can_edit_agent', 'Editar Agente de IA'],
         ['can_edit_crm', 'Editar CRM'],
         ['can_edit_schedule', 'Editar Agendamentos'],
-        ['can_edit_prospect', 'Editar Prospecção'],
         ['can_edit_contacts', 'Editar Contatos'],
         ['can_edit_connection', 'Editar Conexão'],
         ['can_edit_settings', 'Editar Configurações'],
@@ -1000,40 +978,6 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
   </div>
 </section>
 
-
-  {/* === PERMISSÕES DE PROSPECÇÃO === */}
-  <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-    <div className="flex items-center gap-2 mb-4">
-      <div className="w-8 h-8 bg-pink-100 text-pink-600 rounded-lg flex items-center justify-center">
-        🚀
-      </div>
-      <h3 className="text-base font-semibold text-gray-900">Permissões de Prospecção</h3>
-    </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <label className="flex items-center gap-2 text-sm text-gray-700">
-        <input
-          type="checkbox"
-          checked={userPermissions?.can_view_prospeccao_busca || false}
-          onChange={(e) =>
-            handlePermissionChange('can_view_prospeccao_busca', e.target.checked)
-          }
-          className="accent-pink-600 w-4 h-4"
-        />
-        Menu Prospecção
-      </label>
-      <label className="flex items-center gap-2 text-sm text-gray-700">
-        <input
-          type="checkbox"
-          checked={userPermissions?.can_view_prospeccao_dd || false}
-          onChange={(e) =>
-            handlePermissionChange('can_view_prospeccao_dd', e.target.checked)
-          }
-          className="accent-pink-600 w-4 h-4"
-        />
-        Menu Disparo Direto
-      </label>
-    </div>
-  </section>
 
   {/* === BOTÕES === */}
   <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">

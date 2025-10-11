@@ -17,10 +17,9 @@ import {
   Legend,
   PointElement,
   LineElement,
-  Filler, // 👈 IMPORTANTE: adiciona o módulo responsável pelo gradiente/fill
+  Filler,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import { hasPermission } from "../utils/permissions";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { registerLocale } from "react-datepicker";
@@ -73,8 +72,7 @@ const formatBR = (d: string) =>
 
 // ==================== Component ====================
 export default function Dashboard() {
-  const canViewCRMDashboard = hasPermission("can_view_dashboard_crm");
-
+  // 🔓 Dashboard acessível a todos os usuários
   const defaultEnd = new Date();
   const defaultStart = new Date();
   defaultStart.setDate(defaultStart.getDate() - 30);
@@ -126,7 +124,7 @@ export default function Dashboard() {
     }
   };
 
-  // ==================== Funções de Filtro Rápido ====================
+  // ==================== Filtros rápidos ====================
   const setToday = () => {
     const today = new Date().toISOString().slice(0, 10);
     setStartDate(today);
@@ -165,7 +163,7 @@ export default function Dashboard() {
     setEndDate(end.toISOString().slice(0, 10));
   };
 
-  // ==================== Gráficos ====================
+  // ==================== Gráfico ====================
   const dateRange = useMemo(() => {
     if (!startDate || !endDate) return dailyDeals.map((d) => d.dia);
     return buildDateRange(startDate, endDate);
@@ -191,11 +189,9 @@ export default function Dashboard() {
           const { ctx: c, chartArea } = chart;
           if (!chartArea) return "rgba(37,99,235,0.3)";
           const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-
-          // 🔵 Azul intenso no topo, desaparecendo suavemente até o fim
-          g.addColorStop(0, "rgba(37,99,235,0.65)");  // topo mais sólido
+          g.addColorStop(0, "rgba(37,99,235,0.65)");
           g.addColorStop(0.8, "rgba(59,130,246,0.25)");
-          g.addColorStop(1, "rgba(59,130,246,0)");    // base transparente
+          g.addColorStop(1, "rgba(59,130,246,0)");
           return g;
         },
       },
@@ -214,8 +210,6 @@ export default function Dashboard() {
   };
 
   // ==================== Render ====================
-  if (!canViewCRMDashboard) return null;
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-indigo-50">
       {/* Header */}
@@ -264,9 +258,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Charts */}
+      {/* Gráficos */}
       <div className="px-6 pb-10 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_380px] gap-6">
-        {/* Conversas */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="bg-white px-6 py-5 flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
@@ -281,7 +274,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Status */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="bg-white px-6 py-5 flex items-center gap-3">
             <div className="w-10 h-10 bg-cyan-50 rounded-xl flex items-center justify-center">
@@ -321,13 +313,12 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      </div> {/* 👈 Fechamento da área dos gráficos */}
+      </div>
 
-      {/* Modal de Período */}
+      {/* Modal de período */}
       {showDateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-            {/* Cabeçalho */}
             <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-blue-700" />
@@ -343,9 +334,7 @@ export default function Dashboard() {
               </button>
             </div>
 
-            {/* Corpo */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-6 py-6 bg-gray-50">
-              {/* Filtros rápidos */}
               <div className="flex flex-col gap-2">
                 <p className="text-sm font-medium text-gray-700 mb-1">Filtro rápido</p>
                 <button onClick={setToday} className="px-3 py-2 text-sm rounded-xl border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 transition-all">
@@ -365,7 +354,6 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              {/* Seleção manual */}
               <div className="md:col-span-2 bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>

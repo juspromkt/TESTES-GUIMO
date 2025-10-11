@@ -1,67 +1,68 @@
-import React, { useState, useEffect } from 'react';
-import ProspectarForm from '../components/prospectar/ProspectarForm';
-import ProspectarHistory from '../components/prospectar/ProspectarHistory';
-import DirectDispatchHistory from '../components/prospectar/DirectDispatchHistory';
-import { hasPermission } from '../utils/permissions';
+import React, { useState, useEffect } from "react";
+import ProspectarForm from "../components/prospectar/ProspectarForm";
+import ProspectarHistory from "../components/prospectar/ProspectarHistory";
+import DirectDispatchHistory from "../components/prospectar/DirectDispatchHistory";
+import ProspectarLayout from "./ProspectarLayout";
 
-type TabType = 'prospectar' | 'disparo-direto';
+import ModelosSection from "../components/configuracoes/ModelosSection";
+import ParametrosSection from "../components/configuracoes/ParametrosSection";
+
+import { hasPermission } from "../utils/permissions";
+
+type SectionType = "prospectar" | "disparo-direto" | "modelos" | "parametros";
 
 export default function Prospectar() {
-  const canViewBusca = hasPermission('can_view_prospeccao_busca');
-  const canViewDd = hasPermission('can_view_prospeccao_dd');
-  const [activeTab, setActiveTab] = useState<TabType>(canViewBusca ? 'prospectar' : 'disparo-direto');
+  const canViewBusca = hasPermission("can_view_prospeccao_busca");
+  const canViewDd = hasPermission("can_view_prospeccao_dd");
+  const canEditConfigs = hasPermission("can_edit_settings");
+
+  // 🟢 Agora a aba padrão é sempre "disparo-direto"
+  const [activeSection, setActiveSection] = useState<SectionType>("disparo-direto");
   const [historyRefresh, setHistoryRefresh] = useState(0);
 
   const handleProspeccaoCreated = () => setHistoryRefresh((prev) => prev + 1);
 
   useEffect(() => {
-    if (activeTab === 'prospectar' && (!canViewBusca)) {
-      if (canViewDd) setActiveTab('disparo-direto');
-    } else if (activeTab === 'disparo-direto' && !canViewDd) {
-      if (canViewBusca) setActiveTab('prospectar');
+    // Garantir que não caia numa aba sem permissão
+    if (activeSection === "prospectar" && !canViewBusca) {
+      if (canViewDd) setActiveSection("disparo-direto");
+    } else if (activeSection === "disparo-direto" && !canViewDd) {
+      if (canViewBusca) setActiveSection("prospectar");
     }
-  }, [activeTab, canViewBusca, canViewDd]);
+  }, [activeSection, canViewBusca, canViewDd]);
+
+  // 👉 Sidebar sem o item "Prospectar Segmento"
+  const sections = [
+    { id: "disparo-direto", label: "Lista de envios" },
+    { id: "modelos", label: "Modelos de Mensagem" },
+    { id: "parametros", label: "Configurações de envio" },
+  ];
 
   return (
-    <div className="max-w-[1400px] space-y-6">
-      {/* Tabs */}
-      <div className="flex gap-4 border-b border-gray-200">
-        {canViewBusca && (
-          <button
-            onClick={() => setActiveTab('prospectar')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'prospectar'
-                ? 'border-emerald-500 text-emerald-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Prospectar
-          </button>
-        )}
-        {canViewDd && (
-        <button
-          onClick={() => setActiveTab('disparo-direto')}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-            activeTab === 'disparo-direto'
-              ? 'border-emerald-500 text-emerald-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Disparo Direto
-        </button>
-        )}
-      </div>
-
-      {/* Content */}
-      {activeTab === 'prospectar' && canViewBusca ? (
+    <ProspectarLayout
+      sections={sections}
+      activeSection={activeSection}
+      setActiveSection={(id) => setActiveSection(id as SectionType)}
+    >
+      {/* 🔒 A aba "Prospectar Segmento" ainda existe, mas fica oculta */}
+      {activeSection === "prospectar" && canViewBusca && (
         <>
           <ProspectarForm onProspeccaoCreated={handleProspeccaoCreated} />
           <ProspectarHistory refreshTrigger={historyRefresh} />
         </>
-      ) : null}
-      {activeTab === 'disparo-direto' && canViewDd && (
+      )}
+
+      {activeSection === "disparo-direto" && canViewDd && (
         <DirectDispatchHistory />
       )}
-    </div>
+
+      {activeSection === "modelos" && (
+        <ModelosSection isActive={true} canEdit={canEditConfigs} />
+      )}
+
+      {activeSection === "parametros" && (
+        <ParametrosSection isActive={true} canEdit={canEditConfigs} />
+      )}
+    </ProspectarLayout>
   );
 }

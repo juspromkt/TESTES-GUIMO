@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Database, Users, Tag } from "lucide-react";
+import { GitBranch, Globe2, ListChecks, Tag, Users2, Link2 } from "lucide-react"; // 👈 substituí o ícone da conexão
 import ConfigLayout from "./ConfigLayout";
 
 import FontesSection from "./FontesSection";
@@ -7,11 +7,14 @@ import FunisSection from "./FunisSection";
 import CamposSection from "./CamposSection";
 import TagsSection from "./TagsSection";
 import UsersSection from "./UsersSection";
+import Conexao from "../../pages/Conexao";
+
 
 import { hasPermission } from "../../utils/permissions";
 import type { UserType } from "../../types/user";
 
-type SectionId = "funis" | "fontes" | "campos" | "etiquetas" | "usuarios";
+// adiciona "conexao" ao tipo
+type SectionId = "funis" | "fontes" | "campos" | "etiquetas" | "usuarios" | "conexao";
 
 export default function Configuracoes() {
   const [activeSection, setActiveSection] = useState<SectionId>("funis");
@@ -40,14 +43,14 @@ export default function Configuracoes() {
     checkUserType();
   }, [token]);
 
-  // Sidebar limpinha: funil, fontes, campos, etiquetas, usuários
+  // Sidebar com ícones coerentes e a nova aba de Conexão
   const sections = [
-    { id: "funis", label: "Status do Lead", icon: Database, show: true },
-    { id: "fontes", label: "Origem do Lead", icon: Database, show: true },
-    { id: "campos", label: "Campos personalizados", icon: Database, show: true },
+    { id: "funis", label: "Status do Lead", icon: GitBranch, show: true },
+    { id: "fontes", label: "Origem do Lead", icon: Globe2, show: true },
+    { id: "campos", label: "Campos Personalizados", icon: ListChecks, show: true },
     { id: "etiquetas", label: "Etiquetas", icon: Tag, show: true },
-    { id: "usuarios", label: "Gestão de Usuários", icon: Users, show: showUsers },
-    // Webhooks e Chave de API ocultos por enquanto
+    { id: "conexao", label: "Conexões", icon: Link2, show: true }, // 👈 ajustado nome e ícone
+    { id: "usuarios", label: "Gestão de Usuários", icon: Users2, show: showUsers },
   ];
 
   const renderSection = () => {
@@ -60,6 +63,8 @@ export default function Configuracoes() {
         return <CamposSection isActive={true} canEdit={canEditConfigs} />;
       case "etiquetas":
         return <TagsSection isActive={true} canEdit={canEditConfigs} />;
+      case "conexao":
+        return <Conexao isActive={true} canEdit={canEditConfigs} />; // 👈 corrigido nome
       case "usuarios":
         return <UsersSection isActive={true} canEdit={canEditConfigs} />;
       default:

@@ -162,18 +162,6 @@ export default function StageColumn({
                   )}
                 </div>
               </InfiniteScroll>
-
-              {provided.placeholder}
-
-              {hasMore && deals.length > 0 && (
-                <button
-                  onClick={onLoadMore}
-                  className="w-full mt-3 py-2 flex items-center justify-center text-sm text-blue-600 hover:bg-blue-50 transition-colors rounded-md"
-                >
-                  <span>Ver mais</span>
-                  <ChevronDown className="w-4 h-4 ml-1" />
-                </button>
-              )}
             </div>
           </div>
         )}

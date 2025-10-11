@@ -35,7 +35,7 @@ export default function ParametrosSection({ isActive, canEdit }: ParametrosSecti
       });
       
       if (!response.ok) {
-        throw new Error('Erro ao carregar parâmetros');
+        throw new Error('Erro ao carregar configurações');
       }
 
       const data = await response.json();
@@ -45,8 +45,8 @@ export default function ParametrosSection({ isActive, canEdit }: ParametrosSecti
         setDelayDisparos(params.delay_entre_disparo);
       }
     } catch (err) {
-      console.error('Erro ao carregar parâmetros:', err);
-      setError('Erro ao carregar parâmetros');
+      console.error('Erro ao carregar configurações:', err);
+      setError('Erro ao carregar configurações');
     }
   };
 
@@ -72,16 +72,16 @@ export default function ParametrosSection({ isActive, canEdit }: ParametrosSecti
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao atualizar parâmetros');
+        throw new Error('Erro ao atualizar configurações');
       }
 
-      setSuccess('Parâmetros atualizados com sucesso!');
+      setSuccess('Configurações atualizadas com sucesso!');
       setTimeout(() => {
         setSuccess('');
       }, 2000);
     } catch (err) {
-      console.error('Erro ao atualizar parâmetros:', err);
-      setError('Erro ao atualizar parâmetros');
+      console.error('Erro ao atualizar configurações:', err);
+      setError('Erro ao atualizar configurações');
     } finally {
       setLoading(false);
     }
@@ -92,12 +92,12 @@ export default function ParametrosSection({ isActive, canEdit }: ParametrosSecti
   return (
     <div className="mt-8">
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Parâmetros do Sistema</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">Configurações</h2>
         
         <div className="space-y-4">
           <div>
             <label htmlFor="maxDisparos" className="block text-sm font-medium text-gray-700">
-              Máximo de disparos por prospecção
+              Máximo de disparos (Se sua lista tem 2000 nomes, coloque 2000 aqui)
             </label>
             <input
               type="number"

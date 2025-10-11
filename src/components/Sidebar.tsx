@@ -12,6 +12,7 @@ import {
   ContactIcon as ContactsIcon,
   GitBranch,
   Search,
+  Rocket,
   Loader2,
   Check,
   CalendarDays,
@@ -27,6 +28,8 @@ import { fetchUserPermissions, hasPermission, clearUserPermissions } from '../ut
 import { ThemeContext } from '../context/ThemeContext';
 import { clearChatCache } from '../utils/chatCache';
 import type { LoginResponse } from '../types/auth';
+import { Send, FileText, Sliders } from "lucide-react";
+
 
 interface LinkedAccount {
   id_cliente?: number;
@@ -113,6 +116,7 @@ const Sidebar = () => {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [permissionsLoaded, setPermissionsLoaded] = useState(false);
+  const [isProspectarOpen, setIsProspectarOpen] = useState(false);
   const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
   const [linkedAccountsLoading, setLinkedAccountsLoading] = useState(false);
   const [linkedAccountsError, setLinkedAccountsError] = useState('');
@@ -508,22 +512,21 @@ const Sidebar = () => {
     if (!permissionsLoaded) return [];
     
     const menuItems = [
-  { path: '/dashboard', text: 'Dashboard', icon: LayoutDashboard, permission: true },
-  { path: '/conversas', text: 'Conversas', icon: MessageSquare, permission: hasPermission('can_view_menu_chat')},
-  { path: '/ai-agent', text: 'Agente de IA', icon: Bot, permission: hasPermission('can_view_menu_agent') },
-  { path: '/crm', text: 'CRM', icon: GitBranch, permission: hasPermission('can_view_menu_crm') },
-  { path: '/agendamentos', text: 'Agendamentos', icon: CalendarDays, permission: hasPermission('can_view_menu_schedule') },
-  { path: '/contatos', text: 'Contatos', icon: ContactsIcon, permission: hasPermission('can_view_menu_contacts') },
-  { path: '/conexao', text: 'Conexão', icon: Link, permission: hasPermission('can_view_menu_connection') },
-  { path: '/configuracoes', text: 'Configurações', icon: Settings, permission: hasPermission('can_view_menu_settings') },
-  {
-    text: 'Tutoriais',
-    icon: BookOpen, // você pode importar do lucide-react
-    external: true,
-    path: 'https://tutorial.guimoo.com.br/',
-    permission: true,
-  },
-];
+      { path: '/dashboard', text: 'Dashboard', icon: LayoutDashboard, permission: true },
+      { path: '/conversas', text: 'Conversas', icon: MessageSquare, permission: hasPermission('can_view_menu_chat') },
+      { path: '/ai-agent', text: 'Agente de IA', icon: Bot, permission: hasPermission('can_view_menu_agent') },
+      { path: '/crm', text: 'CRM', icon: GitBranch, permission: hasPermission('can_view_menu_crm') },
+      { path: '/prospectar', text: 'Envios em Massa', icon: Rocket, permission: hasPermission('can_view_menu_prospect') },
+
+      { path: '/configuracoes', text: 'Configurações', icon: Settings, permission: hasPermission('can_view_menu_settings') },
+      {
+        text: 'Tutoriais',
+        icon: BookOpen, // você pode importar do lucide-react
+        external: true,
+        path: 'https://tutorial.guimoo.com.br/',
+        permission: true,
+      },
+    ];
 
     
     return menuItems.filter(item => item.permission);
@@ -618,6 +621,7 @@ const Sidebar = () => {
 
 
             </div>
+
 
 {getMenuItems().map((item) =>
   item.text === 'Tutoriais' ? (

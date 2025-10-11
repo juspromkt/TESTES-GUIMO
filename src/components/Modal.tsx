@@ -55,15 +55,18 @@ const Modal = ({
   const modalContent = (
     <>
       {/* Fundo escurecido */}
-      <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]" />
 
       {/* Conteúdo do modal */}
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200"
+        onClick={(e) => {
+          // Fecha o modal se clicar fora do conteúdo
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
         <div
-          className={`bg-white rounded-xl shadow-2xl ${getMaxWidthClass()} overflow-hidden flex flex-col`}
+          className={`bg-white rounded-xl shadow-2xl transform transition-all duration-200 scale-100 ${getMaxWidthClass()} overflow-hidden flex flex-col`}
           style={{
             width:
               typeof width === 'string' && !width.includes('w-')
@@ -82,6 +85,7 @@ const Modal = ({
                 ? maxHeight
                 : undefined,
           }}
+          onClick={(e) => e.stopPropagation()} // 🔒 impede fechamento ao clicar dentro
         >
           {/* Cabeçalho */}
           <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
