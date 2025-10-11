@@ -557,7 +557,7 @@ const Sidebar = () => {
   onMouseLeave={handleMouseLeave}
   className={`fixed top-0 left-0 bottom-0 z-[9999] transition-all duration-500 ease-in-out transform ${
     domainConfig.getSidebarColor()
-  } border-r border-gray-100 backdrop-blur-md shadow-xl
+  } border-r border-gray-300 backdrop-blur-md shadow-xl
   ${isExpanded ? 'w-56' : 'w-16'}
   `}
   style={{
