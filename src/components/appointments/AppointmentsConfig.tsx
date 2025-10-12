@@ -156,7 +156,7 @@ Exemplo de formato esperado:
                     disabled={!canEdit}
                   />
                   <div className="relative w-14 h-7 bg-gray-200 rounded-full peer transition-all duration-300 peer-focus:ring-4 peer-focus:ring-blue-300/30 peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-indigo-600 shadow-inner">
-                    <div className="absolute top-0.5 left-0.5 bg-white border border-gray-200 rounded-full h-6 w-6 transition-all duration-300 peer-checked:translate-x-7 shadow-md">
+                    <div className="absolute top-0.5 left-0.5 bg-white border border-gray-300 rounded-full h-6 w-6 transition-all duration-300 peer-checked:translate-x-7 shadow-md">
                       {config.isAtivo && (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
@@ -283,7 +283,7 @@ Exemplo de formato esperado:
               <div className="flex-1 h-px bg-gradient-to-r from-gray-300 to-transparent"></div>
             </div>
 
-            <div className="bg-gradient-to-br from-gray-50 to-blue-50/50 rounded-2xl border border-gray-200/50 p-6">
+            <div className="bg-gradient-to-br from-gray-50 to-blue-50/50 rounded-2xl border border-gray-300/50 p-6">
               <div className="flex items-center justify-between mb-4">
                 <label className="text-sm font-semibold text-gray-700">
                   Prompt de Lembrete
@@ -343,7 +343,7 @@ Exemplo de formato esperado:
 
           {/* Action Button */}
           {canEdit && (
-            <div className="flex justify-end pt-6 border-t border-gray-200/50">
+            <div className="flex justify-end pt-6 border-t border-gray-300/50">
               <button
                 type="submit"
                 disabled={saving}

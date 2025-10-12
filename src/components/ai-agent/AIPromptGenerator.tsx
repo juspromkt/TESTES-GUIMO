@@ -197,7 +197,7 @@ export default function AIPromptGenerator({ token, onApplyModel, canEdit }: AIPr
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-gray-200 mt-6">
+              <div className="pt-6 border-t border-gray-300 mt-6">
                 <div className="flex justify-end gap-4">
                   <button
                     onClick={() => setIsResultModalOpen(false)}

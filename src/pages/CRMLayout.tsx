@@ -22,7 +22,7 @@ export default function CRMLayout({
   return (
     <div className="flex gap-6">
       {/* Sidebar */}
-      <aside className="w-64 bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
+      <aside className="w-64 bg-white rounded-2xl border border-gray-300 p-4 shadow-sm">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
           CRM e Relacionamento
         </h2>

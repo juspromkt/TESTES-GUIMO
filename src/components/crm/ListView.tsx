@@ -262,7 +262,7 @@ export default function ListView({
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden w-full">
       {selectedDeals.length > 0 && canEdit && (
-        <div className="p-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+        <div className="p-4 bg-gray-50 border-b border-gray-300 flex items-center justify-between">
           <div className="text-sm text-gray-600">
             {selectedDeals.length} negociação(ões) selecionada(s)
           </div>
@@ -302,7 +302,7 @@ export default function ListView({
         </div>
       )}
 
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between p-4 border-b border-gray-300">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Visualizar itens:</span>

@@ -338,7 +338,7 @@ const canEditContacts = hasPermission('can_edit_contacts');
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="p-4 border-b border-gray-200 bg-gray-50">
+          <div className="p-4 border-b border-gray-300 bg-gray-50">
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -487,7 +487,7 @@ const canEditContacts = hasPermission('can_edit_contacts');
   <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
       {/* Cabeçalho */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-300">
         <h2 className="text-lg font-semibold text-gray-900">
           {selectedContato ? 'Editar Contato' : 'Novo Contato'}
         </h2>

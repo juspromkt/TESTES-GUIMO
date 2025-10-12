@@ -73,7 +73,7 @@ export default function TemplateModal({ isOpen, onClose, token, remoteJid }: Tem
     });
 
     return (
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden">
         <div className="bg-gradient-to-r from-green-400 to-green-500 text-white text-xs px-3 py-2 font-medium">
           Template do WhatsApp
         </div>
@@ -402,7 +402,7 @@ export default function TemplateModal({ isOpen, onClose, token, remoteJid }: Tem
               </label>
               <div className="space-y-3">
                 {createForm.buttons.map((button, idx) => (
-                  <div key={idx} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                  <div key={idx} className="border border-gray-300 rounded-lg p-4 bg-gray-50">
                     <div className="flex gap-2 mb-3">
                       <select
                         className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 focus:ring-2 focus:ring-green-500 focus:border-green-500"

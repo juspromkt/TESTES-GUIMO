@@ -627,7 +627,7 @@ const Sidebar = () => {
   item.text === 'Tutoriais' ? (
     <>
       {/* Divisor antes do Tutoriais */}
-      <hr className="mx-3 my-2 border-t border-gray-200/40" />
+      <hr className="mx-3 my-2 border-t border-gray-300/40" />
 
       {/* Botão Tutoriais */}
       <a
@@ -715,7 +715,7 @@ const Sidebar = () => {
   <button
     onClick={() => setIsWorkspaceModalOpen(true)}
     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl
-               bg-white/60 backdrop-blur-sm border border-gray-200/70
+               bg-white/60 backdrop-blur-sm border border-gray-300/70
                hover:bg-white hover:shadow-md
                transition-all duration-300 text-gray-800 group"
   >
@@ -808,7 +808,7 @@ const Sidebar = () => {
         title="Alterar Senha"
         maxWidth="md"
       >
-        <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200/50 p-6">
+        <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-300/50 p-6">
           <form onSubmit={handlePasswordSubmit} className="space-y-6">
             <div>
               <label htmlFor="currentPassword" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -876,7 +876,7 @@ const Sidebar = () => {
               </div>
             )}
 
-            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200/50">
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-300/50">
               <button
                 type="button"
                 onClick={() => {
@@ -920,7 +920,7 @@ const Sidebar = () => {
   title="Selecionar Workspace"
   maxWidth="lg"
 >
-  <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200/50 p-6 space-y-6">
+  <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-300/50 p-6 space-y-6">
     {/* 🧭 BLOCO SUPERIOR - WORKSPACE ATUAL */}
     <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl flex items-start gap-3">
       <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
@@ -940,7 +940,7 @@ const Sidebar = () => {
     </div>
 
     {/* 🧭 CABEÇALHO */}
-    <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+    <div className="flex items-center justify-between border-b border-gray-300 pb-3">
       <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
         <Users className="w-5 h-5 text-emerald-600" />
         Workspaces
@@ -956,7 +956,7 @@ const Sidebar = () => {
         value={linkedAccountsSearch}
         onChange={(e) => setLinkedAccountsSearch(e.target.value)}
         placeholder="Buscar workspace..."
-        className="w-full pl-9 pr-3 py-2.5 text-sm rounded-lg border border-gray-200 bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+        className="w-full pl-9 pr-3 py-2.5 text-sm rounded-lg border border-gray-300 bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
       />
     </div>
 
@@ -1000,7 +1000,7 @@ const Sidebar = () => {
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium border transition-all duration-200 ${
                 isCurrent
                   ? 'bg-emerald-50 border-emerald-300 text-emerald-800 shadow-sm'
-                  : 'bg-white border-gray-200 text-gray-700 hover:bg-emerald-50/70 hover:border-emerald-400 hover:shadow-sm'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-emerald-50/70 hover:border-emerald-400 hover:shadow-sm'
               }`}
             >
               <div className="flex items-center gap-3">

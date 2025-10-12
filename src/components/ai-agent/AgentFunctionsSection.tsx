@@ -1191,7 +1191,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
               className={`rounded-xl p-4 border ${
                 newFunction.tipo === 'NOTIFICACAO'
                   ? 'bg-slate-50 border-slate-200 shadow-sm'
-                  : 'border-gray-200'
+                  : 'border-gray-300'
               }`}
             >
               <div className="flex items-start justify-between gap-3 mb-2">
@@ -1199,7 +1199,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                   Explique para a IA quando ela deve te enviar essa notificação *
                 </label>
                 {newFunction.tipo === 'NOTIFICACAO' && (
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-300">
                     Guia para a IA
                   </span>
                 )}
@@ -1266,7 +1266,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
               const notificationInput = notificationAttributeInputs[func.id] ?? createEmptyNotificationAttribute();
 
               return (
-                <div key={func.id} className="border border-gray-200 rounded-lg p-6">
+                <div key={func.id} className="border border-gray-300 rounded-lg p-6">
                 {editingFunction === func.id ? (
                   <div className="space-y-4 mb-6">
                     <h4 className="font-semibold text-gray-900">Editando Notificação</h4>
@@ -1409,7 +1409,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                       className={`rounded-xl p-4 border ${
                         editingFunctionData.tipo === 'NOTIFICACAO'
                           ? 'bg-slate-50 border-slate-200 shadow-sm'
-                          : 'border-gray-200'
+                          : 'border-gray-300'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3 mb-2">
@@ -1417,7 +1417,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                           Descrição do Contexto *
                         </label>
                         {editingFunctionData.tipo === 'NOTIFICACAO' && (
-                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-300">
                             Guia para a IA
                           </span>
                         )}

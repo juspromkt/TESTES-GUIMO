@@ -352,7 +352,7 @@ return (
         maxWidth="lg"
         maxHeight="90vh"
       >
-        <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200/50">
+        <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-300/50">
           <form onSubmit={handleCreateAppointment} className="space-y-6 p-6 overflow-y-auto max-h-[70vh]">
             {/* Deal Selection */}
             <div className="space-y-3">
@@ -370,7 +370,7 @@ return (
                     className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 backdrop-blur-sm transition-all duration-200"
                   />
                 </div>
-                <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-xl bg-white/50 backdrop-blur-sm">
+                <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-xl bg-white/50 backdrop-blur-sm">
                   {loadingDeals ? (
                     <div className="flex items-center justify-center h-20 text-gray-500">
                       <CalendarIcon className="w-5 h-5 animate-spin mr-2" />
@@ -383,7 +383,7 @@ return (
                         <div
                           key={deal.Id}
                           onClick={() => setSelectedDealId(deal.Id)}
-                          className={`p-4 cursor-pointer hover:bg-blue-50 transition-all duration-200 border-b border-gray-100 last:border-b-0 ${
+                          className={`p-4 cursor-pointer hover:bg-blue-50 transition-all duration-200 border-b border-gray-300 last:border-b-0 ${
                             selectedDealId === deal.Id 
                               ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border-l-4 border-l-blue-500' 
                               : 'text-gray-700'
@@ -485,7 +485,7 @@ return (
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200/50">
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-300/50">
               <button
                 type="button"
                 onClick={() => {
@@ -515,7 +515,7 @@ return (
         title="Detalhes do Agendamento"
       >
         {summaryAppointment && (
-          <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200/50">
+          <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-300/50">
             <div className="p-6 space-y-6">
               {/* Header */}
               <div className="flex items-start justify-between">
@@ -590,7 +590,7 @@ return (
 
               {/* Actions */}
               {summaryAppointment.id_negociacao && (
-                <div className="flex justify-end pt-6 border-t border-gray-200/50">
+                <div className="flex justify-end pt-6 border-t border-gray-300/50">
                   <button
                     onClick={() => navigate(`/crm/${summaryAppointment.id_negociacao}`)}
                     className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
@@ -613,7 +613,7 @@ return (
         maxWidth="lg"
         maxHeight="90vh"
       >
-        <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200/50">
+        <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-300/50">
           <form onSubmit={handleEditAppointment} className="space-y-6 p-6 overflow-y-auto max-h-[70vh]">
             {/* Deal Selection */}
             <div className="space-y-3">
@@ -631,7 +631,7 @@ return (
                     className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 backdrop-blur-sm transition-all duration-200"
                   />
                 </div>
-                <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-xl bg-white/50 backdrop-blur-sm">
+                <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-xl bg-white/50 backdrop-blur-sm">
                   {loadingDeals ? (
                     <div className="flex items-center justify-center h-20 text-gray-500">
                       <CalendarIcon className="w-5 h-5 animate-spin mr-2" />
@@ -646,7 +646,7 @@ return (
                         <div
                           key={deal.Id}
                           onClick={() => setSelectedDealId(deal.Id)}
-                          className={`p-4 cursor-pointer hover:bg-blue-50 transition-all duration-200 border-b border-gray-100 last:border-b-0 ${
+                          className={`p-4 cursor-pointer hover:bg-blue-50 transition-all duration-200 border-b border-gray-300 last:border-b-0 ${
                             selectedDealId === deal.Id 
                               ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border-l-4 border-l-blue-500' 
                               : 'text-gray-700'
@@ -745,7 +745,7 @@ return (
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-between pt-6 border-t border-gray-200/50">
+            <div className="flex justify-between pt-6 border-t border-gray-300/50">
               <button
                 type="button"
                 onClick={() => {

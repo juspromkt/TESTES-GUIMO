@@ -748,7 +748,7 @@ onChange={canViewAgent ? (content) => setConfig({ ...config, prompt: content }) 
 
       {/* Histórico de Follow-up */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-300">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-900">Histórico de Follow-up</h2>
                         {canViewAgent && (
@@ -820,7 +820,7 @@ onChange={canViewAgent ? (content) => setConfig({ ...config, prompt: content }) 
         maxWidth="4xl"
       >
         <div className="p-6 space-y-6">
-          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 max-h-[400px] overflow-y-auto">
+          <div className="bg-gray-50 p-6 rounded-lg border border-gray-300 max-h-[400px] overflow-y-auto">
             <pre className="whitespace-pre-wrap text-gray-800 text-sm font-mono">{generatedPrompt}</pre>
           </div>
 

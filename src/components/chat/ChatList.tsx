@@ -1471,7 +1471,7 @@ const getLastMessageText = (chat) => {
 
   return (
     <div className="h-full flex flex-col bg-gray-50">
-      <div className="border-b border-gray-100 bg-white/90">
+      <div className="border-b border-gray-300 bg-white/90">
         <div className="px-3 py-3 space-y-3">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -1481,7 +1481,7 @@ const getLastMessageText = (chat) => {
               <button
                 onClick={() => setShowControls(prev => !prev)}
                 className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                  showControls ? 'bg-gray-100 text-gray-700 border-gray-200' : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
+                  showControls ? 'bg-gray-100 text-gray-700 border-gray-300' : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-300'
                 }`}
               >
                 <span>{showControls ? 'Ocultar filtros' : 'Mostrar filtros'}</span>
@@ -1492,7 +1492,7 @@ const getLastMessageText = (chat) => {
               </button>
               <button
                 onClick={handleManualRefresh}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition-colors hover:bg-gray-50"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 text-gray-500 transition-colors hover:bg-gray-50"
                 title="Atualizar lista"
               >
                 <RefreshCw className="h-4 w-4" />
@@ -1510,28 +1510,28 @@ const getLastMessageText = (chat) => {
                 lastUserInteractionRef.current = Date.now();
                 setSearchTerm(e.target.value);
               }}
-              className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-700 placeholder:text-gray-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition"
+              className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-700 placeholder:text-gray-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition"
             />
           </div>
 
           {showControls && (
-            <div className="border-t border-gray-100 pt-3">
+            <div className="border-t border-gray-300 pt-3">
               <div
-                className="space-y-3 rounded-lg border border-gray-200 bg-white/95 p-3 shadow-sm max-h-64 overflow-y-auto"
+                className="space-y-3 rounded-lg border border-gray-300 bg-white/95 p-3 shadow-sm max-h-64 overflow-y-auto"
                 style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(148, 163, 184, 0.35) transparent' }}
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <Popover.Root open={contactPopoverOpen} onOpenChange={setContactPopoverOpen}>
                     <Popover.Trigger asChild>
                       <button
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-50"
                         title="Nova conversa"
                       >
                         <MessageSquarePlus className="h-4 w-4" />
                       </button>
                     </Popover.Trigger>
                     <Popover.Portal>
-                      <Popover.Content sideOffset={6} className="z-50 w-60 rounded-xl border border-gray-200 bg-white p-3 shadow-2xl">
+                      <Popover.Content sideOffset={6} className="z-50 w-60 rounded-xl border border-gray-300 bg-white p-3 shadow-2xl">
                         <input
                           type="text"
                           value={contactSearch}
@@ -1540,7 +1540,7 @@ const getLastMessageText = (chat) => {
                             setContactSearch(e.target.value);
                           }}
                           placeholder="Buscar contato"
-                          className="mb-2 w-full rounded border border-gray-200 p-2 text-sm focus:border-emerald-400 focus:outline-none"
+                          className="mb-2 w-full rounded border border-gray-300 p-2 text-sm focus:border-emerald-400 focus:outline-none"
                         />
                         <div className="max-h-60 overflow-y-auto">
                           {filteredContacts.map(c => (
@@ -1570,7 +1570,7 @@ const getLastMessageText = (chat) => {
                         className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-gray-600 transition-colors ${
                           iaStatusFilter !== 'all'
                             ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                            : 'border-gray-200 bg-white hover:bg-gray-50'
+                            : 'border-gray-300 bg-white hover:bg-gray-50'
                         }`}
                         title="Filtrar por status de IA"
                       >
@@ -1580,7 +1580,7 @@ const getLastMessageText = (chat) => {
                       </button>
                     </Popover.Trigger>
                     <Popover.Portal>
-                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-200 bg-white p-3 shadow-2xl">
+                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-300 bg-white p-3 shadow-2xl">
                         <div className="space-y-1">
                           <button
                             onClick={() => setIaStatusFilter('active')}
@@ -1611,7 +1611,7 @@ const getLastMessageText = (chat) => {
                         className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-gray-600 transition-colors ${
                           usuarioFiltroId !== null
                             ? 'border-blue-300 bg-blue-50 text-blue-700'
-                            : 'border-gray-200 bg-white hover:bg-gray-50'
+                            : 'border-gray-300 bg-white hover:bg-gray-50'
                         }`}
                         title="Filtrar por usuário"
                       >
@@ -1621,7 +1621,7 @@ const getLastMessageText = (chat) => {
                       </button>
                     </Popover.Trigger>
                     <Popover.Portal>
-                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-200 bg-white p-3 shadow-2xl">
+                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-300 bg-white p-3 shadow-2xl">
                         <div className="max-h-60 space-y-1 overflow-y-auto">
                           <button
                             onClick={() => setUsuarioFiltroId(null)}
@@ -1651,7 +1651,7 @@ const getLastMessageText = (chat) => {
                         className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-gray-600 transition-colors ${
                           tagFiltroId !== null
                             ? 'border-purple-300 bg-purple-50 text-purple-700'
-                            : 'border-gray-200 bg-white hover:bg-gray-50'
+                            : 'border-gray-300 bg-white hover:bg-gray-50'
                         }`}
                         title="Filtrar por etiqueta"
                       >
@@ -1661,7 +1661,7 @@ const getLastMessageText = (chat) => {
                       </button>
                     </Popover.Trigger>
                     <Popover.Portal>
-                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-200 bg-white p-3 shadow-2xl">
+                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-300 bg-white p-3 shadow-2xl">
                         <div className="max-h-60 space-y-1 overflow-y-auto">
                           <button
                             onClick={() => setTagFiltroId(null)}
@@ -1703,7 +1703,7 @@ const getLastMessageText = (chat) => {
                       className={`flex-1 min-w-[120px] rounded-md border px-2.5 py-1 transition-colors ${
                         activeTab === tab.key
                           ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                          : 'border-transparent bg-white text-gray-600 hover:border-gray-200 hover:bg-gray-50'
+                          : 'border-transparent bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
                       }`}
                     >
                       {tab.label}
@@ -1721,7 +1721,7 @@ const getLastMessageText = (chat) => {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <div className="relative">
-              <div className="w-12 h-12 border-4 border-gray-200 rounded-full animate-spin"></div>
+              <div className="w-12 h-12 border-4 border-gray-300 rounded-full animate-spin"></div>
               <div className="absolute top-0 left-0 w-12 h-12 border-4 border-transparent border-t-gray-600 rounded-full animate-spin"></div>
             </div>
             <p className="text-gray-600/70 text-sm">Carregando conversas...</p>
@@ -1946,7 +1946,7 @@ const getLastMessageText = (chat) => {
                                     ? 'bg-amber-100 text-amber-800 border-amber-200'
                                     : isSelected
                                       ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
-                                      : 'bg-gray-100 text-gray-700 border-gray-200'
+                                      : 'bg-gray-100 text-gray-700 border-gray-300'
                                 }`}
                                 title={`${hidden} etiqueta(s) adicional(is)`}
                               >
@@ -2038,7 +2038,7 @@ const getLastMessageText = (chat) => {
 
             {loadingMore && (
               <div className="flex justify-center py-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-3000"></div>
               </div>
             )}
             

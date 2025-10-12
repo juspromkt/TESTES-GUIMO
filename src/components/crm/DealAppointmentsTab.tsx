@@ -315,7 +315,7 @@ export default function DealAppointmentsTab({ dealId }: DealAppointmentsTabProps
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-gray-300">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold">Agendamentos</h2>
           <button
@@ -502,7 +502,7 @@ export default function DealAppointmentsTab({ dealId }: DealAppointmentsTabProps
             <div className="p-4 bg-red-50 text-red-600 rounded-lg text-sm">{error}</div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-300">
             <button
               type="button"
               onClick={() => {

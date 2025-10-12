@@ -380,7 +380,7 @@ const handleModeloSubmit = async (e: React.FormEvent) => {
     <div className="space-y-8">
       {/* Success Banner */}
       {allDispatchesCompleted && (
-        <div className="bg-gray-50 border-l-4 border-gray-500 p-4 flex items-center gap-3">
+        <div className="bg-gray-50 border-l-4 border-gray-3000 p-4 flex items-center gap-3">
           <CheckCircle className="w-6 h-6 text-gray-500" />
           <p className="text-gray-700 font-medium">
             TODOS OS DISPAROS FORAM EXECUTADOS COM SUCESSO
@@ -388,7 +388,7 @@ const handleModeloSubmit = async (e: React.FormEvent) => {
         </div>
       )}
 
-<div className="bg-white border-b border-gray-200 px-6 py-4">
+<div className="bg-white border-b border-gray-300 px-6 py-4">
   <button
     onClick={() => navigate('/prospectar')}
     className="text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-2"
@@ -443,7 +443,7 @@ const handleModeloSubmit = async (e: React.FormEvent) => {
 
       {/* Tabela de Leads */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-300">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Leads Encontrados</h2>
             {leads.length > 0 && (
@@ -549,7 +549,7 @@ const handleModeloSubmit = async (e: React.FormEvent) => {
 
       {/* Histórico de Disparos */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-300">
           <h2 className="text-xl font-semibold">Histórico de Disparos</h2>
         </div>
         <div className="overflow-x-auto">

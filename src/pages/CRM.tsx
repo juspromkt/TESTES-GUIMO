@@ -261,10 +261,23 @@ const fetchDeals = async (page: number) => {
     const dataFunil = await responseFunil.json();
     const dataSemFunil = await responseSemFunil.json();
 
-    const allDeals = [
-      ...(Array.isArray(dataFunil) ? dataFunil : []),
-      ...(Array.isArray(dataSemFunil) ? dataSemFunil : [])
-    ];
+// 🔹 Junta os dois resultados, mas remove duplicados pelo ID
+const allDealsRaw = [
+  ...(Array.isArray(dataFunil) ? dataFunil : []),
+  ...(Array.isArray(dataSemFunil) ? dataSemFunil : []),
+];
+
+// 🔹 Cria um mapa para remover duplicados com base no ID da negociação
+const uniqueDealsMap = new Map<number, any>();
+for (const d of allDealsRaw) {
+  if (!uniqueDealsMap.has(d.Id)) {
+    uniqueDealsMap.set(d.Id, d);
+  }
+}
+const allDeals = Array.from(uniqueDealsMap.values());
+
+console.log("📊 Negociações únicas (sem duplicatas):", allDeals);
+
 
     console.log("📊 Todas as negociações (com e sem funil):", allDeals);
 

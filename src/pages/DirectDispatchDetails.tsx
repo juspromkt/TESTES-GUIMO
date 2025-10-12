@@ -542,7 +542,7 @@ const filteredAndSortedLeads = [...leads]
         </div>
       )}
 
-      <div className="bg-white border-b border-gray-200 px-8 py-4">
+      <div className="bg-white border-b border-gray-300 px-8 py-4">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/prospectar')}
@@ -622,7 +622,7 @@ const filteredAndSortedLeads = [...leads]
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
+            <div className="p-6 border-b border-gray-300">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold">Leads Importados</h2>
                   <div className="flex gap-3">
@@ -729,7 +729,7 @@ const filteredAndSortedLeads = [...leads]
             />
 
 {canEditProspect && (
-            <div className="p-6 border-t border-gray-200">
+            <div className="p-6 border-t border-gray-300">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-semibold">Controle de Envios</h2>

@@ -94,7 +94,7 @@ export default function KanbanBoard({
             inline-flex gap-5 px-6 pb-10
             min-h-[calc(100vh-200px)]
             bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50
-            rounded-2xl border border-gray-200 shadow-inner
+            rounded-2xl border border-gray-300 shadow-inner
             relative overflow-visible z-0
           "
           style={{ transform: 'none' }}

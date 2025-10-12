@@ -5,7 +5,6 @@ import type { Deal } from '../../types/deal';
 import type { Estagio } from '../../types/funil';
 import DealCard from './DealCard';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import { ChevronDown, MoreHorizontal } from 'lucide-react';
 
 interface StageColumnProps {
   estagio: Estagio;
@@ -28,14 +27,15 @@ export default function StageColumn({
   onLoadMore,
   canEdit,
   users,
-  tagsMap
+  tagsMap,
 }: StageColumnProps) {
   const isSemStatus =
-    estagio.Id === 'sem-status' || estagio.nome?.toLowerCase?.() === 'sem status';
+    estagio.Id === 'sem-status' ||
+    estagio.nome?.toLowerCase?.() === 'sem status';
 
   return (
     <div
-      className="w-80 flex-shrink-0 h-full flex flex-col rounded-2xl shadow-sm border border-gray-200 overflow-visible relative transition-all duration-300"
+      className="w-80 flex-shrink-0 h-full flex flex-col rounded-2xl shadow-sm border border-gray-300 overflow-visible relative transition-all duration-300"
       style={{
         backgroundColor: estagio.cor || '#f9fafb',
       }}
@@ -51,7 +51,7 @@ export default function StageColumn({
                 : ''
             }`}
           >
-            {/* Cabeçalho da Coluna */}
+            {/* Cabeçalho */}
             <div
               className={`flex items-center justify-between px-4 py-3 rounded-t-2xl border-b shadow-sm ${
                 isSemStatus ? 'bg-green-500/90' : 'bg-white/70 backdrop-blur-sm'
@@ -72,7 +72,6 @@ export default function StageColumn({
                 </h3>
               </div>
 
-              {/* Badge de contagem */}
               <span
                 className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                   isSemStatus
@@ -124,14 +123,17 @@ export default function StageColumn({
                               {...provided.dragHandleProps}
                               style={{
                                 ...provided.draggableProps.style,
+                                // 🔹 mantém a transformação do DnD e adiciona transição suave
+                                transform: provided.draggableProps.style
+                                  ?.transform,
+                                transition: snapshot.isDragging
+                                  ? 'transform 0.15s ease'
+                                  : 'transform 0.25s ease',
                                 zIndex: snapshot.isDragging ? 9999 : 'auto',
-                                position: snapshot.isDragging
-                                  ? 'relative'
-                                  : 'static',
                               }}
-                              className={`transform transition-all duration-200 ${
+                              className={`rounded-xl bg-white transition-all duration-200 cursor-grab active:cursor-grabbing ${
                                 snapshot.isDragging
-                                  ? 'scale-105 rotate-1'
+                                  ? 'scale-105 rotate-[1deg] shadow-2xl ring-2 ring-blue-400 ring-offset-2'
                                   : 'hover:scale-[1.01]'
                               }`}
                             >
@@ -161,6 +163,9 @@ export default function StageColumn({
                     )
                   )}
                 </div>
+
+                {/* 🔹 ESSENCIAL: placeholder para o drag funcionar visualmente */}
+                {provided.placeholder}
               </InfiniteScroll>
             </div>
           </div>

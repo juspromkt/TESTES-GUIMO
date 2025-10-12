@@ -76,7 +76,7 @@ const canEditProspect = hasPermission('can_edit_prospect');
             placeholder="Ex: Restaurantes, Clínicas..."
             value={segmento}
             onChange={(e) => setSegmento(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-3000"
             required
           />
           {isAlimenticio(segmento) && (
@@ -97,7 +97,7 @@ const canEditProspect = hasPermission('can_edit_prospect');
             placeholder="Digite uma cidade por vez"
             value={cidade}
             onChange={(e) => setCidade(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-3000"
             required
           />
         </div>
@@ -113,7 +113,7 @@ const canEditProspect = hasPermission('can_edit_prospect');
             placeholder="Ex: apenas lojas físicas..."
             value={filtros}
             onChange={(e) => setFiltros(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-3000"
           />
         </div>
 

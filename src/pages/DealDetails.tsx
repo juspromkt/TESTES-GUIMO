@@ -1240,7 +1240,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
   return (
     <div className="h-full flex flex-col bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-8 py-6 shadow-sm">
+      <div className="bg-white border-b border-gray-300 px-8 py-6 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             {onClose ? (
@@ -1338,7 +1338,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
             {/* Left Column - Basic Info & Funnel */}
             <div className="md:col-span-2 space-y-6">
               {/* Basic Info Card */}
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-300">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <FileText className="w-5 h-5 text-blue-500" />
@@ -1509,7 +1509,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
               </div>
 
               {/* Funnel Card */}
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-300">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <GitBranch className="w-5 h-5 text-indigo-500" />
@@ -1605,7 +1605,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
             </div>
 
               {/* Summary Card */}
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-300">
                 <div className="flex justify-between items-center mb-4">
 <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
   <Bot className="w-5 h-5 text-violet-500" />
@@ -1657,7 +1657,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                 )}
               </div>
               {/* Activities Section */}
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-300">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <MessageSquare className="w-5 h-5 text-purple-500" />
@@ -1667,7 +1667,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
 
                 {/* New Activity Form */}
                 {canEditCRM && (
-                  <div className="mb-6 border-b border-gray-200 pb-6">
+                  <div className="mb-6 border-b border-gray-300 pb-6">
                     <h3 className="text-sm font-medium text-gray-700 mb-2">Nova Atividade</h3>
                     <div className="space-y-3">
                       {canEditCRM && (
@@ -1755,7 +1755,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                         const activityUser = users.find(u => u.Id === activity.id_usuario);
                         
                         return (
-                          <div key={activity.Id} className="border border-gray-200 rounded-lg p-4">
+                          <div key={activity.Id} className="border border-gray-300 rounded-lg p-4">
                             {editingActivity?.Id === activity.Id ? (
                               <div className="space-y-3">
                                 <div className="relative">
@@ -1812,7 +1812,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                                       <button className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
                                         <MoreVertical className="w-4 h-4" />
                                       </button>
-                                      <div className="absolute right-0 mt-1 w-36 bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200 hidden group-hover:block z-10">
+                                      <div className="absolute right-0 mt-1 w-36 bg-white shadow-lg rounded-lg overflow-hidden border border-gray-300 hidden group-hover:block z-10">
                                         <button
                                           onClick={() => setEditingActivity(activity)}
                                           className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
@@ -1849,7 +1849,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
 
             {/* Right Column - Contact Info */}
             <div className="space-y-6">
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-300">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <User className="w-5 h-5 text-green-500" />
@@ -1946,7 +1946,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                     
                     {/* Quick Actions */}
                     {!editingContact && (
-                      <div className="mt-4 pt-4 border-t border-gray-100">
+                      <div className="mt-4 pt-4 border-t border-gray-300">
                         <h3 className="text-sm font-medium text-gray-700 mb-2">Ações Rápidas</h3>
                         <div className="flex flex-wrap gap-2">
                           
@@ -1988,7 +1988,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                   </div>
                 )}
               </div>
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-300">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <GitBranch className="w-5 h-5 text-purple-500" />
@@ -2138,7 +2138,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
 
         {!hideConversations && activeTab === 'conversas' && (
           <div className="flex justify-center">
-            <div className="w-full md:w-[480px] bg-gray-100 rounded-2xl overflow-hidden shadow-md border border-gray-200 flex flex-col" style={{ height: "600px" }}>
+            <div className="w-full md:w-[480px] bg-gray-100 rounded-2xl overflow-hidden shadow-md border border-gray-300 flex flex-col" style={{ height: "600px" }}>
               <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 flex items-center">
                 <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                   <span className="text-lg font-semibold">{deal.contato?.nome?.charAt(0) || 'U'}</span>

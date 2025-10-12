@@ -8,7 +8,7 @@ interface AnuncioCardProps {
 
 export default function AnuncioCard({ anuncio }: AnuncioCardProps) {
   return (
-    <div className="flex max-w-md border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+    <div className="flex max-w-md border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm">
       {/* Imagem */}
       <div className="w-32 h-24 flex items-center justify-center bg-gray-100">
         {anuncio.mediaType === 'IMAGE' && (

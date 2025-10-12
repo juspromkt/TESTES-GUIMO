@@ -137,7 +137,7 @@ export function AudioPlayer({ url }: AudioPlayerProps) {
   const progressPercentage = duration ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="flex items-center space-x-3 p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-gray-200/50 shadow-sm max-w-sm">
+    <div className="flex items-center space-x-3 p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-gray-300/50 shadow-sm max-w-sm">
       {/* Botão Play/Pause */}
       <button
         onClick={togglePlay}

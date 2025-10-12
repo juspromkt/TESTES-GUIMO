@@ -5,7 +5,7 @@ import { GitBranch, Settings } from 'lucide-react';
 export default function EmptyFunnelState() {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-4">
-      <div className="bg-gray-50 p-8 rounded-xl shadow-sm border border-gray-200 max-w-lg">
+      <div className="bg-gray-50 p-8 rounded-xl shadow-sm border border-gray-300 max-w-lg">
         <GitBranch className="w-16 h-16 text-blue-500 mx-auto mb-4" />
         <h2 className="text-2xl font-semibold text-gray-900 mb-3">
           Você ainda não configurou/ativou seu CRM

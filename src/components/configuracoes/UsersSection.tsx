@@ -597,7 +597,7 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                 <p className="text-gray-700">
                   A senha foi resetada com sucesso. Envie a nova senha para o usuário ou peça para que ele altere após o login.
                 </p>
-                <div className="flex items-center justify-between gap-3 bg-gray-100 border border-gray-200 rounded-lg px-4 py-3">
+                <div className="flex items-center justify-between gap-3 bg-gray-100 border border-gray-300 rounded-lg px-4 py-3">
                   <span className="font-mono text-lg text-gray-900 break-all">{resetPassword}</span>
                   <button
                     type="button"
@@ -879,7 +879,7 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
 
 
   {/* === VISIBILIDADE DE MENUS === */}
-  <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+  <section className="bg-white rounded-xl shadow-sm border border-gray-300 p-5">
     <div className="flex items-center gap-2 mb-4">
       <div className="w-8 h-8 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center">
         🧭
@@ -913,7 +913,7 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
   </section>
 
   {/* === PERMISSÕES DE EDIÇÃO === */}
-  <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+  <section className="bg-white rounded-xl shadow-sm border border-gray-300 p-5">
     <div className="flex items-center gap-2 mb-4">
       <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center">
         ✏️
@@ -945,7 +945,7 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
   </section>
 
   {/* === VISIBILIDADE DE LEADS === */}
-  <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+  <section className="bg-white rounded-xl shadow-sm border border-gray-300 p-5">
   <div className="flex items-center gap-2 mb-4">
     <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center">
       👥
@@ -980,7 +980,7 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
 
 
   {/* === BOTÕES === */}
-  <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+  <div className="flex justify-end gap-3 pt-4 border-t border-gray-300">
     <button
       type="button"
       onClick={() => {

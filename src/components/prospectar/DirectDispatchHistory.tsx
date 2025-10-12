@@ -205,7 +205,7 @@ setDispatches(
       )}
 
       {success && (
-        <div className="bg-gray-50 border border-gray-200 text-gray-600 px-4 py-3 rounded-md">
+        <div className="bg-gray-50 border border-gray-300 text-gray-600 px-4 py-3 rounded-md">
           {success}
         </div>
       )}

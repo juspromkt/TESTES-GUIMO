@@ -335,7 +335,7 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
             {funis.map((funil, funilIndex) => (
               <div key={funil.id} className="group bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
                 {/* Funil Header */}
-                <div className="relative bg-gradient-to-r from-slate-50 to-blue-50 p-3 sm:p-6 border-b border-gray-100/50">
+                <div className="relative bg-gradient-to-r from-slate-50 to-blue-50 p-3 sm:p-6 border-b border-gray-300/50">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div className="flex items-start gap-3 sm:gap-4 w-full sm:w-auto">
                       <div className="p-1.5 sm:p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl shadow-lg">
@@ -374,7 +374,7 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
                       <div key={estagio.Id} className="relative">
                         {/* Stage Card */}
                         <div
-                          className="min-w-[200px] sm:min-w-[280px] rounded-xl sm:rounded-2xl p-3 sm:p-5 border border-gray-200/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm"
+                          className="min-w-[200px] sm:min-w-[280px] rounded-xl sm:rounded-2xl p-3 sm:p-5 border border-gray-300/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm"
                           style={{ 
                             backgroundColor: estagio.cor || '#ffffff',
                             boxShadow: `0 8px 32px ${estagio.cor || '#000000'}20`
@@ -464,7 +464,7 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
             onClose={handleCloseModals}
             title="Criar Novo Funil"
           >
-            <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-6 border border-gray-200/50">
+            <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-6 border border-gray-300/50">
               <form onSubmit={handleCreateFunil} className="space-y-6">
                 <div>
                   <label htmlFor="funilName" className="block text-sm font-semibold text-gray-700 mb-3">
@@ -481,7 +481,7 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
                   />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200/50">
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-300/50">
                   <button
                     type="button"
                     onClick={handleCloseModals}

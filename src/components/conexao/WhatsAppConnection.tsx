@@ -331,7 +331,7 @@ const handleConnect = async (e: React.FormEvent) => {
       {connection ? (
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           {/* Connection Header */}
-          <div className="p-6 border-b border-gray-200">
+          <div className="p-6 border-b border-gray-300">
             <div className="flex items-center gap-6">
               <div className="relative">
                 {connection.profilePicUrl ? (

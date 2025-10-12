@@ -257,9 +257,9 @@ reader.readAsDataURL(audioBlob);
     }
   };
  return (
-    <div className="p-6 bg-white/80 backdrop-blur-sm border-t border-gray-100">
+    <div className="p-6 bg-white/80 backdrop-blur-sm border-t border-gray-300">
       {pendingFile && (
-        <div className="mb-4 p-4 bg-gradient-to-r from-gray-50 to-gray-50 border border-gray-200 rounded-2xl">
+        <div className="mb-4 p-4 bg-gradient-to-r from-gray-50 to-gray-50 border border-gray-300 rounded-2xl">
           <div className="flex items-center space-x-3">
             {pendingFile.mediatype === 'image' && (
               <img
@@ -351,7 +351,7 @@ reader.readAsDataURL(audioBlob);
               placeholder="Digite sua mensagem..."
               rows={1}
               autoFocus
-              className="w-full resize-none rounded-2xl border border-gray-200 bg-white/60 backdrop-blur-sm px-4 py-3 pr-12 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+              className="w-full resize-none rounded-2xl border border-gray-300 bg-white/60 backdrop-blur-sm px-4 py-3 pr-12 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
             />
           </div>
         ) : null}

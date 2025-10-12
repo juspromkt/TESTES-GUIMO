@@ -29,7 +29,7 @@ const [activeTab, setActiveTab] = useState<TabType>('calendar');
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-300">
         <div className="flex gap-4">
           {tabs.map((tab) => {
             const Icon = tab.icon;

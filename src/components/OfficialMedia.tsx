@@ -323,7 +323,7 @@ export function OfficialMediaRenderer({ token, message, fetchMedia, compact }: M
             </span>
           </div>
 
-          <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center">
+          <div className="p-3 bg-gray-50 rounded-lg border border-gray-300 flex items-center justify-center">
             <FileText className="w-12 h-12 text-gray-400" />
           </div>
 

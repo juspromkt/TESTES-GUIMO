@@ -293,7 +293,7 @@ export default function SessionManagementTab({ token, canDelete }: SessionManage
   return (
     <div className="space-y-6">
       {/* Sub-tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-300">
         <div className="flex gap-4">
           {tabs.map((tab) => (
             <button
@@ -329,7 +329,7 @@ export default function SessionManagementTab({ token, canDelete }: SessionManage
 
       {/* Main Content */}
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-300">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">
               {activeTab === 'sessions' ? 'Sessões' : 'Intervenções'}

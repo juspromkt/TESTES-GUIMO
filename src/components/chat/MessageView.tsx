@@ -2115,7 +2115,7 @@ function OfficialBinaryMedia({
             <FileText className="w-5 h-5 text-emerald-600" />
             <span className="text-sm font-medium">Documento</span>
           </div>
-          <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 flex justify-center">
+          <div className="p-3 bg-gray-50 rounded-lg border border-gray-300 flex justify-center">
             <FileText className="w-12 h-12 text-gray-400" />
           </div>
           <a
@@ -2240,7 +2240,7 @@ function EvoBinaryMedia({
             <FileText className="w-5 h-5 text-emerald-600" />
             <span className="text-sm font-medium">Documento</span>
           </div>
-          <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 flex justify-center">
+          <div className="p-3 bg-gray-50 rounded-lg border border-gray-300 flex justify-center">
             <FileText className="w-12 h-12 text-gray-400" />
           </div>
           <a
@@ -2742,7 +2742,7 @@ case "templateMessage":
       content = (
         <div className="space-y-2">
           {/* Indicador de que é um template */}
-          <div className="flex items-center space-x-2 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-200">
+          <div className="flex items-center space-x-2 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-300">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -2753,7 +2753,7 @@ case "templateMessage":
           </div>
           
           {/* Container do template */}
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden max-w-sm">
+          <div className="bg-white border border-gray-300 rounded-xl shadow-sm overflow-hidden max-w-sm">
             {/* Header do template */}
             <div className="bg-gradient-to-r from-gray-500 to-gray-600 text-white text-xs px-3 py-2">
               Template do WhatsApp Business
@@ -2761,7 +2761,7 @@ case "templateMessage":
             
             {/* Título do template (se houver) */}
             {template.hydratedTitleText && template.hydratedTitleText.trim() !== "" && (
-              <div className="px-3 py-2 border-b border-gray-100">
+              <div className="px-3 py-2 border-b border-gray-300">
                 <div className="font-semibold text-gray-800 text-sm">
                   {template.hydratedTitleText}
                 </div>
@@ -2779,11 +2779,11 @@ case "templateMessage":
             
             {/* Botões do template */}
             {template.hydratedButtons && template.hydratedButtons.length > 0 && (
-              <div className="border-t border-gray-100">
+              <div className="border-t border-gray-300">
                 {template.hydratedButtons.map((btn, idx) => (
                   <div
                     key={idx}
-                    className="border-b border-gray-100 last:border-b-0"
+                    className="border-b border-gray-300 last:border-b-0"
                   >
                     {btn.quickReplyButton && (
                       <div className="text-center py-3 px-3 text-sm text-gray-600 font-medium hover:bg-gray-50 transition-colors cursor-pointer">
@@ -2827,7 +2827,7 @@ case "templateMessage":
           </div>
           
           {/* Container do template */}
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden max-w-sm">
+          <div className="bg-white border border-gray-300 rounded-xl shadow-sm overflow-hidden max-w-sm">
             {/* Header do template */}
             <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-xs px-3 py-2">
               Template Interativo WhatsApp
@@ -2835,7 +2835,7 @@ case "templateMessage":
             
             {/* Título do header (se houver) */}
             {template.header?.title && template.header.title.trim() !== "" && (
-              <div className="px-3 py-2 border-b border-gray-100">
+              <div className="px-3 py-2 border-b border-gray-300">
                 <div className="font-semibold text-gray-800 text-sm">
                   {template.header.title}
                 </div>
@@ -2853,7 +2853,7 @@ case "templateMessage":
             
             {/* Botões interativos */}
             {buttons.length > 0 && (
-              <div className="border-t border-gray-100">
+              <div className="border-t border-gray-300">
                 {buttons.map((btn, idx) => {
                   let buttonParams = {};
                   try {
@@ -2865,7 +2865,7 @@ case "templateMessage":
                   return (
                     <div
                       key={idx}
-                      className="border-b border-gray-100 last:border-b-0"
+                      className="border-b border-gray-300 last:border-b-0"
                     >
                       {btn.name === 'quick_reply' && (
                         <div className="text-center py-3 px-3 text-sm text-gray-600 font-medium hover:bg-gray-50 transition-colors cursor-pointer">
@@ -2893,7 +2893,7 @@ case "templateMessage":
     } else {
       // Fallback para templates sem estrutura reconhecida
       content = (
-        <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-300">
           <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
@@ -2907,7 +2907,7 @@ case "templateMessage":
   } else {
     // Se não tem templateMessage, mostrar fallback
     content = (
-      <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+      <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-300">
         <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
@@ -3084,7 +3084,7 @@ case "documentMessage": {
           <FileText className="w-5 h-5 text-emerald-600" />
           <span className="text-sm font-medium">Documento</span>
         </div>
-        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 flex justify-center">
+        <div className="p-3 bg-gray-50 rounded-lg border border-gray-300 flex justify-center">
           <FileText className="w-12 h-12 text-gray-400" />
         </div>
         <button
@@ -3237,7 +3237,7 @@ return (
     }}
   >
 {/* Header Premium */}
-<div className="relative flex items-center justify-between px-6 py-4 bg-white/95 backdrop-blur-lg border-b border-gray-200/50 shadow-sm">
+<div className="relative flex items-center justify-between px-6 py-4 bg-white/95 backdrop-blur-lg border-b border-gray-300/50 shadow-sm">
   <div className="flex items-center space-x-4">
     <button
       onClick={onBack}
@@ -3393,7 +3393,7 @@ return (
       <Popover.Portal>
         <Popover.Content
           sideOffset={8}
-          className="z-50 bg-white border border-gray-200 rounded-2xl shadow-xl w-56 p-2 animate-in slide-in-from-top-2"
+          className="z-50 bg-white border border-gray-300 rounded-2xl shadow-xl w-56 p-2 animate-in slide-in-from-top-2"
         >
           {contactData && (
             <Popover.Close asChild>
@@ -3523,7 +3523,7 @@ return (
               <div key={message.id}>
                 {showDateSeparator && (
                   <div className="flex justify-center my-8">
-                    <div className="px-4 py-2 text-xs font-medium text-gray-500 bg-white/70 backdrop-blur-sm rounded-full shadow-sm border border-gray-200/50">
+                    <div className="px-4 py-2 text-xs font-medium text-gray-500 bg-white/70 backdrop-blur-sm rounded-full shadow-sm border border-gray-300/50">
                       {messageDateLabel}
                     </div>
                   </div>
@@ -3573,7 +3573,7 @@ return (
                     ${
                       isFromMe
                         ? "bg-gradient-to-br from-gray-500 to-gray-600 text-white ml-12 rounded-br-md"
-                        : "bg-white text-gray-800 mr-12 border border-gray-200/50 rounded-bl-md"
+                        : "bg-white text-gray-800 mr-12 border border-gray-300/50 rounded-bl-md"
                     }
                   `}
                 >
@@ -3665,7 +3665,7 @@ return (
 {showDeals && (
   <div
     id="deals-popup"
-    className="fixed bg-white border border-gray-200 shadow-2xl rounded-2xl w-96 max-h-[500px] overflow-hidden z-[9999] animate-in slide-in-from-top-2"
+    className="fixed bg-white border border-gray-300 shadow-2xl rounded-2xl w-96 max-h-[500px] overflow-hidden z-[9999] animate-in slide-in-from-top-2"
     style={{ 
       boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
       top: dealsButtonRef.current ? 
@@ -3683,7 +3683,7 @@ return (
     }}
   >
     {/* Header */}
-    <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-200/50">
+    <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-300/50">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -3741,7 +3741,7 @@ return (
                     setShowDeals(false);
                     setSelectedDealId(deal.Id);
                   }}
-                  className="cursor-pointer p-4 border border-gray-200 rounded-xl hover:bg-gradient-to-r hover:from-gray-50 hover:to-indigo-50 hover:border-blue-200 transition-all duration-200 group"
+                  className="cursor-pointer p-4 border border-gray-300 rounded-xl hover:bg-gradient-to-r hover:from-gray-50 hover:to-indigo-50 hover:border-blue-200 transition-all duration-200 group"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -3765,7 +3765,7 @@ return (
             })}
           </div>
           
-          <div className="border-t border-gray-200 pt-4">
+          <div className="border-t border-gray-300 pt-4">
             <button
               onClick={createNewDeal}
               className="w-full px-4 py-3 bg-gradient-to-r from-gray-500 to-indigo-600 text-white rounded-xl hover:from-gray-600 hover:to-indigo-700 transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center justify-center space-x-2"
@@ -3806,7 +3806,7 @@ return (
     {/* Context Menu */}
     {contextMenu && (
       <div
-        className="fixed z-50 bg-white border border-gray-200 shadow-xl rounded-2xl overflow-hidden animate-in slide-in-from-top-1"
+        className="fixed z-50 bg-white border border-gray-300 shadow-xl rounded-2xl overflow-hidden animate-in slide-in-from-top-1"
         style={{ top: contextMenu.y, left: contextMenu.x }}
         onClick={() => setContextMenu(null)}
       >
@@ -3868,7 +3868,7 @@ return (
     {editModal.open && (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95">
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-gray-200">
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-gray-300">
             <h2 className="text-xl font-bold text-gray-800 flex items-center space-x-3">
               <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
                 <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3909,7 +3909,7 @@ return (
     {contactModalOpen && contactData && (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <div className="px-6 py-4 border-b border-gray-300 flex items-center justify-between">
             <h2 className="text-lg font-bold text-gray-800 flex items-center space-x-3">
               <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
                 <User className="w-4 h-4 text-gray-600" />
@@ -3956,7 +3956,7 @@ return (
               />
             </div>
           </div>
-          <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3 border-t border-gray-200">
+          <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3 border-t border-gray-300">
             <button
               onClick={() => setContactModalOpen(false)}
               className="px-4 py-2 rounded-xl text-sm text-gray-700 hover:bg-gray-100"

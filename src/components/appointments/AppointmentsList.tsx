@@ -405,7 +405,7 @@ return (
   <div className="min-h-screen bg-gray-50 p-6">
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-lg border border-gray-300 bg-white p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="p-2 rounded-md bg-blue-600 text-white">
@@ -476,7 +476,7 @@ return (
       )}
 
       {/* Appointments List */}
-      <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-lg border border-gray-300 bg-white shadow-sm overflow-hidden">
         {paginatedAppointments.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
@@ -525,7 +525,7 @@ return (
                       )}
                       
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3">
+                        <div className="flex items-center gap-3 rounded-lg border border-gray-300 bg-white p-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-600 text-white">
                             <Calendar className="w-4 h-4 text-white" />
                           </div>
@@ -537,7 +537,7 @@ return (
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3">
+                        <div className="flex items-center gap-3 rounded-lg border border-gray-300 bg-white p-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded bg-green-600 text-white">
                             <Clock className="w-4 h-4 text-white" />
                           </div>
@@ -549,7 +549,7 @@ return (
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3">
+                        <div className="flex items-center gap-3 rounded-lg border border-gray-300 bg-white p-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded bg-purple-600 text-white">
                             <User className="w-4 h-4 text-white" />
                           </div>
@@ -591,7 +591,7 @@ return (
 
         {/* Pagination */}
         {filteredAppointments.length > itemsPerPage && (
-          <div className="p-6 border-t border-gray-100">
+          <div className="p-6 border-t border-gray-300">
             <Pagination
               totalItems={filteredAppointments.length}
               itemsPerPage={itemsPerPage}
@@ -614,7 +614,7 @@ return (
         maxWidth="lg"
         maxHeight="90vh"
       >
-        <div className="rounded-lg border border-gray-200 bg-white">
+        <div className="rounded-lg border border-gray-300 bg-white">
           <form onSubmit={handleCreateAppointment} className="space-y-6 p-6 overflow-y-auto max-h-[70vh]">
             {/* Deal Selection */}
             <div className="space-y-3">
@@ -633,7 +633,7 @@ return (
                     className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200"
                   />
                 </div>
-                <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-xl bg-white">
+                <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-xl bg-white">
                   {dealsLoading ? (
                     <div className="flex items-center justify-center h-20 text-gray-500">
                       <Loader2 className="w-5 h-5 animate-spin mr-2" />
@@ -644,7 +644,7 @@ return (
                       <div
                         key={deal.Id}
                         onClick={() => setSelectedDealId(deal.Id)}
-                        className={`p-4 cursor-pointer hover:bg-blue-50 transition-all duration-200 border-b border-gray-100 last:border-b-0 ${
+                        className={`p-4 cursor-pointer hover:bg-blue-50 transition-all duration-200 border-b border-gray-300 last:border-b-0 ${
                           selectedDealId === deal.Id 
                             ? 'bg-blue-50 text-blue-700 border-l-4 border-l-blue-500' 
                             : 'text-gray-700'
@@ -752,7 +752,7 @@ return (
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200/50">
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-300/50">
               <button
                 type="button"
                 onClick={() => {
@@ -796,7 +796,7 @@ return (
         maxWidth="lg"
         maxHeight="90vh"
       >
-        <div className="rounded-lg border border-gray-200 bg-white">
+        <div className="rounded-lg border border-gray-300 bg-white">
           <form onSubmit={handleEditAppointment} className="space-y-6 p-6 overflow-y-auto max-h-[70vh]">
             {/* Deal Selection */}
             <div className="space-y-3">
@@ -815,7 +815,7 @@ return (
                     className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200"
                   />
                 </div>
-                <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-xl bg-white">
+                <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-xl bg-white">
                   {dealsLoading ? (
                     <div className="flex items-center justify-center h-20 text-gray-500">
                       <Loader2 className="w-5 h-5 animate-spin mr-2" />
@@ -826,7 +826,7 @@ return (
                       <div
                         key={deal.Id}
                         onClick={() => setSelectedDealId(deal.Id)}
-                        className={`p-4 cursor-pointer hover:bg-blue-50 transition-all duration-200 border-b border-gray-100 last:border-b-0 ${
+                        className={`p-4 cursor-pointer hover:bg-blue-50 transition-all duration-200 border-b border-gray-300 last:border-b-0 ${
                           selectedDealId === deal.Id 
                             ? 'bg-blue-50 text-blue-700 border-l-4 border-l-blue-500' 
                             : 'text-gray-700'
@@ -905,7 +905,7 @@ return (
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200/50">
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-300/50">
               <button
                 type="button"
                 onClick={() => {

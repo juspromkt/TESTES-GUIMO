@@ -382,13 +382,13 @@ const AIAgent = () => {
       </div>
 
       {success && (
-        <div className="mb-4 px-4 py-3 text-gray-600 bg-gray-50 border border-gray-200 rounded-md">
+        <div className="mb-4 px-4 py-3 text-gray-600 bg-gray-50 border border-gray-300 rounded-md">
           {success}
         </div>
       )}
 
       {/* Tabs */}
-      <div className="mb-8 border-b border-gray-200">
+      <div className="mb-8 border-b border-gray-300">
         <div className="flex gap-4">
           {tabs.map((tab) => (
             <button
@@ -396,7 +396,7 @@ const AIAgent = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? 'border-gray-500 text-gray-600'
+                  ? 'border-gray-3000 text-gray-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >

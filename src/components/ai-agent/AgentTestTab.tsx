@@ -543,7 +543,7 @@ const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
             </div>
           </div>
 
-          <div className="w-full md:w-[380px] bg-gray-100 rounded-2xl overflow-hidden shadow-md border border-gray-200 flex flex-col" style={{ height: "600px" }}>
+          <div className="w-full md:w-[380px] bg-gray-100 rounded-2xl overflow-hidden shadow-md border border-gray-300 flex flex-col" style={{ height: "600px" }}>
             {/* WhatsApp-like header */}
             <div className="bg-emerald-600 text-white p-3 flex items-center">
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
@@ -626,7 +626,7 @@ const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
 </div>
 
             {/* Input area */}
-            <div className="bg-gray-100 p-3 border-t border-gray-200">
+            <div className="bg-gray-100 p-3 border-t border-gray-300">
               {isRecording ? (
                 <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2">
                   <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>

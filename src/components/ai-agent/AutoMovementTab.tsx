@@ -762,7 +762,7 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
           
           <div className="space-y-4 max-h-[400px] overflow-y-auto">
             {generatedDescriptions.map((desc) => (
-              <div key={desc.ordem} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div key={desc.ordem} className="bg-gray-50 p-4 rounded-lg border border-gray-300">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-semibold">
                     {desc.ordem}

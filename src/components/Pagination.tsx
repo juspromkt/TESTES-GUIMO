@@ -19,7 +19,7 @@ const Pagination = ({
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
+    <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-300 sm:px-6">
       <div className="flex items-center">
         <label htmlFor="itemsPerPage" className="mr-2 text-sm text-gray-700">
           Mostrar

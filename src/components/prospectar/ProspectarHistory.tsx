@@ -107,14 +107,14 @@ export default function ProspectarHistory({ refreshTrigger = 0 }: ProspectarHist
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-3000"></div>
       </div>
     );
   }
 
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-gray-300">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold">Histórico de Prospecções</h2>
           <div className="flex items-center gap-2">
@@ -132,7 +132,7 @@ export default function ProspectarHistory({ refreshTrigger = 0 }: ProspectarHist
             <select
               value={filterValues.segmento}
               onChange={(e) => setFilterValues({ ...filterValues, segmento: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-3000"
             >
               <option value="">Todos</option>
               {uniqueSegmentos.map((segmento) => (
@@ -148,7 +148,7 @@ export default function ProspectarHistory({ refreshTrigger = 0 }: ProspectarHist
             <select
               value={filterValues.cidade}
               onChange={(e) => setFilterValues({ ...filterValues, cidade: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-3000"
             >
               <option value="">Todas</option>
               {uniqueCidades.map((cidade) => (
@@ -164,7 +164,7 @@ export default function ProspectarHistory({ refreshTrigger = 0 }: ProspectarHist
             <select
               value={filterValues.status}
               onChange={(e) => setFilterValues({ ...filterValues, status: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-3000"
             >
               <option value="">Todos</option>
               <option value="pending">Pendente</option>

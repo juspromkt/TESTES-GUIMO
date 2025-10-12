@@ -65,7 +65,7 @@ const Login = () => {
     <div className="relative min-h-screen flex flex-col items-center justify-center bg-white text-gray-800 overflow-hidden">
       {/* === Card de Login === */}
       <div
-        className="relative w-full max-w-md bg-white rounded-3xl border border-gray-100
+        className="relative w-full max-w-md bg-white rounded-3xl border border-gray-300
         shadow-[0_40px_100px_-20px_rgba(0,0,0,0.25),0_0_40px_-10px_rgba(118,34,151,0.3)]
         p-10 backdrop-blur-xl transition-all duration-500 hover:shadow-[0_50px_120px_-20px_rgba(0,0,0,0.35)]
         z-10"
@@ -101,7 +101,7 @@ const Login = () => {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Digite seu e-mail"
                 required
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-[#762297]/30 focus:border-[#762297]/40 transition-all"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-[#762297]/30 focus:border-[#762297]/40 transition-all"
               />
             </div>
           </div>
@@ -117,7 +117,7 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Digite sua senha"
                 required
-                className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-[#762297]/30 focus:border-[#762297]/40 transition-all"
+                className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-[#762297]/30 focus:border-[#762297]/40 transition-all"
               />
               <button
                 type="button"

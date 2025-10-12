@@ -29,9 +29,9 @@ const Conexao = () => {
 
         {/* Aba única de Conexão WhatsApp */}
         <div className="space-y-8">
-          <div className="flex gap-1 border-b border-gray-200 mb-8">
+          <div className="flex gap-1 border-b border-gray-300 mb-8">
             <button
-              className="flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors bg-gray-50 text-gray-700 font-medium border-b-2 border-gray-500"
+              className="flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors bg-gray-50 text-gray-700 font-medium border-b-2 border-gray-3000"
             >
               <Smartphone className="w-4 h-4" />
               Conexão WhatsApp

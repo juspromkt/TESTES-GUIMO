@@ -15,7 +15,7 @@ export default function ConfigIcon({ icon: Icon, label, isActive, onClick }: Con
       className={`p-4 rounded-lg border transition-all ${
         isActive
           ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500 ring-opacity-50'
-          : 'border-gray-200 bg-white hover:border-blue-500 hover:shadow-md'
+          : 'border-gray-300 bg-white hover:border-blue-500 hover:shadow-md'
       }`}
     >
       <div className="flex flex-col items-center gap-2">

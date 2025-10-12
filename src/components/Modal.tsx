@@ -88,7 +88,7 @@ const Modal = ({
           onClick={(e) => e.stopPropagation()} // 🔒 impede fechamento ao clicar dentro
         >
           {/* Cabeçalho */}
-          <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
+          <div className="flex justify-between items-center p-4 border-b border-gray-300 bg-white/95 backdrop-blur-sm">
             <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
             <button
               onClick={onClose}

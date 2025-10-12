@@ -24,7 +24,7 @@ export class DomainConfig {
       activeColor: 'text-gray-900',
       defaultColor: 'text-gray-700',
       hoverBg: 'hover:bg-gray-100',
-      activeBg: 'bg-white border border-gray-200 shadow-sm',
+      activeBg: 'bg-white border border-gray-300 shadow-sm',
       sidebarBg: 'bg-[#f9fafb]',
       profileBg: 'bg-gray-100',
       textLoginColor: 'text-gray-900',

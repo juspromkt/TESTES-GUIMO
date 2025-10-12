@@ -285,7 +285,7 @@ export default function FAQSection({
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">
@@ -325,7 +325,7 @@ export default function FAQSection({
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                        className="border border-gray-300 rounded-lg p-4 bg-gray-50"
                       >
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="flex items-start gap-3">

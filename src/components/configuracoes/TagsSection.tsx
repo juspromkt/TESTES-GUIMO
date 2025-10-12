@@ -1,3 +1,4 @@
+// src/components/configuracoes/TagsSection.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Plus, MoreVertical, Edit3, Copy, Trash2, Users as UsersIcon,
@@ -34,6 +35,7 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
   const [descMap, setDescMap] = useState<DescMap>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tagCounts, setTagCounts] = useState<Record<number, number>>({});
 
   const [query, setQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -55,8 +57,10 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
   useEffect(() => {
     if (!isActive) return;
     setLoading(true);
-    fetchTags();
     setDescMap(readDescMap());
+    Promise.all([fetchTags(), fetchTagCounts()])
+      .catch(() => setError("Erro ao carregar etiquetas"))
+      .finally(() => setLoading(false));
   }, [isActive]);
 
   useEffect(() => {
@@ -68,15 +72,54 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
     return () => document.removeEventListener("click", close);
   }, []);
 
+  // 🔹 Busca lista de tags
   const fetchTags = async () => {
     try {
-      const res = await fetch("https://n8n.lumendigital.com.br/webhook/prospecta/tag/list", { headers: { token } });
+      const res = await fetch("https://n8n.lumendigital.com.br/webhook/prospecta/tag/list", {
+        headers: { token },
+      });
       const data = await res.json();
       setTags(Array.isArray(data) ? data : []);
     } catch {
       setError("Erro ao carregar etiquetas");
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  // 🔹 Busca contagem de tags igual ao CRM
+  const fetchTagCounts = async () => {
+    try {
+      const [tagsRes, assocRes] = await Promise.all([
+        fetch("https://n8n.lumendigital.com.br/webhook/prospecta/tag/list", {
+          headers: { token },
+        }),
+        fetch("https://n8n.lumendigital.com.br/webhook/prospecta/tag/negociacao/list", {
+          headers: { token },
+        }),
+      ]);
+
+      const tagsData = tagsRes.ok ? await tagsRes.json() : [];
+      const assocData = assocRes.ok ? await assocRes.json() : [];
+
+      const tagsList = Array.isArray(tagsData) ? tagsData : [];
+      setTags(tagsList);
+
+      const counts: Record<number, number> = {};
+      const associations = Array.isArray(assocData) ? assocData : [];
+
+      associations.forEach((rel: { id_negociacao: number | number[]; id_tag: number }) => {
+        const negociacaoIds = Array.isArray(rel.id_negociacao)
+          ? rel.id_negociacao
+          : [rel.id_negociacao];
+        const tagId = rel.id_tag;
+        if (tagId) {
+          counts[tagId] = (counts[tagId] || 0) + negociacaoIds.length;
+        }
+      });
+
+      setTagCounts(counts);
+    } catch (err) {
+      console.error("Erro ao buscar contagem de tags:", err);
+      setTagCounts({});
     }
   };
 
@@ -108,7 +151,7 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
       });
       if (!res.ok) throw new Error("Erro ao salvar etiqueta");
 
-      await fetchTags();
+      await Promise.all([fetchTags(), fetchTagCounts()]);
       if (isEdit) setTagDescription(editingTag!.Id, formDescricao);
       setIsFormOpen(false);
     } catch {
@@ -130,7 +173,7 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
         }),
       });
       if (!res.ok) throw new Error();
-      await fetchTags();
+      await Promise.all([fetchTags(), fetchTagCounts()]);
     } catch {
       setError("Erro ao duplicar etiqueta");
     }
@@ -140,15 +183,18 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await fetch(`https://n8n.lumendigital.com.br/webhook/prospecta/tag/delete?id=${deleteTarget.Id}`, {
-        method: "DELETE",
-        headers: { token },
-      });
+      await fetch(
+        `https://n8n.lumendigital.com.br/webhook/prospecta/tag/delete?id=${deleteTarget.Id}`,
+        {
+          method: "DELETE",
+          headers: { token },
+        }
+      );
       const next = { ...descMap };
       delete next[deleteTarget.Id];
       writeDescMap(next);
       setDescMap(next);
-      await fetchTags();
+      await Promise.all([fetchTags(), fetchTagCounts()]);
       setDeleteTarget(null);
     } catch {
       setError("Erro ao excluir etiqueta");
@@ -174,11 +220,8 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
     openMenuId !== null && menuPosition
       ? createPortal(
           <div
-            className="fixed z-[9999] w-44 rounded-lg border border-gray-200 bg-white shadow-xl"
-            style={{
-              left: menuPosition.x,
-              top: menuPosition.y,
-            }}
+            className="fixed z-[9999] w-44 rounded-lg border border-gray-300 bg-white shadow-xl"
+            style={{ left: menuPosition.x, top: menuPosition.y }}
           >
             <button
               onClick={() => {
@@ -221,27 +264,24 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
         )
       : null;
 
- return (
+  return (
     <div className="mt-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-  <h2 className="text-xl font-semibold text-gray-900">Etiquetas</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Etiquetas</h2>
 
-  {/* Botão de informação */}
-  <div className="relative group">
-    <button
-      className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-colors"
-      title=""
-    >
-      ?
-    </button>
-
-    {/* Tooltip */}
-    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10">
-      As <strong>etiquetas</strong> servem para organizar e acompanhar os leads dentro do sistema. Durante o atendimento a IA ou a equipe podem atribuir ou remover etiquetas automaticamente, conforma as ações do lead. <strong>O recomendado é que use o STATUS DO LEAD como principal controle</strong>, e as Etiquetas como um apoio visual e organizacional.
-    </div>
-  </div>
-</div>
+          {/* Tooltip detalhada do código 1 */}
+          <div className="relative group">
+            <button
+              className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-colors"
+            >
+              ?
+            </button>
+            <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10">
+              As <strong>etiquetas</strong> servem para organizar e acompanhar os leads dentro do sistema. Durante o atendimento a IA ou a equipe podem atribuir ou remover etiquetas automaticamente, conforme as ações do lead. <strong>O recomendado é que use o STATUS DO LEAD como principal controle</strong>, e as Etiquetas como um apoio visual e organizacional.
+            </div>
+          </div>
+        </div>
 
         {canEdit && (
           <button
@@ -282,7 +322,7 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
           <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+        <div className="overflow-hidden rounded-xl border border-gray-300 bg-white">
           <table className="min-w-full">
             <thead className="bg-gray-50 text-xs uppercase text-gray-500">
               <tr>
@@ -318,7 +358,9 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
                       <span className="text-gray-400">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">0</td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {tagCounts[t.Id] ?? 0}
+                  </td>
                   <td className="px-4 py-3 text-right relative" data-tag-actions>
                     <button
                       onClick={(e) => {
@@ -349,7 +391,7 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
         </div>
       )}
 
-      {/* Modal Criar / Editar */}
+      {/* 🔹 Modal de criação/edição */}
       <Modal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
@@ -404,7 +446,7 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
         </form>
       </Modal>
 
-      {/* Modal Excluir */}
+      {/* 🔹 Modal de exclusão */}
       <Modal
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
@@ -416,8 +458,7 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
             <AlertTriangle className="h-5 w-5 text-red-600" />
           </div>
           <p className="text-gray-700">
-            Deseja realmente excluir{" "}
-            <strong>{deleteTarget?.nome}</strong>?
+            Deseja realmente excluir <strong>{deleteTarget?.nome}</strong>?
           </p>
         </div>
         <div className="mt-6 flex justify-end gap-3">

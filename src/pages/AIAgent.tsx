@@ -180,9 +180,9 @@ const AIAgent = () => {
   return (
     <div className="grid grid-cols-[280px_1fr] gap-6">
       {/* Sidebar */}
-      <aside className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-col h-[calc(100vh-6rem)]">
+      <aside className="bg-white rounded-2xl border border-gray-300 shadow-sm p-4 flex flex-col h-[calc(100vh-6rem)]">
         {/* Header */}
-        <div className="flex flex-col gap-3 px-2 pb-3 border-b border-gray-100">
+        <div className="flex flex-col gap-3 px-2 pb-3 border-b border-gray-300">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center">
               <Bot className="w-5 h-5 text-gray-600" />
@@ -196,7 +196,7 @@ const AIAgent = () => {
           </div>
 
           {/* IA Toggle */}
-          <div className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 mt-2">
+          <div className="flex items-center justify-between bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 mt-2">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-700">
                 {toggling
@@ -323,7 +323,7 @@ const AIAgent = () => {
             </div>
           )}
 
-          <div className="my-3 border-t border-gray-200"></div>
+          <div className="my-3 border-t border-gray-300"></div>
 
           <button
             onClick={() => setMainSection('follow')}
@@ -364,7 +364,7 @@ const AIAgent = () => {
       </aside>
 
       {/* Painel direito */}
-      <main className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 overflow-y-auto">
+      <main className="bg-white rounded-2xl shadow-sm border border-gray-300 p-6 overflow-y-auto">
         {mainSection === 'config' && (
           <>
             {subSection === 'personalidade' && (

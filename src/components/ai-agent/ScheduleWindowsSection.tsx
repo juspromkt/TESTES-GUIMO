@@ -254,14 +254,14 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
 
   if (loading) {
     return (
-      <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6 flex justify-center">
+      <section className="bg-white rounded-lg shadow-sm border border-gray-300 p-6 mt-6 flex justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
       </section>
     );
   }
 
   return (
-    <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+    <section className="bg-white rounded-lg shadow-sm border border-gray-300 p-6 mt-6">
       <h2 className="text-xl font-semibold text-gray-900 mb-6">Horários Disponíveis (Funciona na agenda interna e Google Agenda)</h2>
       {days.map((day) => (
         <div key={day} className="mb-6">

@@ -347,7 +347,7 @@ return (
                     className={`
                       border rounded-lg p-4 cursor-move transition-all
                       ${draggedIndex === index ? 'opacity-50' : ''}
-                      ${dragOverIndex === index && draggedIndex !== index ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'}
+                      ${dragOverIndex === index && draggedIndex !== index ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-white hover:border-gray-300'}
                     `}
                     style={{ backgroundColor: stage.cor || '#ffffff' }}
                   >
@@ -458,7 +458,7 @@ return (
           <div className="border-t pt-6">
             <h4 className="text-base font-medium text-gray-900 mb-4">Adicionar Novo Estágio</h4>
             
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
               <div className="space-y-4">
                 <input
                   type="text"

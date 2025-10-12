@@ -478,7 +478,7 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
               Abaixo está o JSON do seu modelo atual. Você pode copiá-lo ou fazer o download para importar em outro sistema.
             </p>
             
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 overflow-auto max-h-[400px]">
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-300 overflow-auto max-h-[400px]">
               <pre className="text-sm text-gray-800 whitespace-pre-wrap">{exportedModel}</pre>
             </div>
             

@@ -39,7 +39,7 @@ export default function ProspectarLayout({
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
         {/* Sidebar lateral */}
-        <aside className="w-full lg:w-72 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        <aside className="w-full lg:w-72 bg-white rounded-2xl shadow-sm border border-gray-300 p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-6">
             Envios em Massa
           </h2>
@@ -55,7 +55,7 @@ export default function ProspectarLayout({
                   className={`w-full flex items-center gap-3 px-5 py-3 rounded-xl text-[15px] font-medium transition-all duration-200 ${
                     isActive
                       ? "bg-emerald-100/80 text-emerald-700 shadow-sm ring-1 ring-emerald-200"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-800 border border-transparent hover:border-gray-100"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-800 border border-transparent hover:border-gray-300"
                   }`}
                 >
                   <Icon
@@ -71,7 +71,7 @@ export default function ProspectarLayout({
         </aside>
 
         {/* Conteúdo principal */}
-        <main className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+        <main className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-300 p-8">
           {children}
         </main>
       </div>

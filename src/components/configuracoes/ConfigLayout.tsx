@@ -29,7 +29,7 @@ export default function ConfigLayout({
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
         {/* Sidebar */}
-        <aside className="w-full lg:w-72 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        <aside className="w-full lg:w-72 bg-white rounded-2xl shadow-sm border border-gray-300 p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-6">
             Configurações
           </h2>
@@ -63,7 +63,7 @@ export default function ConfigLayout({
         </aside>
 
         {/* Conteúdo principal */}
-        <main className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+        <main className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-300 p-8">
           <header className="mb-8">
             <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
             <p className="text-sm text-gray-500 mt-1">{description}</p>

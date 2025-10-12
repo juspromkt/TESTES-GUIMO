@@ -85,7 +85,7 @@ export default function OperatingHoursSection({ token, canEdit }: OperatingHours
   }
 
   return (
-    <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <section className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
       <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
         <Clock className="w-6 h-6 text-emerald-600" />
         Horário de Funcionamento
