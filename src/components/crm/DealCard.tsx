@@ -1,6 +1,6 @@
 // src/components/crm/DealCard.tsx
 import React from 'react';
-import { Calendar, User, ShieldCheck, Phone } from 'lucide-react';
+import { Calendar, User, ShieldCheck, Phone, UserCircle2 } from 'lucide-react';
 import type { Deal } from '../../types/deal';
 import type { Tag } from '../../types/tag';
 
@@ -40,67 +40,71 @@ export default function DealCard({
   return (
     <div
       onClick={onClick}
-      className={`bg-white rounded-lg p-3 shadow-sm hover:shadow transition-all overflow-hidden ${
-        isDragging ? 'shadow-lg ring-2 ring-blue-400' : ''
-      } cursor-grab active:cursor-grabbing transform hover:scale-[1.02] active:scale-[0.98]`}
+      className={`group bg-white rounded-xl p-4 shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden border border-gray-100 ${
+        isDragging ? 'shadow-2xl ring-2 ring-blue-500 scale-105' : ''
+      } cursor-grab active:cursor-grabbing transform hover:-translate-y-1 active:scale-95`}
     >
-      {/* Nome do lead em destaque */}
-      <h4 className="font-semibold text-gray-900 text-sm mb-1 truncate">
-        {leadName}
-      </h4>
-
-      <div className="space-y-1.5">
-        {/* TELEFONE (se existir) */}
-        {telefone && (
-          <div
-            className="flex items-center gap-1.5 text-gray-600 text-xs"
-            title={`Telefone do contato: ${telefone}`}
-          >
-            <Phone className="w-3.5 h-3.5" />
-            <span className="truncate max-w-[150px]">{telefone}</span>
+      {/* Header com Avatar e Nome */}
+      <div className="flex items-start gap-3 mb-3">
+        <div className="relative flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full blur-sm opacity-50"></div>
+          <div className="relative w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+            <span className="text-white font-bold text-sm">
+              {leadName.charAt(0).toUpperCase()}
+            </span>
           </div>
-        )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h4 className="font-bold text-gray-900 text-base mb-0.5 truncate group-hover:text-blue-700 transition-colors">
+            {leadName}
+          </h4>
+          {telefone && (
+            <div className="flex items-center gap-1.5 text-gray-600 text-xs">
+              <Phone className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate font-medium">{telefone}</span>
+            </div>
+          )}
+        </div>
+      </div>
 
-        {/* DATA DO PRIMEIRO CONTATO (CreatedAt) */}
-        <div
-          className="flex items-center gap-1.5 text-gray-500 text-xs"
-          title={`Data do primeiro contato: ${formatDate(deal.CreatedAt)}`}
-        >
-          <Calendar className="w-3.5 h-3.5" />
-          <span>Data do primeiro contato: {formatDate(deal.CreatedAt)}</span>
+      {/* Informações Principais */}
+      <div className="space-y-2 mb-3">
+        {/* DATA DO PRIMEIRO CONTATO */}
+        <div className="flex items-center gap-2 text-gray-600 text-xs bg-gray-50 px-2.5 py-2 rounded-lg">
+          <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <span className="font-medium">{formatDate(deal.CreatedAt)}</span>
         </div>
 
         {/* RESPONSÁVEL */}
-        <div
-          className="flex items-center gap-1.5 text-xs"
-          title={`Responsável: ${responsavel}`}
-        >
-          <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
-          <span className="bg-blue-100 text-blue-800 font-medium px-2 py-0.5 rounded-full truncate max-w-[150px]">
-            {responsavel}
-          </span>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-1 bg-gradient-to-r from-blue-50 to-indigo-50 px-2.5 py-2 rounded-lg">
+            <ShieldCheck className="w-4 h-4 text-blue-600 flex-shrink-0" />
+            <span className="text-xs font-semibold text-blue-900 truncate">
+              {responsavel}
+            </span>
+          </div>
         </div>
 
-        {/* CONTATO (nome completo, se quiser manter como info secundária) */}
-        {rawName && (
-          <div
-            className="flex items-center gap-1.5 text-gray-500 text-xs"
-            title={`Nome completo: ${rawName}`}
-          >
-            <User className="w-3.5 h-3.5" />
-            <span className="truncate max-w-[150px]">{rawName}</span>
+        {/* NOME COMPLETO (se diferente do primeiro nome) */}
+        {rawName && rawName !== leadName && (
+          <div className="flex items-center gap-2 text-gray-500 text-xs bg-gray-50 px-2.5 py-2 rounded-lg">
+            <UserCircle2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <span className="truncate font-medium">{rawName}</span>
           </div>
         )}
       </div>
 
       {/* TAGS */}
       {tags && tags.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-2 mt-3 pt-1">
+        <div className="flex flex-wrap gap-1.5 pt-2 border-t border-gray-100">
           {tags.map((tag) => (
             <span
               key={tag.Id}
-              className="px-1.5 py-0.5 rounded text-[10px]"
-              style={{ backgroundColor: tag.cor, color: tag.cor_texto }}
+              className="px-2 py-1 rounded-md text-[10px] font-semibold shadow-sm"
+              style={{
+                backgroundColor: tag.cor,
+                color: tag.cor_texto
+              }}
             >
               {tag.nome}
             </span>

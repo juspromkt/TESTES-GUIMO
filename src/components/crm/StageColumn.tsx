@@ -35,9 +35,10 @@ export default function StageColumn({
 
   return (
     <div
-      className="w-80 flex-shrink-0 h-full flex flex-col rounded-2xl shadow-sm border border-gray-300 overflow-visible relative transition-all duration-300"
+      className="w-[340px] flex-shrink-0 h-full flex flex-col rounded-2xl shadow-lg border-2 overflow-visible relative transition-all duration-300 hover:shadow-xl"
       style={{
         backgroundColor: estagio.cor || '#f9fafb',
+        borderColor: isSemStatus ? '#10b981' : '#e5e7eb'
       }}
     >
       <Droppable droppableId={String(estagio.Id)}>
@@ -47,25 +48,34 @@ export default function StageColumn({
             {...provided.droppableProps}
             className={`flex flex-col h-full transition-all duration-200 ${
               snapshot.isDraggingOver
-                ? 'ring-2 ring-blue-400 shadow-lg scale-[1.01]'
+                ? 'ring-4 ring-blue-400/50 shadow-2xl scale-[1.02]'
                 : ''
             }`}
           >
-            {/* Cabeçalho */}
+            {/* Cabeçalho Premium */}
             <div
-              className={`flex items-center justify-between px-4 py-3 rounded-t-2xl border-b shadow-sm ${
-                isSemStatus ? 'bg-green-500/90' : 'bg-white/70 backdrop-blur-sm'
+              className={`flex items-center justify-between px-5 py-4 rounded-t-2xl border-b-2 ${
+                isSemStatus
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-600 border-green-600/30'
+                  : 'bg-white/90 backdrop-blur-md border-gray-200/50'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    isSemStatus ? 'bg-white' : 'bg-blue-500'
-                  }`}
-                ></span>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div
+                    className={`absolute inset-0 rounded-full blur-sm ${
+                      isSemStatus ? 'bg-white/50' : 'bg-blue-500/50'
+                    }`}
+                  ></div>
+                  <span
+                    className={`relative w-3 h-3 rounded-full block shadow-lg ${
+                      isSemStatus ? 'bg-white' : 'bg-gradient-to-br from-blue-500 to-indigo-600'
+                    }`}
+                  ></span>
+                </div>
                 <h3
-                  className={`text-sm font-semibold ${
-                    isSemStatus ? 'text-white' : 'text-gray-800'
+                  className={`text-sm font-bold tracking-wide ${
+                    isSemStatus ? 'text-white' : 'text-gray-900'
                   }`}
                 >
                   {estagio.nome}
@@ -73,10 +83,10 @@ export default function StageColumn({
               </div>
 
               <span
-                className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                className={`text-xs font-bold px-3 py-1.5 rounded-full shadow-sm ${
                   isSemStatus
-                    ? 'bg-white/20 text-white'
-                    : 'bg-blue-100 text-blue-700'
+                    ? 'bg-white/25 text-white backdrop-blur-sm'
+                    : 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800'
                 }`}
               >
                 {deals.length}
@@ -105,8 +115,14 @@ export default function StageColumn({
               >
                 <div className="space-y-3">
                   {deals.length === 0 ? (
-                    <div className="text-center py-6 text-sm text-gray-500">
-                      Nenhuma negociação nessa etapa
+                    <div className="text-center py-8 px-4">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                        </svg>
+                      </div>
+                      <p className="text-sm font-medium text-gray-500">Nenhum negócio</p>
+                      <p className="text-xs text-gray-400 mt-1">Arraste cards para cá</p>
                     </div>
                   ) : (
                     deals.map((deal, index) =>

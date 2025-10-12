@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
-import { Loader2, AlertCircle, ChevronDown, Plus, RefreshCw, Search, Calendar, Tags } from 'lucide-react';
+import { Loader2, AlertCircle, ChevronDown, Plus, RefreshCw, Search, Calendar, Tags, X } from 'lucide-react';
 import type { Funil } from '../types/funil';
 import type { Fonte } from '../types/fonte';
 import type { Contato } from '../types/contato';
@@ -16,6 +16,7 @@ import TagFilter from '../components/crm/TagFilter';
 import SearchableSelect from '../components/crm/SearchableSelect';
 import AnuncioCard from '../components/crm/AnuncioCard';
 import Modal from '../components/Modal';
+import FilterDropdown from '../components/FilterDropdown';
 import { hasPermission } from '../utils/permissions';
 
 type ViewMode = 'kanban' | 'list';
@@ -46,6 +47,10 @@ export default function CRM() {
   const [selectedFonteId, setSelectedFonteId] = useState<number | null>(null);
   const [selectedAnuncioId, setSelectedAnuncioId] = useState<number | null>(null);
   const [showAnuncioModal, setShowAnuncioModal] = useState(false);
+
+  // Refs para os botões de filtro
+  const dateFilterButtonRef = useRef<HTMLButtonElement>(null);
+  const tagFilterButtonRef = useRef<HTMLButtonElement>(null);
 
 useEffect(() => {
   const fetchUsers = async () => {
@@ -591,23 +596,37 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
   }
 
   return (
-    <div className="w-full overflow-x-hidden">
-      <div className="px-4">
-        <div className="flex-none pb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-gray-900">CRM</h1>
+    <div className="w-full overflow-x-hidden bg-gradient-to-br from-gray-50 via-blue-50/20 to-indigo-50/20 min-h-screen">
+      <div className="px-6 py-6">
+        {/* Header Premium */}
+        <div className="flex-none pb-6 bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur-lg opacity-30"></div>
+                <div className="relative bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-2xl shadow-lg">
+                  <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
+                  CRM
+                </h1>
+                <p className="text-sm text-gray-600 mt-0.5">Gerencie suas negociações</p>
+              </div>
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                className="ml-2 p-2.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all disabled:opacity-50 border border-gray-200"
                 title="Atualizar dados"
               >
                 <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="relative">
                 <select
                   value={selectedFunil?.id || ''}
@@ -615,7 +634,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                     const funil = funis.find(f => f.id === Number(e.target.value));
                     setSelectedFunil(funil || null);
                   }}
-                  className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[200px]"
+                  className="appearance-none bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 rounded-xl px-5 py-2.5 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 min-w-[220px] font-semibold text-gray-900 cursor-pointer hover:border-gray-300 transition-all"
                 >
                   <option value="">Selecione um funil</option>
                   {funis.map((funil) => (
@@ -624,156 +643,210 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none w-5 h-5" />
               </div>
 
               <ViewToggle view={viewMode} onViewChange={setViewMode} />
-{canEditCRM && (
 
-              <button
-                onClick={() => setIsCreatePanelOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                Nova Negociação
-              </button>
+              {canEditCRM && (
+                <button
+                  onClick={() => setIsCreatePanelOpen(true)}
+                  className="group relative flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-200 font-medium overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-indigo-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <Plus className="relative w-5 h-5" />
+                  <span className="relative">Nova Negociação</span>
+                </button>
               )}
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-5 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Buscar por título ou contato..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          {/* Filtros Premium */}
+          <div className="mt-6 p-5 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+              {/* Busca */}
+              <div className="relative group">
+                <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-blue-600 transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Buscar por título ou contato..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-11 pr-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-gray-400 text-sm font-medium"
+                />
+              </div>
+
+              {/* Filtro de Data */}
+              <div>
+                <button
+                  ref={dateFilterButtonRef}
+                  type="button"
+                  onClick={() => setShowDateFilter(!showDateFilter)}
+                  className={`w-full flex items-center justify-between pl-3.5 pr-4 py-2.5 bg-white border-2 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20 hover:border-gray-300 transition-all ${
+                    startDate || endDate ? 'border-blue-500' : 'border-gray-200'
+                  }`}
+                >
+                  <span className="flex items-center gap-2 flex-1 min-w-0">
+                    <Calendar className={`w-5 h-5 flex-shrink-0 ${startDate || endDate ? 'text-blue-600' : 'text-gray-500'}`} />
+                    {startDate || endDate ? (
+                      <span className="text-gray-900 text-xs truncate">
+                        {startDate ? new Date(startDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '...'}
+                        {' - '}
+                        {endDate ? new Date(endDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '...'}
+                      </span>
+                    ) : (
+                      <span className="text-gray-600">Filtrar datas</span>
+                    )}
+                  </span>
+                  {(startDate || endDate) ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setStartDate('');
+                        setEndDate('');
+                      }}
+                      className="p-0.5 hover:bg-gray-100 rounded flex-shrink-0"
+                    >
+                      <X className="w-4 h-4 text-gray-500" />
+                    </button>
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                  )}
+                </button>
+
+                <FilterDropdown
+                  isOpen={showDateFilter}
+                  onClose={() => setShowDateFilter(false)}
+                  triggerRef={dateFilterButtonRef}
+                >
+                  <div className="p-5 w-72">
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Data Inicial
+                        </label>
+                        <input
+                          type="date"
+                          value={startDate}
+                          onChange={(e) => setStartDate(e.target.value)}
+                          className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Data Final
+                        </label>
+                        <input
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setStartDate('');
+                            setEndDate('');
+                            setShowDateFilter(false);
+                          }}
+                          className="text-sm font-medium text-gray-600 hover:text-gray-900 px-4 py-2 hover:bg-gray-100 rounded-lg transition-all"
+                        >
+                          Limpar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowDateFilter(false)}
+                          className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium px-5 py-2 rounded-lg hover:shadow-lg transition-all"
+                        >
+                          Aplicar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </FilterDropdown>
+              </div>
+
+              {/* Filtro de Tags */}
+              <div>
+                <button
+                  ref={tagFilterButtonRef}
+                  type="button"
+                  onClick={() => setShowTagFilter(!showTagFilter)}
+                  className={`w-full flex items-center justify-between px-4 py-2.5 bg-white border-2 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20 hover:border-gray-300 transition-all ${
+                    selectedTagIds.length > 0 ? 'border-blue-500' : 'border-gray-200'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Tags className={`w-5 h-5 ${selectedTagIds.length > 0 ? 'text-blue-600' : 'text-gray-500'}`} />
+                    <span className="text-gray-600">Tags</span>
+                    {selectedTagIds.length > 0 && (
+                      <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
+                        {selectedTagIds.length}
+                      </span>
+                    )}
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                </button>
+
+                <FilterDropdown
+                  isOpen={showTagFilter}
+                  onClose={() => setShowTagFilter(false)}
+                  triggerRef={tagFilterButtonRef}
+                >
+                  <div className="p-3 w-72 max-h-80 overflow-y-auto">
+                    <TagFilter
+                      tags={tags}
+                      counts={tagCounts}
+                      selected={selectedTagIds}
+                      onChange={setSelectedTagIds}
+                    />
+                  </div>
+                </FilterDropdown>
+              </div>
+
+              {/* Fontes */}
+              <SearchableSelect
+                options={fonteOptions}
+                value={selectedFonteId}
+                onChange={(id) => setSelectedFonteId(id === 0 ? null : id)}
+                placeholder="Fontes"
+              />
+
+              {/* Anúncios */}
+              <SearchableSelect
+                options={anuncioOptions}
+                value={selectedAnuncioId}
+                onChange={(id) => setSelectedAnuncioId(id === 0 ? null : id)}
+                placeholder="Anúncios"
+                footerLabel="Ver anúncios"
+                onFooterClick={() => setShowAnuncioModal(true)}
               />
             </div>
 
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowDateFilter(!showDateFilter)}
-                className="w-full flex items-center justify-between pl-3 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-              >
-                <span className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-gray-400" />
-                  {startDate || endDate ? (
-                    <span>{`${startDate || '...'} - ${endDate || '...'}`}</span>
-                  ) : (
-                    <span>Filtrar datas</span>
-                  )}
-                </span>
-                <ChevronDown className="w-4 h-4 text-gray-400" />
-              </button>
-              {showDateFilter && (
-                <div className="absolute z-10 mt-2 bg-white border rounded-lg shadow-lg p-4 w-64">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm">
-                      Início
-                      <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="mt-1 w-full border rounded px-2 py-1"
-                      />
-                    </label>
-                    <label className="text-sm">
-                      Fim
-                      <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="mt-1 w-full border rounded px-2 py-1"
-                      />
-                    </label>
-                    <div className="flex justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setStartDate('');
-                          setEndDate('');
-                          setShowDateFilter(false);
-                        }}
-                        className="text-sm text-gray-600"
-                      >
-                        Limpar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowDateFilter(false)}
-                        className="bg-blue-500 text-white text-sm px-2 py-1 rounded"
-                      >
-                        Aplicar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowTagFilter(!showTagFilter)}
-                className="w-full flex items-center justify-between px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-              >
-                <span className="flex items-center gap-2">
-                  <Tags className="w-5 h-5 text-gray-400" />
-                  <span>Tags</span>
-                </span>
-                <ChevronDown className="w-4 h-4 text-gray-400" />
-              </button>
-              {showTagFilter && (
-                <div className="absolute z-10 mt-2 bg-white border rounded-lg shadow-lg p-2 w-64 max-h-64 overflow-y-auto">
-                  <TagFilter
-                    tags={tags}
-                    counts={tagCounts}
-                    selected={selectedTagIds}
-                    onChange={setSelectedTagIds}
-                  />
-                </div>
-              )}
-            </div>
-
-            <SearchableSelect
-              options={fonteOptions}
-              value={selectedFonteId}
-              onChange={(id) => setSelectedFonteId(id === 0 ? null : id)}
-              placeholder="Fontes"
-            />
-
-            <SearchableSelect
-              options={anuncioOptions}
-              value={selectedAnuncioId}
-              onChange={(id) => setSelectedAnuncioId(id === 0 ? null : id)}
-              placeholder="Anúncios"
-              footerLabel="Ver anúncios"
-              onFooterClick={() => setShowAnuncioModal(true)}
-            />
-
+            {/* Card do Anúncio Selecionado */}
             {selectedAnuncio && (
-              <div className="mt-4 w-full max-w-md">
+              <div className="mt-4">
                 <AnuncioCard anuncio={selectedAnuncio} />
               </div>
             )}
-
-            <Modal
-              isOpen={showAnuncioModal}
-              onClose={() => setShowAnuncioModal(false)}
-              title="Anúncios"
-              maxWidth="3xl"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {anuncios.map(anuncio => (
-                  <AnuncioCard key={anuncio.Id} anuncio={anuncio} />
-                ))}
-              </div>
-            </Modal>
           </div>
+
+          {/* Modal de Anúncios */}
+          <Modal
+            isOpen={showAnuncioModal}
+            onClose={() => setShowAnuncioModal(false)}
+            title="Anúncios"
+            maxWidth="3xl"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+              {anuncios.map(anuncio => (
+                <AnuncioCard key={anuncio.Id} anuncio={anuncio} />
+              ))}
+            </div>
+          </Modal>
         </div>
 
         <div className="flex-1">
