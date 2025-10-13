@@ -14,10 +14,9 @@ export function AudioPlayer({ url }: AudioPlayerProps) {
   const [waveform, setWaveform] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Gerar ondas mais realistas (simulando o visual do WhatsApp)
+  // Gerar ondas estilo WhatsApp Web
   useEffect(() => {
     const waves = Array.from({ length: 40 }, (_, i) => {
-      // Criar um padrão mais natural com variações suaves
       const baseHeight = 20 + Math.sin(i * 0.3) * 15;
       const randomVariation = (Math.random() - 0.5) * 10;
       return Math.max(8, Math.min(40, baseHeight + randomVariation));
@@ -38,7 +37,7 @@ export function AudioPlayer({ url }: AudioPlayerProps) {
   };
 
   const changePlaybackRate = () => {
-    const rates = [1, 1.2, 1.5, 2];
+    const rates = [1, 1.5, 2];
     const currentIndex = rates.indexOf(playbackRate);
     const nextRate = rates[(currentIndex + 1) % rates.length];
     setPlaybackRate(nextRate);
@@ -96,11 +95,10 @@ export function AudioPlayer({ url }: AudioPlayerProps) {
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const percentage = clickX / rect.width;
-    const newTime = percentage * duration;
-    audio.currentTime = newTime;
+    audio.currentTime = percentage * duration;
   };
 
-  // Animação sutil das ondas durante a reprodução
+  // Animação das ondas durante reprodução
   useEffect(() => {
     let animationFrameId: number;
     let lastTime = 0;
@@ -110,13 +108,12 @@ export function AudioPlayer({ url }: AudioPlayerProps) {
       if (!isPlaying) return;
 
       if (!lastTime || timestamp - lastTime > animationSpeed) {
-        setWaveform(prev => {
-          return prev.map((height, index) => {
-            // Adiciona uma variação sutil durante a reprodução
+        setWaveform(prev =>
+          prev.map((height, index) => {
             const variation = Math.sin(timestamp * 0.01 + index * 0.5) * 3;
             return Math.max(8, Math.min(40, height + variation));
-          });
-        });
+          })
+        );
         lastTime = timestamp;
       }
 
@@ -137,85 +134,63 @@ export function AudioPlayer({ url }: AudioPlayerProps) {
   const progressPercentage = duration ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="flex items-center space-x-3 p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-gray-300/50 shadow-sm max-w-sm">
-      {/* Botão Play/Pause */}
+    <div className="flex items-center gap-2 py-1.5 max-w-[280px] min-w-[200px]">
+      <audio ref={audioRef} src={url} preload="metadata" />
+
+      {/* Botão Play/Pause - estilo WhatsApp */}
       <button
         onClick={togglePlay}
         disabled={isLoading}
-        className="relative flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md hover:from-green-600 hover:to-green-700 transition-all duration-200 flex items-center justify-center group disabled:opacity-50"
+        className="flex-shrink-0 w-11 h-11 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 transition-all duration-200 flex items-center justify-center disabled:opacity-50"
       >
         {isLoading ? (
-          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
         ) : isPlaying ? (
-          <Pause className="w-4 h-4 ml-0.5" />
+          <Pause className="w-5 h-5" fill="currentColor" />
         ) : (
-          <Play className="w-4 h-4 ml-0.5" />
+          <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
         )}
-        
-        {/* Anel de progresso ao redor do botão */}
-        <svg className="absolute inset-0 w-10 h-10 -rotate-90">
-          <circle
-            cx="20"
-            cy="20"
-            r="18"
-            fill="none"
-            stroke="rgba(255,255,255,0.2)"
-            strokeWidth="2"
-          />
-          <circle
-            cx="20"
-            cy="20"
-            r="18"
-            fill="none"
-            stroke="rgba(255,255,255,0.8)"
-            strokeWidth="2"
-            strokeDasharray={`${2 * Math.PI * 18}`}
-            strokeDashoffset={`${2 * Math.PI * 18 * (1 - progressPercentage / 100)}`}
-            className="transition-all duration-300"
-          />
-        </svg>
       </button>
 
-      {/* Waveform interativo */}
-      <div 
-        className="flex-1 flex items-center space-x-0.5 h-8 cursor-pointer px-1"
-        onClick={handleWaveformClick}
-      >
-        {waveform.map((height, index) => {
-          const isPlayed = (index / waveform.length) <= (progressPercentage / 100);
-          return (
-            <div
-              key={index}
-              className={`w-0.5 rounded-full transition-all duration-150 ${
-                isPlayed 
-                  ? 'bg-green-500' 
-                  : 'bg-gray-300'
-              } ${isPlaying && isPlayed ? 'opacity-100' : 'opacity-70'}`}
-              style={{
-                height: `${height}%`,
-                transform: isPlaying && isPlayed ? 'scaleY(1.1)' : 'scaleY(1)',
-              }}
-            />
-          );
-        })}
-      </div>
-
-      {/* Tempo e velocidade */}
-      <div className="flex flex-col items-end space-y-1">
-        <span className="text-xs font-medium text-gray-600 tabular-nums">
-          {formatTime(duration - currentTime)}
-        </span>
-        
-        {/* Botão de velocidade discreto */}
-        <button
-          onClick={changePlaybackRate}
-          className="text-[10px] font-bold text-gray-500 hover:text-green-600 transition-colors px-1.5 py-0.5 rounded-full hover:bg-gray-100"
+      {/* Waveform interativo - estilo WhatsApp */}
+      <div className="flex-1 flex flex-col justify-center">
+        <div
+          className="flex items-center justify-start gap-[2px] h-[30px] cursor-pointer"
+          onClick={handleWaveformClick}
         >
-          {playbackRate}×
-        </button>
+          {waveform.map((height, index) => {
+            const isPlayed = (index / waveform.length) <= (progressPercentage / 100);
+            return (
+              <div
+                key={index}
+                className={`w-[3px] rounded-full transition-colors duration-100 ${
+                  isPlayed ? 'bg-gray-600' : 'bg-gray-300'
+                }`}
+                style={{
+                  height: `${height}%`,
+                  minHeight: '3px'
+                }}
+              />
+            );
+          })}
+        </div>
+
+        {/* Tempo */}
+        <div className="flex items-center justify-between mt-0.5">
+          <span className="text-[11px] font-normal text-gray-600 tabular-nums">
+            {formatTime(duration - currentTime)}
+          </span>
+        </div>
       </div>
 
-      <audio ref={audioRef} src={url} preload="metadata" />
+      {/* Botão velocidade sempre visível mas discreto */}
+      <button
+        onClick={changePlaybackRate}
+        className="flex-shrink-0 text-[11px] font-medium text-gray-500 hover:text-gray-700 transition-colors px-1.5 py-1 rounded"
+        title="Velocidade de reprodução"
+      >
+        {playbackRate}×
+      </button>
     </div>
   );
 }

@@ -24,6 +24,7 @@ import {
 import { toast } from 'sonner';
 import { useMessageEvents } from '../../pages/MessageEventsContext';
 import { loadChats, updateCacheFromMessage, setCache, getCache, setChatListLoaded } from '../../utils/chatCache';
+import { onChatUpdate, type ChatUpdateEventData } from '../../utils/chatUpdateEvents';
 
 
 const TRANSFER_STORAGE_KEY = 'chat_transfer_remote_jids';
@@ -46,9 +47,46 @@ interface ChatListProps {
   onChatSelect: (chat: Chat) => void;
   selectedChatId?: string;
   whatsappType?: string;
+  // Props externas opcionais (quando controlado externamente)
+  externalSearchTerm?: string;
+  externalUsuarioFiltroId?: number | null;
+  externalTagFiltroId?: number | null;
+  externalUsuarioFiltroIds?: number[];
+  externalTagFiltroIds?: number[];
+  externalFunilId?: number | null;
+  externalStageFiltroIds?: string[];
+  externalStartDate?: Date | null;
+  externalEndDate?: Date | null;
+  externalIaStatusFilter?: 'all' | 'active' | 'inactive';
+  externalShowOnlyUnread?: boolean;
+  externalShowUnanswered?: boolean;
+  externalActiveTab?: 'all' | 'ia' | 'transfers' | 'unread' | 'unanswered';
+  externalHandleTabChange?: (tab: 'all' | 'ia' | 'transfers' | 'unread' | 'unanswered') => void;
+  onFilteredCountChange?: (count: number) => void;
+  onCategoryCountsChange?: (counts: { ia: number; unread: number; unanswered: number; transfers: number }) => void;
 }
 
-export function ChatList({ onChatSelect, selectedChatId, whatsappType }: ChatListProps) {
+export function ChatList({
+  onChatSelect,
+  selectedChatId,
+  whatsappType,
+  externalSearchTerm,
+  externalUsuarioFiltroId,
+  externalTagFiltroId,
+  externalUsuarioFiltroIds,
+  externalTagFiltroIds,
+  externalFunilId,
+  externalStageFiltroIds,
+  externalStartDate,
+  externalEndDate,
+  externalIaStatusFilter,
+  externalShowOnlyUnread,
+  externalShowUnanswered,
+  externalActiveTab,
+  externalHandleTabChange,
+  onFilteredCountChange,
+  onCategoryCountsChange,
+}: ChatListProps) {
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -63,24 +101,62 @@ export function ChatList({ onChatSelect, selectedChatId, whatsappType }: ChatLis
   const lastRefreshRef = useRef(0);
   const lastRealtimeUpdateRef = useRef(Date.now());
   const lastUserInteractionRef = useRef(0);
-  const [searchTerm, setSearchTerm] = useState('');
+
+  // Estados internos (usados quando não há controle externo)
+  const [internalSearchTerm, setInternalSearchTerm] = useState('');
+  const [internalUsuarioFiltroId, setInternalUsuarioFiltroId] = useState<number | null>(null);
+  const [internalTagFiltroId, setInternalTagFiltroId] = useState<number | null>(null);
+  const [internalUsuarioFiltroIds, setInternalUsuarioFiltroIds] = useState<number[]>([]);
+  const [internalTagFiltroIds, setInternalTagFiltroIds] = useState<number[]>([]);
+  const [internalStageFiltroIds, setInternalStageFiltroIds] = useState<string[]>([]);
+  const [internalStartDate, setInternalStartDate] = useState<Date | null>(null);
+  const [internalEndDate, setInternalEndDate] = useState<Date | null>(null);
+  const [internalIaStatusFilter, setInternalIaStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [internalShowOnlyUnread, setInternalShowOnlyUnread] = useState(false);
+  const [internalShowUnanswered, setInternalShowUnanswered] = useState(false);
+  const [internalActiveTab, setInternalActiveTab] = useState<'all' | 'ia' | 'transfers' | 'unread' | 'unanswered'>('all');
+
+  // Usa valores externos se fornecidos, senão usa internos
+  const searchTerm = externalSearchTerm !== undefined ? externalSearchTerm : internalSearchTerm;
+  const setSearchTerm = externalSearchTerm !== undefined ? () => {} : setInternalSearchTerm;
+  const usuarioFiltroId = externalUsuarioFiltroId !== undefined ? externalUsuarioFiltroId : internalUsuarioFiltroId;
+  const setUsuarioFiltroId = externalUsuarioFiltroId !== undefined ? () => {} : setInternalUsuarioFiltroId;
+  const tagFiltroId = externalTagFiltroId !== undefined ? externalTagFiltroId : internalTagFiltroId;
+  const setTagFiltroId = externalTagFiltroId !== undefined ? () => {} : setInternalTagFiltroId;
+  const usuarioFiltroIds = externalUsuarioFiltroIds !== undefined ? externalUsuarioFiltroIds : internalUsuarioFiltroIds;
+  const setUsuarioFiltroIds = externalUsuarioFiltroIds !== undefined ? () => {} : setInternalUsuarioFiltroIds;
+  const tagFiltroIds = externalTagFiltroIds !== undefined ? externalTagFiltroIds : internalTagFiltroIds;
+  const setTagFiltroIds = externalTagFiltroIds !== undefined ? () => {} : setInternalTagFiltroIds;
+  const stageFiltroIds = externalStageFiltroIds !== undefined ? externalStageFiltroIds : internalStageFiltroIds;
+  const setStageFiltroIds = externalStageFiltroIds !== undefined ? () => {} : setInternalStageFiltroIds;
+  const startDate = externalStartDate !== undefined ? externalStartDate : internalStartDate;
+  const setStartDate = externalStartDate !== undefined ? () => {} : setInternalStartDate;
+  const endDate = externalEndDate !== undefined ? externalEndDate : internalEndDate;
+  const setEndDate = externalEndDate !== undefined ? () => {} : setInternalEndDate;
+  const iaStatusFilter = externalIaStatusFilter !== undefined ? externalIaStatusFilter : internalIaStatusFilter;
+  const setIaStatusFilter = externalIaStatusFilter !== undefined ? () => {} : setInternalIaStatusFilter;
+  const showOnlyUnread = externalShowOnlyUnread !== undefined ? externalShowOnlyUnread : internalShowOnlyUnread;
+  const setShowOnlyUnread = externalShowOnlyUnread !== undefined ? () => {} : setInternalShowOnlyUnread;
+  const showUnanswered = externalShowUnanswered !== undefined ? externalShowUnanswered : internalShowUnanswered;
+  const setShowUnanswered = externalShowUnanswered !== undefined ? () => {} : setInternalShowUnanswered;
+  const activeTab = externalActiveTab !== undefined ? externalActiveTab : internalActiveTab;
+  const setActiveTab = externalActiveTab !== undefined ? () => {} : setInternalActiveTab;
+
+  // Determina se está sendo controlado externamente
+  const isExternallyControlled = externalSearchTerm !== undefined;
+
   const user = localStorage.getItem('user');
   const token = user ? JSON.parse(user).token : null;
   const [usuariosPorContato, setUsuariosPorContato] = useState<any[]>([]);
   const [tagsMap, setTagsMap] = useState<Record<string, Tag[]>>({});
-  const [usuarioFiltroId, setUsuarioFiltroId] = useState<number | null>(null);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
-  const [tagFiltroId, setTagFiltroId] = useState<number | null>(null);
   const [sessions, setSessions] = useState<any[]>([]);
   const [interventions, setInterventions] = useState<any[]>([]);
   const [permanentExclusions, setPermanentExclusions] = useState<any[]>([]);
-  const [iaStatusFilter, setIaStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [contactMap, setContactMap] = useState<Record<string, Contact>>({});
   const [contactSearch, setContactSearch] = useState('');
   const [contactPopoverOpen, setContactPopoverOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>({});
-  const [showOnlyUnread, setShowOnlyUnread] = useState(false);
-  const [showUnanswered, setShowUnanswered] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const normalizedSelectedChatId = useMemo(
     () => (selectedChatId ? normalizeRemoteJid(selectedChatId) : null),
@@ -123,15 +199,15 @@ export function ChatList({ onChatSelect, selectedChatId, whatsappType }: ChatLis
           }
         );
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
         let data: any = [];
-        try {
-          data = await response.json();
-        } catch {
-          data = [];
+        if (response.ok) {
+          try {
+            const text = await response.text();
+            data = text ? JSON.parse(text) : [];
+          } catch (err) {
+            console.warn('⚠️ Resposta vazia ou inválida ao carregar transferências');
+            data = [];
+          }
         }
 
         const remoteJids: string[] = [];
@@ -180,37 +256,46 @@ export function ChatList({ onChatSelect, selectedChatId, whatsappType }: ChatLis
     [token]
   );
 
-  const [activeTab, setActiveTab] = useState<'all' | 'ia' | 'transfers' | 'unread' | 'unanswered'>('all');
-
   function handleTabChange(tab: 'all' | 'ia' | 'transfers' | 'unread' | 'unanswered') {
     lastUserInteractionRef.current = Date.now();
-    setActiveTab(tab);
+
+    // Usa função externa se disponível
+    if (externalHandleTabChange) {
+      externalHandleTabChange(tab);
+      if (tab === 'transfers') {
+        void loadTransfers();
+      }
+      return;
+    }
+
+    // Lógica interna
+    setInternalActiveTab(tab);
     switch (tab) {
       case 'ia':
-        setIaStatusFilter('active');
-        setShowOnlyUnread(false);
-        setShowUnanswered(false);
+        setInternalIaStatusFilter('active');
+        setInternalShowOnlyUnread(false);
+        setInternalShowUnanswered(false);
         break;
       case 'transfers':
-        setIaStatusFilter('all');
-        setShowOnlyUnread(false);
-        setShowUnanswered(false);
+        setInternalIaStatusFilter('all');
+        setInternalShowOnlyUnread(false);
+        setInternalShowUnanswered(false);
         void loadTransfers();
         break;
       case 'unread':
-        setIaStatusFilter(prev => (prev === 'active' ? 'all' : prev));
-        setShowOnlyUnread(true);
-        setShowUnanswered(false);
+        setInternalIaStatusFilter(prev => (prev === 'active' ? 'all' : prev));
+        setInternalShowOnlyUnread(true);
+        setInternalShowUnanswered(false);
         break;
       case 'unanswered':
-        setIaStatusFilter(prev => (prev === 'active' ? 'all' : prev));
-        setShowOnlyUnread(false);
-        setShowUnanswered(true);
+        setInternalIaStatusFilter(prev => (prev === 'active' ? 'all' : prev));
+        setInternalShowOnlyUnread(false);
+        setInternalShowUnanswered(true);
         break;
       default:
-        setIaStatusFilter(prev => (prev === 'active' ? 'all' : prev));
-        setShowOnlyUnread(false);
-        setShowUnanswered(false);
+        setInternalIaStatusFilter(prev => (prev === 'active' ? 'all' : prev));
+        setInternalShowOnlyUnread(false);
+        setInternalShowUnanswered(false);
     }
   }
 
@@ -221,6 +306,11 @@ export function ChatList({ onChatSelect, selectedChatId, whatsappType }: ChatLis
       iaStatusFilter !== 'all' ||
       usuarioFiltroId !== null ||
       tagFiltroId !== null ||
+      usuarioFiltroIds.length > 0 ||
+      tagFiltroIds.length > 0 ||
+      stageFiltroIds.length > 0 ||
+      startDate !== null ||
+      endDate !== null ||
       showOnlyUnread ||
       showUnanswered,
     [
@@ -229,6 +319,11 @@ export function ChatList({ onChatSelect, selectedChatId, whatsappType }: ChatLis
       iaStatusFilter,
       usuarioFiltroId,
       tagFiltroId,
+      usuarioFiltroIds,
+      tagFiltroIds,
+      stageFiltroIds,
+      startDate,
+      endDate,
       showOnlyUnread,
       showUnanswered,
     ]
@@ -241,6 +336,65 @@ export function ChatList({ onChatSelect, selectedChatId, whatsappType }: ChatLis
     }
     prevHasActiveFilters.current = hasActiveFilters;
   }, [hasActiveFilters]);
+
+  // Função para enriquecer chats com dados de negociação
+  const enrichChatsWithDeals = useCallback(async (chats: Chat[]): Promise<Chat[]> => {
+    if (!token || chats.length === 0) return chats;
+
+    try {
+      console.log('[enrichChatsWithDeals] Iniciando enriquecimento de', chats.length, 'chats');
+
+      // 1. Buscar as 100 negociações mais recentes
+      const allDeals = await apiClient.findDeals(token, 1, 100);
+      console.log('[enrichChatsWithDeals] Buscadas', allDeals.length, 'negociações');
+
+      if (!allDeals || allDeals.length === 0) {
+        console.log('[enrichChatsWithDeals] Nenhuma negociação encontrada');
+        return chats;
+      }
+
+      // 2. Criar mapa de negociações por id_contato
+      const dealsByContactId: Record<number, any> = {};
+      allDeals.forEach((deal) => {
+        // Tenta várias variações do campo id_contato
+        const idContato = deal.id_contato || deal.idContato || deal.IdContato || deal.contactId;
+        if (idContato) {
+          dealsByContactId[idContato] = deal;
+        }
+      });
+
+      console.log('[enrichChatsWithDeals] Mapa de negociações criado:', Object.keys(dealsByContactId).length, 'contatos mapeados');
+
+      // 3. Enriquecer cada chat com os dados da negociação
+      let enrichedCount = 0;
+      const enrichedChats = chats.map(chat => {
+        const contactId = chat.contactId;
+
+        if (!contactId) {
+          return chat;
+        }
+
+        const deal = dealsByContactId[contactId];
+
+        if (deal) {
+          enrichedCount++;
+          return {
+            ...chat,
+            chatFunilId: deal.id_funil,
+            chatStageId: String(deal.id_estagio),
+          };
+        }
+
+        return chat;
+      });
+
+      console.log('[enrichChatsWithDeals] Enriquecidos', enrichedCount, 'chats com dados de negociação');
+      return enrichedChats;
+    } catch (error) {
+      console.error('[enrichChatsWithDeals] Erro ao enriquecer chats:', error);
+      return chats; // Retorna os chats originais em caso de erro
+    }
+  }, [token]);
 
   // Adicione esta função após loadSessionData:
   const loadUnreadMessages = useCallback(async () => {
@@ -318,6 +472,10 @@ export function ChatList({ onChatSelect, selectedChatId, whatsappType }: ChatLis
 
   function extractPhoneNumber(remoteJid: string): string {
     return remoteJid.replace(/\D/g, '');
+  }
+
+  function removeAccents(str: string): string {
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   }
 
   function sanitizePushName(
@@ -553,6 +711,21 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
     }
   }, [token, whatsappType]);
 
+  // 🔹 Lê contatos criados manualmente do cache local e adiciona ao contactMap
+useEffect(() => {
+  try {
+    const cache = localStorage.getItem('contacts_cache');
+    if (cache) {
+      const parsed = JSON.parse(cache);
+      setContactMap(prev => ({ ...prev, ...parsed }));
+      console.log('✅ Contatos locais carregados do contacts_cache:', Object.keys(parsed).length);
+    }
+  } catch (err) {
+    console.warn('⚠️ Erro ao carregar contacts_cache local:', err);
+  }
+}, []);
+
+
   useEffect(() => {
     loadContactMap();
   }, [loadContactMap]);
@@ -568,13 +741,21 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
       loadContactMap();
       loadInternalContacts();
     };
+    const contactUpdatedHandler = () => {
+      // Recarrega dados do usuário responsável quando contato é atualizado
+      loadUsuarios();
+      loadContactMap();
+      loadInternalContacts();
+    };
     window.addEventListener('storage', handler);
     window.addEventListener('contacts_updated', customHandler as EventListener);
+    window.addEventListener('contactUpdated', contactUpdatedHandler as EventListener);
     return () => {
       window.removeEventListener('storage', handler);
       window.removeEventListener('contacts_updated', customHandler as EventListener);
+      window.removeEventListener('contactUpdated', contactUpdatedHandler as EventListener);
     };
-  }, [loadContactMap, loadInternalContacts]);
+  }, [loadContactMap, loadInternalContacts, loadUsuarios]);
 
   useEffect(() => {
     if (!token) return;
@@ -673,7 +854,7 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
 
     if (whatsappType === 'WHATSAPP-BUSINESS') {
       apiClient.findChats(token)
-        .then((chats) => {
+        .then(async (chats) => {
           const rawChats = Array.isArray(chats) ? chats : [];
           const normalized = rawChats.map(c => ({
             ...c,
@@ -682,7 +863,11 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
               messageTimestamp: normalizeTimestamp(c.lastMessage.messageTimestamp)
             }
           }));
-          setChats(normalized);
+
+          // Enriquecer com dados de negociação
+          const enriched = await enrichChatsWithDeals(normalized);
+
+          setChats(enriched);
           setHasMore(rawChats.length >= 50);
           pageRef.current = 1;
           lastScrollTopRef.current = 0;
@@ -694,7 +879,7 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
           setTimeout(loadUnreadMessages, 0);
 
           const now = Date.now();
-          setCache(normalized, now, rawChats.length);
+          setCache(enriched, now, rawChats.length);
           lastRefreshRef.current = now;
           lastRealtimeUpdateRef.current = now;
 
@@ -711,7 +896,7 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
     }
 
     loadChats(token)
-      .then(({ chats, pageSize }) => {
+      .then(async ({ chats, pageSize }) => {
         const safeChats = Array.isArray(chats) ? chats : [];
         const safePageSize = typeof pageSize === 'number' ? pageSize : safeChats.length;
         const enriched = safeChats.map(chat => {
@@ -735,7 +920,10 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
           };
         });
 
-        const merged = mergeChats(enriched, []);
+        // Enriquecer com dados de negociação
+        const enrichedWithDeals = await enrichChatsWithDeals(enriched);
+
+        const merged = mergeChats(enrichedWithDeals, []);
         setChats(merged);
         setHasMore(safePageSize >= 50);
         pageRef.current = 1;
@@ -850,8 +1038,68 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
         loadingMoreFlagRef.current = false;
       }
 
+      // 🔹 Declara dealsByContactId no escopo da função para uso em ambos os blocos
+      let dealsByContactId: Record<number, any> = {};
+
       try {
         void loadTransfers(true, !preserveExisting);
+
+        // 🔹 CARREGA NEGOCIAÇÕES (INDEPENDENTE DO TIPO DE WHATSAPP)
+        console.log('🚀 INICIANDO CARREGAMENTO DE NEGOCIAÇÕES', {
+          externalFunilId
+        });
+
+        // Carrega todas as negociações
+        const dealsResponse = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/get', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', token },
+          body: JSON.stringify({ page: 1, offset: 1000 })
+        }).then(async r => {
+          if (!r.ok) return [];
+          try {
+            const text = await r.text();
+            return text ? JSON.parse(text) : [];
+          } catch (err) {
+            console.warn('⚠️ Resposta vazia ou inválida ao carregar negociações');
+            return [];
+          }
+        });
+
+        const allDealsRaw = Array.isArray(dealsResponse) ? dealsResponse : [];
+        console.log('📊 Negociações carregadas:', allDealsRaw.length);
+
+        // Remove duplicados por ID
+        const uniqueDealsMap = new Map<number, any>();
+        for (const d of allDealsRaw) {
+          if (d.Id && !uniqueDealsMap.has(d.Id)) {
+            uniqueDealsMap.set(d.Id, d);
+          }
+        }
+        const allDeals = Array.from(uniqueDealsMap.values());
+
+        // DEBUG: Mostra amostra da estrutura das negociações
+        if (allDeals.length > 0) {
+          console.log('📝 Amostra de negociação (primeira):', allDeals[0]);
+          console.log('🔍 Campos importantes:', {
+            'id_contato': allDeals[0].id_contato,
+            'id_funil': allDeals[0].id_funil,
+            'id_estagio': allDeals[0].id_estagio
+          });
+        }
+
+        // 🔹 Popula o mapa de negociações por id_contato
+        allDeals.forEach((deal: any) => {
+          const idContato = deal.id_contato || deal.idContato || deal.IdContato || deal.contactId;
+          if (idContato) {
+            const existing = dealsByContactId[idContato];
+            if (!existing || new Date(deal.UpdatedAt || deal.CreatedAt) > new Date(existing.UpdatedAt || existing.CreatedAt)) {
+              dealsByContactId[idContato] = deal;
+            }
+          }
+        });
+
+        console.log('🗺️ Negociações mapeadas por id_contato:', Object.keys(dealsByContactId).length, 'contatos');
+
         if (whatsappType === 'WHATSAPP-BUSINESS') {
           if (!preserveExisting) {
             clearApiCache([
@@ -860,27 +1108,124 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
             ]);
           }
 
-          const [contacts, chats] = await Promise.all([
-            apiClient.findContactInterno(token),
-            apiClient.findChats(token, 1, 50, true),
+          console.log('🚀 CARREGANDO DADOS CRM (WHATSAPP-BUSINESS)', {
+            externalFunilId,
+            useCRMEnriched: true
+          });
+
+          // 🔹 REPLICANDO EXATAMENTE A LÓGICA DO CRM
+          // Carrega: contatos CRM e chats WhatsApp
+          const [contatosCRM, chats] = await Promise.all([
+            // Usa o mesmo endpoint do CRM para carregar contatos
+            fetch('https://n8n.lumendigital.com.br/webhook/prospecta/contato/get', {
+              headers: { token }
+            }).then(async r => {
+              if (!r.ok) return [];
+              try {
+                const text = await r.text();
+                return text ? JSON.parse(text) : [];
+              } catch (err) {
+                console.warn('⚠️ Resposta vazia ou inválida ao carregar contatos CRM');
+                return [];
+              }
+            }),
+            apiClient.findChats(token, 1, 50, true)
           ]);
 
+          // 🔹 Mapeia contatos CRM para o formato do chat
           const map: Record<string, Contact> = {};
-          (Array.isArray(contacts) ? contacts : []).forEach((item: any) => {
-            const telefone = String(item?.telefone || '').replace(/\D/g, '');
+          const contactosCRMArray = Array.isArray(contatosCRM) ? contatosCRM : [];
+
+          console.log('👥 Contatos CRM carregados:', contactosCRMArray.length);
+          if (contactosCRMArray.length > 0) {
+            console.log('📝 Amostra de contato (primeiro):', contactosCRMArray[0]);
+            console.log('📝 Campos disponíveis:', Object.keys(contactosCRMArray[0]));
+            console.log('🔍 VERIFICANDO CAMPOS DO CONTATO:', {
+              'contato.Id': contactosCRMArray[0].Id,
+              'contato.id': contactosCRMArray[0].id,
+              'contato.ID': contactosCRMArray[0].ID,
+              'contato.contactId': contactosCRMArray[0].contactId
+            });
+          }
+
+          let matchCount = 0;
+          let noMatchCount = 0;
+
+          contactosCRMArray.forEach((contatoCRM: any, index: number) => {
+            const telefone = String(contatoCRM?.telefone || '').replace(/\D/g, '');
             if (!telefone) return;
+
             const baseJid = `${telefone}@s.whatsapp.net`;
             const normalized = normalizeRemoteJid(baseJid);
+
+            // 🔹 Busca a negociação deste contato (IGUAL AO CRM)
+            // Tenta diferentes variações do campo ID
+            const contatoId = contatoCRM?.Id || contatoCRM?.id || contatoCRM?.ID || contatoCRM?.contactId;
+            const deal = contatoId ? dealsByContactId[contatoId] : null;
+
+            // Log detalhado para os primeiros 3 contatos
+            if (index < 3) {
+              console.log(`🔍 Tentando mapear contato #${index}:`, {
+                nome: contatoCRM?.nome,
+                contatoId,
+                'contatoCRM.Id': contatoCRM?.Id,
+                'contatoCRM.id': contatoCRM?.id,
+                dealEncontrado: !!deal,
+                dealInfo: deal ? { id_funil: deal.id_funil, id_estagio: deal.id_estagio } : null
+              });
+            }
+            const estagioId = deal?.id_estagio ? String(deal.id_estagio) : null;
+            const funilId = deal?.id_funil || null;
+
             const contact: Contact = {
               id: baseJid,
               remoteJid: baseJid,
               pushName:
                 sanitizePushName(
-                  typeof item?.nome === 'string' ? item.nome : undefined,
+                  typeof contatoCRM?.nome === 'string' ? contatoCRM.nome : undefined,
                   baseJid,
                 ) || baseJid.split('@')[0],
               profilePicUrl: null,
+              estagioId,
+              funilId,
+              Id: contatoId
             };
+
+            // Contabiliza matches
+            if (deal) {
+              matchCount++;
+            } else if (contatoId) {
+              noMatchCount++;
+            }
+
+            // DEBUG - Log detalhado dos dados (apenas para primeiros 5)
+            if (index < 5) {
+              if (deal) {
+                console.log('✅ Contato COM negociação:', {
+                  nome: contatoCRM?.nome,
+                  telefone,
+                  contactId: contatoId,
+                  deal: {
+                    Id: deal.Id,
+                    titulo: deal.titulo,
+                    id_contato: deal.id_contato || deal.idContato || deal.IdContato,
+                    id_funil: deal.id_funil,
+                    id_estagio: deal.id_estagio
+                  },
+                  parsed: {
+                    funilId,
+                    estagioId
+                  }
+                });
+              } else if (contatoId) {
+                console.log('⚠️ Contato SEM negociação:', {
+                  nome: contatoCRM?.nome,
+                  telefone,
+                  contactId: contatoId
+                });
+              }
+            }
+
             map[baseJid] = contact;
             if (normalized && normalized !== baseJid) {
               map[normalized] = { ...contact, remoteJid: normalized };
@@ -890,6 +1235,17 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
               map[digits] = contact;
             }
           });
+
+          // DEBUG: Resumo final
+          const contatosComNegociacao = Object.values(map).filter(c => c.funilId).length;
+          console.log('📈 RESUMO FINAL:', {
+            totalContatos: Object.keys(map).length,
+            contatosComNegociacao,
+            contatosSemNegociacao: Object.keys(map).length - contatosComNegociacao,
+            matchesDuranteProcessamento: matchCount,
+            semMatchDuranteProcessamento: noMatchCount
+          });
+
           setContactMap(map);
 
           const chatList = Array.isArray(chats) ? chats : [];
@@ -900,15 +1256,25 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
               map[chat.remoteJid] ||
               (normalizedJid ? map[normalizedJid] : undefined) ||
               (digits ? map[digits] : undefined);
-            return {
+
+            // 🔹 BUSCA NEGOCIAÇÃO DO CONTATO PARA PEGAR id_funil e id_estagio
+            const contactId = (contact as any)?.Id ?? (contact as any)?.id ?? chat.contactId;
+            const deal = contactId ? dealsByContactId[contactId] : null;
+
+            const chatFunilId = deal?.id_funil || null;
+            const chatStageId = deal?.id_estagio ? String(deal.id_estagio) : null;
+
+            // DEBUG: Log dos primeiros 3 chats enriquecidos
+            const enrichedChat = {
               ...chat,
-              contactId:
-                (contact as any)?.Id ?? (contact as any)?.id ?? chat.contactId,
+              contactId,
               pushName:
                 sanitizePushName(contact?.pushName || chat.pushName, chat.remoteJid) ||
                 chat.remoteJid.split('@')[0],
               profilePicUrl:
                 contact?.profilePicUrl ?? chat.profilePicUrl ?? null,
+              chatFunilId,  // 🔹 USA O NOME CORRETO: chatFunilId
+              chatStageId,  // 🔹 USA O NOME CORRETO: chatStageId
               lastMessage: {
                 ...chat.lastMessage,
                 messageTimestamp: normalizeTimestamp(
@@ -916,6 +1282,20 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
                 ),
               },
             };
+
+            return enrichedChat;
+          }).map((chat, index) => {
+            // DEBUG: Log dos primeiros 3 chats enriquecidos
+            if (index < 3) {
+              console.log(`💬 Chat enriquecido (BUSINESS) #${index}:`, {
+                remoteJid: chat.remoteJid,
+                pushName: chat.pushName,
+                contactId: (chat as any).contactId,
+                chatFunilId: (chat as any).chatFunilId,
+                chatStageId: (chat as any).chatStageId
+              });
+            }
+            return chat;
           });
 
           const pageHasMore = chatList.length >= 50;
@@ -935,9 +1315,12 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
               contactMap[chat.remoteJid] ||
               (normalized ? contactMap[normalized] : undefined) ||
               (digits ? contactMap[digits] : undefined);
+
+            const contactId = (c as any)?.Id ?? (c as any)?.id ?? chat.contactId;
+
             return {
               ...chat,
-              contactId: (c as any)?.Id ?? (c as any)?.id ?? chat.contactId,
+              contactId,
               pushName:
                 sanitizePushName(c?.pushName || chat.pushName, chat.remoteJid) ||
                 chat.remoteJid.split('@')[0],
@@ -948,8 +1331,12 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
               },
             };
           });
+
+          // Enriquecer com dados de negociação
+          const enrichedWithDeals = await enrichChatsWithDeals(enriched);
+
           const base = preserveExisting ? chatsRef.current : [];
-          const merged = mergeChats(base, enriched);
+          const merged = mergeChats(base, enrichedWithDeals);
           setChats(merged);
           setHasMore(safePageSize >= 50);
           setCache(merged, Date.now(), safePageSize);
@@ -1154,14 +1541,29 @@ const filteredContacts = useMemo(() => {
   };
 
 const filteredChats = useMemo(() => {
-  const query = searchTerm.toLowerCase();
+  const query = searchTerm.toLowerCase().trim();
 
-  return chats.filter(chat => {
+  const result = chats.filter(chat => {
     const displayName =
       sanitizePushName(chat.pushName, chat.remoteJid) ||
       chat.remoteJid.split('@')[0] ||
       'Contato';
-    const matchesSearch = displayName.toLowerCase().includes(query);
+
+    // 🔍 FIRST: Search by name OR phone (including partial matches)
+    if (query) {
+      const phoneDigits = extractPhoneNumber(chat.remoteJid);
+      const displayNameLower = displayName.toLowerCase();
+      const displayNameNormalized = removeAccents(displayNameLower);
+      const queryNormalized = removeAccents(query);
+      const queryDigitsOnly = query.replace(/\D/g, '');
+
+      const nameMatch = displayNameNormalized.includes(queryNormalized);
+      // Only match phone if query contains digits
+      const phoneMatch = queryDigitsOnly.length > 0 && phoneDigits.includes(queryDigitsOnly);
+
+      if (!nameMatch && !phoneMatch) return false;
+    }
+
     const jidNorm = normalizeRemoteJid(chat.remoteJid);
     const unreadCount = unreadMessages[jidNorm] || 0;
     const digitsKey = jidDigits(chat.remoteJid);
@@ -1169,6 +1571,7 @@ const filteredChats = useMemo(() => {
     const isTransferChat =
       transferSet.has(jidNorm) || (transferKey ? transferSet.has(transferKey) : false);
 
+    // Legacy single-select filters (for backward compatibility)
     if (usuarioFiltroId) {
       const dono = resolveUsuarioDono(chat.remoteJid);
       if (!dono || dono.Id !== usuarioFiltroId) return false;
@@ -1184,10 +1587,73 @@ const filteredChats = useMemo(() => {
       if (!tags.some(t => t.Id === tagFiltroId)) return false;
     }
 
+    // Multi-select filter for responsibles
+    if (usuarioFiltroIds.length > 0) {
+      const dono = resolveUsuarioDono(chat.remoteJid);
+      if (!dono || !usuarioFiltroIds.includes(dono.Id)) return false;
+    }
+
+    // Multi-select filter for tags
+    if (tagFiltroIds.length > 0) {
+      const normalized = normalizeRemoteJid(chat.remoteJid);
+      const digits = jidDigits(chat.remoteJid);
+      const tags =
+        tagsMap[normalized] ||
+        (digits ? tagsMap[digits] : undefined) ||
+        [];
+      // Check if chat has at least one of the selected tags
+      if (!tags.some(t => tagFiltroIds.includes(t.Id))) return false;
+    }
+
+    // Multi-select filter for stages (etapas do funil)
+    // 🔹 Filtra pelo chatStageId (id_estagio da negociação vinculada ao chat)
+    if (stageFiltroIds.length > 0) {
+      const chatStageId = (chat as any).chatStageId;
+
+      // Verifica se o chat tem um dos estágios selecionados
+      if (!chatStageId || !stageFiltroIds.includes(chatStageId)) {
+        return false;
+      }
+    }
+
+    // Date range filter (filters by last message timestamp)
+    if (startDate || endDate) {
+      const messageTimestamp = normalizeTimestamp(chat.lastMessage.messageTimestamp);
+      const messageDate = new Date(messageTimestamp * 1000);
+
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        if (messageDate < start) return false;
+      }
+
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        if (messageDate > end) return false;
+      }
+    }
+
     if (showOnlyUnread && unreadCount === 0) return false;
     if (showUnanswered && chat.lastMessage.fromMe) return false;
 
-    if (activeTab === 'transfers' && !isTransferChat) return false;
+    // Filter by active tab
+    if (activeTab === 'ia') {
+      // Show only chats with active IA
+      const isIAPermanente = permanentSet.has(jidNorm);
+      const isIAAtiva =
+        sessionsSet.has(jidNorm) && !interventionsSet.has(jidNorm) && !isIAPermanente;
+      if (!isIAAtiva) return false;
+    } else if (activeTab === 'unread') {
+      // Show only unread chats
+      if (unreadCount === 0) return false;
+    } else if (activeTab === 'unanswered') {
+      // Show only unanswered chats (last message is not from me)
+      if (chat.lastMessage.fromMe) return false;
+    } else if (activeTab === 'transfers') {
+      // Show only transfer chats
+      if (!isTransferChat) return false;
+    }
 
     if (iaStatusFilter !== 'all') {
       const isIAPermanente = permanentSet.has(jidNorm);
@@ -1199,8 +1665,10 @@ const filteredChats = useMemo(() => {
       if (iaStatusFilter === 'inactive' && !(isIAInativa || isIAPermanente)) return false;
     }
 
-    return matchesSearch;
+    return true;
   });
+
+  return result;
 }, [
   chats,
   searchTerm,
@@ -1215,13 +1683,126 @@ const filteredChats = useMemo(() => {
   permanentSet,
   tagsMap,
   tagFiltroId,
+  tagFiltroIds,
+  usuarioFiltroIds,
+  stageFiltroIds,
+  startDate,
+  endDate,
   resolveUsuarioDono,
   usuarioFiltroId,
+  contactMap,
 ]);
 
 const chatsToShow = filteredChats;
 
   const [flashChatIds, setFlashChatIds] = useState<Set<string>>(new Set());
+
+  // Notify parent of filtered count changes
+  useEffect(() => {
+    if (onFilteredCountChange) {
+      onFilteredCountChange(filteredChats.length);
+    }
+  }, [filteredChats, onFilteredCountChange]);
+
+  // Calculate category counts for all filter tabs
+  // This counts ALL chats matching base filters (search, tags, dates, etc) but ignores activeTab
+  useEffect(() => {
+    if (!onCategoryCountsChange) return;
+
+    let iaCount = 0;
+    let unreadCount = 0;
+    let unansweredCount = 0;
+    let transfersCount = 0;
+
+    // Process all chats (not just loaded ones)
+    chats.forEach(chat => {
+      const jidNorm = normalizeRemoteJid(chat.remoteJid);
+      const displayName = sanitizePushName(chat.pushName, chat.remoteJid) || chat.remoteJid.split('@')[0] || 'Contato';
+      const unreadMsgCount = unreadMessages[jidNorm] || 0;
+      const digitsKey = jidDigits(chat.remoteJid);
+      const transferKey = digitsKey ? `${digitsKey}@s.whatsapp.net` : null;
+      const isTransfer = transferSet.has(jidNorm) || (transferKey ? transferSet.has(transferKey) : false);
+
+      // Apply base filters (same as filteredChats but WITHOUT activeTab filter)
+
+      // Search filter
+      const query = searchTerm.toLowerCase().trim();
+      if (query) {
+        const phoneDigits = extractPhoneNumber(chat.remoteJid);
+        const displayNameLower = displayName.toLowerCase();
+        const displayNameNormalized = removeAccents(displayNameLower);
+        const queryNormalized = removeAccents(query);
+        const queryDigitsOnly = query.replace(/\D/g, '');
+        const nameMatch = displayNameNormalized.includes(queryNormalized);
+        const phoneMatch = queryDigitsOnly.length > 0 && phoneDigits.includes(queryDigitsOnly);
+        if (!nameMatch && !phoneMatch) return;
+      }
+
+      // Legacy filters
+      if (usuarioFiltroId) {
+        const dono = resolveUsuarioDono(chat.remoteJid);
+        if (!dono || dono.Id !== usuarioFiltroId) return;
+      }
+      if (tagFiltroId) {
+        const tags = tagsMap[jidNorm] || (digitsKey ? tagsMap[digitsKey] : undefined) || [];
+        if (!tags.some(t => t.Id === tagFiltroId)) return;
+      }
+
+      // Multi-select filters
+      if (usuarioFiltroIds && usuarioFiltroIds.length > 0) {
+        const dono = resolveUsuarioDono(chat.remoteJid);
+        if (!dono || !usuarioFiltroIds.includes(dono.Id)) return;
+      }
+      if (tagFiltroIds && tagFiltroIds.length > 0) {
+        const tags = tagsMap[jidNorm] || (digitsKey ? tagsMap[digitsKey] : undefined) || [];
+        if (!tags.some(t => tagFiltroIds.includes(t.Id))) return;
+      }
+      if (stageFiltroIds && stageFiltroIds.length > 0) {
+        const chatStageId = (chat as any).chatStageId;
+        if (!chatStageId || !stageFiltroIds.includes(chatStageId)) return;
+      }
+
+      // Date range filter
+      if (startDate || endDate) {
+        const messageTimestamp = normalizeTimestamp(chat.lastMessage.messageTimestamp);
+        const messageDate = new Date(messageTimestamp * 1000);
+        if (startDate) {
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          if (messageDate < start) return;
+        }
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          if (messageDate > end) return;
+        }
+      }
+
+      // Legacy boolean filters
+      if (showOnlyUnread && unreadMsgCount === 0) return;
+      if (showUnanswered && chat.lastMessage.fromMe) return;
+
+      // IA status filter
+      if (iaStatusFilter !== 'all') {
+        const isIAPermanente = permanentSet.has(jidNorm);
+        const isIAAtiva = sessionsSet.has(jidNorm) && !interventionsSet.has(jidNorm) && !isIAPermanente;
+        const isIAInativa = interventionsSet.has(jidNorm) && !isIAPermanente;
+        if (iaStatusFilter === 'active' && !isIAAtiva) return;
+        if (iaStatusFilter === 'inactive' && !(isIAInativa || isIAPermanente)) return;
+      }
+
+      // Now count for each category (this chat passed all base filters)
+      const isIAPermanente = permanentSet.has(jidNorm);
+      const isIAAtiva = sessionsSet.has(jidNorm) && !interventionsSet.has(jidNorm) && !isIAPermanente;
+
+      if (isIAAtiva) iaCount++;
+      if (unreadMsgCount > 0) unreadCount++;
+      if (!chat.lastMessage.fromMe) unansweredCount++;
+      if (isTransfer) transfersCount++;
+    });
+
+    onCategoryCountsChange({ ia: iaCount, unread: unreadCount, unanswered: unansweredCount, transfers: transfersCount });
+  }, [chats, searchTerm, unreadMessages, transferSet, sessionsSet, interventionsSet, permanentSet, tagsMap, tagFiltroId, tagFiltroIds, usuarioFiltroId, usuarioFiltroIds, stageFiltroIds, startDate, endDate, iaStatusFilter, showOnlyUnread, showUnanswered, onCategoryCountsChange, contactMap, resolveUsuarioDono, sanitizePushName, extractPhoneNumber, removeAccents]);
 
   useEffect(() => {
     chatsRef.current = chats;
@@ -1298,6 +1879,7 @@ useEffect(() => {
 }, [scheduleResumeRefresh]);
 
 useMessageEvents((msg) => {
+  // 1. Atualiza o cache primeiro
   updateCacheFromMessage(msg);
 
   lastRealtimeUpdateRef.current = Date.now();
@@ -1309,29 +1891,21 @@ useMessageEvents((msg) => {
       ? normalizeTimestamp((msg as any).messageTimestamp)
       : Math.floor(Date.now() / 1000);
 
-  setChats(prev => {
-    return prev.map(chat => {
-      if (chat.id !== resolved) return chat;
+  // 2. Pega os chats atualizados do cache (já ordenados)
+  const cachedChats = getCache().chats || [];
 
-      // Se for inbound, registra o último inbound conhecido
-      const next: any = isInbound
-        ? { ...chat, lastInboundTimestamp: ts }
-        : { ...chat };
-
-      // NÃO sobrescrevemos lastMessage aqui (fica a cargo do seu cache/stream),
-      // apenas garantimos que o inbound fique salvo para cálculo da janela.
-      return next;
-    });
-  });
-
-  // (restante do seu handler continua igual...)
-  const updated = (getCache().chats || []).map(chat => {
+  // 3. Enriquece com dados de contato e mantém lastMessage atualizado
+  const updated = cachedChats.map(chat => {
     const normalized = normalizeRemoteJid(chat.remoteJid);
     const digits = jidDigits(chat.remoteJid);
     const c =
       contactMap[chat.remoteJid] ||
       (normalized ? contactMap[normalized] : undefined) ||
       (digits ? contactMap[digits] : undefined);
+
+    // Se for inbound para este chat, salva o timestamp
+    const lastInboundTimestamp = (chat.id === resolved && isInbound) ? ts : (chat as any).lastInboundTimestamp;
+
     return {
       ...chat,
       contactId: (c as any)?.Id ?? (c as any)?.id ?? chat.contactId,
@@ -1339,8 +1913,12 @@ useMessageEvents((msg) => {
         sanitizePushName(c?.pushName || chat.pushName, chat.remoteJid) ||
         chat.remoteJid.split('@')[0],
       profilePicUrl: c?.profilePicUrl ?? chat.profilePicUrl ?? null,
+      lastInboundTimestamp,
+      // lastMessage já vem atualizado do cache
     };
   });
+
+  // 4. Atualiza o estado com os chats ordenados e atualizados
   setChats(updated);
 
   if (normalizedSelectedChatId) {
@@ -1350,6 +1928,7 @@ useMessageEvents((msg) => {
     }
   }
 
+  // 5. Flash visual no chat selecionado
   if (normalizedSelectedChatId && resolved === normalizedSelectedChatId) {
     setFlashChatIds(prev => {
       const newSet = new Set(prev);
@@ -1379,6 +1958,120 @@ useEffect(() => {
     });
   }
 }, [normalizedSelectedChatId]);
+
+// 🔔 Listener para atualização em tempo real de TODOS os campos do chat
+useEffect(() => {
+  const unsubscribe = onChatUpdate('chat:update', async (data: ChatUpdateEventData) => {
+    console.log('📥 Evento recebido em ChatList:', data);
+    const { remoteJid, ...updates } = data;
+
+    if (!remoteJid) {
+      // Se não tiver remoteJid, recarregar toda a lista
+      if (token) {
+        try {
+          const result = await loadChats(token, true);
+          const enriched = result.chats.map(chat => {
+            const normalized = normalizeRemoteJid(chat.remoteJid);
+            const digits = jidDigits(chat.remoteJid);
+            const c =
+              contactMap[chat.remoteJid] ||
+              (normalized ? contactMap[normalized] : undefined) ||
+              (digits ? contactMap[digits] : undefined);
+            return {
+              ...chat,
+              contactId: (c as any)?.Id ?? (c as any)?.id ?? chat.contactId,
+              pushName:
+                sanitizePushName(c?.pushName || chat.pushName, chat.remoteJid) ||
+                chat.remoteJid.split('@')[0],
+              profilePicUrl: c?.profilePicUrl ?? chat.profilePicUrl ?? null,
+            };
+          });
+
+          // Enriquecer com dados de negociação
+          const enrichedWithDeals = await enrichChatsWithDeals(enriched);
+
+          setChats(enrichedWithDeals);
+        } catch (err) {
+          console.error('Erro ao recarregar lista:', err);
+        }
+      }
+      return;
+    }
+
+    // Atualização específica de um chat
+    const normalized = normalizeRemoteJid(remoteJid);
+
+    setChats(prev => {
+      return prev.map(chat => {
+        if (chat.id !== normalized && chat.remoteJid !== remoteJid) {
+          return chat;
+        }
+
+        // Aplicar todas as atualizações
+        const updated = { ...chat };
+
+        if (updates.tags !== undefined) {
+          (updated as any).tags = updates.tags;
+        }
+        if (updates.iaStatus !== undefined) {
+          (updated as any).iaStatus = updates.iaStatus;
+        }
+        if (updates.stage !== undefined) {
+          (updated as any).stage = updates.stage;
+        }
+        if (updates.name !== undefined) {
+          updated.pushName = sanitizePushName(updates.name, chat.remoteJid) || chat.remoteJid.split('@')[0];
+        }
+        if (updates.responsibleId !== undefined) {
+          (updated as any).responsibleId = updates.responsibleId;
+        }
+
+        return updated;
+      });
+    });
+
+    console.log('✅ Chat atualizado em tempo real:', remoteJid, updates);
+  });
+
+  return unsubscribe;
+}, [token, contactMap]);
+
+// 🔔 Listener para refresh completo da lista
+useEffect(() => {
+  const unsubscribe = onChatUpdate('chat:refresh_all', async () => {
+    if (!token) return;
+
+    try {
+      const result = await loadChats(token, true);
+      const enriched = result.chats.map(chat => {
+        const normalized = normalizeRemoteJid(chat.remoteJid);
+        const digits = jidDigits(chat.remoteJid);
+        const c =
+          contactMap[chat.remoteJid] ||
+          (normalized ? contactMap[normalized] : undefined) ||
+          (digits ? contactMap[digits] : undefined);
+        return {
+          ...chat,
+          contactId: (c as any)?.Id ?? (c as any)?.id ?? chat.contactId,
+          pushName:
+            sanitizePushName(c?.pushName || chat.pushName, chat.remoteJid) ||
+            chat.remoteJid.split('@')[0],
+          profilePicUrl: c?.profilePicUrl ?? chat.profilePicUrl ?? null,
+        };
+      });
+
+      // Enriquecer com dados de negociação
+      const enrichedWithDeals = await enrichChatsWithDeals(enriched);
+
+      setChats(enrichedWithDeals);
+      console.log('✅ Lista de chats recarregada completamente');
+    } catch (err) {
+      console.error('Erro ao recarregar lista completa:', err);
+    }
+  });
+
+  return unsubscribe;
+}, [token, contactMap, enrichChatsWithDeals]);
 
 
 const getInitials = (name?: string | null) => {
@@ -1471,50 +2164,52 @@ const getLastMessageText = (chat) => {
 
   return (
     <div className="h-full flex flex-col bg-gray-50">
-      <div className="border-b border-gray-300 bg-white/90">
-        <div className="px-3 py-3 space-y-3">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h1 className="text-lg font-semibold text-gray-700">Conversas</h1>
+      {/* Header - oculto quando controlado externamente */}
+      {!isExternallyControlled && (
+        <div className="border-b border-gray-300 bg-white/90">
+          <div className="px-3 py-3 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h1 className="text-lg font-semibold text-gray-700">Conversas</h1>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowControls(prev => !prev)}
+                  className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                    showControls ? 'bg-gray-100 text-gray-700 border-gray-300' : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-300'
+                  }`}
+                >
+                  <span>{showControls ? 'Ocultar filtros' : 'Mostrar filtros'}</span>
+                  {hasActiveFilters && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />}
+                  <ChevronDown
+                    className={`h-3 w-3 transition-transform ${showControls ? 'rotate-180' : ''}`}
+                  />
+                </button>
+                <button
+                  onClick={handleManualRefresh}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 text-gray-500 transition-colors hover:bg-gray-50"
+                  title="Atualizar lista"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowControls(prev => !prev)}
-                className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                  showControls ? 'bg-gray-100 text-gray-700 border-gray-300' : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-300'
-                }`}
-              >
-                <span>{showControls ? 'Ocultar filtros' : 'Mostrar filtros'}</span>
-                {hasActiveFilters && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />}
-                <ChevronDown
-                  className={`h-3 w-3 transition-transform ${showControls ? 'rotate-180' : ''}`}
-                />
-              </button>
-              <button
-                onClick={handleManualRefresh}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 text-gray-500 transition-colors hover:bg-gray-50"
-                title="Atualizar lista"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </button>
+
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar conversas..."
+                value={searchTerm}
+                onChange={(e) => {
+                  lastUserInteractionRef.current = Date.now();
+                  setSearchTerm(e.target.value);
+                }}
+                className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-700 placeholder:text-gray-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition"
+              />
             </div>
-          </div>
 
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar conversas..."
-              value={searchTerm}
-              onChange={(e) => {
-                lastUserInteractionRef.current = Date.now();
-                setSearchTerm(e.target.value);
-              }}
-              className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-700 placeholder:text-gray-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition"
-            />
-          </div>
-
-          {showControls && (
+            {showControls && (
             <div className="border-t border-gray-300 pt-3">
               <div
                 className="space-y-3 rounded-lg border border-gray-300 bg-white/95 p-3 shadow-sm max-h-64 overflow-y-auto"
@@ -1712,12 +2407,20 @@ const getLastMessageText = (chat) => {
                 </div>
               </div>
             </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Lista de conversas */}
-      <div ref={chatListRef} className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-2">
+      <div
+        ref={chatListRef}
+        className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar"
+        style={{
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#d1d5db transparent'
+        }}
+      >
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <div className="relative">
@@ -1746,60 +2449,22 @@ const getLastMessageText = (chat) => {
                 transferSet.has(jidNorm) || (transferKey ? transferSet.has(transferKey) : false);
               const isSelectedTransfer = isSelected && isTransfer;
 
+              // Clean WhatsApp Web style
               const baseContainerClasses =
-                'group relative flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer transition-colors duration-200';
-              let containerTone =
-                'bg-white hover:bg-gray-50 border border-transparent';
-              if (isSelectedTransfer) {
-                containerTone = 'bg-amber-100 border border-amber-300';
-              } else if (isSelected) {
-                containerTone = 'bg-emerald-50 border border-emerald-300 shadow-sm';
-              } else if (isTransfer) {
-                containerTone = 'bg-amber-50 border border-amber-200 hover:bg-amber-100';
-              } else if (unreadCount > 0) {
-                containerTone = 'bg-white border border-emerald-200 shadow-sm hover:border-emerald-300';
-              } else if (chat.hasNewMessage) {
-                containerTone = 'bg-emerald-50 border border-emerald-200';
+                'group relative flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-all duration-150 border-b border-gray-100';
+
+              let containerTone = 'bg-white hover:bg-gray-50';
+              if (isSelected) {
+                containerTone = 'bg-gray-100';
               }
 
-              const nameColorClass = isSelectedTransfer
-                ? 'text-amber-900'
-                : isSelected
-                  ? 'text-emerald-700'
-                  : isTransfer
-                    ? 'text-amber-900'
-                    : 'text-gray-800';
-
-              const secondaryTextClass = isSelectedTransfer
-                ? 'text-amber-800'
-                : isSelected
-                  ? 'text-emerald-600'
-                  : isTransfer
-                    ? 'text-amber-700'
-                    : 'text-slate-500';
-
-              const metaTextClass = isSelectedTransfer
-                ? 'text-amber-800'
-                : isSelected
-                  ? 'text-emerald-600'
-                  : isTransfer
-                    ? 'text-amber-700'
-                    : 'text-gray-500';
-
-              const messageTextClass = isSelectedTransfer
-                ? 'text-amber-900'
-                : isSelected
-                  ? 'text-emerald-700'
-                  : isTransfer
-                    ? 'text-amber-800'
-                    : 'text-gray-600';
+              const nameColorClass = unreadCount > 0 ? 'text-gray-900 font-semibold' : 'text-gray-900';
+              const metaTextClass = unreadCount > 0 ? 'text-teal-600 font-semibold' : 'text-gray-500';
+              const messageTextClass = unreadCount > 0 ? 'text-gray-900 font-medium' : 'text-gray-600';
 
               const containerClasses = [
                 baseContainerClasses,
                 containerTone,
-                isSelected && !isSelectedTransfer ? 'ring-1 ring-emerald-200/80' : '',
-                isSelectedTransfer ? 'ring-2 ring-amber-200/80' : '',
-                flashChatIds.has(chat.id) ? 'animate-pulse' : '',
               ]
                 .filter(Boolean)
                 .join(' ');
@@ -1824,59 +2489,16 @@ const getLastMessageText = (chat) => {
                   }}
                   className={containerClasses}
                 >
-                  {/* Container da foto com status de IA */}
-                  <div className="relative">
-                    {/* Status de IA posicionado acima da foto */}
-                    {(() => {
-                      const keys = jidCandidates(chat.remoteJid);
-                      const hasSession = keys.some(k => sessionsSet.has(k));
-                      const hasIntervention = keys.some(k => interventionsSet.has(k));
-                      const hasPermanent = keys.some(k => permanentSet.has(k));
-                      const iaAtiva = hasSession && !hasIntervention && !hasPermanent;
-                      const iaInativa = hasIntervention && !hasPermanent;
-                      const iaPermanente = hasPermanent;
-
-                      if (!iaAtiva && !iaInativa && !iaPermanente) return null;
-
-                      return (
-                        <div className="absolute -top-2 -right-2 z-10 flex flex-col space-y-1">
-                          {iaAtiva && (
-                            <div className="bg-green-500 text-white text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full shadow-lg border-2 border-white">
-                              <div className="flex items-center">
-                                <div className="w-1.5 h-1.5 bg-white rounded-full mr-1 animate-pulse" />
-                                IA
-                              </div>
-                            </div>
-                          )}
-                          {iaInativa && (
-                            <div className="bg-red-500 text-white text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full shadow-lg border-2 border-white">
-                              <div className="flex items-center">
-                                <div className="w-1.5 h-1.5 bg-white rounded-full mr-1" />
-                                Int.
-                              </div>
-                            </div>
-                          )}
-                          {iaPermanente && (
-                            <div className="bg-red-700 text-white text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full shadow-lg border-2 border-white">
-                              <div className="flex items-center">
-                                <div className="w-1.5 h-1.5 bg-white rounded-full mr-1" />
-                                Exc. Perm.
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-
-                    {/* Foto do usuário */}
+                  {/* Foto do usuário */}
+                  <div className="flex-shrink-0">
                     {chat.profilePicUrl ? (
                       <img
                         src={chat.profilePicUrl}
                         alt={chat.pushName}
-                        className="h-10 w-10 rounded-full object-cover ring-2 ring-slate-100 transition-all duration-200 group-hover:ring-emerald-200"
+                        className="h-12 w-12 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-slate-200 to-slate-300 ring-2 ring-slate-100 transition-all duration-200 group-hover:ring-emerald-200">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-gray-600 font-semibold text-sm">
                         {getInitials(chat.pushName)}
                       </div>
                     )}
@@ -1884,154 +2506,113 @@ const getLastMessageText = (chat) => {
 
                   {/* Conteúdo da conversa */}
                   <div className="flex-1 min-w-0">
-                    {/* Área de metadados */}
-                    <div className="mb-1.5 space-y-1">
-                      {/* Usuário responsável */}
-                      {dono && (
-                        <div className="flex items-center">
-                          <div
-                            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium border ${
-                              isSelectedTransfer
-                                ? 'bg-amber-100 text-amber-800 border-amber-200'
-                                : isSelected
-                                  ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
-                                  : 'bg-blue-50 text-blue-700 border-blue-200'
-                            }`}
-                          >
-                            <svg
-                              className="w-2.5 h-2.5 mr-1"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                              />
-                            </svg>
-                            {dono.nome}
-                          </div>
-                        </div>
-                      )}
-
-                      {(() => {
-                        const all = tagsMap[normalizeRemoteJid(chat.remoteJid)] || [];
-                        if (!all.length) return null;
-
-                        const visible = all.slice(0, 3);
-                        const hidden = all.length - visible.length;
-
-                        return (
-                          <div className="flex flex-wrap items-center gap-1">
-                            {visible.map(tag => (
-                              <span
-                                key={tag.Id}
-                                className="inline-block rounded-full px-1.5 py-[1px] text-[10px] leading-none font-medium border truncate max-w-[120px]"
-                                style={{
-                                  backgroundColor: tag.cor,
-                                  color: tag.cor_texto,
-                                  borderColor: tag.cor,
-                                }}
-                                title={`#${tag.nome}`}
-                              >
-                                #{formatShort(tag.nome, 14)}
-                              </span>
-                            ))}
-                            {hidden > 0 && (
-                              <span
-                                className={`inline-block rounded-full px-1.5 py-[1px] text-[10px] leading-none font-medium border ${
-                                  isSelectedTransfer
-                                    ? 'bg-amber-100 text-amber-800 border-amber-200'
-                                    : isSelected
-                                      ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
-                                      : 'bg-gray-100 text-gray-700 border-gray-300'
-                                }`}
-                                title={`${hidden} etiqueta(s) adicional(is)`}
-                              >
-                                +{hidden}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })()}
-
-                      {isTransfer && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide border border-amber-200 bg-amber-50 text-amber-700">
-                          Transferência
-                        </span>
-                      )}
+                    {/* Linha 1: Nome + Timestamp */}
+                    <div className="flex items-baseline justify-between gap-2 mb-0.5">
+                      <h3 className={`text-[15px] truncate flex-1 ${nameColorClass}`}>
+                        {displayName}
+                      </h3>
+                      <span className={`text-xs flex-shrink-0 ${metaTextClass}`}>
+                        {formatTimestamp(normalizeTimestamp(chat.lastMessage.messageTimestamp))}
+                      </span>
                     </div>
 
-                    <div className="flex items-center justify-between mb-1">
-                      {/* Nome + número */}
-                      <div className="flex flex-col">
-                        <h3
-                          className={`font-semibold text-sm truncate transition-colors ${nameColorClass}`}
-                        >
-                          {formatShortName(displayName)}
-                        </h3>
-
-                        <div className="flex items-center gap-2">
-                          <span className={`text-[11px] truncate ${secondaryTextClass}`}>
-                            {formatPhoneNumber(chat.remoteJid)}
-                          </span>
-                        </div>
+                    {/* Linha 2: Última mensagem + Badges */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                        {chat.lastMessage.fromMe && (
+                          <svg className="w-4 h-4 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                        <p className={`text-sm truncate ${messageTextClass}`}>
+                          {getLastMessageText(chat)}
+                        </p>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[11px] font-medium ${metaTextClass}`}>
-                          {formatTimestamp(normalizeTimestamp(chat.lastMessage.messageTimestamp))}
-                        </span>
-
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
                         {unreadCount > 0 && (
-                          <span
-                            className={`inline-flex min-w-[20px] h-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${
-                              isSelectedTransfer ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'
-                            }`}
-                            title="Mensagens não lidas"
-                          >
+                          <span className="inline-flex min-w-[20px] h-5 items-center justify-center rounded-full bg-teal-500 text-white px-1.5 text-xs font-semibold">
                             {unreadCount > 99 ? '99+' : unreadCount}
                           </span>
                         )}
+
+                        {/* Transfer Badge */}
+                        {isTransfer && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-100 text-yellow-700">
+                            TRANSF
+                          </span>
+                        )}
+
+                        {(() => {
+                          const keys = jidCandidates(chat.remoteJid);
+                          const hasSession = keys.some(k => sessionsSet.has(k));
+                          const hasIntervention = keys.some(k => interventionsSet.has(k));
+                          const hasPermanent = keys.some(k => permanentSet.has(k));
+                          const iaAtiva = hasSession && !hasIntervention && !hasPermanent;
+                          const iaInativa = hasIntervention && !hasPermanent;
+                          const iaPermanente = hasPermanent;
+
+                          if (iaAtiva) {
+                            return (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-green-100 text-green-700">
+                                IA
+                              </span>
+                            );
+                          }
+                          if (iaInativa) {
+                            return (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-700">
+                                INT
+                              </span>
+                            );
+                          }
+                          if (iaPermanente) {
+                            return (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-800">
+                                EXC
+                              </span>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      {chat.lastMessage.fromMe && (
-                        <div className={`flex-shrink-0 ${metaTextClass}`}>
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </div>
-                      )}
-                      <p className={`text-xs truncate ${messageTextClass}`}>
-                        {getLastMessageText(chat)}
-                      </p>
-                    </div>
+                    {/* Linha 3: Estágio do funil + Responsável */}
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {/* Estágio do funil */}
+                      {(() => {
+                        const chatStageId = (chat as any).chatStageId;
+                        if (!chatStageId) return null;
 
-                    {unansweredFor && (
-                      <p
-                        className={`mt-1 text-[10px] font-medium ${
-                          isSelectedTransfer ? 'text-amber-800' : 'text-red-500'
-                        }`}
-                      >
-                        Sem resposta {unansweredFor}
-                      </p>
-                    )}
+                        const stage = availableStages.find(s => String(s.id) === String(chatStageId));
+                        if (!stage) return null;
+
+                        return (
+                          <span
+                            className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium"
+                            style={{
+                              backgroundColor: stage.cor || '#e5e7eb',
+                              color: '#374151'
+                            }}
+                          >
+                            {stage.nome}
+                          </span>
+                        );
+                      })()}
+
+                      {/* Responsável */}
+                      {dono && (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          {dono.nome}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Indicador visual */}
-                  {isSelected && (
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                      <div className="h-8 w-1.5 rounded-full bg-emerald-400/60"></div>
-                    </div>
-                  )}
                 </div>
               );
             })}

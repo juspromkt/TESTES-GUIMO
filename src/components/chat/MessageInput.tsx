@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
-import { Send, Paperclip, Mic, StopCircle, FileText } from "lucide-react";
+import { Send, Paperclip, Mic, StopCircle, FileText, Smile } from "lucide-react";
 import { apiClient } from "./utils/api";
 import type { Message } from "./utils/api";
 import { toast } from "sonner";
 import { resolveJid } from "../../utils/jidMapping";
+import * as Popover from "@radix-ui/react-popover";
 
 interface MessageInputProps {
   remoteJid: string;
@@ -256,39 +257,98 @@ reader.readAsDataURL(audioBlob);
       handleSendMessage();
     }
   };
+
+  // Lista de emojis mais usados (estilo WhatsApp)
+  const emojis = [
+    "😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "🙃",
+    "😉", "😊", "😇", "🥰", "😍", "🤩", "😘", "😗", "😚", "😙",
+    "😋", "😛", "😜", "🤪", "😝", "🤑", "🤗", "🤭", "🤫", "🤔",
+    "🤐", "🤨", "😐", "😑", "😶", "😏", "😒", "🙄", "😬", "🤥",
+    "😌", "😔", "😪", "🤤", "😴", "😷", "🤒", "🤕", "🤢", "🤮",
+    "🤧", "🥵", "🥶", "😶‍🌫️", "🥴", "😵", "🤯", "🤠", "🥳", "😎",
+    "🤓", "🧐", "😕", "😟", "🙁", "😮", "😯", "😲", "😳", "🥺",
+    "😦", "😧", "😨", "😰", "😥", "😢", "😭", "😱", "😖", "😣",
+    "😞", "😓", "😩", "😫", "🥱", "😤", "😡", "😠", "🤬", "👍",
+    "👎", "👏", "🙌", "👐", "🤲", "🤝", "🙏", "✌️", "🤞", "🤟",
+    "🤘", "🤙", "👈", "👉", "👆", "👇", "☝️", "👋", "🤚", "🖐",
+    "✋", "🖖", "👌", "🤏", "✊", "👊", "🤛", "🤜", "💪", "❤️",
+    "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❣️",
+    "💕", "💞", "💓", "💗", "💖", "💘", "💝", "🔥", "✨", "💫"
+  ];
+
+  const handleEmojiSelect = (emoji: string) => {
+    setMessage(prev => prev + emoji);
+    textareaRef.current?.focus();
+  };
  return (
-    <div className="p-6 bg-white/80 backdrop-blur-sm border-t border-gray-300">
+    <div className="bg-[#f0f2f5] border-t border-gray-200">
+      {/* Preview de arquivo selecionado */}
       {pendingFile && (
-        <div className="mb-4 p-4 bg-gradient-to-r from-gray-50 to-gray-50 border border-gray-300 rounded-2xl">
+        <div className="px-4 py-3 bg-white border-b border-gray-200">
           <div className="flex items-center space-x-3">
             {pendingFile.mediatype === 'image' && (
               <img
                 src={`data:${pendingFile.mimetype};base64,${pendingFile.base64}`}
                 alt="preview"
-                className="w-16 h-16 object-cover rounded-xl shadow-md"
+                className="w-16 h-16 object-cover rounded-lg"
               />
             )}
-            <div>
-              <p className="text-sm font-medium text-gray-700">Arquivo selecionado</p>
-              <p className="text-xs text-gray-600 truncate">{pendingFile.file.name}</p>
+            {pendingFile.mediatype !== 'image' && (
+              <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                <FileText className="w-8 h-8 text-gray-400" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-700 truncate">{pendingFile.file.name}</p>
+              <p className="text-xs text-gray-500">{(pendingFile.file.size / 1024).toFixed(1)} KB</p>
             </div>
+            <button
+              onClick={() => setPendingFile(null)}
+              className="text-gray-400 hover:text-gray-600 p-1"
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}
 
-      {replyTo && (
-        <div className="mb-2 px-4 py-2 bg-gray-100 border-l-4 border-gray-400 text-gray-700 rounded">
-          Respondendo: {replyTo.message.conversation?.slice(0, 40)}...
-          <button
-            onClick={() => onClearReply?.()}
-            className="ml-2 text-gray-600 hover:text-gray-800 text-xs underline"
-          >
-            Cancelar
-          </button>
+      {/* Preview de áudio gravado */}
+      {audioPreview && (
+        <div className="px-4 py-3 bg-white border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <audio controls src={audioPreview.url} className="flex-1" />
+            <button
+              onClick={() => setAudioPreview(null)}
+              className="text-gray-400 hover:text-gray-600 p-1"
+            >
+              ✕
+            </button>
+          </div>
         </div>
       )}
 
-      <div className="flex items-end space-x-3">
+      {/* Responder a mensagem */}
+      {replyTo && (
+        <div className="px-4 py-2 bg-[#d1f4cc] border-b border-gray-200">
+          <div className="flex items-start justify-between">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-[#00a884]">Respondendo</p>
+              <p className="text-sm text-gray-700 truncate">
+                {replyTo.message.conversation?.slice(0, 50)}...
+              </p>
+            </div>
+            <button
+              onClick={() => onClearReply?.()}
+              className="text-gray-500 hover:text-gray-700 ml-2 p-1"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Input principal - estilo WhatsApp Web */}
+      <div className="flex items-center gap-2 px-4 py-2.5">
         <input
           ref={fileInputRef || internalRef}
           type="file"
@@ -297,73 +357,118 @@ reader.readAsDataURL(audioBlob);
           className="hidden"
         />
 
-        {isBusiness && (
+        {/* Lado esquerdo: Emoji + Anexo */}
+        <div className="flex items-center gap-1">
+          {/* Botão Emoji com Popover */}
+          <Popover.Root>
+            <Popover.Trigger asChild>
+              <button
+                type="button"
+                className="p-2 text-[#54656f] hover:text-[#00a884] transition-colors rounded-full hover:bg-[#f0f2f5]"
+                title="Emoji"
+              >
+                <Smile className="w-6 h-6" />
+              </button>
+            </Popover.Trigger>
+
+            <Popover.Portal>
+              <Popover.Content
+                className="z-50 bg-white shadow-2xl rounded-lg overflow-hidden w-[350px] animate-in fade-in-0 zoom-in-95"
+                sideOffset={8}
+                align="start"
+              >
+                <div className="p-3">
+                  <div className="grid grid-cols-8 gap-1 max-h-[300px] overflow-y-auto">
+                    {emojis.map((emoji, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleEmojiSelect(emoji)}
+                        className="text-2xl hover:bg-gray-100 rounded p-2 transition-colors"
+                        type="button"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
+
+          {/* Botão Anexar */}
           <button
             type="button"
-            onClick={onTemplateClick}
-            className="p-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-2xl hover:from-gray-600 hover:to-gray-700 shadow-lg hover:scale-105"
+            onClick={() => (fileInputRef || internalRef).current?.click()}
+            className="p-2 text-[#54656f] hover:text-[#00a884] transition-colors rounded-full hover:bg-[#f0f2f5]"
+            title="Anexar arquivo"
           >
-            <FileText className="w-5 h-5" />
+            <Paperclip className="w-6 h-6" />
           </button>
-        )}
 
-        <button
-          type="button"
-          onClick={() => (fileInputRef || internalRef).current?.click()}
-          className="p-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-2xl hover:from-gray-600 hover:to-gray-700 shadow-lg hover:scale-105"
-        >
-          <Paperclip className="w-5 h-5" />
-        </button>
+          {/* Botão Template (se business) */}
+          {isBusiness && (
+            <button
+              type="button"
+              onClick={onTemplateClick}
+              className="p-2 text-[#54656f] hover:text-[#00a884] transition-colors rounded-full hover:bg-[#f0f2f5]"
+              title="Template"
+            >
+              <FileText className="w-5 h-5" />
+            </button>
+          )}
+        </div>
 
-        <button
-          type="button"
-          onClick={recording ? stopRecording : startRecording}
-          className={`p-3 ${recording ? 'bg-red-500' : 'bg-gradient-to-r from-gray-500 to-gray-600'} text-white rounded-2xl hover:from-gray-600 hover:to-gray-700 shadow-lg hover:scale-105`}
-        >
-          {recording ? <StopCircle className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-        </button>
-
-        {audioPreview ? (
-          <div className="flex items-center space-x-3 p-3 bg-gray-100 border border-gray-300 rounded-2xl mb-3">
-            <audio controls src={audioPreview.url} className="w-40 h-8" />
-            <div className="flex flex-col space-y-1">
-              <button
-                onClick={handleSendMessage}
-                className="text-xs px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
-                Enviar
-              </button>
-              <button
-                onClick={() => setAudioPreview(null)}
-                className="text-xs px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-              >
-                Cancelar
-              </button>
+        {/* Campo de input */}
+        {recording ? (
+          <div className="flex-1 flex items-center justify-center bg-white rounded-lg py-2.5 px-4">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-gray-600">Gravando áudio...</span>
             </div>
           </div>
-        ) : !recording ? (
-          <div className="flex-1 relative">
+        ) : (
+          <div className="flex-1 bg-white rounded-lg">
             <textarea
               ref={textareaRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Digite sua mensagem..."
+              placeholder="Digite uma mensagem"
               rows={1}
               autoFocus
-              className="w-full resize-none rounded-2xl border border-gray-300 bg-white/60 backdrop-blur-sm px-4 py-3 pr-12 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+              className="w-full resize-none rounded-lg bg-transparent px-3 py-2.5 text-[15px] text-[#111b21] placeholder:text-[#667781] focus:outline-none max-h-[100px] overflow-y-auto"
+              style={{
+                minHeight: '42px',
+                maxHeight: '100px'
+              }}
             />
           </div>
-        ) : null}
+        )}
 
-        <button
-          type="button"
-          onClick={handleSendMessage}
-          disabled={!message.trim() && !pendingFile && !audioPreview}
-          className="p-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-2xl hover:from-gray-600 hover:to-gray-700 shadow-lg hover:scale-105 disabled:opacity-50"
-        >
-          <Send className="w-5 h-5" />
-        </button>
+        {/* Lado direito: Áudio ou Enviar */}
+        {message.trim() || pendingFile || audioPreview ? (
+          <button
+            type="button"
+            onClick={handleSendMessage}
+            className="p-2 text-white bg-[#00a884] hover:bg-[#008f6f] transition-colors rounded-full flex-shrink-0"
+            title="Enviar"
+          >
+            <Send className="w-6 h-6" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={recording ? stopRecording : startRecording}
+            className={`p-2 transition-colors rounded-full flex-shrink-0 ${
+              recording
+                ? 'text-white bg-red-500 hover:bg-red-600'
+                : 'text-[#54656f] hover:text-[#00a884] hover:bg-[#f0f2f5]'
+            }`}
+            title={recording ? "Parar gravação" : "Gravar áudio"}
+          >
+            {recording ? <StopCircle className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+          </button>
+        )}
       </div>
     </div>
   );

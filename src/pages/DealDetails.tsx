@@ -33,6 +33,7 @@ import type { CampoPersonalizado, CampoPersonalizadoValor } from '../types/campo
 import AnuncioCard from '../components/crm/AnuncioCard';
 import Modal from '../components/Modal';
 import DealAppointmentsTab from '../components/crm/DealAppointmentsTab';
+import DealSummaryWidget from '../components/crm/DealSummaryWidget';
 import { hasPermission } from '../utils/permissions';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -1849,6 +1850,13 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
 
             {/* Right Column - Contact Info */}
             <div className="space-y-6">
+              {/* Deal Summary Widget */}
+              <DealSummaryWidget
+                dealId={parseInt(id!)}
+                contactName={deal.contato?.nome}
+                contactPhone={deal.contato?.telefone}
+              />
+
               <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-300">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">

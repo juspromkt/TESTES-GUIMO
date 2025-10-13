@@ -1,6 +1,17 @@
 
 const BASE_URL = 'https://n8n.lumendigital.com.br/webhook/prospecta/chat';
 
+// Helper para parsear JSON com tratamento de resposta vazia
+async function safeJsonParse<T = any>(response: Response, fallback: T = [] as any): Promise<T> {
+  try {
+    const text = await response.text();
+    return text ? JSON.parse(text) : fallback;
+  } catch (err) {
+    console.warn('⚠️ Resposta vazia ou inválida:', response.url);
+    return fallback;
+  }
+}
+
 // Cache com persistência opcional em localStorage
 const cache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL = Infinity; // persist until reload
@@ -282,6 +293,8 @@ export interface Chat {
   pushName: string;
   profilePicUrl?: string | null;
   contactId?: number;
+  chatFunilId?: number;
+  chatStageId?: string;
   lastMessage: {
     messageType: string;
     fromMe: boolean;
@@ -318,6 +331,8 @@ export interface Contact {
   pushName: string;
   profilePicUrl: string | null;
   Id?: number;
+  estagioId?: string | null;
+  funilId?: number | null;
 }
 
 export interface SendTextMessage {
@@ -356,7 +371,7 @@ async findChats(
 
   if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'UNAUTHORIZED' : `HTTP error! status: ${response.status}`);
 
-  const data = await response.json();
+  const data = await safeJsonParse(response, []);
   saveToCache(key, data);
   return data;
 },
@@ -369,9 +384,9 @@ async findMensagensNaoLidas(token: string) {
       headers: { token }
     }
   );
-  
+
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-  return response.json();
+  return safeJsonParse(response, []);
 },
 
 async visualizarMensagens(token: string, remoteJid: string) {
@@ -459,13 +474,7 @@ async findMessages(
         );
       }
 
-      let data: unknown = [];
-      try {
-        data = await response.json();
-      } catch (e) {
-        console.log("[findMessages][JSON parse error]", e);
-        data = [];
-      }
+      const data: unknown = await safeJsonParse(response, []);
       const messages = extractMessagesResponse(data);
       console.log("[findMessages][FETCH OK]", { count: messages.length });
 
@@ -503,7 +512,7 @@ async findMessages(
           : `HTTP error! status: ${response.status}`
       );
 
-    const data = await response.json();
+    const data = await safeJsonParse(response, []);
     saveToCache(key, data, true); // persist contacts
     return data;
   },
@@ -530,7 +539,7 @@ async findMessages(
         );
       }
 
-      const data = await response.json();
+      const data = await safeJsonParse(response, []);
       const arr = Array.isArray(data) ? data : [];
       saveToCache(key, arr);
       return arr;
@@ -606,7 +615,7 @@ async findMessages(
           : `HTTP error! status: ${response.status}`
       );
 
-    const data = await response.json();
+    const data = await safeJsonParse(response, []);
     saveToCache(key, data);
     return data;
   },
@@ -651,7 +660,7 @@ async findMessages(
           : `HTTP error! status: ${response.status}`
       );
 
-    const data = await response.json();
+    const data = await safeJsonParse(response, []);
     saveToCache(key, data);
     return data;
   },
@@ -673,7 +682,7 @@ async findMessages(
           : `HTTP error! status: ${response.status}`
       );
 
-    const data = await response.json();
+    const data = await safeJsonParse(response, []);
     saveToCache(key, data);
     return data;
   },
@@ -695,7 +704,7 @@ async findMessages(
           : `HTTP error! status: ${response.status}`
       );
 
-    const data = await response.json();
+    const data = await safeJsonParse(response, []);
     saveToCache(key, data);
     return data;
   },
@@ -717,7 +726,7 @@ async findMessages(
           : `HTTP error! status: ${response.status}`
       );
 
-    const data = await response.json();
+    const data = await safeJsonParse(response, []);
     saveToCache(key, data);
     return data;
   },
@@ -739,7 +748,7 @@ async findMessages(
           : `HTTP error! status: ${response.status}`
       );
 
-    const data = await response.json();
+    const data = await safeJsonParse(response, []);
     saveToCache(key, data);
     return data;
   },
@@ -809,7 +818,7 @@ async findMessages(
           : `HTTP error! status: ${response.status}`
       );
 
-    const data = await response.json();
+    const data = await safeJsonParse(response, []);
     saveToCache(key, data);
     return data;
   },
@@ -860,7 +869,7 @@ async findMessages(
       getCacheKey('findInterventionByRemoteJid', token, { remoteJid: digits }),
     ]);
     try {
-      return await response.json();
+      return await safeJsonParse(response, null);
     } catch {
       return null;
     }
@@ -888,7 +897,7 @@ async findMessages(
       getCacheKey('findPermanentExclusionByRemoteJid', token, { remoteJid: digits }),
     ]);
     try {
-      return await response.json();
+      return await safeJsonParse(response, null);
     } catch {
       return null;
     }
@@ -963,7 +972,7 @@ async sendMessage(token: string, message: SendTextMessage | SendMediaMessage): P
 
   if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'UNAUTHORIZED' : `HTTP error! status: ${response.status}`);
 
-  const data: Message[] = await response.json(); // retorna array de mensagens
+  const data: Message[] = await safeJsonParse(response, []); // retorna array de mensagens
   data.forEach(msg => {
     prependMessageToCache(msg.key.remoteJid, msg);
   });
@@ -998,5 +1007,45 @@ async sendMessage(token: string, message: SendTextMessage | SendMediaMessage): P
     });
 
     if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'UNAUTHORIZED' : `HTTP error! status: ${response.status}`);
+  },
+
+  async transcribeAudio(token: string, audioUrl: string): Promise<{ text: string }> {
+    const response = await fetch(`${BASE_URL}/transcribeAudio`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'token': token,
+      },
+      body: JSON.stringify({ audioUrl }),
+    });
+
+    if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'UNAUTHORIZED' : `HTTP error! status: ${response.status}`);
+
+    return await safeJsonParse(response, { text: '' });
+  },
+
+  async findDeals(token: string, page: number = 1, offset: number = 100): Promise<any[]> {
+    const key = getCacheKey('findDeals', token, { page, offset });
+    const cached = getFromCache<any[]>(key);
+    if (cached) {
+      console.log('[findDeals] Retornando do cache:', cached.length, 'negociações');
+      return cached;
+    }
+
+    const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/get', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'token': token,
+      },
+      body: JSON.stringify({ page, offset }),
+    });
+
+    if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'UNAUTHORIZED' : `HTTP error! status: ${response.status}`);
+
+    const data = await safeJsonParse(response, []);
+    console.log('[findDeals] Buscadas', data.length, 'negociações do servidor');
+    saveToCache(key, data, true); // persist deals
+    return data;
   },
 };

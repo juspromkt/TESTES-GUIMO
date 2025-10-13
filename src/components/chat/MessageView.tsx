@@ -5,6 +5,8 @@ import { decryptEvoMedia, MediaKeyInput } from "../decryptEvoMedia";
 const TemplateModal = lazy(() => import("./TemplateModal"));
 import Modal from "../Modal";
 import DealDetailsPanel from "../crm/DealDetailsPanel";
+import ContactSidebarV2 from "./ContactSidebarV2";
+import SearchSidebar from "./SearchSidebar";
 import {
   ArrowLeft,
   Image,
@@ -28,6 +30,15 @@ import {
   RefreshCw,
   PauseCircle,
   Ban,
+  ChevronDown,
+  Info,
+  Reply,
+  Copy,
+  Smile,
+  Forward,
+  Pin,
+  Star,
+  Trash2,
 } from "lucide-react";
 import { MessageInput } from "./MessageInput";
 import { toast } from "sonner";
@@ -628,12 +639,29 @@ const handleDownloadMedia = async (msg: Message) => {
     return;
   }
 
-  const link = document.createElement("a");
-  link.href = finalUrl;
-  link.download = `media-${msg.id}`;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+  try {
+    // Tenta fazer download usando fetch para evitar abrir nova aba
+    const response = await fetch(finalUrl);
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = `media-${msg.id}`;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Libera o objeto URL após um pequeno delay
+    setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+
+    toast.success("Download iniciado");
+  } catch (error) {
+    console.error("Erro ao fazer download:", error);
+    // Fallback: abre em nova aba se o fetch falhar
+    window.open(finalUrl, '_blank');
+  }
 };
 
 
@@ -663,11 +691,6 @@ function getLastInboundTimestamp(
   return Math.max(...candidates);
 }
 
-  const [contextMenu, setContextMenu] = useState<{
-    x: number;
-    y: number;
-    message: Message;
-  } | null>(null);
   const [editModal, setEditModal] = useState<{
     open: boolean;
     message: Message | null;
@@ -698,10 +721,25 @@ const [contactForm, setContactForm] = useState({ nome: '', email: '', telefone: 
 const [savingContact, setSavingContact] = useState(false);
 const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [preview, setPreview] = useState<{ url: string; type: 'image' | 'video' } | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   function openPreview(url: string, type: 'image' | 'video') {
     setPreview({ url, type });
   }
+
+  // Função para rolar até a mensagem
+  const scrollToMessage = useCallback((messageId: string) => {
+    const element = document.getElementById(`msg-${messageId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Adiciona um highlight temporário
+      element.classList.add('bg-yellow-100');
+      setTimeout(() => {
+        element.classList.remove('bg-yellow-100');
+      }, 2000);
+    }
+  }, []);
 
   const evaluateSessionActivity = useCallback(
     (arr: Message[]) => {
@@ -1685,7 +1723,6 @@ if (isBusiness && newMessage && newMessage.key && !newMessage.key.fromMe) {
 }, [token]);
 
   const handleEditModal = (message: Message) => {
-    setContextMenu(null);
     setEditText(message.message.conversation || "");
     setEditModal({ open: true, message });
   };
@@ -2922,6 +2959,8 @@ case "imageMessage": {
   const part = msgContent?.imageMessage;
   const directUrl = msgContent?.mediaUrl || part?.url;
 
+  console.log('📷 Processando imageMessage:', { isBusiness, part, directUrl, msgContent });
+
   if (isBusiness && part?.id && part?.sha256 && part?.mime_type) {
     content = <OfficialBinaryMedia part={part} kind="image" isEdited={isEdited} />;
     break;
@@ -2961,7 +3000,17 @@ case "imageMessage": {
         {isEdited && <div className="text-[10px] text-emerald-600">Mensagem editada</div>}
       </div>
     );
+    break;
   }
+
+  // Fallback se nenhuma condição foi atendida
+  console.warn('⚠️ ImageMessage sem URL válida:', message);
+  content = (
+    <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-300">
+      <FileText className="w-5 h-5 text-gray-500" />
+      <span className="text-sm text-gray-600">Imagem (carregando...)</span>
+    </div>
+  );
   break;
 }
 
@@ -2971,6 +3020,8 @@ case "imageMessage": {
 case "videoMessage": {
   const part = msgContent?.videoMessage;
   const directUrl = msgContent?.mediaUrl || part?.url;
+
+  console.log('🎥 Processando videoMessage:', { isBusiness, part, directUrl });
 
   if (isBusiness && part?.id && part?.sha256 && part?.mime_type) {
     content = <OfficialBinaryMedia part={part} kind="video" isEdited={isEdited} />;
@@ -3006,7 +3057,17 @@ case "videoMessage": {
         {isEdited && <div className="text-[10px] text-emerald-600">Mensagem editada</div>}
       </div>
     );
+    break;
   }
+
+  // Fallback
+  console.warn('⚠️ VideoMessage sem URL válida:', message);
+  content = (
+    <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-300">
+      <FileText className="w-5 h-5 text-gray-500" />
+      <span className="text-sm text-gray-600">Vídeo (carregando...)</span>
+    </div>
+  );
   break;
 }
 
@@ -3016,6 +3077,8 @@ case "videoMessage": {
 case "audioMessage": {
   const part = msgContent?.audioMessage;
   const directUrl = msgContent?.mediaUrl || part?.url;
+
+  console.log('🎵 Processando audioMessage:', { isBusiness, part, directUrl });
 
   if (isBusiness && part?.id && part?.sha256 && part?.mime_type) {
     content = <OfficialBinaryMedia part={part} kind="audio" isEdited={isEdited} />;
@@ -3042,7 +3105,17 @@ case "audioMessage": {
       break;
     }
     content = <AudioPlayer url={directUrl} />;
+    break;
   }
+
+  // Fallback
+  console.warn('⚠️ AudioMessage sem URL válida:', message);
+  content = (
+    <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-300">
+      <FileText className="w-5 h-5 text-gray-500" />
+      <span className="text-sm text-gray-600">Áudio (carregando...)</span>
+    </div>
+  );
   break;
 }
 
@@ -3153,8 +3226,18 @@ case "stickerMessage": {
       // Não renderiza mensagens de protocolo (edições)
       return null;
 
+    case "associatedChildMessage":
+      // Não renderiza mensagens associadas (metadados/legendas inline)
+      // Essas mensagens são renderizadas junto com a mensagem pai
+      return null;
+
     default:
-      content = <div className="text-sm text-gray-500">Tipo de mensagem não suportado</div>;
+      console.log('Tipo de mensagem não suportado:', message.messageType, message);
+      content = (
+        <div className="text-sm text-gray-500 italic">
+          Tipo de mensagem não suportado ({message.messageType || 'desconhecido'})
+        </div>
+      );
   }
 
   return (
@@ -3208,92 +3291,107 @@ case "stickerMessage": {
     (transferLookup ? transferSet.has(transferLookup) : false);
 
 return (
-  <div
-    className="h-full flex flex-col min-h-0 bg-gradient-to-br from-gray-50 via-white to-gray-100 relative"
-    onDragOver={(e) => {
-      e.preventDefault();
-      setDragActive(true);
-    }}
-    onDragLeave={(e) => {
-      if (
-        e.relatedTarget === null ||
-        !e.currentTarget.contains(e.relatedTarget)
-      ) {
+  <div className="h-full flex relative">
+    <div
+      className={`flex-1 flex flex-col min-h-0 bg-gradient-to-br from-gray-50 via-white to-gray-100 transition-all duration-300 ${
+        sidebarOpen || searchOpen ? 'mr-[420px]' : 'mr-0'
+      }`}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragActive(true);
+      }}
+      onDragLeave={(e) => {
+        if (
+          e.relatedTarget === null ||
+          !e.currentTarget.contains(e.relatedTarget)
+        ) {
+          setDragActive(false);
+        }
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
         setDragActive(false);
-      }
-    }}
-    onDrop={(e) => {
-      e.preventDefault();
-      setDragActive(false);
-      const file = e.dataTransfer?.files?.[0];
-      if (file && fileDropRef.current) {
-        const dt = new DataTransfer();
-        dt.items.add(file);
-        fileDropRef.current.files = dt.files;
-        fileDropRef.current.dispatchEvent(
-          new Event("change", { bubbles: true })
-        );
-      }
-    }}
-  >
+        const file = e.dataTransfer?.files?.[0];
+        if (file && fileDropRef.current) {
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          fileDropRef.current.files = dt.files;
+          fileDropRef.current.dispatchEvent(
+            new Event("change", { bubbles: true })
+          );
+        }
+      }}
+    >
 {/* Header Premium */}
-<div className="relative flex items-center justify-between px-6 py-4 bg-white/95 backdrop-blur-lg border-b border-gray-300/50 shadow-sm">
-  <div className="flex items-center space-x-4">
+<div className="relative flex items-center justify-between px-4 py-2 bg-white/95 backdrop-blur-lg border-b border-gray-200 shadow-sm">
+  <div className="flex items-center space-x-3 flex-1">
     <button
       onClick={onBack}
-      className="p-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200 md:hidden group"
+      className="p-1.5 rounded-lg hover:bg-gray-100 transition-all duration-200 md:hidden group"
     >
-      <ArrowLeft className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
+      <ArrowLeft className="w-4 h-4 text-gray-600 group-hover:text-gray-800" />
     </button>
 
-    {/* Avatar com Status */}
-    <div className="relative">
-      {selectedChat.profilePicUrl ? (
-        <img
-          src={selectedChat.profilePicUrl}
-          alt={displayName}
-          className="h-12 w-12 rounded-full object-cover ring-2 ring-white shadow-lg"
-        />
-      ) : (
-        <div className="h-12 w-12 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold text-sm shadow-lg ring-2 ring-white">
-          {getInitials(displayName)}
+    {/* Clickable area - Avatar + Contact Info */}
+    <div
+      onClick={() => {
+        setSidebarOpen(!sidebarOpen);
+        if (!sidebarOpen) setSearchOpen(false);
+      }}
+      className="flex items-center space-x-3 flex-1 cursor-pointer"
+      title="Abrir informações do contato"
+    >
+      {/* Avatar com Status */}
+      <div className="relative">
+        {selectedChat.profilePicUrl ? (
+          <img
+            src={selectedChat.profilePicUrl}
+            alt={displayName}
+            className="h-10 w-10 rounded-full object-cover ring-1 ring-gray-200"
+          />
+        ) : (
+          <div className="h-10 w-10 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold text-xs ring-1 ring-gray-200">
+            {getInitials(displayName)}
+          </div>
+        )}
+        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-white rounded-full"></div>
+      </div>
+
+      <div className="flex-1 text-left">
+        <h3 className="font-semibold text-[15px] text-gray-900 leading-tight flex items-center">
+          {displayName}
+        </h3>
+
+        <div className="flex items-center gap-1.5">
+          <Phone className="w-3 h-3 text-slate-400 flex-shrink-0" />
+          <span className="text-[11px] text-slate-500 truncate">
+            {formatPhoneNumber(selectedChat.remoteJid)}
+          </span>
         </div>
-      )}
-      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 border-2 border-white rounded-full"></div>
+      </div>
     </div>
 
-    <div className="flex-1">
-      <h3 className="font-semibold text-lg text-gray-900 leading-tight flex items-center">
-        {displayName}
-        <button
-          onClick={handleReloadMessages}
-          className="ml-2 p-1 rounded-full hover:bg-gray-100"
-          title="Recarregar mensagens"
-        >
-          <RefreshCw className="w-4 h-4 text-gray-600" />
-        </button>
-      </h3>
-
-          <div className="flex items-center gap-2">
-      <Phone className="w-3 h-3 text-slate-400 flex-shrink-0" />
-      <span className="text-xs text-slate-500 truncate">
-        {formatPhoneNumber(selectedChat.remoteJid)}
-      </span>
-    </div>
-    </div>
+    {/* Reload Button */}
+    <button
+      onClick={handleReloadMessages}
+      className="p-1.5 rounded-full hover:bg-gray-100 transition-all duration-200"
+      title="Recarregar mensagens"
+    >
+      <RefreshCw className="w-3.5 h-3.5 text-gray-600" />
+    </button>
   </div>
 
   {/* Actions Bar - Tudo em uma linha */}
-  <div className="flex items-center space-x-3">
-    {/* Status Indicators - Tags e IA */}
+  <div className="flex items-center space-x-2">
+    {/* Status Indicators - IA */}
     <div className="flex items-center space-x-2">
       {permanentInterventionInfo && (
-        <div className={`group inline-flex items-center bg-red-700 rounded-full px-3 py-1 shadow-sm ${deletingPermanentIntervention ? 'animate-pulse' : ''}`}>
-          <div className="w-2 h-2 bg-red-700 rounded-full mr-2"></div>
-          <span className="text-xs font-semibold text-white">Exclusão permanente</span>
+        <div className={`group inline-flex items-center bg-red-700 rounded-full px-2.5 py-1 shadow-sm ${deletingPermanentIntervention ? 'animate-pulse' : ''}`}>
+          <div className="w-2 h-2 bg-red-700 rounded-full mr-1.5"></div>
+          <span className="text-[11px] font-semibold text-white">Exclusão permanente</span>
           <button
             onClick={handleDeletePermanentIntervention}
-            className="ml-2 p-1 rounded-full hover:bg-orange-200 opacity-0 group-hover:opacity-100 transition-all duration-200"
+            className="ml-1.5 p-0.5 rounded-full hover:bg-orange-200 opacity-0 group-hover:opacity-100 transition-all duration-200"
           >
             {deletingPermanentIntervention ? (
               <Loader2 className="w-3 h-3 text-orange-600 animate-spin" />
@@ -3308,16 +3406,16 @@ return (
 
       {isTransferChat && (
         <div
-          className={`group inline-flex items-center border border-yellow-300 bg-yellow-100 rounded-full px-3 py-1 shadow-sm ${
+          className={`group inline-flex items-center border border-yellow-300 bg-yellow-100 rounded-full px-2.5 py-1 shadow-sm ${
             removingTransfer ? 'animate-pulse' : ''
           }`}
         >
-          <div className="w-2 h-2 bg-yellow-400 rounded-full mr-2 animate-pulse"></div>
-          <span className="text-xs font-semibold text-yellow-800">Transferência</span>
+          <div className="w-2 h-2 bg-yellow-400 rounded-full mr-1.5 animate-pulse"></div>
+          <span className="text-[11px] font-semibold text-yellow-800">Transferência</span>
           <button
             onClick={handleRemoveTransfer}
             disabled={removingTransfer}
-            className="ml-2 p-1 rounded-full hover:bg-yellow-200 transition-all duration-200 disabled:opacity-50"
+            className="ml-1.5 p-0.5 rounded-full hover:bg-yellow-200 transition-all duration-200 disabled:opacity-50"
             title="Remover transferência"
           >
             {removingTransfer ? (
@@ -3328,59 +3426,18 @@ return (
           </button>
         </div>
       )}
-
-      {contactTags.length > 0 && (
-        <div
-          className={`flex flex-wrap items-center gap-1 max-w-full ${
-            denseContactTagLayout ? 'max-h-16 overflow-y-auto pr-1' : ''
-          }`}
-        >
-          {contactTags.map(tag => {
-            const sizeClass = ultraDenseContactTagLayout
-              ? 'px-1 py-px text-[8px]'
-              : denseContactTagLayout
-                ? 'px-1.5 py-[2px] text-[9px]'
-                : 'px-2 py-1 text-[10px]';
-
-            return (
-              <span
-                key={tag.Id}
-                className={`inline-flex items-center rounded-full font-medium shadow-sm backdrop-blur-sm ${sizeClass}`}
-                style={{
-                  backgroundColor: tag.cor,
-                  color: tag.cor_texto,
-                  border: `1px solid ${tag.cor}30`
-                }}
-                title={`#${tag.nome}`}
-              >
-                #{tag.nome}
-              </span>
-            );
-          })}
-        </div>
-      )}
     </div>
 
-    {/* Deals Button */}
+    {/* Search Button */}
     <button
-      ref={dealsButtonRef}
-      data-deals-button
-      onClick={fetchDeals}
-      className="px-4 py-2 bg-gradient-to-r from-gray-50 to-indigo-50 text-blue-700 rounded-xl text-sm font-medium hover:from-gray-100 hover:to-indigo-100 transition-all duration-200 border border-blue-200/50 shadow-sm"
+      onClick={() => {
+        setSearchOpen(!searchOpen);
+        if (!searchOpen) setSidebarOpen(false);
+      }}
+      className="p-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200 group"
+      title="Buscar mensagens"
     >
-      {loadingDeals ? (
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
-          <span>Carregando...</span>
-        </div>
-      ) : (
-        <div className="flex items-center space-x-2">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-          <span>Negociações</span>
-        </div>
-      )}
+      <Search className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
     </button>
 
     {/* More Actions */}
@@ -3463,10 +3520,13 @@ return (
     {/* Messages Area */}
     <div
       ref={scrollAreaRef}
-      className="flex-1 overflow-y-auto px-6 py-6 min-h-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+      className="flex-1 overflow-y-auto px-8 py-3 min-h-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent bg-[#efeae2]"
+      style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 800 800'%3E%3Cg fill='none' stroke='%23d9d5cd' stroke-width='1'%3E%3Cpath d='M769 229L1037 260.9M927 880L731 737 520 660 309 538 40 599 295 764 126.5 879.5 40 599-197 493 102 382-31 229 126.5 79.5-69-63'/%3E%3Cpath d='M-31 229L237 261 390 382 603 493 308.5 537.5 101.5 381.5M370 905L295 764'/%3E%3Cpath d='M520 660L578 842 731 737 840 599 603 493 520 660 295 764 309 538 390 382 539 269 769 229 577.5 41.5 370 105 295 -36 126.5 79.5 237 261 102 382 40 599 -69 737 127 880'/%3E%3Cpath d='M520-140L578.5 42.5 731-63M603 493L539 269 237 261 370 105M902 382L539 269M390 382L102 382'/%3E%3Cpath d='M-222 42L126.5 79.5 370 105 539 269 577.5 41.5 927 80 769 229 902 382 603 493 731 737M295-36L577.5 41.5M578 842L295 764M40-201L127 80M102 382L-261 269'/%3E%3C/g%3E%3Cg fill='%23d1ccc3'%3E%3Ccircle cx='769' cy='229' r='5'/%3E%3Ccircle cx='539' cy='269' r='5'/%3E%3Ccircle cx='603' cy='493' r='5'/%3E%3Ccircle cx='731' cy='737' r='5'/%3E%3Ccircle cx='520' cy='660' r='5'/%3E%3Ccircle cx='309' cy='538' r='5'/%3E%3Ccircle cx='295' cy='764' r='5'/%3E%3Ccircle cx='40' cy='599' r='5'/%3E%3Ccircle cx='102' cy='382' r='5'/%3E%3Ccircle cx='127' cy='80' r='5'/%3E%3Ccircle cx='370' cy='105' r='5'/%3E%3Ccircle cx='578' cy='42' r='5'/%3E%3Ccircle cx='237' cy='261' r='5'/%3E%3Ccircle cx='390' cy='382' r='5'/%3E%3C/g%3E%3C/svg%3E")`
+      }}
       onScroll={handleScroll}
     >
-      <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="space-y-1.5 max-w-5xl mx-auto">
         {loadingMore && (
           <div className="flex justify-center py-6">
             <div className="flex items-center space-x-3 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm">
@@ -3541,62 +3601,75 @@ return (
                 {/* Message Bubble */}
                 <div
                   id={`msg-${message.id}`}
-                  className={`relative flex ${isFromMe ? "justify-end" : "justify-start"}`}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    setContextMenu({ x: e.clientX, y: e.clientY, message });
-                  }}
+                  className={`relative flex items-center group ${isFromMe ? "justify-end" : "justify-start"}`}
                   onDoubleClick={() => {
                     setReplyToMessage(message);
                   }}
                 >
-                {/* Avatar for incoming messages */}
-                {!isFromMe && (
-                  <div className="mr-3 mt-1">
-                    {selectedChat.profilePicUrl ? (
-                      <img
-                        src={selectedChat.profilePicUrl}
-                        alt="Avatar"
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-xs font-semibold">
-                        {getInitials(displayName).slice(0, 1)}
+                {/* Avatar removido para mensagens recebidas - estilo WhatsApp Web */}
+
+                {/* Botão de menu - aparece ao hover (estilo WhatsApp Web) */}
+                <Popover.Root>
+                  <Popover.Trigger asChild>
+                    <button
+                      className={`
+                        opacity-0 group-hover:opacity-100 transition-opacity duration-200
+                        p-1.5 rounded-full hover:bg-gray-200/80
+                        ${isFromMe ? 'order-2 ml-1' : 'order-1 mr-1'}
+                      `}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <ChevronDown className="w-4 h-4 text-gray-600" />
+                    </button>
+                  </Popover.Trigger>
+
+                  <Popover.Portal>
+                    <Popover.Content
+                      className="z-50 bg-white shadow-2xl rounded-md overflow-hidden min-w-[200px] animate-in fade-in-0 zoom-in-95"
+                      sideOffset={5}
+                      align={isFromMe ? "end" : "start"}
+                    >
+                      <div className="py-2">
+                        {/* Responder */}
+                        <button
+                          className="w-full px-4 py-2 hover:bg-gray-100 text-gray-700 flex items-center space-x-3 transition-colors text-[14.2px]"
+                          onClick={() => {
+                            setReplyToMessage(message);
+                          }}
+                        >
+                          <Reply className="w-[18px] h-[18px] text-gray-600" />
+                          <span>Responder</span>
+                        </button>
+
+                        {/* Baixar (apenas para mídias) */}
+                        {isMediaMessage(message) && (
+                          <button
+                            className="w-full px-4 py-2 hover:bg-gray-100 text-gray-700 flex items-center space-x-3 transition-colors text-[14.2px]"
+                            onClick={() => handleDownloadMedia(message)}
+                          >
+                            <Download className="w-[18px] h-[18px] text-gray-600" />
+                            <span>Baixar</span>
+                          </button>
+                        )}
                       </div>
-                    )}
-                  </div>
-                )}
+                    </Popover.Content>
+                  </Popover.Portal>
+                </Popover.Root>
 
                 <div
                   className={`
-                    max-w-[75%] rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md group
+                    max-w-[65%] rounded-lg shadow-sm transition-all duration-100
+                    ${isFromMe ? 'order-1' : 'order-2'}
                     ${
                       isFromMe
-                        ? "bg-gradient-to-br from-gray-500 to-gray-600 text-white ml-12 rounded-br-md"
-                        : "bg-white text-gray-800 mr-12 border border-gray-300/50 rounded-bl-md"
+                        ? "bg-[#d9fdd3] text-gray-900 mr-2"
+                        : "bg-white text-gray-900 ml-2"
                     }
                   `}
                 >
-                  {/* Header with sender name and time */}
-                  <div
-                    className={`
-                      flex items-center justify-between px-4 pt-3 pb-1
-                      ${isFromMe ? "text-blue-100" : "text-gray-500"}
-                    `}
-                  >
-                    {!isFromMe && (
-                      <span className="text-xs font-semibold text-blue-600">
-                        {sanitizePushName(message.pushName, message.key.remoteJid) || "Usuário"}
-                      </span>
-                    )}
-                    <span className={`text-xs ${isFromMe ? "text-blue-100" : "text-gray-400"}`}>
-                      {formatMessageTime(message.messageTimestamp)}
-                    </span>
-                  </div>
-
-                  <div className="px-4 pb-4">
+                  <div className="px-2 py-1.5">
                     {message.isEncaminhada && (
-                      <div className={`text-xs mb-2 flex items-center space-x-1 ${isFromMe ? "text-blue-200" : "text-gray-500"}`}>
+                      <div className="text-xs mb-1.5 flex items-center space-x-1 text-gray-500">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                         </svg>
@@ -3604,7 +3677,7 @@ return (
                       </div>
                     )}
 
-                    <div className="text-sm leading-relaxed">
+                    <div className="text-[14.2px] leading-[19px] text-gray-900 break-words">
                       {album ? (
                         <AlbumCarousel items={album} type={type!} />
                       ) : (
@@ -3612,27 +3685,29 @@ return (
                       )}
                     </div>
 
-                    {message.wasEdited && (
-                      <div className={`text-xs mt-2 italic ${isFromMe ? "text-blue-200" : "text-gray-500"}`}>
-                        (editado)
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Message status indicators for non-official API */}
-                  {isFromMe && whatsappType !== 'WHATSAPP-BUSINESS' && (
-                    <div className="absolute -bottom-1 -right-1 flex items-center justify-center">
-                      {message.status === 'pending' && (
-                        <Loader2 className="w-3 h-3 text-white animate-spin" />
+                    {/* Hora e status na mesma linha, ao final da mensagem */}
+                    <div className="flex items-center justify-end gap-1 mt-1 float-right ml-2">
+                      {message.wasEdited && (
+                        <span className="text-[11px] text-gray-500 italic">editado</span>
                       )}
-                      {message.status === 'error' && (
-                        <AlertCircle className="w-3 h-3 text-red-500" />
-                      )}
-                      {(!message.status || message.status === 'sent') && (
-                        <CheckCheck className="w-3 h-3 text-white" />
+                      <span className="text-[11px] text-gray-500">
+                        {formatMessageTime(message.messageTimestamp)}
+                      </span>
+                      {isFromMe && whatsappType !== 'WHATSAPP-BUSINESS' && (
+                        <>
+                          {message.status === 'pending' && (
+                            <Loader2 className="w-3.5 h-3.5 text-gray-500 animate-spin" />
+                          )}
+                          {message.status === 'error' && (
+                            <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                          )}
+                          {(!message.status || message.status === 'sent') && (
+                            <CheckCheck className="w-4 h-4 text-gray-500" />
+                          )}
+                        </>
                       )}
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
               {isFromMe &&
@@ -3803,66 +3878,6 @@ return (
       </div>
     )}
 
-    {/* Context Menu */}
-    {contextMenu && (
-      <div
-        className="fixed z-50 bg-white border border-gray-300 shadow-xl rounded-2xl overflow-hidden animate-in slide-in-from-top-1"
-        style={{ top: contextMenu.y, left: contextMenu.x }}
-        onClick={() => setContextMenu(null)}
-      >
-        <button
-          className="w-full px-4 py-3 hover:bg-gray-50 text-gray-700 hover:text-blue-700 flex items-center space-x-3 transition-colors"
-          onClick={() => {
-            setContextMenu(null);
-            setReplyToMessage(contextMenu.message);
-          }}
-        >
-          <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-            <MessageCircle className="w-4 h-4 text-blue-600" />
-          </div>
-          <span className="font-medium">Responder</span>
-        </button>
-
-        {isMediaMessage(contextMenu.message) && (
-          <button
-            className="w-full px-4 py-3 hover:bg-blue-50 text-gray-700 hover:text-blue-700 flex items-center space-x-3 transition-colors"
-            onClick={() => handleDownloadMedia(contextMenu.message)}
-          >
-            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Download className="w-4 h-4 text-blue-600" />
-            </div>
-            <span className="font-medium">Baixar</span>
-          </button>
-        )}
-
-        {contextMenu.message.key.fromMe && (
-          <>
-            <button
-              className="w-full px-4 py-3 hover:bg-amber-50 text-gray-700 hover:text-amber-700 flex items-center space-x-3 transition-colors"
-              onClick={() => handleEditModal(contextMenu.message)}
-            >
-              <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </div>
-              <span className="font-medium">Editar</span>
-            </button>
-            <button
-              className="w-full px-4 py-3 hover:bg-red-50 text-gray-700 hover:text-red-700 flex items-center space-x-3 transition-colors"
-              onClick={() => handleDeleteMessage(contextMenu.message)}
-            >
-              <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </div>
-              <span className="font-medium">Excluir</span>
-            </button>
-          </>
-        )}
-      </div>
-    )}
 
     {/* Edit Modal */}
     {editModal.open && (
@@ -3975,34 +3990,88 @@ return (
       </div>
     )}
 
-    {/* Message Input / Templates */}
-    <div className="p-4 border-t">
-      {(!isBusiness || isSessionActive) ? (
-        <MessageInput
-          remoteJid={selectedChat.remoteJid}
-          onMessageSent={() => { setReplyToMessage(null); }}
-          onTempMessage={addTempMessage}
-          onReplaceTempMessage={replaceTempMessage}
-          onMessageError={markTempError}
-          fileInputRef={fileDropRef}
-          replyTo={replyToMessage}
-          onClearReply={() => setReplyToMessage(null)}
-          isBusiness={isBusiness}
-          onTemplateClick={() => setTemplateModalOpen(true)}
-        />
-      ) : (
-        <div className="flex flex-col items-center gap-2 text-center">
-          <p className="text-sm text-gray-600">
-            Sessão inativa. Selecione um template para enviar ao usuário.
-          </p>
-          <button
-            onClick={() => setTemplateModalOpen(true)}
-            className="px-4 py-2 rounded-xl text-sm text-white bg-emerald-600 hover:bg-emerald-700"
-          >
-            Selecionar template
-          </button>
-        </div>
-      )}
+      {/* Message Input / Templates */}
+      <div className="p-4 border-t">
+        {(!isBusiness || isSessionActive) ? (
+          <MessageInput
+            remoteJid={selectedChat.remoteJid}
+            onMessageSent={async (messageBody: string) => {
+              try {
+                const user = localStorage.getItem('user');
+                const token = user ? JSON.parse(user).token : null;
+                if (!token) throw new Error('Token não encontrado');
+
+                const numero = selectedChat.remoteJid.replace(/\D/g, '');
+
+                // 🔹 Verifica se a sessão está ativa antes de enviar
+                const check = await fetch(
+                  'https://n8n.lumendigital.com.br/webhook/prospecta/session/check',
+                  { headers: { token } }
+                );
+
+                if (check.ok) {
+                  // 🔸 Sessão ativa: usa fluxo padrão
+                  return;
+                }
+
+                // 🔸 Sessão inativa → usa disparo direto (mesma lógica da aba “Envio em massa”)
+                const payload = [
+                  {
+                    telefone: numero,
+                    mensagem: messageBody,
+                    nome: selectedChat.pushName || numero,
+                  },
+                ];
+
+                const response = await fetch(
+                  'https://n8n.lumendigital.com.br/webhook/prospecta/dd/start',
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      token,
+                    },
+                    body: JSON.stringify({
+                      contatos: payload,
+                      modelo: 'texto_livre',
+                      tipo: 'manual',
+                    }),
+                  }
+                );
+
+                if (!response.ok) throw new Error('Falha no disparo direto');
+
+                toast.success('Mensagem enviada com sucesso!');
+              } catch (err) {
+                console.error('Erro no envio manual:', err);
+                toast.error('Erro ao enviar mensagem');
+              } finally {
+                setReplyToMessage(null);
+              }
+            }}
+            onTempMessage={addTempMessage}
+            onReplaceTempMessage={replaceTempMessage}
+            onMessageError={markTempError}
+            fileInputRef={fileDropRef}
+            replyTo={replyToMessage}
+            onClearReply={() => setReplyToMessage(null)}
+            isBusiness={isBusiness}
+            onTemplateClick={() => setTemplateModalOpen(true)}
+          />
+        ) : (
+          <div className="flex flex-col items-center gap-2 text-center">
+            <p className="text-sm text-gray-600">
+              Sessão inativa. Selecione um template para enviar ao usuário.
+            </p>
+            <button
+              onClick={() => setTemplateModalOpen(true)}
+              className="px-4 py-2 rounded-xl text-sm text-white bg-emerald-600 hover:bg-emerald-700"
+            >
+              Selecionar template
+            </button>
+          </div>
+        )}
+
 
       {templateModalOpen && (
         <Suspense fallback={null}>
@@ -4015,6 +4084,9 @@ return (
         </Suspense>
       )}
     </div>
+    </div>
+
+    {/* Preview Modal */}
     {preview && (
       <Modal
         isOpen={true}
@@ -4046,6 +4118,23 @@ return (
         </div>
       </Modal>
     )}
+
+    {/* Contact Sidebar V2 */}
+    <ContactSidebarV2
+      isOpen={sidebarOpen}
+      onToggle={() => setSidebarOpen(!sidebarOpen)}
+      selectedChat={selectedChat}
+      onOpenContactModal={() => setContactModalOpen(true)}
+    />
+
+    {/* Search Sidebar */}
+    <SearchSidebar
+      isOpen={searchOpen}
+      onToggle={() => setSearchOpen(!searchOpen)}
+      messages={messages}
+      selectedChat={selectedChat}
+      onMessageClick={scrollToMessage}
+    />
   </div>
 );
 }

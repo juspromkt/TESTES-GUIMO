@@ -55,6 +55,20 @@ const canEditContacts = hasPermission('can_edit_contacts');
     fetchContatos();
   }, []);
 
+  // 🔁 Atualiza lista de contatos quando o contato é alterado pela sidebar
+useEffect(() => {
+  const handleContactUpdated = () => {
+    console.log("[Contatos] Atualizando lista após edição na sidebar...");
+    fetchContatos();
+  };
+
+  window.addEventListener("contactUpdated", handleContactUpdated);
+  return () => {
+    window.removeEventListener("contactUpdated", handleContactUpdated);
+  };
+}, []);
+
+
   const fetchContatos = async () => {
     try {
       const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/contato/get', {
