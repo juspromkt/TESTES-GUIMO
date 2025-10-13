@@ -111,6 +111,11 @@ const AIAgent = () => {
     url_marcacao_externa: null,
   });
 
+  // Estados de loading para salvar
+  const [savingPersonality, setSavingPersonality] = useState(false);
+  const [savingSteps, setSavingSteps] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
   useEffect(() => {
     fetchInitialData();
   }, []);
@@ -166,6 +171,133 @@ const AIAgent = () => {
       console.error('Erro ao carregar dados do agente:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handler para salvar personalidade
+  const handleSavePersonality = async () => {
+    setSavingPersonality(true);
+    try {
+      const response = await fetch(
+        'https://n8n.lumendigital.com.br/webhook/prospecta/agente/personalidade/create',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            token,
+          },
+          body: JSON.stringify([personality]),
+        }
+      );
+
+      if (!response.ok) throw new Error('Erro ao salvar personalidade');
+    } catch (err) {
+      console.error('Erro ao salvar personalidade:', err);
+      throw err;
+    } finally {
+      setSavingPersonality(false);
+    }
+  };
+
+  // Handlers para etapas de atendimento
+  const handleAddStep = () => {
+    const newOrder = serviceSteps.length > 0 ? Math.max(...serviceSteps.map(s => s.ordem)) + 1 : 1;
+    setServiceSteps([
+      ...serviceSteps,
+      {
+        ordem: newOrder,
+        nome: '',
+        descricao: '',
+        atribuir_lead: false,
+        desativar_agente: false,
+      },
+    ]);
+  };
+
+  const handleRemoveStep = (ordem: number) => {
+    const filtered = serviceSteps.filter(s => s.ordem !== ordem);
+    const reordered = filtered.map((step, index) => ({
+      ...step,
+      ordem: index + 1,
+    }));
+    setServiceSteps(reordered);
+  };
+
+  const handleUpdateStep = (
+    ordem: number,
+    field: 'nome' | 'descricao' | 'atribuir_lead' | 'desativar_agente',
+    value: string | boolean
+  ) => {
+    setServiceSteps(prev =>
+      prev.map(step => {
+        if (step.ordem === ordem) {
+          // Se está ativando atribuir_lead nesta etapa, desativa nas outras
+          if (field === 'atribuir_lead' && value === true) {
+            return prev.map(s =>
+              s.ordem === ordem
+                ? { ...s, [field]: value }
+                : { ...s, atribuir_lead: false }
+            );
+          }
+          return { ...step, [field]: value };
+        }
+        return step;
+      }).flat()
+    );
+  };
+
+  const handleReorderSteps = (steps: ServiceStep[]) => {
+    setServiceSteps(steps);
+  };
+
+  const handleSaveSteps = async () => {
+    setSavingSteps(true);
+    try {
+      const response = await fetch(
+        'https://n8n.lumendigital.com.br/webhook/prospecta/agente/etapas/create',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            token,
+          },
+          body: JSON.stringify(serviceSteps),
+        }
+      );
+
+      if (!response.ok) throw new Error('Erro ao salvar etapas');
+    } catch (err) {
+      console.error('Erro ao salvar etapas:', err);
+      throw err;
+    } finally {
+      setSavingSteps(false);
+    }
+  };
+
+  const onMediaUpload = async (file: File): Promise<string> => {
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(
+        'https://n8n.lumendigital.com.br/webhook/prospecta/agente/upload',
+        {
+          method: 'POST',
+          headers: { token },
+          body: formData,
+        }
+      );
+
+      if (!response.ok) throw new Error('Erro ao fazer upload da mídia');
+
+      const data = await response.json();
+      return data.url || data.fileUrl || '';
+    } catch (err) {
+      console.error('Erro ao fazer upload:', err);
+      throw err;
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -373,6 +505,8 @@ const AIAgent = () => {
                 canEdit={canEdit}
                 personality={personality}
                 setPersonality={setPersonality}
+                savingPersonality={savingPersonality}
+                handleSavePersonality={handleSavePersonality}
               />
             )}
             {subSection === 'regras' && (
@@ -383,7 +517,14 @@ const AIAgent = () => {
                 token={token}
                 canEdit={canEdit}
                 serviceSteps={serviceSteps}
-                setServiceSteps={setServiceSteps}
+                handleAddStep={handleAddStep}
+                handleRemoveStep={handleRemoveStep}
+                handleUpdateStep={handleUpdateStep}
+                handleReorderSteps={handleReorderSteps}
+                savingSteps={savingSteps}
+                handleSaveSteps={handleSaveSteps}
+                onMediaUpload={onMediaUpload}
+                isUploading={isUploading}
               />
             )}
             {subSection === 'faq' && (
