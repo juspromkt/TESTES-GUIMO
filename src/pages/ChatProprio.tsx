@@ -418,85 +418,64 @@ const ChatProprio = () => {
       {/* Barra superior fixa - ocupa toda a largura da tela */}
       {activeTab === 'chat' && (
         <div className="fixed top-[80px] md:relative md:top-0 left-0 right-0 z-10 bg-white border-b border-gray-200 flex-shrink-0 shadow-sm">
-          <div className="px-2 md:px-4 py-2 flex items-center gap-1.5 md:gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
-            {/* Campo de busca */}
-            <div className="relative flex-1 min-w-[200px] max-w-lg">
-              <Search className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none flex-shrink-0" />
-              <input
-                type="text"
-                placeholder="Pesquisar..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 md:pl-9 pr-3 py-2 md:py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all touch-manipulation"
-              />
+          <div className="px-2 md:px-4 py-2 flex items-center justify-between gap-1.5 md:gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+
+            {/* Grupo Esquerdo: Campo de busca + Filtros */}
+            <div className="flex items-center gap-1.5 md:gap-2 flex-1 min-w-0">
+              {/* Campo de busca */}
+              <div className="relative flex-1 min-w-[200px] max-w-lg">
+                <Search className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none flex-shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Pesquisar..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-8 md:pl-9 pr-3 py-2 md:py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all touch-manipulation"
+                />
+              </div>
+
+              {/* Filtros */}
+              <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
+                {/* Responsáveis (multi-select) */}
+                <MultiSelectDropdown
+                  options={usuariosPorContato.map(u => ({ id: u.Id, label: u.nome }))}
+                  selectedIds={selectedResponsibleIds}
+                  onChange={setSelectedResponsibleIds}
+                  placeholder="Responsável"
+                  icon={<Users className="w-4 h-4" />}
+                />
+
+                {/* Etiquetas (multi-select) */}
+                <MultiSelectDropdown
+                  options={availableTags.map(t => ({ id: t.Id, label: t.nome, color: t.cor }))}
+                  selectedIds={selectedTagIds}
+                  onChange={setSelectedTagIds}
+                  placeholder="Etiquetas"
+                  icon={<TagIcon className="w-4 h-4" />}
+                />
+
+                {/* Filtro de Data */}
+                <button
+                  onClick={() => setShowDateModal(true)}
+                  className={`flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-2 md:py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap touch-manipulation active:scale-95 ${
+                    startDate || endDate
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md hover:from-blue-600 hover:to-indigo-700 active:from-blue-700 active:to-indigo-800'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300'
+                  }`}
+                >
+                  <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="hidden sm:inline">Período</span>
+                  {(startDate || endDate) && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse flex-shrink-0" />
+                  )}
+                </button>
+              </div>
             </div>
 
-            {/* Filtros */}
-            <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
-              {/* Responsáveis (multi-select) */}
-              <MultiSelectDropdown
-                options={usuariosPorContato.map(u => ({ id: u.Id, label: u.nome }))}
-                selectedIds={selectedResponsibleIds}
-                onChange={setSelectedResponsibleIds}
-                placeholder="Responsável"
-                icon={<Users className="w-4 h-4" />}
-              />
-
-              {/* Seletor de Funil - REMOVIDO TEMPORARIAMENTE (para implementação futura) */}
-              {/* <select
-                value={selectedFunnelId || ''}
-                onChange={(e) => setSelectedFunnelId(e.target.value ? Number(e.target.value) : null)}
-                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:bg-gray-50"
-              >
-                <option value="">Todos os funis</option>
-                {availableFunnels.map((f: any) => (
-                  <option key={f.id} value={f.id}>
-                    {f.nome}
-                  </option>
-                ))}
-              </select> */}
-
-              {/* Status/Etapas (multi-select) - REMOVIDO TEMPORARIAMENTE (para implementação futura) */}
-              {/* <MultiSelectDropdown
-                options={availableStages.map(s => ({ id: s.id, label: s.nome, color: s.cor }))}
-                selectedIds={selectedStageIds}
-                onChange={setSelectedStageIds}
-                placeholder={selectedFunnelId ? "Status" : "Selecione um funil"}
-                icon={<GitBranch className="w-4 h-4" />}
-                disabled={!selectedFunnelId || availableStages.length === 0}
-              /> */}
-
-              {/* Etiquetas (multi-select) */}
-              <MultiSelectDropdown
-                options={availableTags.map(t => ({ id: t.Id, label: t.nome, color: t.cor }))}
-                selectedIds={selectedTagIds}
-                onChange={setSelectedTagIds}
-                placeholder="Etiquetas"
-                icon={<TagIcon className="w-4 h-4" />}
-              />
-
-              {/* Filtro de Data */}
-              <button
-                onClick={() => setShowDateModal(true)}
-                className={`flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-2 md:py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap touch-manipulation active:scale-95 ${
-                  startDate || endDate
-                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md hover:from-blue-600 hover:to-indigo-700 active:from-blue-700 active:to-indigo-800'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300'
-                }`}
-              >
-                <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="hidden sm:inline">Período</span>
-                {(startDate || endDate) && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse flex-shrink-0" />
-                )}
-              </button>
-
-            </div>
-
-            {/* Botão Nova Conversa */}
+            {/* Botão Nova Conversa - Canto Direito */}
             <button
               onClick={() => setNewChatModalOpen(true)}
-              className="flex items-center gap-1 md:gap-1.5 px-2 md:px-4 py-2 md:py-1.5 rounded-lg text-xs md:text-sm font-medium bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700 active:from-emerald-700 active:to-green-800 transition-all shadow-md hover:shadow-lg active:scale-95 whitespace-nowrap touch-manipulation flex-shrink-0"
+              className="flex items-center gap-1 md:gap-1.5 px-2 md:px-4 py-2 md:py-1.5 rounded-lg text-xs md:text-sm font-medium bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700 active:from-emerald-700 active:to-green-800 transition-all shadow-md hover:shadow-lg active:scale-95 whitespace-nowrap touch-manipulation flex-shrink-0 ml-auto"
               title="Nova conversa"
               aria-label="Nova conversa"
             >

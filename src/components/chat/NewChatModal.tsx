@@ -13,6 +13,41 @@ export function NewChatModal({ isOpen, onClose, onSuccess }: NewChatModalProps) 
   const [telefone, setTelefone] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const formatPhoneNumbers = (number: string) => {
+    if (!number) return { numero: null };
+
+    const apenasNumeros = (str: string) => String(str).replace(/\D/g, '');
+    let numero = apenasNumeros(number);
+
+    // Remove o zero à esquerda do DDD, se existir
+    if (numero.length >= 11 && numero.startsWith('0')) {
+      numero = numero.slice(1);
+    }
+
+    // ✅ Lógica correta para diferenciar DDI x DDD
+    if (numero.startsWith('55') && numero.length > 11) {
+      // Já está com DDI
+      // Exemplo: 5562998765432 -> não faz nada
+    } else if (numero.length === 11) {
+      // Nacional sem DDI
+      numero = '55' + numero;
+    } else if (numero.length === 10) {
+      // Nacional fixo sem DDI
+      numero = '55' + numero;
+    }
+
+    const ddd = numero.slice(2, 4);
+    const dddInt = parseInt(ddd, 10);
+
+    // Remove o 9 para fixos (ex.: telefone do RS com DDD 55)
+    const numeroFormatado =
+      dddInt >= 11 && dddInt <= 29
+        ? numero
+        : numero.replace(/^(55\d{2})9(\d{8})$/, '$1$2');
+
+    return { numero: numeroFormatado };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -39,6 +74,14 @@ export function NewChatModal({ isOpen, onClose, onSuccess }: NewChatModalProps) 
         return;
       }
 
+      // Formatar número usando a função de formatação
+      const { numero: formattedPhone } = formatPhoneNumbers(cleanPhone);
+
+      if (!formattedPhone) {
+        toast.error('Erro ao formatar telefone');
+        return;
+      }
+
       const response = await fetch(
         'https://n8n.lumendigital.com.br/webhook/prospecta/contato/create',
         {
@@ -49,7 +92,7 @@ export function NewChatModal({ isOpen, onClose, onSuccess }: NewChatModalProps) 
           },
           body: JSON.stringify({
             nome: nome.trim(),
-            telefone: cleanPhone,
+            telefone: formattedPhone,
           }),
         }
       );
@@ -66,8 +109,8 @@ export function NewChatModal({ isOpen, onClose, onSuccess }: NewChatModalProps) 
 
       toast.success('Contato criado com sucesso!');
 
-      // Formatar remoteJid
-      const remoteJid = `${cleanPhone}@s.whatsapp.net`;
+      // Formatar remoteJid com número formatado
+      const remoteJid = `${formattedPhone}@s.whatsapp.net`;
 
       // Fechar modal e abrir conversa
       onSuccess(remoteJid, nome.trim());
