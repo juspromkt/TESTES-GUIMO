@@ -8,6 +8,8 @@ import {
   MessageCircle,
   RefreshCw,
   FlaskConical,
+  Menu,
+  X,
 } from 'lucide-react';
 import { hasPermission } from '../utils/permissions';
 
@@ -80,6 +82,7 @@ const AIAgent = () => {
   const [mainSection, setMainSection] = useState<MainSection>('config');
   const [subSection, setSubSection] = useState<ConfigSub>('personalidade');
   const [configOpen, setConfigOpen] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const [isEnabled, setIsEnabled] = useState(false);
   const [toggling, setToggling] = useState(false);
@@ -301,6 +304,29 @@ const AIAgent = () => {
     }
   };
 
+  // Helper para obter o label da seção atual
+  const getCurrentSectionLabel = () => {
+    if (mainSection === 'follow') return 'Follow-up';
+    if (mainSection === 'movement') return 'Movimentação Automática';
+    if (mainSection === 'test') return 'Teste de Agente';
+
+    const configLabels: Record<ConfigSub, string> = {
+      personalidade: 'Personalidade',
+      regras: 'Regras Gerais',
+      etapas: 'Etapas de Atendimento',
+      faq: 'Perguntas Frequentes',
+      notificacoes: 'Notificações no WhatsApp',
+      agendamento: 'Configurações de Agendamento',
+      horarios: 'Horário de Funcionamento',
+      modelos: 'Modelo de Agente',
+      gatilhos: 'Gatilhos',
+      audio: 'Áudio (TTS/STT)',
+      parametros: 'Parâmetros do Agente',
+    };
+
+    return configLabels[subSection];
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-6rem)]">
@@ -310,21 +336,63 @@ const AIAgent = () => {
   }
 
   return (
-    <div className="grid grid-cols-[280px_1fr] gap-6">
+    <div className="flex flex-col md:grid md:grid-cols-[280px_1fr] gap-4 md:gap-6 pb-20 md:pb-0">
+      {/* Mobile Header com botão de menu */}
+      <div className="md:hidden sticky top-0 z-10 bg-white border-b border-gray-300 px-4 py-3 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+            <Bot className="w-5 h-5 text-indigo-600" />
+          </div>
+          <div>
+            <h1 className="text-sm font-semibold text-gray-900">Agente de IA</h1>
+            <p className="text-xs text-gray-500">{getCurrentSectionLabel()}</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setIsMobileSidebarOpen(true)}
+          className="p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation"
+          aria-label="Abrir menu"
+        >
+          <Menu className="w-5 h-5 text-gray-700" />
+        </button>
+      </div>
+
+      {/* Overlay para mobile */}
+      {isMobileSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="bg-white rounded-2xl border border-gray-300 shadow-sm p-4 flex flex-col h-[calc(100vh-6rem)]">
+      <aside className={`bg-white rounded-2xl border border-gray-300 shadow-sm p-4 flex flex-col h-[calc(100vh-6rem)]
+        md:relative md:translate-x-0
+        fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] z-50 transition-transform duration-300
+        ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
         {/* Header */}
         <div className="flex flex-col gap-3 px-2 pb-3 border-b border-gray-300">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center">
-              <Bot className="w-5 h-5 text-gray-600" />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center">
+                <Bot className="w-5 h-5 text-gray-600" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-gray-900">
+                  Agente de IA
+                </h2>
+                <p className="text-xs text-gray-500">Configure o comportamento</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-sm font-semibold text-gray-900">
-                Agente de IA
-              </h2>
-              <p className="text-xs text-gray-500">Configure o comportamento</p>
-            </div>
+            {/* Botão fechar apenas no mobile */}
+            <button
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation"
+              aria-label="Fechar menu"
+            >
+              <X className="w-5 h-5 text-gray-600" />
+            </button>
           </div>
 
           {/* IA Toggle */}
@@ -442,8 +510,9 @@ const AIAgent = () => {
                   onClick={() => {
                     setMainSection('config');
                     setSubSection(key as ConfigSub);
+                    setIsMobileSidebarOpen(false); // Fecha o drawer no mobile
                   }}
-                  className={`w-full text-left px-3 py-1.5 text-sm rounded-lg ${
+                  className={`w-full text-left px-3 py-1.5 text-sm rounded-lg touch-manipulation ${
                     mainSection === 'config' && subSection === key
                       ? 'bg-indigo-50 text-indigo-700 font-medium'
                       : 'hover:bg-gray-50 text-gray-700'
@@ -458,8 +527,11 @@ const AIAgent = () => {
           <div className="my-3 border-t border-gray-300"></div>
 
           <button
-            onClick={() => setMainSection('follow')}
-            className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg ${
+            onClick={() => {
+              setMainSection('follow');
+              setIsMobileSidebarOpen(false);
+            }}
+            className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg touch-manipulation ${
               mainSection === 'follow'
                 ? 'bg-emerald-50 text-emerald-700'
                 : 'hover:bg-gray-50 text-gray-700'
@@ -470,8 +542,11 @@ const AIAgent = () => {
           </button>
 
           <button
-            onClick={() => setMainSection('movement')}
-            className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg ${
+            onClick={() => {
+              setMainSection('movement');
+              setIsMobileSidebarOpen(false);
+            }}
+            className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg touch-manipulation ${
               mainSection === 'movement'
                 ? 'bg-blue-50 text-blue-700'
                 : 'hover:bg-gray-50 text-gray-700'
@@ -482,8 +557,11 @@ const AIAgent = () => {
           </button>
 
           <button
-            onClick={() => setMainSection('test')}
-            className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg ${
+            onClick={() => {
+              setMainSection('test');
+              setIsMobileSidebarOpen(false);
+            }}
+            className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg touch-manipulation ${
               mainSection === 'test'
                 ? 'bg-amber-50 text-amber-700'
                 : 'hover:bg-gray-50 text-gray-700'
@@ -496,7 +574,7 @@ const AIAgent = () => {
       </aside>
 
       {/* Painel direito */}
-      <main className="bg-white rounded-2xl shadow-sm border border-gray-300 p-6 overflow-y-auto">
+      <main className="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-300 p-4 md:p-6 overflow-y-auto mx-2 md:mx-0">
         {mainSection === 'config' && (
           <>
             {subSection === 'personalidade' && (

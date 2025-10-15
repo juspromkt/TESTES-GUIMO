@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Loader2, Plus, X, Edit } from 'lucide-react';
 import type { CampoPersonalizado } from '../../types/campo';
 
@@ -8,21 +9,21 @@ interface CamposSectionProps {
 }
 
 const tipoOptions = [
-  { value: 'INTEGER', label: 'INTEGER - números inteiros' },
-  { value: 'DECIMAL', label: 'DECIMAL - números com casas decimais' },
-  { value: 'STRING', label: 'STRING - textos livres' },
-  { value: 'BOOLEAN', label: 'BOOLEAN - verdadeiro ou falso' },
-  { value: 'DATE', label: 'DATE - datas sem hora' },
-  { value: 'DATETIME', label: 'DATETIME - datas com hora' },
+  { value: 'STRING', label: 'Texto livre' },
+  { value: 'INTEGER', label: 'Número inteiro' },
+  { value: 'DECIMAL', label: 'Número decimal' },
+  { value: 'BOOLEAN', label: 'Sim ou Não' },
+  { value: 'DATE', label: 'Data' },
+  { value: 'DATETIME', label: 'Data e hora' },
 ] as const;
 
 const tipoDescriptions: Record<CampoPersonalizado['tipo'], string> = {
-  INTEGER: 'Aceita apenas números inteiros, sem casas decimais.',
-  DECIMAL: 'Aceita números com casas decimais.',
-  STRING: 'Aceita textos e combinações de caracteres.',
-  BOOLEAN: 'Aceita apenas os valores verdadeiro ou falso.',
+  STRING: 'Aceita textos e combinações de caracteres (nomes, endereços, descrições).',
+  INTEGER: 'Aceita apenas números inteiros, sem casas decimais (idade, quantidade).',
+  DECIMAL: 'Aceita números com casas decimais (valores monetários, porcentagens).',
+  BOOLEAN: 'Aceita apenas respostas de sim ou não (verdadeiro ou falso).',
   DATE: 'Aceita datas no formato dia/mês/ano.',
-  DATETIME: 'Aceita datas com hora e minuto.',
+  DATETIME: 'Aceita datas completas com hora e minuto.',
 };
 
 export default function CamposSection({ isActive, canEdit }: CamposSectionProps) {
@@ -260,9 +261,15 @@ export default function CamposSection({ isActive, canEdit }: CamposSectionProps)
         </div>
       )}
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+      {isModalOpen && createPortal(
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg w-full max-w-md p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Novo Campo</h3>
               <button
@@ -341,12 +348,19 @@ export default function CamposSection({ isActive, canEdit }: CamposSectionProps)
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {isEditModalOpen && editCampo && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+      {isEditModalOpen && editCampo && createPortal(
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
+          onClick={() => setIsEditModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg w-full max-w-md p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Editar Campo</h3>
               <button
@@ -417,7 +431,8 @@ export default function CamposSection({ isActive, canEdit }: CamposSectionProps)
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

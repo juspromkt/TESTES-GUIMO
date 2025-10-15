@@ -281,10 +281,10 @@ reader.readAsDataURL(audioBlob);
     textareaRef.current?.focus();
   };
  return (
-    <div className="bg-[#f0f2f5] border-t border-gray-200">
+    <div className="bg-[#f0f2f5] border-t border-gray-200 relative z-[9998]" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
       {/* Preview de arquivo selecionado */}
       {pendingFile && (
-        <div className="px-4 py-3 bg-white border-b border-gray-200">
+        <div className="px-3 md:px-4 py-3 bg-white border-b border-gray-200">
           <div className="flex items-center space-x-3">
             {pendingFile.mediatype === 'image' && (
               <img
@@ -348,7 +348,7 @@ reader.readAsDataURL(audioBlob);
       )}
 
       {/* Input principal - estilo WhatsApp Web */}
-      <div className="flex items-center gap-2 px-4 py-2.5">
+      <div className="flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-2">
         <input
           ref={fileInputRef || internalRef}
           type="file"
@@ -358,32 +358,33 @@ reader.readAsDataURL(audioBlob);
         />
 
         {/* Lado esquerdo: Emoji + Anexo */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 md:gap-1 flex-shrink-0">
           {/* Botão Emoji com Popover */}
           <Popover.Root>
             <Popover.Trigger asChild>
               <button
                 type="button"
-                className="p-2 text-[#54656f] hover:text-[#00a884] transition-colors rounded-full hover:bg-[#f0f2f5]"
+                className="p-1.5 md:p-2 text-[#54656f] hover:text-[#00a884] active:text-[#008f6f] transition-colors rounded-full hover:bg-[#f0f2f5] active:bg-[#e1e3e5] touch-manipulation"
                 title="Emoji"
+                aria-label="Selecionar emoji"
               >
-                <Smile className="w-6 h-6" />
+                <Smile className="w-5 h-5 md:w-6 md:h-6" />
               </button>
             </Popover.Trigger>
 
             <Popover.Portal>
               <Popover.Content
-                className="z-50 bg-white shadow-2xl rounded-lg overflow-hidden w-[350px] animate-in fade-in-0 zoom-in-95"
+                className="z-50 bg-white shadow-2xl rounded-lg overflow-hidden w-[300px] md:w-[350px] animate-in fade-in-0 zoom-in-95"
                 sideOffset={8}
                 align="start"
               >
-                <div className="p-3">
-                  <div className="grid grid-cols-8 gap-1 max-h-[300px] overflow-y-auto">
+                <div className="p-2 md:p-3">
+                  <div className="grid grid-cols-7 md:grid-cols-8 gap-0.5 md:gap-1 max-h-[250px] md:max-h-[300px] overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
                     {emojis.map((emoji, index) => (
                       <button
                         key={index}
                         onClick={() => handleEmojiSelect(emoji)}
-                        className="text-2xl hover:bg-gray-100 rounded p-2 transition-colors"
+                        className="text-xl md:text-2xl hover:bg-gray-100 active:bg-gray-200 rounded p-1.5 md:p-2 transition-colors touch-manipulation"
                         type="button"
                       >
                         {emoji}
@@ -399,10 +400,11 @@ reader.readAsDataURL(audioBlob);
           <button
             type="button"
             onClick={() => (fileInputRef || internalRef).current?.click()}
-            className="p-2 text-[#54656f] hover:text-[#00a884] transition-colors rounded-full hover:bg-[#f0f2f5]"
+            className="p-1.5 md:p-2 text-[#54656f] hover:text-[#00a884] active:text-[#008f6f] transition-colors rounded-full hover:bg-[#f0f2f5] active:bg-[#e1e3e5] touch-manipulation"
             title="Anexar arquivo"
+            aria-label="Anexar arquivo"
           >
-            <Paperclip className="w-6 h-6" />
+            <Paperclip className="w-5 h-5 md:w-6 md:h-6" />
           </button>
 
           {/* Botão Template (se business) */}
@@ -410,10 +412,11 @@ reader.readAsDataURL(audioBlob);
             <button
               type="button"
               onClick={onTemplateClick}
-              className="p-2 text-[#54656f] hover:text-[#00a884] transition-colors rounded-full hover:bg-[#f0f2f5]"
+              className="p-1.5 md:p-2 text-[#54656f] hover:text-[#00a884] active:text-[#008f6f] transition-colors rounded-full hover:bg-[#f0f2f5] active:bg-[#e1e3e5] touch-manipulation"
               title="Template"
+              aria-label="Selecionar template"
             >
-              <FileText className="w-5 h-5" />
+              <FileText className="w-4 h-4 md:w-5 md:h-5" />
             </button>
           )}
         </div>
@@ -435,11 +438,11 @@ reader.readAsDataURL(audioBlob);
               onKeyPress={handleKeyPress}
               placeholder="Digite uma mensagem"
               rows={1}
-              autoFocus
-              className="w-full resize-none rounded-lg bg-transparent px-3 py-2.5 text-[15px] text-[#111b21] placeholder:text-[#667781] focus:outline-none max-h-[100px] overflow-y-auto"
+              className="w-full resize-none rounded-lg bg-transparent px-3 py-2.5 text-base md:text-[15px] text-[#111b21] placeholder:text-[#667781] focus:outline-none max-h-[100px] overflow-y-auto touch-manipulation"
               style={{
-                minHeight: '42px',
-                maxHeight: '100px'
+                minHeight: '44px',
+                maxHeight: '100px',
+                WebkitOverflowScrolling: 'touch'
               }}
             />
           </div>
@@ -450,23 +453,25 @@ reader.readAsDataURL(audioBlob);
           <button
             type="button"
             onClick={handleSendMessage}
-            className="p-2 text-white bg-[#00a884] hover:bg-[#008f6f] transition-colors rounded-full flex-shrink-0"
+            className="p-2 md:p-2.5 text-white bg-[#00a884] hover:bg-[#008f6f] active:bg-[#007a65] transition-colors rounded-full flex-shrink-0 touch-manipulation active:scale-95"
             title="Enviar"
+            aria-label="Enviar mensagem"
           >
-            <Send className="w-6 h-6" />
+            <Send className="w-5 h-5 md:w-6 md:h-6" />
           </button>
         ) : (
           <button
             type="button"
             onClick={recording ? stopRecording : startRecording}
-            className={`p-2 transition-colors rounded-full flex-shrink-0 ${
+            className={`p-2 md:p-2.5 transition-colors rounded-full flex-shrink-0 touch-manipulation active:scale-95 ${
               recording
-                ? 'text-white bg-red-500 hover:bg-red-600'
-                : 'text-[#54656f] hover:text-[#00a884] hover:bg-[#f0f2f5]'
+                ? 'text-white bg-red-500 hover:bg-red-600 active:bg-red-700'
+                : 'text-[#54656f] hover:text-[#00a884] active:text-[#008f6f] hover:bg-[#f0f2f5] active:bg-[#e1e3e5]'
             }`}
             title={recording ? "Parar gravação" : "Gravar áudio"}
+            aria-label={recording ? "Parar gravação" : "Gravar áudio"}
           >
-            {recording ? <StopCircle className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+            {recording ? <StopCircle className="w-5 h-5 md:w-6 md:h-6" /> : <Mic className="w-5 h-5 md:w-6 md:h-6" />}
           </button>
         )}
       </div>

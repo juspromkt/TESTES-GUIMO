@@ -732,10 +732,10 @@ const handleUpdateName = async () => {
   return (
     <div
       className={`
-        absolute right-0 top-0 h-full
+        fixed md:absolute right-0 top-[135px] md:top-0 bottom-0 md:h-full
         bg-white border-l border-gray-300 shadow-lg
         transition-all duration-300 ease-in-out
-        flex flex-col z-40
+        flex flex-col z-50
         ${isOpen ? "w-[420px] opacity-100" : "w-0 opacity-0 overflow-hidden"}
       `}
     >

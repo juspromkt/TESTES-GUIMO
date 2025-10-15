@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar';
 import DemoBanner from '../components/DemoBanner';
 import { checkSessionExpiration } from '../utils/auth';
 import { fetchUserPermissions } from '../utils/permissions';
+import { ConversationProvider } from '../context/ConversationContext';
 
 const MainLayout = () => {
   const navigate = useNavigate();
@@ -58,14 +59,14 @@ const MainLayout = () => {
   }, [location.pathname]);
 
   return (
-    <>
+    <ConversationProvider>
       {isMobile ? (
         // 📱 MOBILE: Sidebar no topo, conteúdo abaixo
         <div className="flex flex-col min-h-screen w-full overflow-x-hidden">
           <div className="fixed top-0 left-0 right-0 z-50">
             <Sidebar />
           </div>
-          <main className={`flex-1 pt-20 ${isChatPage ? 'px-0' : 'px-4'}`}>
+          <main className={`flex-1 pt-[80px] ${isChatPage ? 'px-0' : 'px-4'}`}>
             <DemoBanner />
             <Outlet />
           </main>
@@ -117,7 +118,7 @@ const MainLayout = () => {
           }
         }
       `}</style>
-    </>
+    </ConversationProvider>
   );
 };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ListOrdered, Loader2, Save, RotateCcw, AlertCircle, Info, Sparkles, Pencil, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { ListOrdered, Loader2, Save, Trash2, AlertCircle, Info, Sparkles, Pencil, X, Settings } from 'lucide-react';
 import type { Tag } from '../../types/tag';
-import Modal from '../Modal';
 
 interface AutoMovement {
   Id: number;
@@ -43,6 +43,7 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
   const [isActive, setIsActive] = useState(false);
   const [togglingStatus, setTogglingStatus] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
@@ -52,7 +53,7 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
   const [editingTagsId, setEditingTagsId] = useState<number | null>(null);
   const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
   const [savingTag, setSavingTag] = useState(false);
-  
+
   // AI Generator states
   const [isGeneratingDescriptions, setIsGeneratingDescriptions] = useState(false);
   const [generatedDescriptions, setGeneratedDescriptions] = useState<{ordem: number, descricao: string}[]>([]);
@@ -60,9 +61,27 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [generationError, setGenerationError] = useState('');
 
+  // Config modal
+  const [selectedMovement, setSelectedMovement] = useState<AutoMovement | null>(null);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  const showMessage = (message: string, type: 'error' | 'success') => {
+    if (type === 'error') {
+      setError(message);
+      setSuccess('');
+    } else {
+      setSuccess(message);
+      setError('');
+    }
+    setTimeout(() => {
+      setError('');
+      setSuccess('');
+    }, 5000);
+  };
 
   const fetchData = async () => {
     try {
@@ -112,7 +131,6 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
       setAvailableTags(tagsList);
       setMovements(processedMovements);
 
-      // Set service steps
       setServiceSteps(Array.isArray(stepsData) ? stepsData.map(step => ({
         ...step,
         Id: parseInt(step.Id)
@@ -133,10 +151,10 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
       const defaultFunnel = validFunnels.find(funnel => funnel.isFunilPadrao) || null;
       setDefaultFunnel(defaultFunnel);
 
-      // Set active status
       setIsActive(statusData.isAtivo);
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
+      showMessage('Erro ao carregar dados. Tente novamente.', 'error');
     } finally {
       setLoading(false);
     }
@@ -155,10 +173,10 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
 
       const data = await response.json();
       setIsActive(data.isAtivo);
-      setSuccess('Status atualizado com sucesso!');
-      setTimeout(() => setSuccess(''), 3000);
+      showMessage('Status atualizado com sucesso!', 'success');
     } catch (err) {
       console.error('Erro ao alterar status:', err);
+      showMessage('Erro ao alterar status. Tente novamente.', 'error');
     } finally {
       setTogglingStatus(false);
     }
@@ -177,11 +195,11 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
 
       if (response.ok) {
         await fetchData();
-        setSuccess('Configurações resetadas com sucesso!');
-        setTimeout(() => setSuccess(''), 3000);
+        showMessage('Configurações resetadas com sucesso!', 'success');
       }
     } catch (err) {
       console.error('Erro ao resetar configurações:', err);
+      showMessage('Erro ao resetar. Tente novamente.', 'error');
     } finally {
       setResetting(false);
       setIsResetModalOpen(false);
@@ -205,6 +223,14 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
       }
       return movement;
     }));
+
+    if (selectedMovement && selectedMovement.ordem === ordem) {
+      const updates: Partial<AutoMovement> = { [field]: value };
+      if (field === 'id_funil') {
+        updates.id_estagio = null;
+      }
+      setSelectedMovement({ ...selectedMovement, ...updates });
+    }
   };
 
   const handleAddTag = async (movementId: number) => {
@@ -216,11 +242,28 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
         headers: { 'Content-Type': 'application/json', token },
         body: JSON.stringify({ id_movimentacao: movementId, id_tag: selectedTagId })
       });
-      await fetchData();
+
+      // Buscar a tag adicionada
+      const addedTag = availableTags.find(t => t.Id === selectedTagId);
+
+      if (addedTag) {
+        // Atualizar imediatamente o selectedMovement
+        setSelectedMovement(prev => prev ? {
+          ...prev,
+          tags: [...(prev.tags || []), addedTag]
+        } : null);
+
+        // Atualizar a lista de movimentos
+        setMovements(prev => prev.map(m =>
+          m.Id === movementId ? { ...m, tags: [...(m.tags || []), addedTag] } : m
+        ));
+      }
+
       setSelectedTagId(null);
-      setEditingTagsId(null);
+      showMessage('Etiqueta adicionada com sucesso!', 'success');
     } catch (err) {
       console.error('Erro ao adicionar etiqueta:', err);
+      showMessage('Erro ao adicionar etiqueta.', 'error');
     } finally {
       setSavingTag(false);
     }
@@ -234,9 +277,22 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
         headers: { 'Content-Type': 'application/json', token },
         body: JSON.stringify({ id_movimentacao: movementId, id_tag: tagId })
       });
-      await fetchData();
+
+      // Atualizar imediatamente o selectedMovement removendo a tag
+      setSelectedMovement(prev => prev ? {
+        ...prev,
+        tags: (prev.tags || []).filter(t => t.Id !== tagId)
+      } : null);
+
+      // Atualizar a lista de movimentos
+      setMovements(prev => prev.map(m =>
+        m.Id === movementId ? { ...m, tags: (m.tags || []).filter(t => t.Id !== tagId) } : m
+      ));
+
+      showMessage('Etiqueta removida com sucesso!', 'success');
     } catch (err) {
       console.error('Erro ao remover etiqueta:', err);
+      showMessage('Erro ao remover etiqueta.', 'error');
     } finally {
       setSavingTag(false);
     }
@@ -257,12 +313,12 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
       });
 
       if (response.ok) {
-        setSuccess('Movimentações salvas com sucesso!');
-        setTimeout(() => setSuccess(''), 3000);
+        showMessage('Movimentações salvas com sucesso!', 'success');
         await fetchData();
       }
     } catch (err) {
       console.error('Erro ao salvar movimentações:', err);
+      showMessage('Erro ao salvar movimentações.', 'error');
     } finally {
       setSaving(false);
     }
@@ -271,21 +327,18 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
   const handleGenerateDescriptions = async () => {
     setIsGeneratingDescriptions(true);
     setGenerationError('');
-    
+
     try {
-      // Check if we have service steps
       if (!serviceSteps || serviceSteps.length === 0) {
         throw new Error('Não há etapas de atendimento configuradas. Configure as etapas primeiro.');
       }
-      
-      // Format service steps for the API
+
       const formattedSteps = serviceSteps.map(step => ({
         ordem: step.ordem,
         nome: step.nome,
-        descricao: step.descricao
+        descricao: (step as any).descricao
       }));
-      
-      // Call the API to generate descriptions
+
       const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/agente/prompt/movimentacao/gerar', {
         method: 'POST',
         headers: {
@@ -294,13 +347,13 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
         },
         body: JSON.stringify(formattedSteps)
       });
-      
+
       if (!response.ok) {
         throw new Error('Erro ao gerar descrições de movimentação');
       }
-      
+
       const data = await response.json();
-      
+
       if (Array.isArray(data) && data.length > 0) {
         setGeneratedDescriptions(data);
         setIsDescriptionsModalOpen(true);
@@ -316,7 +369,6 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
   };
 
   const handleApplyGeneratedDescriptions = () => {
-    // Apply generated descriptions to movements
     const updatedMovements = movements.map(movement => {
       const generatedDesc = generatedDescriptions.find(desc => desc.ordem === movement.ordem);
       if (generatedDesc) {
@@ -327,507 +379,618 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
       }
       return movement;
     });
-    
+
     setMovements(updatedMovements);
     setIsDescriptionsModalOpen(false);
     setIsConfirmModalOpen(false);
-    setSuccess('Descrições aplicadas com sucesso!');
-    setTimeout(() => setSuccess(''), 3000);
+    showMessage('Descrições aplicadas com sucesso!', 'success');
+  };
+
+  const handleOpenConfig = (movement: AutoMovement) => {
+    setSelectedMovement(movement);
+    setShowConfigModal(true);
+  };
+
+  const getStepName = (id: number | null) => {
+    if (!id) return 'Não configurado';
+    const step = serviceSteps.find(s => s.Id === id);
+    return step ? step.nome : 'Não encontrado';
+  };
+
+  const getStageName = (funnelId: number | null, stageId: number | null) => {
+    if (!funnelId || !stageId) return 'Não configurado';
+    const funnel = funnels.find(f => f.id === funnelId);
+    if (!funnel) return 'Não encontrado';
+    const stage = funnel.estagios?.find(s => s.Id === stageId);
+    return stage ? stage.nome : 'Não encontrado';
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+        <span className="ml-2 text-gray-600">Carregando movimentações...</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow-md p-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-              <ListOrdered className="w-6 h-6 text-orange-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Movimentação Automática</h2>
-              <p className="text-sm text-gray-500 mt-1">Configure a movimentação automática entre etapas e estágios</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowInfoModal(true)}
-              className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-colors"
-              title="Informações sobre Movimentação Automática"
-            >
-              <Info className="w-5 h-5" />
-            </button>
-{canViewAgent && (
-  <button
-    onClick={() => setIsResetModalOpen(true)}
-    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-    title="Resetar configurações"
-  >
-    <RotateCcw className="w-5 h-5" />
-  </button>
-)}
+    <>
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out forwards;
+          opacity: 0;
+        }
+      `}</style>
 
-{canViewAgent && (
-  <label className="relative inline-flex items-center cursor-pointer">
-    <input
-      type="checkbox"
-      className="sr-only peer"
-      checked={isActive}
-      onChange={handleToggleStatus}
-      disabled={togglingStatus}
-    />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
-              <span className="ml-3 text-sm font-medium text-gray-700">
-                {togglingStatus ? 'Alternando...' : isActive ? 'Ativado' : 'Desativado'}
-              </span>
-            </label>
-          )}
-          </div>
-        </div>
-
-        {/* Explanation Box */}
-        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-          <h3 className="font-medium text-blue-800 mb-2">O que é Movimentação Automática?</h3>
-          <p className="text-blue-700 text-sm mb-2">
-            A Movimentação Automática permite que o Agente de IA mova leads automaticamente entre os estágios do seu funil de vendas com base nas etapas de atendimento.
-          </p>
-          <p className="text-blue-700 text-sm">
-            Por exemplo: quando um lead chega à etapa "Agendamento" no atendimento do agente, ele pode ser movido automaticamente para o estágio "Reunião Agendada" no seu CRM.
-          </p>
-        </div>
-
-        {funnels.length === 0 && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-            <p className="text-yellow-700">
-              Nenhum funil cadastrado. Cadastre um funil nas configurações de CRM para utilizar a movimentação automática.
-            </p>
-          </div>
-        )}
-
-        <div className="space-y-6">
-          {movements.map((movement) => (
-            <div key={movement.ordem} className="bg-orange-50/50 rounded-lg p-6 space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-semibold">
-                  {movement.ordem}
-                </div>
-                <h3 className="text-lg font-medium text-gray-900">Movimentação #{movement.ordem}</h3>
+      <div className="space-y-6">
+        <div className="bg-white rounded-xl shadow-md p-8">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                <ListOrdered className="w-6 h-6 text-orange-600" />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Etapa de Atendimento
-                    <span className="ml-1 text-xs text-gray-500">(Quando o agente chegar nesta etapa...)</span>
-                  </label>
-                  <select
-                    value={movement.id_etapa || ''}
-                    disabled={!canViewAgent}
-                    onChange={(e) => handleUpdateMovement(movement.ordem, 'id_etapa', e.target.value ? parseInt(e.target.value) : null)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Movimentação Automática</h2>
+                <p className="text-sm text-gray-500 mt-1">Configure a movimentação automática entre etapas e status do lead</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowInfoModal(true)}
+                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                title="Informações"
+              >
+                <Info className="w-5 h-5" />
+              </button>
+              {canViewAgent && (
+                <>
+                  <button
+                    onClick={() => setIsResetModalOpen(true)}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Resetar configurações"
                   >
-                    <option value="">Selecione uma etapa</option>
-                    {serviceSteps.map((step) => (
-                      <option key={step.Id} value={step.Id}>
-                        {step.nome}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Selecione a etapa do agente que, quando atingida, acionará a movimentação automática.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Funil
-                    </label>
-                    <select
-                      value={movement.id_funil || ''}
-                      disabled={!canViewAgent}
-                      onChange={(e) => handleUpdateMovement(movement.ordem, 'id_funil', e.target.value ? parseInt(e.target.value) : null)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                    >
-                      <option value="">Selecione um funil</option>
-                      {funnels.map((funnel) => (
-                        <option key={funnel.id} value={funnel.id}>
-                          {funnel.nome}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={isActive}
+                      onChange={handleToggleStatus}
+                      disabled={togglingStatus}
+                    />
+                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                    <span className="ml-3 text-sm font-medium text-gray-700">
+                      {togglingStatus ? 'Alternando...' : isActive ? 'Ativado' : 'Desativado'}
+                    </span>
+                  </label>
+                </>
+              )}
+            </div>
+          </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Estágio do Funil
-                      <span className="ml-1 text-xs text-gray-500">(O lead será movido para este estágio)</span>
-                    </label>
-                    <select
-                      disabled={!canViewAgent || !movement.id_funil}
-                      value={movement.id_estagio || ''}
-                      onChange={(e) => handleUpdateMovement(movement.ordem, 'id_estagio', e.target.value ? parseInt(e.target.value) : null)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                    >
-                      <option value="">Selecione um estágio</option>
-                      {funnels.find(f => f.id === movement.id_funil)?.estagios?.map((stage) => (
-                        <option key={stage.Id} value={stage.Id}>
-                          {stage.nome}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="mt-1 text-xs text-gray-500">
-                      Selecione o estágio do funil para onde o lead será movido automaticamente.
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg mb-4">
+              {success}
+            </div>
+          )}
+
+          {funnels.length === 0 && (
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg mb-6">
+              Nenhum funil cadastrado. Cadastre um funil nas configurações de CRM para utilizar a movimentação automática.
+            </div>
+          )}
+
+          {/* Lista de Movimentações */}
+          <div className="space-y-3">
+            {movements.map((movement, index) => (
+              <div
+                key={movement.ordem}
+                className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-4 hover:bg-gray-100 transition-colors animate-fadeIn"
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold">
+                    {movement.ordem}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-medium text-gray-900">Movimentação #{movement.ordem}</p>
+                      {movement.tags && movement.tags.length > 0 && (
+                        <div className="flex gap-1">
+                          {movement.tags.map(tag => (
+                            <span
+                              key={tag.Id}
+                              className="px-2 py-0.5 rounded text-xs"
+                              style={{ backgroundColor: tag.cor, color: tag.cor_texto }}
+                            >
+                              {tag.nome}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-600">
+                      <strong>Etapa:</strong> {getStepName(movement.id_etapa)} → <strong>Status:</strong> {getStageName(movement.id_funil, movement.id_estagio)}
                     </p>
+                    {movement.descricao && (
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-1">{movement.descricao}</p>
+                    )}
                   </div>
                 </div>
+                {canViewAgent && (
+                  <button
+                    onClick={() => handleOpenConfig(movement)}
+                    className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+                    title="Configurar movimentação"
+                  >
+                    <Settings className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* AI Generator */}
+          {canViewAgent && (
+            <div className="mt-6 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Gerar Descrições com IA</h3>
+                    <p className="text-sm text-gray-600">Crie descrições claras automaticamente</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleGenerateDescriptions}
+                  disabled={isGeneratingDescriptions || serviceSteps.length === 0}
+                  className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50"
+                >
+                  {isGeneratingDescriptions ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Gerando...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Gerar
+                    </>
+                  )}
+                </button>
+              </div>
+              {generationError && (
+                <div className="mt-3 text-sm text-red-600">{generationError}</div>
+              )}
+            </div>
+          )}
+
+          {/* Salvar */}
+          {canViewAgent && (
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={handleSave}
+                disabled={saving || funnels.length === 0}
+                className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 font-medium"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-5 h-5" />
+                    Salvar Movimentações
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal: Configurar Movimentação */}
+      {showConfigModal && selectedMovement && createPortal(
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}
+             onClick={() => setShowConfigModal(false)}>
+          <div className="bg-white rounded-xl max-w-2xl w-full shadow-2xl flex flex-col" style={{ maxHeight: '90vh' }}
+               onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900">Configurar Movimentação #{selectedMovement.ordem}</h3>
+              <button onClick={() => setShowConfigModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Etapa de Atendimento */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Etapa de Atendimento
+                  <span className="ml-1 text-xs text-gray-500">(Quando o agente chegar nesta etapa...)</span>
+                </label>
+                <select
+                  value={selectedMovement.id_etapa || ''}
+                  onChange={(e) => handleUpdateMovement(selectedMovement.ordem, 'id_etapa', e.target.value ? parseInt(e.target.value) : null)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                >
+                  <option value="">Selecione uma etapa</option>
+                  {serviceSteps.map((step) => (
+                    <option key={step.Id} value={step.Id}>
+                      {step.nome}
+                    </option>
+                  ))}
+                </select>
               </div>
 
+              {/* Funil */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Funil
+                </label>
+                <select
+                  value={selectedMovement.id_funil || ''}
+                  onChange={(e) => handleUpdateMovement(selectedMovement.ordem, 'id_funil', e.target.value ? parseInt(e.target.value) : null)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                >
+                  <option value="">Selecione um funil</option>
+                  {funnels.map((funnel) => (
+                    <option key={funnel.id} value={funnel.id}>
+                      {funnel.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Status do Lead */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Status do Lead
+                  <span className="ml-1 text-xs text-gray-500">(O lead será movido para este status)</span>
+                </label>
+                <select
+                  disabled={!selectedMovement.id_funil}
+                  value={selectedMovement.id_estagio || ''}
+                  onChange={(e) => handleUpdateMovement(selectedMovement.ordem, 'id_estagio', e.target.value ? parseInt(e.target.value) : null)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:opacity-50"
+                >
+                  <option value="">Selecione um status</option>
+                  {funnels.find(f => f.id === selectedMovement.id_funil)?.estagios?.map((stage) => (
+                    <option key={stage.Id} value={stage.Id}>
+                      {stage.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Descrição */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Descrição
                   <span className="ml-1 text-xs text-gray-500">(Opcional)</span>
                 </label>
                 <textarea
-                disabled={!canViewAgent}
-                  value={movement.descricao || ''}
-                  onChange={(e) => handleUpdateMovement(movement.ordem, 'descricao', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                  rows={3}
+                  value={selectedMovement.descricao || ''}
+                  onChange={(e) => handleUpdateMovement(selectedMovement.ordem, 'descricao', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-vertical"
+                  rows={4}
                   placeholder="Descreva a situação para o lead ser movido para essa etapa..."
                 />
-                <p className="mt-1 text-xs text-gray-500">
-                  Adicione uma descrição de quando a movimentação deve ocorrer. Exemplo: "O lead está nessa etapa quando ele ainda não respondeu nenhuma mensagem desde que entrou no sistema. Nenhuma interação foi iniciada."
-                </p>
               </div>
 
+              {/* Etiquetas */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Etiquetas</label>
-                {editingTagsId === movement.Id ? (
-                  <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Etiquetas</label>
+                {editingTagsId === selectedMovement.Id ? (
+                  <div className="space-y-3">
                     <div className="flex gap-2">
                       <select
                         value={selectedTagId || ''}
                         onChange={e => setSelectedTagId(e.target.value ? parseInt(e.target.value) : null)}
-                        className="px-3 py-2 border border-gray-300 rounded-lg"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                       >
-                        <option value="">Selecione</option>
+                        <option value="">Selecione uma etiqueta</option>
                         {availableTags.map(tag => (
                           <option key={tag.Id} value={tag.Id}>{tag.nome}</option>
                         ))}
                       </select>
-                      <button onClick={() => handleAddTag(movement.Id)} disabled={savingTag} className="px-3 py-2 bg-green-600 text-white rounded-lg disabled:opacity-50">Adicionar</button>
-                      <button type="button" onClick={() => { setEditingTagsId(null); setSelectedTagId(null); }} className="px-3 py-2 bg-gray-200 rounded-lg">Concluir</button>
+                      <button
+                        onClick={() => handleAddTag(selectedMovement.Id)}
+                        disabled={savingTag || !selectedTagId}
+                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors font-medium"
+                      >
+                        {savingTag ? 'Adicionando...' : 'Adicionar'}
+                      </button>
                     </div>
-                    <div className="flex flex-wrap gap-1">
-                      {movement.tags && movement.tags.map(tag => (
-                        <span key={tag.Id} className="px-2 py-0.5 rounded text-xs flex items-center" style={{ backgroundColor: tag.cor, color: tag.cor_texto }}>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedMovement.tags && selectedMovement.tags.map(tag => (
+                        <span
+                          key={tag.Id}
+                          className="px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                          style={{ backgroundColor: tag.cor, color: tag.cor_texto }}
+                        >
                           {tag.nome}
-                          <button type="button" className="ml-1" onClick={() => handleRemoveTag(movement.Id, tag.Id)}>
-                            <X className="w-3 h-3" />
+                          <button
+                            onClick={() => handleRemoveTag(selectedMovement.Id, tag.Id)}
+                            className="hover:opacity-70"
+                          >
+                            <X className="w-4 h-4" />
                           </button>
                         </span>
                       ))}
+                      {(!selectedMovement.tags || selectedMovement.tags.length === 0) && (
+                        <span className="text-sm text-gray-500">Nenhuma etiqueta adicionada</span>
+                      )}
                     </div>
+                    <button
+                      onClick={() => { setEditingTagsId(null); setSelectedTagId(null); }}
+                      className="mt-2 text-sm text-gray-600 hover:text-gray-800 underline"
+                    >
+                      Concluir edição de etiquetas
+                    </button>
                   </div>
                 ) : (
-                  <div className="flex flex-wrap gap-1 items-center">
-                    {(!movement.tags || movement.tags.length === 0) && <span className="text-sm text-gray-500">Sem etiquetas</span>}
-                    {movement.tags && movement.tags.map(tag => (
-                      <span key={tag.Id} className="px-2 py-0.5 rounded text-xs" style={{ backgroundColor: tag.cor, color: tag.cor_texto }}>{tag.nome}</span>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {selectedMovement.tags && selectedMovement.tags.map(tag => (
+                      <span
+                        key={tag.Id}
+                        className="px-3 py-1 rounded-full text-sm"
+                        style={{ backgroundColor: tag.cor, color: tag.cor_texto }}
+                      >
+                        {tag.nome}
+                      </span>
                     ))}
-                    {canViewAgent && (
-                      <button type="button" onClick={() => { setEditingTagsId(movement.Id); setSelectedTagId(null); }} className="ml-2 text-blue-600">
-                        <Pencil className="w-4 h-4" />
-                      </button>
+                    {(!selectedMovement.tags || selectedMovement.tags.length === 0) && (
+                      <span className="text-sm text-gray-500">Sem etiquetas</span>
                     )}
+                    <button
+                      onClick={() => { setEditingTagsId(selectedMovement.Id); setSelectedTagId(null); }}
+                      className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                      title="Editar etiquetas"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
                   </div>
                 )}
               </div>
             </div>
-          ))}
-        </div>
 
-        {/* AI Description Generator */}
-        {canViewAgent && (
-          <div className="mt-8 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-100">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-amber-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Gerar Descrições com IA</h3>
-                <p className="text-sm text-gray-500">Use IA para criar descrições claras para cada movimentação</p>
-              </div>
-            </div>
-            
-            <p className="text-gray-700 mb-4">
-              A IA analisará suas etapas de atendimento e gerará descrições apropriadas para cada movimentação automática, 
-              explicando claramente quando um lead deve ser movido para cada estágio.
-            </p>
-            
-            {generationError && (
-              <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                <span>{generationError}</span>
-              </div>
-            )}
-            
-            <div className="flex justify-end">
+            {/* Footer */}
+            <div className="flex justify-end gap-2 p-6 border-t border-gray-200">
               <button
-                onClick={handleGenerateDescriptions}
-                disabled={isGeneratingDescriptions || serviceSteps.length === 0}
-                className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50"
+                onClick={() => setShowConfigModal(false)}
+                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               >
-                {isGeneratingDescriptions ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Gerando Descrições...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5" />
-                    <span>Gerar Descrições com IA</span>
-                  </>
-                )}
+                Fechar
               </button>
             </div>
           </div>
-        )}
+        </div>,
+        document.body
+      )}
 
-        {success && (
-          <div className="mt-4 bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg">
-            {success}
-          </div>
-        )}
-{canViewAgent && (
-        <div className="flex justify-end pt-6">
-          <button
-            onClick={handleSave}
-            disabled={saving || funnels.length === 0}
-            className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 font-medium"
-          >
-            {saving ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Salvando...</span>
-              </>
-            ) : (
-              <>
-                <Save className="w-5 h-5" />
-                <span>Salvar Movimentações</span>
-              </>
-            )}
-          </button>
-        </div>
-        )}
-      </div>
-
-      {/* Reset Confirmation Modal */}
-      <Modal
-        isOpen={isResetModalOpen}
-        onClose={() => setIsResetModalOpen(false)}
-        title="Confirmar Reset"
-      >
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-red-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                Você tem certeza?
-              </h3>
-              <p className="text-gray-500 mt-1">
-                Isso vai excluir todas as suas configurações de movimentação atuais.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              onClick={() => setIsResetModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleReset}
-  disabled={resetting || !canViewAgent}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md disabled:opacity-50"
-            >
-              {resetting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Resetando...</span>
-                </>
-              ) : (
-                'Sim, Resetar'
-              )}
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Info Modal */}
-      <Modal
-        isOpen={showInfoModal}
-        onClose={() => setShowInfoModal(false)}
-        title="Como Funciona a Movimentação Automática"
-        maxWidth="lg"
-      >
-        <div className="p-6 space-y-6">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Visão Geral</h3>
-            <p className="text-gray-700">
-              A Movimentação Automática conecta seu Agente de IA com o CRM, permitindo que leads sejam movidos automaticamente entre os estágios do funil de vendas com base nas etapas de atendimento do agente.
-            </p>
-            
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <p className="text-blue-800 font-medium">Exemplo prático:</p>
-              <p className="text-blue-700 mt-1">
-                Quando um lead agenda uma reunião com o agente (Etapa "Agendamento"), ele é automaticamente movido para o estágio "Reunião Agendada" no seu funil de CRM.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Como Configurar</h3>
-            
-            <div className="space-y-2">
-              <h4 className="font-medium text-gray-800">1. Etapa de Atendimento</h4>
-              <p className="text-gray-700">
-                Selecione a etapa do agente que, quando atingida pelo lead durante a conversa, acionará a movimentação automática. Estas etapas são as mesmas que você configurou na seção "Etapas de Atendimento".
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="font-medium text-gray-800">2. Estágio do Funil</h4>
-              <p className="text-gray-700">
-                Selecione o estágio do funil para onde o lead será movido automaticamente quando atingir a etapa selecionada. Estes estágios vêm do funil padrão configurado no CRM.
-              </p>
-              <p className="text-gray-500 text-sm">
-                Nota: É necessário ter um funil marcado como "Funil padrão" nas configurações de CRM.
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="font-medium text-gray-800">3. Descrição</h4>
-              <p className="text-gray-700">
-                Campo opcional para documentar quando e por que esta movimentação deve ocorrer. Útil para referência futura e para outros membros da equipe entenderem a lógica da automação.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Dicas Importantes</h3>
-            
-            <ul className="list-disc list-inside space-y-2 text-gray-700">
-              <li>Configure movimentações apenas para etapas significativas do processo (ex: qualificação, agendamento, fechamento).</li>
-              <li>Certifique-se de que as etapas do agente estão alinhadas com os estágios do seu funil de vendas.</li>
-              <li>Ative a funcionalidade usando o toggle no topo da página após configurar as movimentações.</li>
-              <li>Você pode resetar todas as configurações clicando no botão de reset (ícone circular com seta).</li>
-              <li>Lembre-se de salvar suas configurações após fazer alterações.</li>
-            </ul>
-          </div>
-
-          <div className="pt-4 flex justify-end">
-            <button
-              onClick={() => setShowInfoModal(false)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Entendi
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Generated Descriptions Modal */}
-      <Modal
-        isOpen={isDescriptionsModalOpen}
-        onClose={() => setIsDescriptionsModalOpen(false)}
-        title="Descrições Geradas com IA"
-        maxWidth="lg"
-      >
-        <div className="p-6 space-y-6">
-          <p className="text-gray-700 mb-4">
-            A IA analisou suas etapas de atendimento e gerou as seguintes descrições para cada movimentação:
-          </p>
-          
-          <div className="space-y-4 max-h-[400px] overflow-y-auto">
-            {generatedDescriptions.map((desc) => (
-              <div key={desc.ordem} className="bg-gray-50 p-4 rounded-lg border border-gray-300">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-semibold">
-                    {desc.ordem}
-                  </div>
-                  <h4 className="font-medium text-gray-900">Movimentação #{desc.ordem}</h4>
-                </div>
-                <p className="text-gray-700 whitespace-pre-wrap">{desc.descricao}</p>
+      {/* Modal: Reset Confirmation */}
+      {isResetModalOpen && createPortal(
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 10000 }}
+             onClick={() => setIsResetModalOpen(false)}>
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-red-600" />
               </div>
-            ))}
-          </div>
-          
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              onClick={() => setIsDescriptionsModalOpen(false)}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              Fechar
-            </button>
-            <button
-              onClick={() => setIsConfirmModalOpen(true)}
-              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-            >
-              Aplicar Descrições
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Confirmation Modal */}
-      <Modal
-        isOpen={isConfirmModalOpen}
-        onClose={() => setIsConfirmModalOpen(false)}
-        title="Confirmar Aplicação das Descrições"
-      >
-        <div className="p-6 space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-amber-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                Tem certeza que deseja aplicar estas descrições?
-              </h3>
-              <p className="text-gray-500 mt-1">
-                Esta ação substituirá todas as descrições atuais das suas movimentações. A alteração é irreversível.
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Resetar Configurações</h3>
+              <p className="text-gray-600 mb-6">
+                Tem certeza que deseja resetar todas as configurações? Esta ação não pode ser desfeita.
               </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsResetModalOpen(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleReset}
+                  disabled={resetting}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+                >
+                  {resetting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Resetando...
+                    </>
+                  ) : (
+                    'Sim, Resetar'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
+        </div>,
+        document.body
+      )}
 
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              onClick={() => setIsConfirmModalOpen(false)}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleApplyGeneratedDescriptions}
-              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-            >
-              Sim, Aplicar Descrições
-            </button>
+      {/* Modal: Info */}
+      {showInfoModal && createPortal(
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}
+             onClick={() => setShowInfoModal(false)}>
+          <div className="bg-white rounded-xl max-w-3xl w-full shadow-2xl" style={{ maxHeight: '90vh', overflow: 'auto' }}
+               onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 space-y-6">
+              <div className="flex items-center justify-between border-b pb-4">
+                <h2 className="text-2xl font-bold text-gray-900">Como Funciona a Movimentação Automática</h2>
+                <button onClick={() => setShowInfoModal(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Visão Geral</h3>
+                <p className="text-gray-700">
+                  A Movimentação Automática conecta seu Agente de IA com o CRM, permitindo que leads sejam movidos automaticamente entre os status do funil de vendas com base nas etapas de atendimento do agente.
+                </p>
+
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <p className="text-blue-800 font-medium mb-2">Exemplo prático:</p>
+                  <p className="text-blue-700">
+                    Quando um lead agenda uma reunião com o agente (Etapa "Agendamento"), ele é automaticamente movido para o status "Reunião Agendada" no seu funil de CRM.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Como Configurar</h3>
+
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="font-medium text-gray-800 mb-1">1. Etapa de Atendimento</h4>
+                    <p className="text-gray-700 text-sm">
+                      Selecione a etapa do agente que acionará a movimentação automática quando o lead atingi-la durante a conversa.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium text-gray-800 mb-1">2. Funil e Status do Lead</h4>
+                    <p className="text-gray-700 text-sm">
+                      Escolha o funil e o status para onde o lead será movido automaticamente.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium text-gray-800 mb-1">3. Descrição (Opcional)</h4>
+                    <p className="text-gray-700 text-sm">
+                      Documente quando e por que esta movimentação deve ocorrer.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-900">Dicas Importantes</h3>
+                <ul className="list-disc list-inside space-y-2 text-gray-700 text-sm">
+                  <li>Configure movimentações apenas para etapas significativas do processo</li>
+                  <li>Certifique-se de que as etapas estão alinhadas com os status do funil</li>
+                  <li>Ative a funcionalidade usando o toggle após configurar</li>
+                  <li>Lembre-se de salvar suas configurações</li>
+                </ul>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t">
+                <button
+                  onClick={() => setShowInfoModal(false)}
+                  className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+                >
+                  Entendi
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </Modal>
-    </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Modal: Generated Descriptions */}
+      {isDescriptionsModalOpen && createPortal(
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}
+             onClick={() => setIsDescriptionsModalOpen(false)}>
+          <div className="bg-white rounded-xl max-w-3xl w-full shadow-2xl" style={{ maxHeight: '90vh', overflow: 'auto' }}
+               onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 space-y-6">
+              <div className="flex items-center justify-between border-b pb-4">
+                <h2 className="text-xl font-bold text-gray-900">Descrições Geradas com IA</h2>
+                <button onClick={() => setIsDescriptionsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <p className="text-gray-700">
+                A IA analisou suas etapas de atendimento e gerou as seguintes descrições:
+              </p>
+
+              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                {generatedDescriptions.map((desc) => (
+                  <div key={desc.ordem} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold text-sm">
+                        {desc.ordem}
+                      </div>
+                      <h4 className="font-medium text-gray-900">Movimentação #{desc.ordem}</h4>
+                    </div>
+                    <p className="text-gray-700 text-sm whitespace-pre-wrap">{desc.descricao}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button
+                  onClick={() => setIsDescriptionsModalOpen(false)}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Fechar
+                </button>
+                <button
+                  onClick={() => setIsConfirmModalOpen(true)}
+                  className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+                >
+                  Aplicar Descrições
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Modal: Confirm Apply */}
+      {isConfirmModalOpen && createPortal(
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 10000 }}
+             onClick={() => setIsConfirmModalOpen(false)}>
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="w-8 h-8 text-amber-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Confirmar Aplicação</h3>
+              <p className="text-gray-600 mb-6">
+                As descrições geradas substituirão as descrições atuais. Esta ação é irreversível.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsConfirmModalOpen(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleApplyGeneratedDescriptions}
+                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+                >
+                  Sim, Aplicar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
   );
 }

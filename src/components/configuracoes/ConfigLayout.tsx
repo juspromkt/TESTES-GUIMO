@@ -64,12 +64,7 @@ export default function ConfigLayout({
 
         {/* Conteúdo principal */}
         <main className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-300 p-8">
-          <header className="mb-8">
-            <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
-            <p className="text-sm text-gray-500 mt-1">{description}</p>
-          </header>
-
-          <div className="max-w-6xl mx-auto">{children}</div>
+          {children}
         </main>
       </div>
     </div>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Filter, ArrowUpDown, Trash2, Loader2, AlertCircle } from 'lucide-react';
 import Pagination from '../Pagination';
-import Modal from '../Modal';
 import { hasPermission } from '../../utils/permissions';
 
 interface DirectDispatch {
@@ -309,9 +309,18 @@ setDispatches(
       </div>
 
       {/* Create Modal */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg">
+      {isCreateModalOpen && createPortal(
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
+          onClick={() => {
+            setIsCreateModalOpen(false);
+            setFormData({ nome: '', publico: '', cidade: '' });
+          }}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Novo Disparo Direto
@@ -378,63 +387,71 @@ setDispatches(
               </form>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          setSelectedDispatch(null);
-        }}
-        title="Confirmar Exclusão"
-      >
-        <div className="p-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-red-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                Tem certeza que deseja excluir?
-              </h3>
-              <p className="text-gray-500 mt-1">
-                Esta ação não pode ser desfeita.
-              </p>
-            </div>
-          </div>
+      {isDeleteModalOpen && createPortal(
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
+          onClick={() => {
+            setIsDeleteModalOpen(false);
+            setSelectedDispatch(null);
+          }}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Tem certeza que deseja excluir?
+                  </h3>
+                  <p className="text-gray-500 mt-1">
+                    Esta ação não pode ser desfeita.
+                  </p>
+                </div>
+              </div>
 
-          <div className="flex justify-end gap-3 mt-6">
-            <button
-              onClick={() => {
-                setIsDeleteModalOpen(false);
-                setSelectedDispatch(null);
-              }}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md disabled:opacity-50"
-            >
-              {deleting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Excluindo...</span>
-                </>
-              ) : (
-                <>
-                  <Trash2 className="w-4 h-4" />
-                  <span>Excluir</span>
-                </>
-              )}
-            </button>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setIsDeleteModalOpen(false);
+                    setSelectedDispatch(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md disabled:opacity-50"
+                >
+                  {deleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Excluindo...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      <span>Excluir</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </Modal>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

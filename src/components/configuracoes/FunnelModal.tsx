@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Loader2,
   X,
@@ -11,7 +12,6 @@ import {
 } from 'lucide-react';
 // Removido hello-pangea/dnd para evitar bugs recorrentes
 import type { Funil, Estagio } from '../../types/funil';
-import Modal from '../Modal';
 
 interface FunnelModalProps {
   isOpen: boolean;
@@ -23,6 +23,19 @@ interface FunnelModalProps {
   token: string;
   canEdit: boolean;
 }
+
+// Cores predefinidas profissionais
+const PRESET_COLORS = [
+  { bg: '#EEF2FF', text: '#3730A3', name: 'Indigo' },
+  { bg: '#DBEAFE', text: '#1E40AF', name: 'Azul' },
+  { bg: '#D1FAE5', text: '#065F46', name: 'Verde' },
+  { bg: '#FEF3C7', text: '#92400E', name: 'Amarelo' },
+  { bg: '#FED7AA', text: '#9A3412', name: 'Laranja' },
+  { bg: '#FECACA', text: '#991B1B', name: 'Vermelho' },
+  { bg: '#E9D5FF', text: '#6B21A8', name: 'Roxo' },
+  { bg: '#FBCFE8', text: '#9F1239', name: 'Rosa' },
+  { bg: '#E5E7EB', text: '#1F2937', name: 'Cinza' },
+];
 
 export default function FunnelModal({
   isOpen,
@@ -37,9 +50,8 @@ export default function FunnelModal({
   const [stages, setStages] = useState<Estagio[]>([]);
   const [editingStage, setEditingStage] = useState<Estagio | null>(null);
   const [newStageName, setNewStageName] = useState('');
-  const [newStageColor, setNewStageColor] = useState('#ffffff');
-  const [newStagePrimaryColor, setNewStagePrimaryColor] = useState('#000000');
-  const [newStageSecondaryColor, setNewStageSecondaryColor] = useState('#6b7280');
+  const [selectedColorIndex, setSelectedColorIndex] = useState(0);
+  const [editingColorIndex, setEditingColorIndex] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -79,14 +91,15 @@ export default function FunnelModal({
 
     try {
       const nextOrder = (stages.length + 1).toString();
+      const selectedColor = PRESET_COLORS[selectedColorIndex];
       const newStage: Estagio = {
         Id: '',
         nome: newStageName,
         id_funil: selectedFunil.id.toString(),
         ordem: nextOrder,
-        cor: newStageColor,
-        cor_texto_principal: newStagePrimaryColor,
-        cor_texto_secundario: newStageSecondaryColor,
+        cor: selectedColor.bg,
+        cor_texto_principal: selectedColor.text,
+        cor_texto_secundario: selectedColor.text,
         isFollowUp: false,
         isReuniaoAgendada: false,
         isPerdido: false,
@@ -96,9 +109,7 @@ export default function FunnelModal({
       await onSaveStage(newStage);
       await fetchUpdatedFunnel();
       setNewStageName('');
-      setNewStageColor('#ffffff');
-      setNewStagePrimaryColor('#000000');
-      setNewStageSecondaryColor('#6b7280');
+      setSelectedColorIndex(0);
     } catch (err) {
       console.error('Error adding stage:', err);
       setError('Error adding stage');
@@ -251,73 +262,74 @@ const handleDragEnd = () => {
   setDragOverIndex(null);
 };
 
-return (
-  <>
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={selectedFunil ? `Editar Funil: ${selectedFunil.nome}` : 'Editar Funil'}
-      width="90vw"
-      maxWidth="900px"
-      height="85vh"
-      maxHeight="700px"
-    >
-      <div className="h-full flex flex-col">
-        {/* Header */}
-        <div className="flex-shrink-0 border-b bg-gray-50 p-4 mb-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <h3 className="text-lg font-semibold text-gray-900">Configurações do Funil</h3>
-              
-              <label className="flex items-center gap-2">
-<div className="flex items-center gap-4">
-  {/* Switch bonito */}
-  <button
-    onClick={handleToggleDefaultFunnel}
-    disabled={updatingDefault}
-    className={`relative w-14 h-8 flex items-center rounded-full transition-all duration-300 shadow-sm
-      ${isDefaultFunnel ? 'bg-blue-600' : 'bg-gray-300'}
-      ${updatingDefault ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
-  >
+  if (!isOpen) return null;
+
+  const mainModal = createPortal(
     <div
-      className={`absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300
-        ${isDefaultFunnel ? 'translate-x-6' : ''}`}
-    ></div>
-  </button>
-
-  {/* Texto ao lado */}
-  <span className="text-sm text-gray-700">
-    {updatingDefault ? (
-      <span className="flex items-center gap-1">
-        <Loader2 className="w-3 h-3 animate-spin" />
-        Atualizando...
-      </span>
-    ) : (
-      <>
-        <strong className="text-gray-900">Funil Padrão</strong> — Deixe ativado para que novos leads sejam adicionados automaticamente a este funil.
-      </>
-    )}
-  </span>
-</div>
-
-              </label>
-            </div>
-            
-            <button 
-              onClick={() => setIsDeleteModalOpen(true)} 
-              className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 border border-red-200 rounded-md transition-colors"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex-shrink-0 flex items-center justify-between p-5 border-b border-gray-200 bg-gray-50">
+          <h2 className="text-xl font-semibold text-gray-900">
+            {selectedFunil?.nome}
+          </h2>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              title="Excluir Funil"
             >
-              <Trash2 className="w-4 h-4" />
-              Excluir Funil
+              <Trash2 className="w-5 h-5" />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
+        {/* Funil Padrão Toggle */}
+        <div className="flex-shrink-0 p-4 bg-blue-50 border-b border-blue-100">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleToggleDefaultFunnel}
+              disabled={updatingDefault}
+              className={`relative w-11 h-6 flex items-center rounded-full transition-all duration-300 shadow-sm
+                ${isDefaultFunnel ? 'bg-blue-600' : 'bg-gray-300'}
+                ${updatingDefault ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+              <div
+                className={`absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300
+                  ${isDefaultFunnel ? 'translate-x-5' : ''}`}
+              ></div>
+            </button>
+            <span className="text-sm text-gray-700">
+              {updatingDefault ? (
+                <span className="flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Atualizando...
+                </span>
+              ) : (
+                <>
+                  <strong className="text-gray-900">Funil Padrão</strong> — Novos leads serão adicionados automaticamente a este funil
+                </>
+              )}
+            </span>
+          </div>
+        </div>
+
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-4">
+        <div className="flex-1 overflow-y-auto p-5">
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-red-600" />
                 <p className="text-sm text-red-800">{error}</p>
@@ -327,14 +339,14 @@ return (
 
           {/* Stages */}
           <div className="mb-6">
-            <h4 className="text-base font-medium text-gray-900 mb-4">Estágios do Funil</h4>
+            <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Status do Lead</h4>
             
             {stages.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <p className="text-sm">Nenhum estágio configurado</p>
+              <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                <p className="text-sm">Nenhum status configurado</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {stages.map((stage, index) => (
                   <div
                     key={stage.Id}
@@ -345,9 +357,9 @@ return (
                     onDrop={(e) => handleDrop(e, index)}
                     onDragEnd={handleDragEnd}
                     className={`
-                      border rounded-lg p-4 cursor-move transition-all
+                      border rounded-lg p-3 cursor-move transition-all
                       ${draggedIndex === index ? 'opacity-50' : ''}
-                      ${dragOverIndex === index && draggedIndex !== index ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-white hover:border-gray-300'}
+                      ${dragOverIndex === index && draggedIndex !== index ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}
                     `}
                     style={{ backgroundColor: stage.cor || '#ffffff' }}
                   >
@@ -357,53 +369,51 @@ return (
                           type="text"
                           value={editingStage.nome}
                           onChange={(e) => setEditingStage({ ...editingStage, nome: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Nome do estágio"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Nome do status"
                           autoFocus
                         />
-                        
-                        <div className="flex gap-4">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Cor de fundo</label>
-                            <input
-                              type="color"
-                              value={editingStage.cor || '#ffffff'}
-                              onChange={(e) => setEditingStage({ ...editingStage, cor: e.target.value })}
-                              className="w-16 h-8 border border-gray-300 rounded cursor-pointer"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Texto principal</label>
-                            <input
-                              type="color"
-                              value={editingStage.cor_texto_principal || '#000000'}
-                              onChange={(e) => setEditingStage({ ...editingStage, cor_texto_principal: e.target.value })}
-                              className="w-16 h-8 border border-gray-300 rounded cursor-pointer"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Texto secundário</label>
-                            <input
-                              type="color"
-                              value={editingStage.cor_texto_secundario || '#6b7280'}
-                              onChange={(e) => setEditingStage({ ...editingStage, cor_texto_secundario: e.target.value })}
-                              className="w-16 h-8 border border-gray-300 rounded cursor-pointer"
-                            />
+
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-2">Selecione uma cor</label>
+                          <div className="flex flex-wrap gap-2">
+                            {PRESET_COLORS.map((color, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => {
+                                  setEditingColorIndex(idx);
+                                  setEditingStage({
+                                    ...editingStage,
+                                    cor: color.bg,
+                                    cor_texto_principal: color.text,
+                                    cor_texto_secundario: color.text
+                                  });
+                                }}
+                                className={`w-10 h-10 rounded-lg border-2 transition-all ${
+                                  editingStage.cor === color.bg
+                                    ? 'border-gray-900 ring-2 ring-gray-300'
+                                    : 'border-gray-200 hover:border-gray-400'
+                                }`}
+                                style={{ backgroundColor: color.bg }}
+                                title={color.name}
+                              />
+                            ))}
                           </div>
                         </div>
 
                         <div className="flex gap-2">
-                          <button 
-                            onClick={handleUpdateStage} 
-                            disabled={saving} 
-                            className="flex items-center gap-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-md disabled:opacity-50"
+                          <button
+                            onClick={handleUpdateStage}
+                            disabled={saving}
+                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-lg disabled:opacity-50 transition-colors"
                           >
                             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                             Salvar
                           </button>
-                          <button 
-                            onClick={() => setEditingStage(null)} 
-                            className="flex items-center gap-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm rounded-md"
+                          <button
+                            onClick={() => setEditingStage(null)}
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-lg transition-colors"
                           >
                             <X className="w-4 h-4" />
                             Cancelar
@@ -413,31 +423,37 @@ return (
                     ) : (
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <GripVertical className="w-5 h-5 text-gray-400" />
+                          <GripVertical className="w-4 h-4 text-gray-400" />
                           <div className="flex items-center gap-2">
-                            <span className="w-6 h-6 bg-blue-100 text-blue-800 text-xs font-medium rounded-full flex items-center justify-center">
+                            <span className="w-7 h-7 bg-white bg-opacity-50 text-xs font-semibold rounded-full flex items-center justify-center border border-gray-200"
+                              style={{ color: stage.cor_texto_principal || '#000000' }}>
                               {stage.ordem}
                             </span>
                             <h5
-                              className="font-medium"
+                              className="font-medium text-sm"
                               style={{ color: stage.cor_texto_principal || '#000000' }}
                             >
                               {stage.nome}
                             </h5>
                           </div>
                         </div>
-                        
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={() => setEditingStage(stage)} 
-                            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md"
+
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => {
+                              setEditingStage(stage);
+                              // Find the color index for this stage
+                              const colorIdx = PRESET_COLORS.findIndex(c => c.bg === stage.cor);
+                              setEditingColorIndex(colorIdx >= 0 ? colorIdx : 0);
+                            }}
+                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-white hover:bg-opacity-50 rounded-md transition-colors"
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
-                          <button 
-                            onClick={() => handleDeleteStage(stage.Id)} 
-                            disabled={saving} 
-                            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md disabled:opacity-50"
+                          <button
+                            onClick={() => handleDeleteStage(stage.Id)}
+                            disabled={saving}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-white hover:bg-opacity-50 rounded-md disabled:opacity-50 transition-colors"
                           >
                             {saving ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
@@ -455,117 +471,129 @@ return (
           </div>
 
           {/* Add New Stage */}
-          <div className="border-t pt-6">
-            <h4 className="text-base font-medium text-gray-900 mb-4">Adicionar Novo Estágio</h4>
-            
-            <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
-              <div className="space-y-4">
+          <div className="border-t pt-5">
+            <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Adicionar Novo Status do Lead</h4>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="space-y-3">
                 <input
                   type="text"
                   value={newStageName}
                   onChange={(e) => setNewStageName(e.target.value)}
-                  placeholder="Nome do novo estágio"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Nome do novo status"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   onKeyPress={(e) => e.key === 'Enter' && handleAddStage()}
                 />
-                
-                <div className="flex gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Cor de fundo</label>
-                    <input
-                      type="color"
-                      value={newStageColor}
-                      onChange={(e) => setNewStageColor(e.target.value)}
-                      className="w-16 h-8 border border-gray-300 rounded cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Texto principal</label>
-                    <input
-                      type="color"
-                      value={newStagePrimaryColor}
-                      onChange={(e) => setNewStagePrimaryColor(e.target.value)}
-                      className="w-16 h-8 border border-gray-300 rounded cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Texto secundário</label>
-                    <input
-                      type="color"
-                      value={newStageSecondaryColor}
-                      onChange={(e) => setNewStageSecondaryColor(e.target.value)}
-                      className="w-16 h-8 border border-gray-300 rounded cursor-pointer"
-                    />
-                  </div>
-                  <div className="flex-1 flex items-end">
-                    <button
-                      onClick={handleAddStage}
-                      disabled={!newStageName.trim() || saving}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md disabled:opacity-50"
-                    >
-                      {saving ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Plus className="w-4 h-4" />
-                      )}
-                      Adicionar Estágio
-                    </button>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">Selecione uma cor</label>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {PRESET_COLORS.map((color, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setSelectedColorIndex(idx)}
+                        className={`w-10 h-10 rounded-lg border-2 transition-all ${
+                          selectedColorIndex === idx
+                            ? 'border-gray-900 ring-2 ring-gray-300'
+                            : 'border-gray-200 hover:border-gray-400'
+                        }`}
+                        style={{ backgroundColor: color.bg }}
+                        title={color.name}
+                      />
+                    ))}
                   </div>
                 </div>
+
+                <button
+                  onClick={handleAddStage}
+                  disabled={!newStageName.trim() || saving}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Adicionando...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      Adicionar Status
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </Modal>
+    </div>,
+    document.body
+  );
 
-    {/* Delete Confirmation Modal */}
-    <Modal
-      isOpen={isDeleteModalOpen}
-      onClose={() => setIsDeleteModalOpen(false)}
-      title="Confirmar Exclusão"
-      maxWidth="400px"
+  // Delete confirmation modal
+  const deleteModal = isDeleteModalOpen && createPortal(
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[10000]"
+      onClick={() => setIsDeleteModalOpen(false)}
     >
-      <div className="p-4">
-        <div className="flex items-start gap-3 mb-4">
-          <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
-          <div>
-            <p className="text-sm text-gray-600 mb-2">
-              Tem certeza que deseja excluir este funil? Esta ação não pode ser desfeita.
-            </p>
-            <p className="text-xs text-red-600">
-              Todos os estágios e leads associados serão removidos permanentemente.
-            </p>
+      <div
+        className="bg-white rounded-lg shadow-xl w-full max-w-md"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-6">
+          <div className="flex items-start gap-4 mb-4">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Confirmar Exclusão
+              </h3>
+              <p className="text-sm text-gray-600 mb-2">
+                Tem certeza que deseja excluir este funil? Esta ação não pode ser desfeita.
+              </p>
+              <p className="text-xs text-red-600">
+                Todos os status e leads associados serão removidos permanentemente.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleDeleteFunil}
+              disabled={deleting}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-50 transition-colors"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  Excluir
+                </>
+              )}
+            </button>
           </div>
         </div>
-
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={() => setIsDeleteModalOpen(false)}
-            className="px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleDeleteFunil}
-            disabled={deleting}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-md disabled:opacity-50"
-          >
-            {deleting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Excluindo...
-              </>
-            ) : (
-              <>
-                <Trash2 className="w-4 h-4" />
-                Excluir
-              </>
-            )}
-          </button>
-        </div>
       </div>
-    </Modal>
-  </>
-);
+    </div>,
+    document.body
+  );
+
+  return (
+    <>
+      {mainModal}
+      {deleteModal}
+    </>
+  );
 }

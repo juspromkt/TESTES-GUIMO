@@ -75,7 +75,7 @@ export default function Configuracoes() {
   return (
     <ConfigLayout
       title="Configurações"
-      description="Painel central de configurações do sistema."
+      description=""
       sections={sections.filter((s) => s.show)}
       activeSection={activeSection}
       setActiveSection={(id) => setActiveSection(id as SectionId)}

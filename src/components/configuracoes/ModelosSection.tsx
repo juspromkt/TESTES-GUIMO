@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Loader2, Plus, X, Trash2, AlertCircle, Pencil, Check } from 'lucide-react';
 import type { Fonte } from '../../types/fonte';
 import Pagination from '../Pagination';
@@ -261,9 +262,19 @@ setModelos(sanitized);
       </div>
 
       {/* Create/Edit Modal */}
-{canEdit && isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg">
+{canEdit && isModalOpen && createPortal(
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
+          onClick={() => {
+            setIsModalOpen(false);
+            setSelectedModelo(null);
+            setFormData({ nome: '', texto: '' });
+          }}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between p-6 border-b border-gray-300">
               <h3 className="text-lg font-semibold text-gray-900">
                 {selectedModelo ? 'Editar Modelo' : 'Novo Modelo'}
@@ -371,13 +382,23 @@ setModelos(sanitized);
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Delete Confirmation Modal */}
-      {isDeleteModalOpen && selectedModelo && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+      {isDeleteModalOpen && selectedModelo && createPortal(
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
+          onClick={() => {
+            setIsDeleteModalOpen(false);
+            setSelectedModelo(null);
+          }}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
@@ -423,7 +444,8 @@ setModelos(sanitized);
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

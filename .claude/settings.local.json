@@ -5,7 +5,10 @@
       "Bash(npm run dev)",
       "Bash(npx tsc:*)",
       "Bash(npm uninstall @remotion/whisper-web)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(dir:*)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Link, 
+import {
+  LayoutDashboard,
+  Link,
   Settings,
   LogOut,
   ChevronDown,
@@ -20,7 +20,9 @@ import {
   Sun,
   Moon,
   Users,
-  BookOpen
+  BookOpen,
+  Menu,
+  X
 } from 'lucide-react';
 import { DomainConfig } from '../utils/DomainConfig';
 import Modal from './Modal';
@@ -152,10 +154,46 @@ const Sidebar = () => {
   storedUser?.nome_cliente ??
   'Desconhecido';
 
-  const isMobile = window.innerWidth < 768;
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   // Determina se a sidebar deve aparecer expandida (hover ou não colapsada)
   const isExpanded = !isCollapsed || isHovered;
+
+  // Detecta mudanças no tamanho da tela
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Handlers para gestos de swipe no mobile
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+
+    if (isLeftSwipe && isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+    }
+  };
 
   const filteredLinkedAccounts = useMemo(() => {
     const term = linkedAccountsSearch.trim().toLowerCase();
@@ -550,6 +588,262 @@ const Sidebar = () => {
 
   return (
     <>
+      {/* Mobile Top Navigation - Todas as páginas */}
+      {isMobile && (
+        <>
+          {/* Overlay quando menu está aberto */}
+          {isMobileMenuOpen && (
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-opacity duration-300"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+          )}
+
+          {/* Drawer lateral para mobile */}
+          <div
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            className={`fixed top-0 left-0 bottom-0 w-72 max-w-[85vw] z-[9999] ${domainConfig.getSidebarColor()} border-r border-gray-300 backdrop-blur-md shadow-2xl transform transition-transform duration-300 ease-out ${
+              isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
+          >
+            {/* Header do drawer */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-300/50" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+              <img
+                src={logos.full}
+                alt="Logo"
+                className="h-12 object-contain"
+              />
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 rounded-lg hover:bg-white/10 active:bg-white/20 transition-colors touch-manipulation"
+                aria-label="Fechar menu"
+              >
+                <X className="w-6 h-6 text-gray-700" />
+              </button>
+            </div>
+
+            {/* Conteúdo do drawer */}
+            <nav className="flex flex-col h-[calc(100%-80px)] overflow-y-auto p-4 space-y-2 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+              {/* Workspace Button */}
+              <button
+                onClick={() => {
+                  setIsWorkspaceModalOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-white/60 backdrop-blur-sm border border-gray-300/70 hover:bg-white active:bg-white/90 hover:shadow-md active:scale-[0.98] transition-all duration-200 text-gray-800 touch-manipulation"
+                aria-label="Selecionar Workspace"
+              >
+                <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div className="flex flex-col items-start text-left">
+                  <span className="text-[13px] font-semibold tracking-tight">
+                    Workspace
+                  </span>
+                  <span className="text-xs text-gray-500 truncate mt-[2px]">
+                    {currentWorkspaceName ?? 'Desconhecido'}
+                  </span>
+                </div>
+              </button>
+
+              {/* Menu Items */}
+              <div className="flex flex-col space-y-1 pt-4">
+                {getMenuItems().map((item) =>
+                  item.text === 'Tutoriais' ? (
+                    <div key="tutorial-section">
+                      <hr className="mx-2 my-3 border-t border-gray-300/40" />
+                      <a
+                        href="https://tutorial.guimoo.com.br/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 active:scale-[0.98] touch-manipulation ${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} hover:shadow-md active:shadow-lg`}
+                      >
+                        <div className="p-2 rounded-lg bg-white/10 group-hover:bg-white/20 transition-all">
+                          <item.icon className="w-6 h-6" />
+                        </div>
+                        <span className="text-sm font-semibold">{item.text}</span>
+                      </a>
+
+                      <a
+                        href="https://wa.me/553892590370"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="group flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 active:scale-[0.98] touch-manipulation text-emerald-700 hover:text-white hover:bg-emerald-500 active:bg-emerald-600 hover:shadow-md active:shadow-lg mt-1"
+                      >
+                        <div className="p-2 rounded-lg bg-emerald-50 group-hover:bg-emerald-600/90 group-hover:text-white transition-all">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                            className="w-5 h-5"
+                          >
+                            <path d="M16.61 14.18c-.27-.14-1.62-.8-1.87-.9-.25-.09-.43-.14-.61.14-.18.27-.7.9-.85 1.09-.16.18-.31.2-.58.07-.27-.14-1.15-.43-2.19-1.37-.81-.72-1.36-1.61-1.52-1.88-.16-.27-.02-.42.12-.56.13-.13.27-.31.4-.47.13-.16.18-.27.27-.45.09-.18.05-.34-.02-.48-.07-.14-.61-1.47-.84-2.02-.22-.53-.45-.45-.61-.45-.16 0-.34-.02-.52-.02s-.48.07-.73.34c-.25.27-.96.93-.96 2.27s.98 2.64 1.12 2.82c.13.18 1.93 2.95 4.68 4.14.65.28 1.16.45 1.56.58.65.21 1.24.18 1.71.11.52-.08 1.62-.66 1.85-1.3.23-.65.23-1.2.16-1.32-.06-.12-.25-.2-.52-.34z" />
+                            <path d="M12.04 2C6.51 2 2 6.5 2 12c0 2.06.68 3.97 1.83 5.52L2 22l4.61-1.77A9.93 9.93 0 0 0 12.04 22c5.53 0 10.04-4.5 10.04-10S17.57 2 12.04 2zm0 18.09a8.1 8.1 0 0 1-4.13-1.15l-.3-.18-2.73 1.05.73-2.64-.18-.27A8.07 8.07 0 1 1 12.04 20.1z" />
+                          </svg>
+                        </div>
+                        <span className="text-sm font-semibold">Suporte</span>
+                      </a>
+                    </div>
+                  ) : (
+                    <button
+                      key={item.path}
+                      onClick={() => {
+                        navigate(item.path);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 active:scale-[0.98] touch-manipulation ${
+                        currentPath.startsWith(item.path)
+                          ? `${domainConfig.getActiveBg()} ${domainConfig.getActiveColor()} shadow-lg scale-[1.02]`
+                          : `${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} hover:shadow-md active:shadow-lg`
+                      }`}
+                    >
+                      <div className={`p-2 rounded-lg transition-all ${
+                        currentPath.startsWith(item.path)
+                          ? 'bg-white/20'
+                          : 'bg-white/10 group-hover:bg-white/20'
+                      }`}>
+                        <item.icon className="w-6 h-6" />
+                      </div>
+                      <span className="text-sm font-semibold">{item.text}</span>
+                      {item.isBeta && (
+                        <span className="text-[10px] text-emerald-600 bg-emerald-100/90 px-2 py-1 rounded-full uppercase tracking-wider font-bold">
+                          BETA
+                        </span>
+                      )}
+                    </button>
+                  )
+                )}
+              </div>
+
+              {/* Profile Section */}
+              <div className="mt-auto pt-4 border-t border-gray-300/40 space-y-3">
+                <button
+                  onClick={() => {
+                    setIsPasswordModalOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`group w-full flex items-center gap-3 px-4 py-3.5 rounded-xl active:scale-[0.98] touch-manipulation ${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} hover:shadow-md active:shadow-lg transition-all`}
+                  aria-label="Trocar senha"
+                >
+                  <div className="p-2 rounded-lg bg-white/10 group-hover:bg-white/20 transition-all">
+                    <Key className="w-5 h-5" />
+                  </div>
+                  <span className="text-sm font-semibold">Trocar senha</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="group w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-red-50 text-red-700 hover:bg-red-100 active:bg-red-200 hover:shadow-md active:shadow-lg active:scale-[0.98] touch-manipulation transition-all"
+                  aria-label="Sair da conta"
+                >
+                  <div className="p-2 rounded-lg bg-red-100 group-hover:bg-red-200 transition-all">
+                    <LogOut className="w-5 h-5" />
+                  </div>
+                  <span className="text-sm font-semibold">Sair</span>
+                </button>
+              </div>
+            </nav>
+          </div>
+
+          {/* Top Navigation Bar - Fixo no topo */}
+          <div
+            className="fixed top-0 left-0 right-0 z-[9997] bg-white border-b border-gray-200 shadow-sm"
+            style={{ paddingTop: 'env(safe-area-inset-top)' }}
+          >
+            {/* Header com logo e botão de usuário */}
+            <div className="flex items-center justify-between px-3 py-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  className="p-2 -ml-1 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation"
+                  aria-label="Abrir menu"
+                >
+                  <Menu className="w-5 h-5 text-gray-700" />
+                </button>
+                <img
+                  src={logos.full}
+                  alt="Logo"
+                  className="h-14 object-contain"
+                />
+              </div>
+              <button
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                className={`w-9 h-9 rounded-full ${domainConfig.getProfileBg()} flex items-center justify-center text-sm font-bold shadow-sm hover:shadow-md transition-shadow touch-manipulation`}
+              >
+                {initials}
+              </button>
+            </div>
+
+            {/* Profile Dropdown */}
+            {isProfileMenuOpen && (
+              <>
+                {/* Overlay */}
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsProfileMenuOpen(false)}
+                />
+                <div className="absolute top-full right-4 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
+                <div className="p-4 border-b border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-full ${domainConfig.getProfileBg()} flex items-center justify-center text-base font-bold`}>
+                      {initials}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{userName}</p>
+                      <p className="text-xs text-gray-500">{currentWorkspaceName}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-2">
+                  <button
+                    onClick={() => {
+                      setIsWorkspaceModalOpen(true);
+                      setIsProfileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation text-left"
+                  >
+                    <Users className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm text-gray-700">Trocar Workspace</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsPasswordModalOpen(true);
+                      setIsProfileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation text-left"
+                  >
+                    <Key className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm text-gray-700">Trocar Senha</span>
+                  </button>
+                </div>
+                <div className="p-2 border-t border-gray-100">
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsProfileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 active:bg-red-100 transition-colors touch-manipulation text-left text-red-600"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="text-sm font-medium">Sair</span>
+                  </button>
+                </div>
+              </div>
+              </>
+            )}
+          </div>
+        </>
+      )}
+
+
+      {/* Desktop Sidebar */}
 <div
   ref={sidebarRef}
   id="sidebar-container"
@@ -559,6 +853,7 @@ const Sidebar = () => {
     domainConfig.getSidebarColor()
   } border-r border-gray-300 backdrop-blur-md shadow-xl
   ${isExpanded ? 'w-56' : 'w-16'}
+  ${isMobile ? 'hidden' : ''}
   `}
   style={{
     willChange: 'width, transform',

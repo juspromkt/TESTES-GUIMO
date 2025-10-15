@@ -3291,7 +3291,7 @@ case "stickerMessage": {
     (transferLookup ? transferSet.has(transferLookup) : false);
 
 return (
-  <div className="h-full flex relative">
+  <div className="h-full flex relative" data-message-view="true">
     <div
       className={`flex-1 flex flex-col min-h-0 bg-gradient-to-br from-gray-50 via-white to-gray-100 transition-all duration-300 ${
         sidebarOpen || searchOpen ? 'mr-[420px]' : 'mr-0'
@@ -3323,13 +3323,14 @@ return (
       }}
     >
 {/* Header Premium */}
-<div className="relative flex items-center justify-between px-4 py-2 bg-white/95 backdrop-blur-lg border-b border-gray-200 shadow-sm">
-  <div className="flex items-center space-x-3 flex-1">
+<div className="fixed md:relative top-[131px] md:top-0 left-0 right-0 md:left-auto md:right-auto z-10 md:z-20 flex items-center justify-between px-3 md:px-4 py-2.5 md:py-2 bg-white/95 backdrop-blur-lg border-b border-gray-200 shadow-sm">
+  <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0">
     <button
       onClick={onBack}
-      className="p-1.5 rounded-lg hover:bg-gray-100 transition-all duration-200 md:hidden group"
+      className="p-1.5 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-all duration-200 md:hidden group touch-manipulation flex-shrink-0"
+      aria-label="Voltar"
     >
-      <ArrowLeft className="w-4 h-4 text-gray-600 group-hover:text-gray-800" />
+      <ArrowLeft className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
     </button>
 
     {/* Clickable area - Avatar + Contact Info */}
@@ -3338,33 +3339,33 @@ return (
         setSidebarOpen(!sidebarOpen);
         if (!sidebarOpen) setSearchOpen(false);
       }}
-      className="flex items-center space-x-3 flex-1 cursor-pointer"
+      className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0 cursor-pointer touch-manipulation"
       title="Abrir informações do contato"
     >
       {/* Avatar com Status */}
-      <div className="relative">
+      <div className="relative flex-shrink-0">
         {selectedChat.profilePicUrl ? (
           <img
             src={selectedChat.profilePicUrl}
             alt={displayName}
-            className="h-10 w-10 rounded-full object-cover ring-1 ring-gray-200"
+            className="h-10 w-10 md:h-10 md:w-10 rounded-full object-cover ring-1 ring-gray-200"
           />
         ) : (
-          <div className="h-10 w-10 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold text-xs ring-1 ring-gray-200">
+          <div className="h-10 w-10 md:h-10 md:w-10 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold text-sm ring-1 ring-gray-200">
             {getInitials(displayName)}
           </div>
         )}
-        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-white rounded-full"></div>
+        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 md:w-3 md:h-3 bg-emerald-400 border-2 border-white rounded-full"></div>
       </div>
 
-      <div className="flex-1 text-left">
-        <h3 className="font-semibold text-[15px] text-gray-900 leading-tight flex items-center">
+      <div className="flex-1 text-left min-w-0">
+        <h3 className="font-semibold text-[15px] md:text-[15px] text-gray-900 leading-tight flex items-center truncate">
           {displayName}
         </h3>
 
-        <div className="flex items-center gap-1.5">
-          <Phone className="w-3 h-3 text-slate-400 flex-shrink-0" />
-          <span className="text-[11px] text-slate-500 truncate">
+        <div className="flex items-center gap-1 md:gap-1.5">
+          <Phone className="w-3 h-3 md:w-3 md:h-3 text-slate-400 flex-shrink-0" />
+          <span className="text-[11px] md:text-[11px] text-slate-500 truncate">
             {formatPhoneNumber(selectedChat.remoteJid)}
           </span>
         </div>
@@ -3374,10 +3375,11 @@ return (
     {/* Reload Button */}
     <button
       onClick={handleReloadMessages}
-      className="p-1.5 rounded-full hover:bg-gray-100 transition-all duration-200"
+      className="p-2 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all duration-200 touch-manipulation flex-shrink-0"
       title="Recarregar mensagens"
+      aria-label="Recarregar mensagens"
     >
-      <RefreshCw className="w-3.5 h-3.5 text-gray-600" />
+      <RefreshCw className="w-4 h-4 md:w-3.5 md:h-3.5 text-gray-600" />
     </button>
   </div>
 
@@ -3520,13 +3522,14 @@ return (
     {/* Messages Area */}
     <div
       ref={scrollAreaRef}
-      className="flex-1 overflow-y-auto px-8 py-3 min-h-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent bg-[#efeae2]"
+      className="flex-1 overflow-y-auto px-3 md:px-8 py-3 pt-[56px] md:pt-3 min-h-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent bg-[#efeae2]"
       style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 800 800'%3E%3Cg fill='none' stroke='%23d9d5cd' stroke-width='1'%3E%3Cpath d='M769 229L1037 260.9M927 880L731 737 520 660 309 538 40 599 295 764 126.5 879.5 40 599-197 493 102 382-31 229 126.5 79.5-69-63'/%3E%3Cpath d='M-31 229L237 261 390 382 603 493 308.5 537.5 101.5 381.5M370 905L295 764'/%3E%3Cpath d='M520 660L578 842 731 737 840 599 603 493 520 660 295 764 309 538 390 382 539 269 769 229 577.5 41.5 370 105 295 -36 126.5 79.5 237 261 102 382 40 599 -69 737 127 880'/%3E%3Cpath d='M520-140L578.5 42.5 731-63M603 493L539 269 237 261 370 105M902 382L539 269M390 382L102 382'/%3E%3Cpath d='M-222 42L126.5 79.5 370 105 539 269 577.5 41.5 927 80 769 229 902 382 603 493 731 737M295-36L577.5 41.5M578 842L295 764M40-201L127 80M102 382L-261 269'/%3E%3C/g%3E%3Cg fill='%23d1ccc3'%3E%3Ccircle cx='769' cy='229' r='5'/%3E%3Ccircle cx='539' cy='269' r='5'/%3E%3Ccircle cx='603' cy='493' r='5'/%3E%3Ccircle cx='731' cy='737' r='5'/%3E%3Ccircle cx='520' cy='660' r='5'/%3E%3Ccircle cx='309' cy='538' r='5'/%3E%3Ccircle cx='295' cy='764' r='5'/%3E%3Ccircle cx='40' cy='599' r='5'/%3E%3Ccircle cx='102' cy='382' r='5'/%3E%3Ccircle cx='127' cy='80' r='5'/%3E%3Ccircle cx='370' cy='105' r='5'/%3E%3Ccircle cx='578' cy='42' r='5'/%3E%3Ccircle cx='237' cy='261' r='5'/%3E%3Ccircle cx='390' cy='382' r='5'/%3E%3C/g%3E%3C/svg%3E")`
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 800 800'%3E%3Cg fill='none' stroke='%23d9d5cd' stroke-width='1'%3E%3Cpath d='M769 229L1037 260.9M927 880L731 737 520 660 309 538 40 599 295 764 126.5 879.5 40 599-197 493 102 382-31 229 126.5 79.5-69-63'/%3E%3Cpath d='M-31 229L237 261 390 382 603 493 308.5 537.5 101.5 381.5M370 905L295 764'/%3E%3Cpath d='M520 660L578 842 731 737 840 599 603 493 520 660 295 764 309 538 390 382 539 269 769 229 577.5 41.5 370 105 295 -36 126.5 79.5 237 261 102 382 40 599 -69 737 127 880'/%3E%3Cpath d='M520-140L578.5 42.5 731-63M603 493L539 269 237 261 370 105M902 382L539 269M390 382L102 382'/%3E%3Cpath d='M-222 42L126.5 79.5 370 105 539 269 577.5 41.5 927 80 769 229 902 382 603 493 731 737M295-36L577.5 41.5M578 842L295 764M40-201L127 80M102 382L-261 269'/%3E%3C/g%3E%3Cg fill='%23d1ccc3'%3E%3Ccircle cx='769' cy='229' r='5'/%3E%3Ccircle cx='539' cy='269' r='5'/%3E%3Ccircle cx='603' cy='493' r='5'/%3E%3Ccircle cx='731' cy='737' r='5'/%3E%3Ccircle cx='520' cy='660' r='5'/%3E%3Ccircle cx='309' cy='538' r='5'/%3E%3Ccircle cx='295' cy='764' r='5'/%3E%3Ccircle cx='40' cy='599' r='5'/%3E%3Ccircle cx='102' cy='382' r='5'/%3E%3Ccircle cx='127' cy='80' r='5'/%3E%3Ccircle cx='370' cy='105' r='5'/%3E%3Ccircle cx='578' cy='42' r='5'/%3E%3Ccircle cx='237' cy='261' r='5'/%3E%3Ccircle cx='390' cy='382' r='5'/%3E%3C/g%3E%3C/svg%3E")`,
+        WebkitOverflowScrolling: 'touch'
       }}
       onScroll={handleScroll}
     >
-      <div className="space-y-1.5 max-w-5xl mx-auto">
+      <div className="space-y-1.5 max-w-5xl mx-auto pb-[80px] md:pb-2">
         {loadingMore && (
           <div className="flex justify-center py-6">
             <div className="flex items-center space-x-3 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm">
@@ -3658,16 +3661,16 @@ return (
 
                 <div
                   className={`
-                    max-w-[65%] rounded-lg shadow-sm transition-all duration-100
+                    max-w-[85%] md:max-w-[65%] rounded-lg shadow-sm transition-all duration-100
                     ${isFromMe ? 'order-1' : 'order-2'}
                     ${
                       isFromMe
-                        ? "bg-[#d9fdd3] text-gray-900 mr-2"
-                        : "bg-white text-gray-900 ml-2"
+                        ? "bg-[#d9fdd3] text-gray-900 mr-1 md:mr-2"
+                        : "bg-white text-gray-900 ml-1 md:ml-2"
                     }
                   `}
                 >
-                  <div className="px-2 py-1.5">
+                  <div className="px-3 py-2 md:px-2 md:py-1.5">
                     {message.isEncaminhada && (
                       <div className="text-xs mb-1.5 flex items-center space-x-1 text-gray-500">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3677,7 +3680,7 @@ return (
                       </div>
                     )}
 
-                    <div className="text-[14.2px] leading-[19px] text-gray-900 break-words">
+                    <div className="text-[15px] md:text-[14.2px] leading-[20px] md:leading-[19px] text-gray-900 break-words">
                       {album ? (
                         <AlbumCarousel items={album} type={type!} />
                       ) : (
@@ -3991,7 +3994,7 @@ return (
     )}
 
       {/* Message Input / Templates */}
-      <div className="p-4 border-t">
+      <div className="fixed md:relative bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto z-20 px-2 md:px-4 py-2 border-t bg-white">
         {(!isBusiness || isSessionActive) ? (
           <MessageInput
             remoteJid={selectedChat.remoteJid}
