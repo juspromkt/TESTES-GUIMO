@@ -165,17 +165,25 @@ interface TagCount {
 // ==================== Utils ====================
 const buildDateRange = (start: string, end: string) => {
   const out: string[] = [];
-  const d = new Date(start);
-  const last = new Date(end);
+  // Adiciona T00:00:00 para forçar horário local
+  const d = new Date(start + 'T00:00:00');
+  const last = new Date(end + 'T00:00:00');
   while (d <= last) {
-    out.push(d.toISOString().slice(0, 10));
+    // Formata data no horário local
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    out.push(`${year}-${month}-${day}`);
     d.setDate(d.getDate() + 1);
   }
   return out;
 };
 
-const formatBR = (d: string) =>
-  new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+const formatBR = (d: string) => {
+  // Adiciona T00:00:00 para forçar horário local
+  const date = new Date(d + 'T00:00:00');
+  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+};
 
 // 🔹 Clareia cor e converte rgba ou hex
 function lightenColor(color: string, percent: number) {
@@ -212,12 +220,20 @@ function lightenColor(color: string, percent: number) {
 
 // ==================== Component ====================
 export default function Dashboard() {
+  // Função auxiliar para formatar data no horário local (sem conversão UTC)
+  const toLocalDateString = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const defaultEnd = new Date();
   const defaultStart = new Date();
   defaultStart.setDate(defaultStart.getDate() - 30);
 
-  const [startDate, setStartDate] = useState(defaultStart.toISOString().slice(0, 10));
-  const [endDate, setEndDate] = useState(defaultEnd.toISOString().slice(0, 10));
+  const [startDate, setStartDate] = useState(toLocalDateString(defaultStart));
+  const [endDate, setEndDate] = useState(toLocalDateString(defaultEnd));
   const [dealMetrics, setDealMetrics] = useState<DealMetrics>({
     quantidade: 0,
     quantidadeMedia: 0,
@@ -391,31 +407,31 @@ export default function Dashboard() {
 
   // filtros rápidos
   const setToday = () => {
-    const t = new Date().toISOString().slice(0, 10);
+    const t = toLocalDateString(new Date());
     setStartDate(t);
     setEndDate(t);
   };
   const setLast7 = () => {
     const e = new Date(), s = new Date(); s.setDate(s.getDate() - 7);
-    setStartDate(s.toISOString().slice(0, 10)); setEndDate(e.toISOString().slice(0, 10));
+    setStartDate(toLocalDateString(s)); setEndDate(toLocalDateString(e));
   };
   const setLast30 = () => {
     const e = new Date(), s = new Date(); s.setDate(s.getDate() - 30);
-    setStartDate(s.toISOString().slice(0, 10)); setEndDate(e.toISOString().slice(0, 10));
+    setStartDate(toLocalDateString(s)); setEndDate(toLocalDateString(e));
   };
   const setThisMonth = () => {
     const n = new Date(); const s = new Date(n.getFullYear(), n.getMonth(), 1);
     const e = new Date(n.getFullYear(), n.getMonth() + 1, 0);
-    setStartDate(s.toISOString().slice(0, 10)); setEndDate(e.toISOString().slice(0, 10));
+    setStartDate(toLocalDateString(s)); setEndDate(toLocalDateString(e));
   };
   const setLastMonth = () => {
     const n = new Date(); const s = new Date(n.getFullYear(), n.getMonth() - 1, 1);
     const e = new Date(n.getFullYear(), n.getMonth(), 0);
-    setStartDate(s.toISOString().slice(0, 10)); setEndDate(e.toISOString().slice(0, 10));
+    setStartDate(toLocalDateString(s)); setEndDate(toLocalDateString(e));
   };
   const clearFilters = () => {
     const e = new Date(), s = new Date(); s.setDate(s.getDate() - 30);
-    setStartDate(s.toISOString().slice(0, 10)); setEndDate(e.toISOString().slice(0, 10));
+    setStartDate(toLocalDateString(s)); setEndDate(toLocalDateString(e));
   };
 
   // ==================== Drag and Drop Handler ====================
@@ -868,31 +884,46 @@ export default function Dashboard() {
               <div className="flex flex-col gap-2">
                 <p className="text-xs md:text-sm font-medium text-gray-700 mb-1">Filtro rápido</p>
                 <button
-                  onClick={setToday}
+                  onClick={() => {
+                    setToday();
+                    setShowDateModal(false);
+                  }}
                   className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 bg-white hover:bg-blue-50 active:bg-blue-100 hover:border-blue-200 active:scale-[0.98] transition-all touch-manipulation text-left"
                 >
                   Hoje
                 </button>
                 <button
-                  onClick={setLast7}
+                  onClick={() => {
+                    setLast7();
+                    setShowDateModal(false);
+                  }}
                   className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 bg-white hover:bg-blue-50 active:bg-blue-100 hover:border-blue-200 active:scale-[0.98] transition-all touch-manipulation text-left"
                 >
                   Últimos 7 dias
                 </button>
                 <button
-                  onClick={setLast30}
+                  onClick={() => {
+                    setLast30();
+                    setShowDateModal(false);
+                  }}
                   className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 bg-white hover:bg-blue-50 active:bg-blue-100 hover:border-blue-200 active:scale-[0.98] transition-all touch-manipulation text-left"
                 >
                   Últimos 30 dias
                 </button>
                 <button
-                  onClick={setThisMonth}
+                  onClick={() => {
+                    setThisMonth();
+                    setShowDateModal(false);
+                  }}
                   className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 bg-white hover:bg-blue-50 active:bg-blue-100 hover:border-blue-200 active:scale-[0.98] transition-all touch-manipulation text-left"
                 >
                   Este mês
                 </button>
                 <button
-                  onClick={setLastMonth}
+                  onClick={() => {
+                    setLastMonth();
+                    setShowDateModal(false);
+                  }}
                   className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 bg-white hover:bg-blue-50 active:bg-blue-100 hover:border-blue-200 active:scale-[0.98] transition-all touch-manipulation text-left"
                 >
                   Mês passado
@@ -918,10 +949,10 @@ export default function Dashboard() {
                       Data inicial
                     </label>
                     <DatePicker
-                      selected={startDate ? new Date(startDate) : null}
+                      selected={startDate ? new Date(startDate + 'T00:00:00') : null}
                       onChange={(date: Date | null) =>
                         setStartDate(
-                          date ? date.toISOString().slice(0, 10) : startDate
+                          date ? toLocalDateString(date) : startDate
                         )
                       }
                       dateFormat="dd/MM/yyyy"
@@ -936,10 +967,10 @@ export default function Dashboard() {
                       Data final
                     </label>
                     <DatePicker
-                      selected={endDate ? new Date(endDate) : null}
+                      selected={endDate ? new Date(endDate + 'T00:00:00') : null}
                       onChange={(date: Date | null) =>
                         setEndDate(
-                          date ? date.toISOString().slice(0, 10) : endDate
+                          date ? toLocalDateString(date) : endDate
                         )
                       }
                       dateFormat="dd/MM/yyyy"
