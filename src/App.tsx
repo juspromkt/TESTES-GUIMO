@@ -17,6 +17,8 @@ import ChatProprio from './pages/ChatProprio';
 import { fetchUserPermissions } from './utils/permissions';
 import { MessageEventsProvider } from './pages/MessageEventsContext';
 import { NotificationManager } from './components/NotificationManager';
+import { ChatProvider } from './context/ChatContext';
+import { ConversationProvider } from './context/ConversationContext';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = localStorage.getItem('user');
@@ -43,10 +45,14 @@ function App() {
           path="/"
           element={
             <PrivateRoute>
-              <MessageEventsProvider>
-                <MainLayout />
-                <NotificationManager />
-              </MessageEventsProvider>
+              <ChatProvider>
+                <ConversationProvider>
+                  <MessageEventsProvider>
+                    <MainLayout />
+                    <NotificationManager />
+                  </MessageEventsProvider>
+                </ConversationProvider>
+              </ChatProvider>
             </PrivateRoute>
           }
         >

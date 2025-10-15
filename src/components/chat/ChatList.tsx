@@ -839,6 +839,20 @@ useEffect(() => {
     };
   }, [loadSessionData]);
 
+  // ✅ NOVO: Recarregar ChatList ao trocar responsável
+  useEffect(() => {
+    const handleResponsavelUpdate = () => {
+      console.log("[ChatList] Responsável atualizado — recarregando sessões");
+      loadSessionData(); // força recarregamento dos dados de sessões/usuários
+    };
+
+    window.addEventListener("responsavel_updated", handleResponsavelUpdate);
+
+    return () => {
+      window.removeEventListener("responsavel_updated", handleResponsavelUpdate);
+    };
+  }, [loadSessionData]);
+
   useEffect(() => {
     return () => {
       setChatListLoaded(false);

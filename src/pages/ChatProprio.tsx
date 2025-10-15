@@ -4,6 +4,7 @@ import { ChatList } from '../components/chat/ChatList';
 import { MessageView } from '../components/chat/MessageView';
 import { AdvancedFilterModal } from '../components/chat/AdvancedFilterModal';
 import { useConversation } from '../context/ConversationContext';
+import { useChat } from '../context/ChatContext';
 import { MultiSelectDropdown } from '../components/chat/MultiSelectDropdown';
 import { NewChatModal } from '../components/chat/NewChatModal';
 import { Chat as ChatType } from '../components/chat/utils/api';
@@ -15,20 +16,22 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { registerLocale } from 'react-datepicker';
 import ptBR from 'date-fns/locale/pt-BR';
 import { fetchWithCache, CacheTTL, CacheKeys } from '../utils/cacheManager';
+import { useDebounce } from 'use-debounce';
 
 registerLocale('pt-BR', ptBR);
 
 const ChatProprio = () => {
   const location = useLocation();
   const { setIsInConversation } = useConversation();
+  const { selectedChat, setSelectedChat, availableTags, users, funnels } = useChat();
   const preselect = location.state as { remoteJid?: string; name?: string } | null;
   const [activeTab, setActiveTab] = useState('chat');
-  const [selectedChat, setSelectedChat] = useState<ChatType | null>(null);
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [whatsappType, setWhatsappType] = useState<string | null>(null);
 
   // Estados para a barra superior
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [newChatModalOpen, setNewChatModalOpen] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
@@ -39,10 +42,9 @@ const ChatProprio = () => {
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [selectedFunnelId, setSelectedFunnelId] = useState<number | null>(null);
 
-  // Data
-  const [usuariosPorContato, setUsuariosPorContato] = useState<any[]>([]);
-  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
-  const [availableFunnels, setAvailableFunnels] = useState<any[]>([]);
+  // Data (agora vêm do contexto)
+  const usuariosPorContato = users;
+  const availableFunnels = funnels;
   const [availableStages, setAvailableStages] = useState<{ id: string; nome: string; cor?: string }[]>([]);
 
   // Date range
@@ -111,119 +113,15 @@ const ChatProprio = () => {
     }
   }, [preselect, setIsInConversation]);
 
-  // Carregar usuários para o dropdown de responsável
+  // Selecionar funil padrão quando os funis forem carregados
   useEffect(() => {
-    if (!token) return;
-
-    const loadUsuarios = async () => {
-      try {
-        // Usar cache de 24h para usuários (dado fixo)
-        const usuarios = await fetchWithCache(
-          CacheKeys.USERS,
-          async () => {
-            const apiUrl = 'https://n8n.lumendigital.com.br/webhook/prospectai/usuario/get';
-            const response = await fetch(apiUrl, { headers: { token } });
-
-            let data = null;
-            try {
-              const text = await response.text();
-              data = text ? JSON.parse(text) : null;
-            } catch (err) {
-              console.warn('⚠️ Resposta vazia ou inválida:', apiUrl, err);
-              data = null;
-            }
-
-            return Array.isArray(data) ? data : [];
-          },
-          CacheTTL.VERY_LONG // 24h - lista de usuários muda raramente
-        );
-
-        setUsuariosPorContato(usuarios);
-      } catch (err) {
-        console.error('Erro ao carregar usuários:', err);
+    if (availableFunnels.length > 0 && !selectedFunnelId) {
+      const funilPadrao = availableFunnels.find((f: any) => f.isFunilPadrao);
+      if (funilPadrao) {
+        setSelectedFunnelId(funilPadrao.id);
       }
-    };
-
-    loadUsuarios();
-  }, [token]);
-
-  // Carregar tags para o filtro
-  useEffect(() => {
-    if (!token) return;
-
-    const loadTags = async () => {
-      try {
-        // Usar cache de 24h para tags (dado fixo)
-        const tags = await fetchWithCache(
-          CacheKeys.TAGS,
-          async () => {
-            const apiUrl = 'https://n8n.lumendigital.com.br/webhook/prospecta/tag/list';
-            const response = await fetch(apiUrl, { headers: { token } });
-
-            let data = null;
-            try {
-              const text = await response.text();
-              data = text ? JSON.parse(text) : null;
-            } catch (err) {
-              console.warn('⚠️ Resposta vazia ou inválida:', apiUrl, err);
-              data = null;
-            }
-
-            return Array.isArray(data) ? data : [];
-          },
-          CacheTTL.VERY_LONG // 24h - lista de tags muda raramente
-        );
-
-        setAvailableTags(tags);
-      } catch (err) {
-        console.error('Erro ao carregar tags:', err);
-      }
-    };
-
-    loadTags();
-  }, [token]);
-
-  // Carregar todos os funis disponíveis
-  useEffect(() => {
-    if (!token) return;
-
-    const loadFunnels = async () => {
-      try {
-        // Usar cache de 24h para funis (dado fixo)
-        const funnels = await fetchWithCache(
-          CacheKeys.FUNNELS,
-          async () => {
-            const apiUrl = 'https://n8n.lumendigital.com.br/webhook/prospecta/funil/get';
-            const response = await fetch(apiUrl, { headers: { token } });
-
-            let data = null;
-            try {
-              const text = await response.text();
-              data = text ? JSON.parse(text) : null;
-            } catch (err) {
-              console.warn('⚠️ Resposta vazia ou inválida:', apiUrl, err);
-              data = null;
-            }
-
-            return Array.isArray(data) ? data : [];
-          },
-          CacheTTL.VERY_LONG // 24h - lista de funis muda raramente
-        );
-
-        setAvailableFunnels(funnels);
-
-        // Selecionar automaticamente o funil padrão
-        const funilPadrao = funnels.find((f: any) => f.isFunilPadrao);
-        if (funilPadrao) {
-          setSelectedFunnelId(funilPadrao.id);
-        }
-      } catch (err) {
-        console.error('❌ Erro ao carregar funis:', err);
-      }
-    };
-
-    loadFunnels();
-  }, [token]);
+    }
+  }, [availableFunnels, selectedFunnelId]);
 
   // Atualizar etapas quando o funil selecionado mudar
   useEffect(() => {
@@ -565,7 +463,7 @@ const ChatProprio = () => {
                     onChatSelect={handleChatSelect}
                     selectedChatId={selectedChat?.id}
                     whatsappType={whatsappType || undefined}
-                    externalSearchTerm={searchTerm}
+                    externalSearchTerm={debouncedSearchTerm}
                     externalUsuarioFiltroIds={selectedResponsibleIds}
                     externalTagFiltroIds={selectedTagIds}
                     externalFunilId={selectedFunnelId}

@@ -19,6 +19,7 @@ import type { Chat } from "./utils/api";
 import { apiClient, clearApiCache, getCacheKey } from "./utils/api";
 import type { Tag } from "../../types/tag";
 import DealSummaryWidget from "../crm/DealSummaryWidget";
+import { useChat } from "../../context/ChatContext";
 
 interface ContactSidebarV2Props {
   isOpen: boolean;
@@ -65,11 +66,9 @@ export default function ContactSidebarV2({
   selectedChat,
   onOpenContactModal,
 }: ContactSidebarV2Props) {
+  const { updateChatLocal, availableTags, users, funnels } = useChat();
   const [contactData, setContactData] = useState<ContactData | null>(null);
   const [dealData, setDealData] = useState<DealData | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
-  const [funnels, setFunnels] = useState<Funil[]>([]);
-  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [dealTags, setDealTags] = useState<Tag[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -100,7 +99,7 @@ export default function ContactSidebarV2({
       const digits = selectedChat.remoteJid.replace(/\D/g, "");
 
       // ⚡ Faz todas as requisições em PARALELO para carregar mais rápido
-      const [contactRes, dealRes, usersRes, funnelsRes, tagsRes] = await Promise.all([
+      const [contactRes, dealRes] = await Promise.all([
         // Contact info
         fetch(
           `https://n8n.lumendigital.com.br/webhook/prospecta/contato/getByRemoteJid?remoteJid=${digits}`,
@@ -114,21 +113,6 @@ export default function ContactSidebarV2({
             headers: { "Content-Type": "application/json", token },
             body: JSON.stringify({ remoteJid: selectedChat.remoteJid }),
           }
-        ),
-        // Users
-        fetch(
-          `https://n8n.lumendigital.com.br/webhook/prospectai/usuario/get`,
-          { headers: { token } }
-        ),
-        // Funnels
-        fetch(
-          `https://n8n.lumendigital.com.br/webhook/prospecta/funil/get`,
-          { headers: { token } }
-        ),
-        // Tags
-        fetch(
-          `https://n8n.lumendigital.com.br/webhook/prospecta/tag/list`,
-          { headers: { token } }
         ),
       ]);
 
@@ -176,23 +160,6 @@ export default function ContactSidebarV2({
         }
       }
 
-      // Process users
-      if (usersRes.ok) {
-        const usersData = await usersRes.json();
-        setUsers(Array.isArray(usersData) ? usersData : []);
-      }
-
-      // Process funnels
-      if (funnelsRes.ok) {
-        const funnelsData = await funnelsRes.json();
-        setFunnels(Array.isArray(funnelsData) ? funnelsData : []);
-      }
-
-      // Process tags
-      if (tagsRes.ok) {
-        const tagsData = await tagsRes.json();
-        setAvailableTags(Array.isArray(tagsData) ? tagsData : []);
-      }
     } catch (error) {
       console.error("Erro ao carregar dados do contato:", error);
     } finally {
@@ -367,14 +334,27 @@ export default function ContactSidebarV2({
 
       // Recarrega status real da API
       await loadInterventionInfo();
-      window.dispatchEvent(new Event("contactUpdated"));
 
-      // 🔔 Dispara evento de atualização em tempo real
+      // 🔔 Atualiza o contexto global - IA ativa
+      updateChatLocal(selectedChat.remoteJid, { iaActive: true });
+
       const { updateChatIAStatus } = await import('../../utils/chatUpdateEvents');
       console.log('[ContactSidebarV2] 🔔 Disparando evento de ativação da IA:', selectedChat.remoteJid);
       updateChatIAStatus(selectedChat.remoteJid, true);
 
-      console.log('[ContactSidebarV2] ✅ IA ativada com sucesso');
+      // ✅ FORÇA ATUALIZAÇÃO GLOBAL IMEDIATA
+      window.dispatchEvent(new Event("sessions_updated"));
+      window.dispatchEvent(new Event("contactUpdated"));
+
+      // ✅ ATUALIZAÇÃO OTIMISTA LOCAL PARA REFLEXO INSTANTÂNEO
+      setAiStatus({ intervention: false, permanentExclusion: false });
+      updateChatLocal(selectedChat.remoteJid, {
+        iaActive: true,
+        intervention: false,
+        permanentExclusion: false,
+      } as any);
+
+      console.log('[ContactSidebarV2] ✅ IA ativada com sucesso e visuais atualizados.');
     } catch (error) {
       console.error("[ContactSidebarV2] ❌ Erro ao ativar IA:", error);
       // Reverte estado otimista em caso de erro
@@ -418,17 +398,21 @@ export default function ContactSidebarV2({
       // ⏱️ Aguarda 1 segundo para o banco processar antes de recarregar
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // 🔔 Dispara evento de atualização em tempo real ANTES de recarregar
+      // 🔔 Atualiza o contexto global - IA pausada
+      updateChatLocal(selectedChat.remoteJid, { iaActive: false });
+
       const { updateChatIAStatus } = await import('../../utils/chatUpdateEvents');
       console.log('[ContactSidebarV2] 🔔 Disparando evento de pausa da IA:', selectedChat.remoteJid);
       updateChatIAStatus(selectedChat.remoteJid, false);
 
+      // ✅ FORÇA ATUALIZAÇÃO GLOBAL IMEDIATA
+      window.dispatchEvent(new Event("sessions_updated"));
       window.dispatchEvent(new Event("contactUpdated"));
 
       // Recarrega status real da API (pode corrigir se algo estiver diferente)
       await loadInterventionInfo();
 
-      console.log('[ContactSidebarV2] ✅ IA pausada com sucesso');
+      console.log('[ContactSidebarV2] ✅ IA pausada com sucesso e visuais atualizados.');
     } catch (error) {
       console.error("[ContactSidebarV2] ❌ Erro ao pausar IA:", error);
       // Reverte estado otimista em caso de erro
@@ -472,12 +456,12 @@ export default function ContactSidebarV2({
       // ⏱️ Aguarda 1 segundo para o banco processar antes de recarregar
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // 🔔 Dispara evento de atualização em tempo real ANTES de recarregar
+      // 🔔 Atualiza o contexto global - IA desativada
+      updateChatLocal(selectedChat.remoteJid, { iaActive: false });
+
       const { updateChatIAStatus } = await import('../../utils/chatUpdateEvents');
       console.log('[ContactSidebarV2] 🔔 Disparando evento de desativação da IA:', selectedChat.remoteJid);
       updateChatIAStatus(selectedChat.remoteJid, false);
-
-      window.dispatchEvent(new Event("contactUpdated"));
 
       // Recarrega status real da API (pode corrigir se algo estiver diferente)
       await loadInterventionInfo();
@@ -584,12 +568,11 @@ const handleUpdateName = async () => {
       }
     }
 
-    // Dispara evento global para atualizar aba Contatos e CRM
-    window.dispatchEvent(new Event("contactUpdated"));
-
-    // 🔔 Dispara evento de atualização em tempo real
-    const { updateChatName } = await import('../../utils/chatUpdateEvents');
+    // 🔔 Atualiza o contexto global com o novo nome
     if (selectedChat?.remoteJid) {
+      updateChatLocal(selectedChat.remoteJid, { pushName: editedName.trim() });
+
+      const { updateChatName } = await import('../../utils/chatUpdateEvents');
       updateChatName(selectedChat.remoteJid, editedName.trim());
     }
 
@@ -619,13 +602,29 @@ const handleUpdateName = async () => {
       );
 
       setDealData((prev) => (prev ? { ...prev, id_usuario } : null));
-      window.dispatchEvent(new Event("contactUpdated"));
 
-      // 🔔 Dispara evento de atualização em tempo real
-      const { updateChatResponsible } = await import('../../utils/chatUpdateEvents');
+      // 🔔 Atualiza o contexto global
       if (selectedChat?.remoteJid) {
+        // Busca o nome do usuário selecionado
+        const selectedUser = users.find(u => u.Id === id_usuario);
+        const responsavelNome = selectedUser?.nome || '';
+
+        // ✅ Atualização otimista local (visualmente instantâneo)
+        updateChatLocal(selectedChat.remoteJid, {
+          responsibleId: id_usuario,
+          responsavelNome: responsavelNome,
+        } as any);
+
+        const { updateChatResponsible } = await import('../../utils/chatUpdateEvents');
         console.log('🔔 Disparando evento de atualização de responsável:', selectedChat.remoteJid, id_usuario);
         updateChatResponsible(selectedChat.remoteJid, id_usuario);
+
+        // ✅ Dispara eventos globais para forçar atualização da ChatList
+        window.dispatchEvent(new Event("responsavel_updated"));
+        window.dispatchEvent(new Event("sessions_updated"));
+        window.dispatchEvent(new Event("contactUpdated"));
+
+        console.log("[ContactSidebarV2] ✅ Responsável atualizado e ChatList sincronizada");
       }
     } catch (error) {
       console.error("Erro ao atualizar responsável:", error);
@@ -650,11 +649,12 @@ const handleUpdateName = async () => {
       );
 
       setDealData((prev) => (prev ? { ...prev, id_funil, id_estagio } : null));
-      window.dispatchEvent(new Event("contactUpdated"));
 
-      // 🔔 Dispara evento de atualização em tempo real
-      const { updateChatStage } = await import('../../utils/chatUpdateEvents');
+      // 🔔 Atualiza o contexto global
       if (selectedChat?.remoteJid) {
+        updateChatLocal(selectedChat.remoteJid, { chatStageId: String(id_estagio) } as any);
+
+        const { updateChatStage } = await import('../../utils/chatUpdateEvents');
         console.log('🔔 Disparando evento de atualização de estágio:', selectedChat.remoteJid, id_estagio);
         updateChatStage(selectedChat.remoteJid, String(id_estagio));
       }
@@ -677,12 +677,13 @@ const handleUpdateName = async () => {
       );
 
       await loadDealTags();
-      window.dispatchEvent(new Event("contactUpdated"));
 
-      // 🔔 Dispara evento de atualização em tempo real
-      const { updateChatTags } = await import('../../utils/chatUpdateEvents');
+      // 🔔 Atualiza o contexto global
       if (selectedChat?.remoteJid) {
         const updatedTagIds = [...dealTags.map(t => t.Id), tagId];
+        updateChatLocal(selectedChat.remoteJid, { tagIds: updatedTagIds } as any);
+
+        const { updateChatTags } = await import('../../utils/chatUpdateEvents');
         console.log('🔔 Disparando evento de atualização de tags:', selectedChat.remoteJid, updatedTagIds);
         updateChatTags(selectedChat.remoteJid, updatedTagIds);
       }
@@ -705,12 +706,13 @@ const handleUpdateName = async () => {
       );
 
       await loadDealTags();
-      window.dispatchEvent(new Event("contactUpdated"));
 
-      // 🔔 Dispara evento de atualização em tempo real
-      const { updateChatTags } = await import('../../utils/chatUpdateEvents');
+      // 🔔 Atualiza o contexto global
       if (selectedChat?.remoteJid) {
         const updatedTagIds = dealTags.map(t => t.Id).filter(id => id !== tagId);
+        updateChatLocal(selectedChat.remoteJid, { tagIds: updatedTagIds } as any);
+
+        const { updateChatTags } = await import('../../utils/chatUpdateEvents');
         console.log('🔔 Disparando evento de remoção de tag:', selectedChat.remoteJid, updatedTagIds);
         updateChatTags(selectedChat.remoteJid, updatedTagIds);
       }

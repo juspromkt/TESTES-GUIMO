@@ -16,7 +16,6 @@ import {
   Paperclip,
   MessageCircle,
   Search,
-  MoreVertical,
   Phone,
   Video,
   Loader2,
@@ -1085,6 +1084,53 @@ useEffect(() => {
     setIsSessionActive(true);
   }
 }, [isBusiness]);
+
+  // ✅ NOVO: Revalidar mensagens a cada 3 segundos quando o chat está ativo
+  useEffect(() => {
+    if (!token || !selectedChat?.remoteJid || activeChatJids.length === 0) return;
+
+    const intervalId = setInterval(() => {
+      console.log("[MessageView] Revalidando mensagens (polling 3s)");
+      fetchMessages(1, false);
+    }, 3000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [token, selectedChat?.remoteJid, activeChatJids, fetchMessages]);
+
+  // ✅ NOVO: Listener global "new_message" para atualização instantânea
+  useEffect(() => {
+    const handleNewMessage = () => {
+      console.log("[MessageView] Nova mensagem recebida — recarregando");
+      handleReloadMessages();
+
+      // Scroll automático ao final após receber nova mensagem
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+    };
+
+    window.addEventListener("new_message", handleNewMessage);
+
+    return () => {
+      window.removeEventListener("new_message", handleNewMessage);
+    };
+  }, [handleReloadMessages]);
+
+  // ✅ NOVO: Scroll automático ao final quando novas mensagens chegam
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+
+      // Se a última mensagem é do próprio usuário, faz scroll automático
+      if (lastMessage?.key?.fromMe) {
+        setTimeout(() => {
+          scrollToBottom();
+        }, 100);
+      }
+    }
+  }, [messages]);
 
   useEffect(() => {
     if (!token || !selectedChat?.remoteJid || !nonEssentialReady) {
@@ -3385,27 +3431,8 @@ return (
 
   {/* Actions Bar - Tudo em uma linha */}
   <div className="flex items-center space-x-2">
-    {/* Status Indicators - IA */}
+    {/* Status Indicators */}
     <div className="flex items-center space-x-2">
-      {permanentInterventionInfo && (
-        <div className={`group inline-flex items-center bg-red-700 rounded-full px-2.5 py-1 shadow-sm ${deletingPermanentIntervention ? 'animate-pulse' : ''}`}>
-          <div className="w-2 h-2 bg-red-700 rounded-full mr-1.5"></div>
-          <span className="text-[11px] font-semibold text-white">Exclusão permanente</span>
-          <button
-            onClick={handleDeletePermanentIntervention}
-            className="ml-1.5 p-0.5 rounded-full hover:bg-orange-200 opacity-0 group-hover:opacity-100 transition-all duration-200"
-          >
-            {deletingPermanentIntervention ? (
-              <Loader2 className="w-3 h-3 text-orange-600 animate-spin" />
-            ) : (
-              <svg className="w-3 h-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            )}
-          </button>
-        </div>
-      )}
-
       {isTransferChat && (
         <div
           className={`group inline-flex items-center border border-yellow-300 bg-yellow-100 rounded-full px-2.5 py-1 shadow-sm ${
@@ -3442,80 +3469,6 @@ return (
       <Search className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
     </button>
 
-    {/* More Actions */}
-    <Popover.Root>
-      <Popover.Trigger asChild>
-        <button className="p-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200 group">
-          <MoreVertical className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
-        </button>
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content
-          sideOffset={8}
-          className="z-50 bg-white border border-gray-300 rounded-2xl shadow-xl w-56 p-2 animate-in slide-in-from-top-2"
-        >
-          {contactData && (
-            <Popover.Close asChild>
-              <button
-                onClick={() => setContactModalOpen(true)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-xl transition-all duration-200"
-              >
-                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <User className="w-4 h-4 text-gray-600" />
-                </div>
-                <span className="font-medium">Ver contato</span>
-              </button>
-            </Popover.Close>
-          )}
-          <button
-            onClick={handleCreateIntervention}
-            disabled={creatingIntervention || !!interventionInfo || !!permanentInterventionInfo}
-            title="Essa função cria uma intervenção temporária na conversa. Ou seja, a conversa será interrompida pelo tempo estabelecido em Agente de IA -> Configurações do Agente -> Parâmetros do Agente -> Tempo de Intervenção"
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-yellow-50 hover:to-gray-50 hover:text-yellow-700 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-              {creatingIntervention ? (
-                <Loader2 className="w-4 h-4 text-yellow-600 animate-spin" />
-              ) : (
-                <PauseCircle className="w-4 h-4 text-yellow-600" />
-              )}
-            </div>
-            <span className="font-medium">Pausar Agente de IA</span>
-          </button>
-          <button
-            onClick={handleCreatePermanentExclusion}
-            disabled={creatingPermanentExclusion || !!permanentInterventionInfo}
-            title="Essa função cria uma exclusão desse usuário do agente de IA de forma permanente, ou seja, o Agente de IA não será mais ativado para este usuário"
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-gray-50 hover:text-red-700 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-              {creatingPermanentExclusion ? (
-                <Loader2 className="w-4 h-4 text-red-600 animate-spin" />
-              ) : (
-                <Ban className="w-4 h-4 text-red-600" />
-              )}
-            </div>
-            <span className="font-medium">Desativar Agente de IA</span>
-          </button>
-          <button
-            onClick={handleStartAgent}
-            disabled={startingAgent || !!permanentInterventionInfo}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-gray-50 hover:text-emerald-700 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-              {startingAgent ? (
-                <div className="w-4 h-4 border-2 border-emerald-300 border-t-emerald-600 rounded-full animate-spin"></div>
-              ) : (
-                <Play className="w-4 h-4 text-emerald-600" />
-              )}
-            </div>
-            <span className="font-medium">
-              {startingAgent ? 'Iniciando Agente...' : 'Ativar agente de IA'}
-            </span>
-          </button>
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
   </div>
 </div>
 
