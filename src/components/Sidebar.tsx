@@ -614,7 +614,7 @@ const Sidebar = () => {
               <img
                 src={theme === 'dark' ? logos.fullDark : logos.full}
                 alt="Logo"
-                className="h-12 object-contain"
+                className="h-10 object-contain"
               />
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -771,7 +771,7 @@ const Sidebar = () => {
                 <img
                   src={theme === 'dark' ? logos.fullDark : logos.full}
                   alt="Logo"
-                  className="h-14 object-contain"
+                  className="h-10 object-contain"
                 />
               </div>
               <button
@@ -875,7 +875,7 @@ const Sidebar = () => {
                 alt="Logo"
                 className={`transition-all duration-300 ${
                   isExpanded
-                    ? 'w-[180px] h-[60px] object-contain group-hover:scale-105'
+                    ? 'w-[140px] h-[60px] object-contain group-hover:scale-105'
                     : 'w-12 h-10 object-contain group-hover:scale-110'
                 } filter drop-shadow-lg`}
               />
