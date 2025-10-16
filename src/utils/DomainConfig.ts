@@ -138,6 +138,7 @@ export class DomainConfig {
       reduced: `${theme.path}/logo-reduzida.png`,
       reducedDark: `${theme.path}/icon-dark-mode.png`,
       login: `${theme.path}/logo-login.png`,
+      loginDark: `${theme.path}/logo-login-dark.png`,
       favicon: `${theme.path}/favicon.ico`
     };
   }
