@@ -314,10 +314,22 @@ export default function DealAppointmentsTab({ dealId }: DealAppointmentsTabProps
 
 
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      <div className="p-6 border-b border-gray-300">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">Agendamentos</h2>
+    <>
+      <style>{`
+        /* Dark mode styles for datetime-local inputs */
+        .dark input[type="datetime-local"] {
+          color-scheme: dark;
+        }
+
+        .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+          filter: invert(1);
+          cursor: pointer;
+        }
+      `}</style>
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-gray-300 dark:border-neutral-700">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Agendamentos</h2>
           <button
             onClick={() => {
               setIsCreateModalOpen(true);
@@ -333,23 +345,23 @@ export default function DealAppointmentsTab({ dealId }: DealAppointmentsTabProps
         <div className="grid grid-cols-2 gap-4">
           {/* Search input */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-5 h-5" />
             <input
               type="text"
               placeholder="Buscar por cliente..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400"
             />
           </div>
 
           {/* Date filter */}
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-5 h-5" />
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value as DateFilter)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
             >
               <option value="all">Todas as datas</option>
               <option value="today">Hoje</option>
@@ -357,25 +369,25 @@ export default function DealAppointmentsTab({ dealId }: DealAppointmentsTabProps
               <option value="week">Próximos 7 dias</option>
               <option value="month">Próximos 30 dias</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-5 h-5 pointer-events-none" />
           </div>
         </div>
       </div>
 
       {success && (
-        <div className="mx-6 mt-4 p-4 bg-green-50 text-green-600 rounded-lg text-sm">
+        <div className="mx-6 mt-4 p-4 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg text-sm">
           {success}
         </div>
       )}
 
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y divide-gray-200 dark:divide-neutral-700">
         {paginatedAppointments.length === 0 ? (
           <div className="p-8 text-center">
-            <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <Calendar className="w-16 h-16 text-gray-400 dark:text-neutral-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 mb-2">
               Nenhum agendamento encontrado
             </h2>
-            <p className="text-gray-500">
+            <p className="text-gray-500 dark:text-neutral-400">
               {searchTerm || dateFilter !== 'all'
                 ? 'Tente ajustar os filtros de busca para encontrar agendamentos.'
                 : 'Os agendamentos aparecerão aqui quando forem marcados através do agente.'}
@@ -385,18 +397,18 @@ export default function DealAppointmentsTab({ dealId }: DealAppointmentsTabProps
           paginatedAppointments.map((appointment) => (
             <div
               key={appointment.Id}
-              className="p-6 hover:bg-gray-50 transition-colors"
+              className="p-6 hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition-colors"
             >
               <div className="flex items-start justify-between gap-6">
                 <div className="flex items-start gap-6">
-                  <div className="flex-shrink-0 w-16 h-16 bg-blue-50 rounded-lg flex flex-col items-center justify-center">
-                    <span className="text-sm font-medium text-blue-600">
+                  <div className="flex-shrink-0 w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex flex-col items-center justify-center">
+                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                       {format(parseISO(appointment.dataInicio), 'HH:mm')}
                     </span>
                   </div>
 
                   <div className="flex-1">
-                    <div className="flex items-center gap-6 text-sm text-gray-500">
+                    <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-neutral-400">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
                         <span>{formatDate(appointment.dataInicio)}</span>
@@ -421,14 +433,14 @@ export default function DealAppointmentsTab({ dealId }: DealAppointmentsTabProps
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => openEditModal(appointment)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                    className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-colors"
                     title="Editar agendamento"
                   >
                     <Pencil className="w-5 h-5" />
                   </button>
                   <button
                     onClick={() => openDeleteModal(appointment)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                    className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors"
                     title="Excluir agendamento"
                   >
                     <Trash2 className="w-5 h-5" />
@@ -464,52 +476,52 @@ export default function DealAppointmentsTab({ dealId }: DealAppointmentsTabProps
         <form onSubmit={handleCreateAppointment} className="space-y-6 p-6 overflow-y-auto max-h-[70vh]">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Início</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">Início</label>
               <input
                 type="datetime-local"
                 value={selectedStart}
                 onChange={(e) => setSelectedStart(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Fim</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">Fim</label>
               <input
                 type="datetime-local"
                 value={selectedEnd}
                 onChange={(e) => setSelectedEnd(e.target.value)}
                 min={selectedStart}
                 max={selectedStart ? `${selectedStart.slice(0, 10)}T23:59` : undefined}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Nome do Cliente</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">Nome do Cliente</label>
             <input
               type="text"
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
               required
             />
           </div>
 
           {error && (
-            <div className="p-4 bg-red-50 text-red-600 rounded-lg text-sm">{error}</div>
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm">{error}</div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-300">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-300 dark:border-neutral-700">
             <button
               type="button"
               onClick={() => {
                 setIsCreateModalOpen(false);
                 resetForm();
               }}
-              className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="px-4 py-2 text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-600 rounded-lg transition-colors"
             >
               Cancelar
             </button>
@@ -548,42 +560,42 @@ export default function DealAppointmentsTab({ dealId }: DealAppointmentsTabProps
         <form onSubmit={handleEditAppointment} className="space-y-6 p-6 overflow-y-auto max-h-[70vh]">
           {/* Start DateTime */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">
               Início
             </label>
             <input
               type="datetime-local"
               value={selectedStart}
               onChange={(e) => setSelectedStart(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
               required
             />
           </div>
 
           {/* End DateTime */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">
               Fim
             </label>
             <input
               type="datetime-local"
               value={selectedEnd}
               onChange={(e) => setSelectedEnd(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
               required
             />
           </div>
 
           {/* Client Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">
               Nome do Cliente
             </label>
             <input
               type="text"
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
               required
             />
           </div>
@@ -601,7 +613,7 @@ export default function DealAppointmentsTab({ dealId }: DealAppointmentsTabProps
                 setIsEditModalOpen(false);
                 resetForm();
               }}
-              className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="px-4 py-2 text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-600 rounded-lg transition-colors"
             >
               Cancelar
             </button>
@@ -637,25 +649,25 @@ export default function DealAppointmentsTab({ dealId }: DealAppointmentsTabProps
       >
         <div className="space-y-6">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-rose-100 rounded-xl flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-red-600" />
+            <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 rounded-xl flex items-center justify-center">
+              <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Excluir Agendamento</h3>
-              <p className="text-gray-600 leading-relaxed">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-neutral-100 mb-2">Excluir Agendamento</h3>
+              <p className="text-gray-600 dark:text-neutral-300 leading-relaxed">
                 Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.
               </p>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-red-200/50">
+          <div className="flex justify-end gap-3 pt-4 border-t border-red-200/50 dark:border-red-800/50">
             <button
               type="button"
               onClick={() => {
                 setIsDeleteModalOpen(false);
                 setSelectedAppointment(null);
               }}
-              className="px-6 py-3 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 rounded-xl border border-gray-300 transition-all duration-200"
+              className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 rounded-xl border border-gray-300 dark:border-neutral-600 transition-all duration-200"
             >
               Cancelar
             </button>
@@ -680,5 +692,6 @@ export default function DealAppointmentsTab({ dealId }: DealAppointmentsTabProps
         </div>
       </Modal>
     </div>
+    </>
   );
 }

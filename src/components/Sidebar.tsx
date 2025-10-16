@@ -887,13 +887,14 @@ const Sidebar = () => {
 
         <nav
           className={`relative z-10 flex flex-1 ${
-            isMobile 
-              ? 'flex-row items-center justify-between w-full h-full px-2' 
-              : 'flex-col overflow-y-auto px-2'
+            isMobile
+              ? 'flex-row items-center justify-between w-full h-full px-2'
+              : 'flex-col overflow-y-auto px-2 pb-48'
           }`}
           style={{
             scrollbarWidth: 'thin',
-            scrollbarColor: 'rgba(255, 255, 255, 0.3) transparent'
+            scrollbarColor: 'rgba(255, 255, 255, 0.3) transparent',
+            maxHeight: isMobile ? 'auto' : 'calc(100vh - 80px - 200px)'
           }}
         >
           {/* Mobile Logo */}
@@ -1005,7 +1006,7 @@ const Sidebar = () => {
 
 
         {!isMobile && (
-          <div className="absolute bottom-0 left-0 w-full z-20 border-t border-white/10 dark:border-neutral-700 backdrop-blur-sm bg-white/30 dark:bg-neutral-900/50 p-3">
+          <div className="absolute bottom-0 left-0 w-full z-20 border-t border-white/10 dark:border-neutral-700 backdrop-blur-sm bg-white/80 dark:bg-neutral-900/90 p-3 shadow-lg">
             {/* Novo botão Workspaces */}
 <div className="relative mb-4">
   <button

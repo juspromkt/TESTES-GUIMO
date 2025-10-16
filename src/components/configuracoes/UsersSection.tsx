@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Users, Plus, Loader2, Pencil, Settings, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Users, Plus, Loader2, Pencil, Settings, Copy, Check, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import type { User, CreateUserPayload, UpdateUserPayload } from '../../types/user';
 import Modal from '../Modal';
 import { hasPermission } from '../../utils/permissions';
@@ -63,6 +63,22 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
   const [resetModalError, setResetModalError] = useState('');
   const [hasCopiedPassword, setHasCopiedPassword] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState({ code: '+55', country: 'BR', name: 'Brasil', flag: '🇧🇷' });
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const countryDropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const countries = [
+    { code: '+55', country: 'BR', name: 'Brasil', flag: '🇧🇷' },
+    { code: '+1', country: 'US', name: 'Estados Unidos', flag: '🇺🇸' },
+    { code: '+54', country: 'AR', name: 'Argentina', flag: '🇦🇷' },
+    { code: '+56', country: 'CL', name: 'Chile', flag: '🇨🇱' },
+    { code: '+57', country: 'CO', name: 'Colômbia', flag: '🇨🇴' },
+    { code: '+51', country: 'PE', name: 'Peru', flag: '🇵🇪' },
+    { code: '+52', country: 'MX', name: 'México', flag: '🇲🇽' },
+    { code: '+351', country: 'PT', name: 'Portugal', flag: '🇵🇹' },
+    { code: '+34', country: 'ES', name: 'Espanha', flag: '🇪🇸' },
+  ];
 
   const user = localStorage.getItem('user');
   const token = user ? JSON.parse(user).token : null;
@@ -72,6 +88,17 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
       fetchUsers();
     }
   }, [isActive]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target as Node)) {
+        setIsCountryDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -818,30 +845,75 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
               <label htmlFor="senha" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                 Senha
               </label>
-              <input
-                type="password"
-                id="senha"
-                value={formData.senha}
-                onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="senha"
+                  value={formData.senha}
+                  onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300 transition-colors"
+                  title={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             <div>
               <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                 Telefone
               </label>
-<input
-  type="tel"
-  id="telefone"
-  value={formData.telefone}
-  onChange={(e) => setFormData({ ...formData, telefone: e.target.value.replace(/\D/g, "") })}
-  placeholder="+55 (11) 98888-8888 — apenas números"
-  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 text-sm"
-  required
-/>
+              <div className="flex gap-2">
+                <div className="relative" ref={countryDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
+                    className="h-[42px] w-[120px] pl-3 pr-2 py-2 flex items-center gap-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors"
+                  >
+                    <span className="text-2xl">{selectedCountry.flag}</span>
+                    <span className="text-sm text-gray-900 dark:text-neutral-100">{selectedCountry.code}</span>
+                    <ChevronDown className="w-4 h-4 ml-auto text-gray-400 dark:text-neutral-500" />
+                  </button>
 
+                  {isCountryDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1 w-[240px] max-h-[300px] overflow-y-auto bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg shadow-lg z-50">
+                      {countries.map((country) => (
+                        <button
+                          key={country.country}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCountry(country);
+                            setIsCountryDropdownOpen(false);
+                          }}
+                          className="w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-neutral-600 text-left transition-colors"
+                        >
+                          <span className="text-2xl">{country.flag}</span>
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{country.name}</div>
+                            <div className="text-xs text-gray-500 dark:text-neutral-400">{country.code}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <input
+                  type="tel"
+                  id="telefone"
+                  value={formData.telefone}
+                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value.replace(/\D/g, "") })}
+                  placeholder="(11) 98888-8888"
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 text-sm"
+                  required
+                />
+              </div>
             </div>
 
             <div>
@@ -926,21 +998,56 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                 <label htmlFor="edit-telefone" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                   Telefone
                 </label>
-<input
-  type="tel"
-  id="edit-telefone"
-  value={editFormData.telefone}
-  onChange={(e) =>
-    setEditFormData({
-      ...editFormData,
-      telefone: e.target.value.replace(/\D/g, ""), // mantém apenas números
-    })
-  }
-  placeholder="+55 (11) 98888-8888 — apenas números"
-  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 text-sm"
-  required
-/>
+                <div className="flex gap-2">
+                  <div className="relative" ref={countryDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
+                      className="h-[42px] w-[120px] pl-3 pr-2 py-2 flex items-center gap-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors"
+                    >
+                      <span className="text-2xl">{selectedCountry.flag}</span>
+                      <span className="text-sm text-gray-900 dark:text-neutral-100">{selectedCountry.code}</span>
+                      <ChevronDown className="w-4 h-4 ml-auto text-gray-400 dark:text-neutral-500" />
+                    </button>
 
+                    {isCountryDropdownOpen && (
+                      <div className="absolute top-full left-0 mt-1 w-[240px] max-h-[300px] overflow-y-auto bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg shadow-lg z-50">
+                        {countries.map((country) => (
+                          <button
+                            key={country.country}
+                            type="button"
+                            onClick={() => {
+                              setSelectedCountry(country);
+                              setIsCountryDropdownOpen(false);
+                            }}
+                            className="w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-neutral-600 text-left transition-colors"
+                          >
+                            <span className="text-2xl">{country.flag}</span>
+                            <div className="flex-1">
+                              <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{country.name}</div>
+                              <div className="text-xs text-gray-500 dark:text-neutral-400">{country.code}</div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <input
+                    type="tel"
+                    id="edit-telefone"
+                    value={editFormData.telefone}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        telefone: e.target.value.replace(/\D/g, ""),
+                      })
+                    }
+                    placeholder="(11) 98888-8888"
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 text-sm"
+                    required
+                  />
+                </div>
               </div>
 
               <div>

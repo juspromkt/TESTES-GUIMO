@@ -33,7 +33,7 @@ export default function FilterDropdown({ isOpen, onClose, children, triggerRef }
       />
       {/* Dropdown */}
       <div
-        className="fixed z-[9999] bg-white border-2 border-gray-200 rounded-2xl shadow-2xl"
+        className="fixed z-[9999] bg-white dark:bg-neutral-800 border-2 border-gray-200 dark:border-neutral-600 rounded-2xl shadow-2xl"
         style={{
           top: `${position.top}px`,
           left: `${position.left}px`,

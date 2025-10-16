@@ -378,9 +378,13 @@ export default function AppointmentsList({ canEdit }: AppointmentsListProps) {
 
   const filteredDeals = useMemo(
     () =>
-      deals.filter((deal) =>
-        (deal.titulo || '').toLowerCase().includes(dealsSearchTerm.toLowerCase())
-      ),
+      deals.filter((deal) => {
+        const searchLower = dealsSearchTerm.toLowerCase();
+        const matchesTitle = (deal.titulo || '').toLowerCase().includes(searchLower);
+        const matchesName = deal.contato?.nome?.toLowerCase().includes(searchLower) || false;
+        const matchesPhone = deal.contato?.telefone?.includes(dealsSearchTerm) || false;
+        return matchesTitle || matchesName || matchesPhone;
+      }),
     [deals, dealsSearchTerm]
   );
 
@@ -402,20 +406,32 @@ export default function AppointmentsList({ canEdit }: AppointmentsListProps) {
   }
 
 return (
-  <div className="min-h-screen bg-gray-50 p-6">
+  <>
+    <style>{`
+      /* Dark mode styles for datetime-local inputs */
+      .dark input[type="datetime-local"] {
+        color-scheme: dark;
+      }
+
+      .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+      }
+    `}</style>
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 p-6">
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="rounded-lg border border-gray-300 bg-white p-6 shadow-sm">
+      <div className="rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="p-2 rounded-md bg-blue-600 text-white">
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-semibold text-gray-900">
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-neutral-100">
                 Lista de Agendamentos
               </h2>
-              <p className="text-gray-500 text-sm">Visualize e gerencie todos os seus compromissos</p>
+              <p className="text-gray-500 dark:text-neutral-400 text-sm">Visualize e gerencie todos os seus compromissos</p>
             </div>
           </div>
           {canEdit && (
@@ -436,23 +452,23 @@ return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
           {/* Search Input */}
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-5 h-5" />
             <input
               type="text"
               placeholder="Buscar por título ou cliente..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200"
+              className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400 transition-all duration-200"
             />
           </div>
 
           {/* Date Filter */}
           <div className="relative">
-            <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-5 h-5" />
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value as DateFilter)}
-              className="w-full pl-12 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white transition-all duration-200"
+              className="w-full pl-12 pr-10 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all duration-200"
             >
               <option value="all">Todas as datas</option>
               <option value="today">Hoje</option>
@@ -460,7 +476,7 @@ return (
               <option value="week">Próximos 7 dias</option>
               <option value="month">Próximos 30 dias</option>
             </select>
-            <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+            <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-5 h-5 pointer-events-none" />
           </div>
         </div>
       </div>
@@ -476,25 +492,25 @@ return (
       )}
 
       {/* Appointments List */}
-      <div className="rounded-lg border border-gray-300 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-sm overflow-hidden">
         {paginatedAppointments.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-              <Calendar className="w-8 h-8 text-gray-400" />
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-neutral-700 flex items-center justify-center mb-4">
+              <Calendar className="w-8 h-8 text-gray-400 dark:text-neutral-500" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Nenhum agendamento encontrado</h3>
-            <p className="text-gray-500 text-center max-w-md text-sm">
+            <h3 className="text-lg font-semibold text-gray-700 dark:text-neutral-200 mb-2">Nenhum agendamento encontrado</h3>
+            <p className="text-gray-500 dark:text-neutral-400 text-center max-w-md text-sm">
               {searchTerm || dateFilter !== 'all' 
                 ? 'Tente ajustar os filtros de busca para encontrar agendamentos.' 
                 : 'Comece criando seu primeiro agendamento.'}
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-neutral-700">
             {paginatedAppointments.map((appointment) => (
               <div
                 key={appointment.Id}
-                className="p-6 hover:bg-blue-50/50 transition-all duration-200 group"
+                className="p-6 hover:bg-blue-50/50 dark:hover:bg-neutral-700/50 transition-all duration-200 group"
               >
                 <div className="flex items-start justify-between gap-6">
                   <div className="flex items-start gap-4">
@@ -515,47 +531,47 @@ return (
                         if (appointment.id_negociacao) navigate(`/crm/${appointment.id_negociacao}`);
                       }}
                     >
-                      <h3 className="text-xl font-bold text-gray-900 mb-1">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100 mb-1">
                         {appointment.nome || appointment.nomeCliente}
                       </h3>
                       {appointment.descricao && (
-                        <p className="text-gray-600 text-sm mb-2">
+                        <p className="text-gray-600 dark:text-neutral-400 text-sm mb-2">
                           {appointment.descricao}
                         </p>
                       )}
                       
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="flex items-center gap-3 rounded-lg border border-gray-300 bg-white p-3">
+                        <div className="flex items-center gap-3 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700/50 p-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-600 text-white">
                             <Calendar className="w-4 h-4 text-white" />
                           </div>
                           <div>
-                            <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">Data</p>
-                            <p className="text-sm font-semibold text-gray-900">
+                            <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">Data</p>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-neutral-100">
                               {formatDate(appointment.dataInicio)}
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 rounded-lg border border-gray-300 bg-white p-3">
+                        <div className="flex items-center gap-3 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700/50 p-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded bg-green-600 text-white">
                             <Clock className="w-4 h-4 text-white" />
                           </div>
                           <div>
-                            <p className="text-xs font-medium text-green-600 uppercase tracking-wide">Horário</p>
-                            <p className="text-sm font-semibold text-gray-900">
+                            <p className="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">Horário</p>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-neutral-100">
                               {format(parseISO(appointment.dataInicio), 'HH:mm')} - {format(parseISO(appointment.dataFinal), 'HH:mm')}
                             </p>
                           </div>
                         </div>
-                        
-                        <div className="flex items-center gap-3 rounded-lg border border-gray-300 bg-white p-3">
+
+                        <div className="flex items-center gap-3 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700/50 p-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded bg-purple-600 text-white">
                             <User className="w-4 h-4 text-white" />
                           </div>
                           <div>
-                            <p className="text-xs font-medium text-purple-600 uppercase tracking-wide">Cliente</p>
-                            <p className="text-sm font-semibold text-gray-900 truncate">
+                            <p className="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wide">Cliente</p>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-neutral-100 truncate">
                               {appointment.nomeCliente}
                             </p>
                           </div>
@@ -569,14 +585,14 @@ return (
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <button
                         onClick={() => openEditModal(appointment)}
-                        className="p-3 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110"
+                        className="p-3 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-200 hover:scale-110"
                         title="Editar agendamento"
                       >
                         <Pencil className="w-5 h-5" />
                       </button>
                       <button
                         onClick={() => openDeleteModal(appointment)}
-                        className="p-3 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:scale-110"
+                        className="p-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-200 hover:scale-110"
                         title="Excluir agendamento"
                       >
                         <Trash2 className="w-5 h-5" />
@@ -591,7 +607,7 @@ return (
 
         {/* Pagination */}
         {filteredAppointments.length > itemsPerPage && (
-          <div className="p-6 border-t border-gray-300">
+          <div className="p-6 border-t border-gray-300 dark:border-neutral-700">
             <Pagination
               totalItems={filteredAppointments.length}
               itemsPerPage={itemsPerPage}
@@ -614,11 +630,11 @@ return (
         maxWidth="lg"
         maxHeight="90vh"
       >
-        <div className="rounded-lg border border-gray-300 bg-white">
+        <div className="rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800">
           <form onSubmit={handleCreateAppointment} className="space-y-6 p-6 overflow-y-auto max-h-[70vh]">
             {/* Deal Selection */}
             <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
                 <Calendar className="w-4 h-4 text-blue-600" />
                 Negociação
               </label>
@@ -627,15 +643,15 @@ return (
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     type="text"
-                    placeholder="Buscar negociação..."
+                    placeholder="Buscar por nome, telefone ou título..."
                     value={dealsSearchTerm}
                     onChange={(e) => setDealsSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400 transition-all duration-200"
                   />
                 </div>
-                <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-xl bg-white">
+                <div className="max-h-40 overflow-y-auto border border-gray-300 dark:border-neutral-600 rounded-xl bg-white dark:bg-neutral-700">
                   {dealsLoading ? (
-                    <div className="flex items-center justify-center h-20 text-gray-500">
+                    <div className="flex items-center justify-center h-20 text-gray-500 dark:text-neutral-400">
                       <Loader2 className="w-5 h-5 animate-spin mr-2" />
                       Carregando negociações...
                     </div>
@@ -644,17 +660,22 @@ return (
                       <div
                         key={deal.Id}
                         onClick={() => setSelectedDealId(deal.Id)}
-                        className={`p-4 cursor-pointer hover:bg-blue-50 transition-all duration-200 border-b border-gray-300 last:border-b-0 ${
-                          selectedDealId === deal.Id 
-                            ? 'bg-blue-50 text-blue-700 border-l-4 border-l-blue-500' 
-                            : 'text-gray-700'
+                        className={`p-4 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 border-b border-gray-300 dark:border-neutral-600 last:border-b-0 ${
+                          selectedDealId === deal.Id
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-l-4 border-l-blue-500'
+                            : 'text-gray-700 dark:text-neutral-300'
                         }`}
                       >
                         <div className="font-medium">{deal.titulo}</div>
+                        {deal.contato && (
+                          <div className="text-xs mt-1 opacity-75">
+                            {deal.contato.nome} • {deal.contato.telefone}
+                          </div>
+                        )}
                       </div>
                     ))
                   ) : (
-                    <div className="p-4 text-gray-500 text-center">
+                    <div className="p-4 text-gray-500 dark:text-neutral-400 text-center">
                       <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
                       Nenhuma negociação encontrada
                     </div>
@@ -666,7 +687,7 @@ return (
             {/* Date/Time Inputs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
                   <Clock className="w-4 h-4 text-green-600" />
                   Data e Hora de Início
                 </label>
@@ -674,13 +695,13 @@ return (
                   type="datetime-local"
                   value={selectedStart}
                   onChange={(e) => setSelectedStart(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all duration-200"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
                   <Clock className="w-4 h-4 text-red-600" />
                   Data e Hora de Término
                 </label>
@@ -688,7 +709,7 @@ return (
                   type="datetime-local"
                   value={selectedEnd}
                   onChange={(e) => setSelectedEnd(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all duration-200"
                   min={selectedStart}
                   max={selectedStart ? `${selectedStart.slice(0, 10)}T23:59` : undefined}
                   required
@@ -698,7 +719,7 @@ return (
 
             {/* Client Name */}
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
                 <User className="w-4 h-4 text-purple-600" />
                 Nome do Cliente
               </label>
@@ -706,7 +727,7 @@ return (
                 type="text"
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400 transition-all duration-200"
                 placeholder="Digite o nome do cliente"
                 required
               />
@@ -714,7 +735,7 @@ return (
 
             {/* Appointment Name */}
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
                 <Calendar className="w-4 h-4 text-blue-600" />
                 Nome do Agendamento
               </label>
@@ -722,20 +743,20 @@ return (
                 type="text"
                 value={appointmentName}
                 onChange={(e) => setAppointmentName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all duration-200"
               />
             </div>
 
             {/* Appointment Description */}
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
                 <Calendar className="w-4 h-4 text-blue-600" />
                 Descrição
               </label>
               <textarea
                 value={appointmentDesc}
                 onChange={(e) => setAppointmentDesc(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all duration-200"
                 rows={3}
               />
             </div>
@@ -752,14 +773,14 @@ return (
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pt-6 border-t border-gray-300/50">
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-300/50 dark:border-neutral-700">
               <button
                 type="button"
                 onClick={() => {
                   setIsCreateModalOpen(false);
                   resetForm();
                 }}
-                className="px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200"
+                className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-xl transition-all duration-200"
               >
                 Cancelar
               </button>
@@ -796,11 +817,11 @@ return (
         maxWidth="lg"
         maxHeight="90vh"
       >
-        <div className="rounded-lg border border-gray-300 bg-white">
+        <div className="rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800">
           <form onSubmit={handleEditAppointment} className="space-y-6 p-6 overflow-y-auto max-h-[70vh]">
             {/* Deal Selection */}
             <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
                 <Calendar className="w-4 h-4 text-blue-600" />
                 Negociação
               </label>
@@ -809,15 +830,15 @@ return (
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     type="text"
-                    placeholder="Buscar negociação..."
+                    placeholder="Buscar por nome, telefone ou título..."
                     value={dealsSearchTerm}
                     onChange={(e) => setDealsSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400 transition-all duration-200"
                   />
                 </div>
-                <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-xl bg-white">
+                <div className="max-h-40 overflow-y-auto border border-gray-300 dark:border-neutral-600 rounded-xl bg-white dark:bg-neutral-700">
                   {dealsLoading ? (
-                    <div className="flex items-center justify-center h-20 text-gray-500">
+                    <div className="flex items-center justify-center h-20 text-gray-500 dark:text-neutral-400">
                       <Loader2 className="w-5 h-5 animate-spin mr-2" />
                       Carregando negociações...
                     </div>
@@ -826,17 +847,22 @@ return (
                       <div
                         key={deal.Id}
                         onClick={() => setSelectedDealId(deal.Id)}
-                        className={`p-4 cursor-pointer hover:bg-blue-50 transition-all duration-200 border-b border-gray-300 last:border-b-0 ${
-                          selectedDealId === deal.Id 
-                            ? 'bg-blue-50 text-blue-700 border-l-4 border-l-blue-500' 
-                            : 'text-gray-700'
+                        className={`p-4 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 border-b border-gray-300 dark:border-neutral-600 last:border-b-0 ${
+                          selectedDealId === deal.Id
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-l-4 border-l-blue-500'
+                            : 'text-gray-700 dark:text-neutral-300'
                         }`}
                       >
                         <div className="font-medium">{deal.titulo}</div>
+                        {deal.contato && (
+                          <div className="text-xs mt-1 opacity-75">
+                            {deal.contato.nome} • {deal.contato.telefone}
+                          </div>
+                        )}
                       </div>
                     ))
                   ) : (
-                    <div className="p-4 text-gray-500 text-center">
+                    <div className="p-4 text-gray-500 dark:text-neutral-400 text-center">
                       <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
                       Nenhuma negociação encontrada
                     </div>
@@ -848,7 +874,7 @@ return (
             {/* Date/Time Inputs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
                   <Clock className="w-4 h-4 text-green-600" />
                   Data e Hora de Início
                 </label>
@@ -856,13 +882,13 @@ return (
                   type="datetime-local"
                   value={selectedStart}
                   onChange={(e) => setSelectedStart(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all duration-200"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
                   <Clock className="w-4 h-4 text-red-600" />
                   Data e Hora de Término
                 </label>
@@ -870,7 +896,7 @@ return (
                   type="datetime-local"
                   value={selectedEnd}
                   onChange={(e) => setSelectedEnd(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all duration-200"
                   min={selectedStart}
                   max={selectedStart ? `${selectedStart.slice(0, 10)}T23:59` : undefined}
                   required
@@ -880,7 +906,7 @@ return (
 
             {/* Client Name */}
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
                 <User className="w-4 h-4 text-purple-600" />
                 Nome do Cliente
               </label>
@@ -888,7 +914,7 @@ return (
                 type="text"
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400 transition-all duration-200"
                 placeholder="Digite o nome do cliente"
                 required
               />
@@ -905,14 +931,14 @@ return (
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pt-6 border-t border-gray-300/50">
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-300/50 dark:border-neutral-700">
               <button
                 type="button"
                 onClick={() => {
                   setIsEditModalOpen(false);
                   resetForm();
                 }}
-                className="px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200"
+                className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-xl transition-all duration-200"
               >
                 Cancelar
               </button>
@@ -947,30 +973,30 @@ return (
         }}
         title="Confirmar Exclusão"
       >
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6">
+        <div className="rounded-lg border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 p-6">
           <div className="space-y-6">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
-                <AlertCircle className="w-6 h-6 text-red-600" />
+              <div className="w-12 h-12 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-neutral-100 mb-2">
                   Excluir Agendamento
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-600 dark:text-neutral-300 leading-relaxed">
                   Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.
                 </p>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-red-200/50">
+            <div className="flex justify-end gap-3 pt-4 border-t border-red-200/50 dark:border-red-800/50">
               <button
                 type="button"
                 onClick={() => {
                   setIsDeleteModalOpen(false);
                   setSelectedAppointment(null);
                 }}
-                className="px-6 py-3 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 rounded-xl border border-gray-300 transition-all duration-200"
+                className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 rounded-xl border border-gray-300 dark:border-neutral-600 transition-all duration-200"
               >
                 Cancelar
               </button>
@@ -997,5 +1023,6 @@ return (
       </Modal>
     </div>
   </div>
+  </>
 );
 }

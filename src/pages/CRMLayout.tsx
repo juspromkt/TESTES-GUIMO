@@ -22,8 +22,8 @@ export default function CRMLayout({
   return (
     <div className="flex gap-6">
       {/* Sidebar */}
-      <aside className="w-64 bg-white rounded-2xl border border-gray-300 p-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+      <aside className="w-64 bg-white dark:bg-neutral-800 rounded-2xl border border-gray-300 dark:border-neutral-700 p-4 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-4">
           CRM e Relacionamento
         </h2>
         <nav className="flex flex-col gap-2">
@@ -36,13 +36,13 @@ export default function CRMLayout({
                 onClick={() => setActiveSection(section.id)}
                 className={`flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                   isActive
-                    ? "bg-green-100 text-green-700"
-                    : "text-gray-700 hover:bg-gray-50"
+                    ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                    : "text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700"
                 }`}
               >
                 <Icon
                   className={`w-4 h-4 ${
-                    isActive ? "text-green-600" : "text-gray-400"
+                    isActive ? "text-green-600 dark:text-green-400" : "text-gray-400 dark:text-neutral-500"
                   }`}
                 />
                 {section.label}

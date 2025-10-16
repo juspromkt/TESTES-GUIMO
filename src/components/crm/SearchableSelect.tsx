@@ -57,17 +57,17 @@ export default function SearchableSelect({
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          w-full px-4 py-2.5 bg-white border-2 rounded-xl cursor-pointer
+          w-full px-4 py-2.5 bg-white dark:bg-neutral-700 border-2 rounded-xl cursor-pointer
           flex items-center justify-between transition-all font-medium text-sm
           focus:ring-2 focus:ring-blue-500/20
-          ${hasValue ? 'border-blue-500' : 'border-gray-200'}
-          ${isOpen ? 'border-blue-500' : 'hover:border-gray-300'}
+          ${hasValue ? 'border-blue-500 dark:border-blue-400' : 'border-gray-200 dark:border-neutral-600'}
+          ${isOpen ? 'border-blue-500 dark:border-blue-400' : 'hover:border-gray-300 dark:hover:border-neutral-500'}
         `}
       >
-        <span className={`flex items-center gap-2 flex-1 min-w-0 ${selectedOption ? 'text-gray-900' : 'text-gray-600'}`}>
+        <span className={`flex items-center gap-2 flex-1 min-w-0 ${selectedOption ? 'text-gray-900 dark:text-neutral-100' : 'text-gray-600 dark:text-neutral-400'}`}>
           {selectedOption ? selectedOption.label : placeholder}
           {hasValue && selectedOption && (
-            <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
+            <span className="ml-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-xs font-bold">
               ✓
             </span>
           )}
@@ -80,12 +80,12 @@ export default function SearchableSelect({
                 e.stopPropagation();
                 onChange(0);
               }}
-              className="p-0.5 hover:bg-gray-100 rounded flex-shrink-0"
+              className="p-0.5 hover:bg-gray-100 dark:hover:bg-neutral-600 rounded flex-shrink-0"
             >
-              <X className="w-4 h-4 text-gray-500" />
+              <X className="w-4 h-4 text-gray-500 dark:text-neutral-400" />
             </button>
           )}
-          <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 ${isOpen ? 'transform rotate-180' : ''}`} />
+          <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-neutral-400 transition-transform flex-shrink-0 ${isOpen ? 'transform rotate-180' : ''}`} />
         </div>
       </div>
 
@@ -101,7 +101,7 @@ export default function SearchableSelect({
           />
           {/* Dropdown */}
           <div
-            className="fixed z-[9999] bg-white border-2 border-gray-200 rounded-2xl shadow-2xl overflow-hidden"
+            className="fixed z-[9999] bg-white dark:bg-neutral-800 border-2 border-gray-200 dark:border-neutral-600 rounded-2xl shadow-2xl overflow-hidden"
             style={{
               top: `${position.top}px`,
               left: `${position.left}px`,
@@ -110,14 +110,14 @@ export default function SearchableSelect({
             }}
           >
             {/* Campo de Busca Premium */}
-            <div className="p-3 bg-gradient-to-br from-gray-50 to-white border-b border-gray-200">
+            <div className="p-3 bg-gradient-to-br from-gray-50 to-white dark:from-neutral-800 dark:to-neutral-900 border-b border-gray-200 dark:border-neutral-700">
               <div className="relative group">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-neutral-500 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white font-medium"
+                  className="w-full pl-10 pr-4 py-2 text-sm border-2 border-gray-200 dark:border-neutral-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 transition-all bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 font-medium"
                   placeholder="Pesquisar..."
                   onClick={(e) => e.stopPropagation()}
                   autoFocus
@@ -143,14 +143,14 @@ export default function SearchableSelect({
                           px-4 py-2.5 rounded-xl cursor-pointer text-sm font-medium
                           flex items-center justify-between transition-all
                           ${isSelected
-                            ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border-2 border-blue-200'
-                            : 'text-gray-700 hover:bg-gray-50 border-2 border-transparent hover:border-gray-200'
+                            ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 border-2 border-blue-200 dark:border-blue-700'
+                            : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 border-2 border-transparent hover:border-gray-200 dark:hover:border-neutral-600'
                           }
                         `}
                       >
                         <span className="truncate">{option.label}</span>
                         {isSelected && (
-                          <Check className="w-4 h-4 text-blue-600 flex-shrink-0 ml-2" />
+                          <Check className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 ml-2" />
                         )}
                       </div>
                     );
@@ -158,10 +158,10 @@ export default function SearchableSelect({
                 </div>
               ) : (
                 <div className="px-4 py-8 text-center">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Search className="w-6 h-6 text-gray-400" />
+                  <div className="w-12 h-12 bg-gray-100 dark:bg-neutral-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Search className="w-6 h-6 text-gray-400 dark:text-neutral-500" />
                   </div>
-                  <p className="text-sm font-medium text-gray-500">
+                  <p className="text-sm font-medium text-gray-500 dark:text-neutral-400">
                     {validOptions.length === 0 ? 'Nenhum item cadastrado' : 'Nenhum resultado encontrado'}
                   </p>
                 </div>
@@ -170,7 +170,7 @@ export default function SearchableSelect({
 
             {/* Footer Button */}
             {footerLabel && (
-              <div className="border-t border-gray-200 p-2">
+              <div className="border-t border-gray-200 dark:border-neutral-700 p-2">
                 <button
                   type="button"
                   onClick={(e) => {
@@ -178,7 +178,7 @@ export default function SearchableSelect({
                     setIsOpen(false);
                     onFooterClick?.();
                   }}
-                  className="w-full text-center px-4 py-2.5 text-sm font-semibold text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                  className="w-full text-center px-4 py-2.5 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-neutral-700 rounded-xl transition-all"
                 >
                   {footerLabel}
                 </button>

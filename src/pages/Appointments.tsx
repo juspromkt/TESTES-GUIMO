@@ -25,11 +25,11 @@ const [activeTab, setActiveTab] = useState<TabType>('calendar');
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Agendamentos</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">Agendamentos</h1>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-300">
+      <div className="border-b border-gray-300 dark:border-neutral-700">
         <div className="flex gap-4">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -39,8 +39,8 @@ const [activeTab, setActiveTab] = useState<TabType>('calendar');
                 onClick={() => setActiveTab(tab.id as TabType)}
                 className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200'
                 }`}
               >
                 <Icon className="w-4 h-4" />

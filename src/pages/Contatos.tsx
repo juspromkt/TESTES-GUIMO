@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Users, Plus, Loader2, Pencil, Trash2, AlertCircle, ChevronUp, ChevronDown, Search, X, Check, Download, Mail, Phone, UserPlus, FileDown, FileUp, Filter, Globe } from 'lucide-react';
 import Papa from 'papaparse';
 import Pagination from '../components/Pagination';
@@ -36,6 +36,8 @@ export default function Contatos() {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
 const canEditContacts = hasPermission('can_edit_contacts');
 
   const [sortConfig, setSortConfig] = useState<{ field: SortField; direction: SortDirection }>({
@@ -67,6 +69,34 @@ useEffect(() => {
     window.removeEventListener("contactUpdated", handleContactUpdated);
   };
 }, []);
+
+  // Fechar dropdown ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target as Node)) {
+        setIsCountryDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Lista de países com bandeiras SVG
+  const countries = [
+    { code: '+55', country: 'BR', name: 'Brasil', flag: '🇧🇷' },
+    { code: '+1', country: 'US', name: 'Estados Unidos', flag: '🇺🇸' },
+    { code: '+44', country: 'GB', name: 'Reino Unido', flag: '🇬🇧' },
+    { code: '+351', country: 'PT', name: 'Portugal', flag: '🇵🇹' },
+    { code: '+34', country: 'ES', name: 'Espanha', flag: '🇪🇸' },
+    { code: '+33', country: 'FR', name: 'França', flag: '🇫🇷' },
+    { code: '+49', country: 'DE', name: 'Alemanha', flag: '🇩🇪' },
+    { code: '+39', country: 'IT', name: 'Itália', flag: '🇮🇹' },
+    { code: '+52', country: 'MX', name: 'México', flag: '🇲🇽' },
+    { code: '+54', country: 'AR', name: 'Argentina', flag: '🇦🇷' },
+  ];
+
+  const selectedCountry = countries.find(c => c.code === countryCode) || countries[0];
 
 
   const fetchContatos = async () => {
@@ -303,12 +333,12 @@ useEffect(() => {
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortConfig.field !== field) {
-      return <ChevronUp className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100" />;
+      return <ChevronUp className="w-4 h-4 text-gray-400 dark:text-neutral-500 opacity-0 group-hover:opacity-100" />;
     }
     return sortConfig.direction === 'asc' ? (
-      <ChevronUp className="w-4 h-4 text-blue-600" />
+      <ChevronUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
     ) : (
-      <ChevronDown className="w-4 h-4 text-blue-600" />
+      <ChevronDown className="w-4 h-4 text-blue-600 dark:text-blue-400" />
     );
   };
 
@@ -327,7 +357,7 @@ useEffect(() => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-900 transition-theme">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Header Premium */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
@@ -340,10 +370,10 @@ useEffect(() => {
                 </div>
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-neutral-100 dark:via-neutral-200 dark:to-neutral-100 bg-clip-text text-transparent">
                   Contatos
                 </h1>
-                <p className="text-sm text-gray-600 mt-0.5">
+                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-0.5">
                   Gerencie sua base de contatos
                 </p>
               </div>
@@ -354,17 +384,17 @@ useEffect(() => {
             <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={handleExportContacts}
-                className="group flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:border-gray-300 hover:shadow-md transition-all duration-200 font-medium"
+                className="group flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 text-gray-700 dark:text-neutral-200 rounded-xl hover:border-gray-300 hover:shadow-md transition-all duration-200 font-medium"
               >
-                <FileDown className="w-5 h-5 text-gray-500 group-hover:text-blue-600 transition-colors" />
+                <FileDown className="w-5 h-5 text-gray-500 dark:text-neutral-400 group-hover:text-blue-600 transition-colors" />
                 <span>Exportar</span>
               </button>
 
               <button
                 onClick={() => setIsImportModalOpen(true)}
-                className="group flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:border-gray-300 hover:shadow-md transition-all duration-200 font-medium"
+                className="group flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 text-gray-700 dark:text-neutral-200 rounded-xl hover:border-gray-300 hover:shadow-md transition-all duration-200 font-medium"
               >
-                <FileUp className="w-5 h-5 text-gray-500 group-hover:text-indigo-600 transition-colors" />
+                <FileUp className="w-5 h-5 text-gray-500 dark:text-neutral-400 group-hover:text-indigo-600 transition-colors" />
                 <span>Importar</span>
               </button>
 
@@ -404,7 +434,7 @@ useEffect(() => {
 
         {/* Estado Vazio ou Lista de Contatos */}
         {contatos.length === 0 ? (
-          <div className="relative bg-white rounded-2xl shadow-xl border border-gray-100 p-12 text-center overflow-hidden">
+          <div className="relative bg-white dark:bg-neutral-800 rounded-2xl shadow-xl border border-gray-100 dark:border-neutral-700 p-12 text-center overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full blur-3xl opacity-30 -z-10"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-purple-100 to-pink-100 rounded-full blur-3xl opacity-30 -z-10"></div>
 
@@ -415,7 +445,7 @@ useEffect(() => {
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-neutral-100 mb-3">
               Nenhum contato cadastrado
             </h2>
             <p className="text-gray-600 max-w-md mx-auto mb-8">
@@ -436,56 +466,56 @@ useEffect(() => {
             )}
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+          <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-xl border border-gray-100 dark:border-neutral-700 overflow-hidden">
             {/* Filtros Premium */}
-            <div className="p-6 border-b border-gray-100 bg-gradient-to-br from-gray-50 to-blue-50/30">
+            <div className="p-6 border-b border-gray-100 dark:border-neutral-700 bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-neutral-800 dark:to-neutral-800">
               <div className="flex items-center gap-2 mb-4">
-                <Filter className="w-5 h-5 text-gray-600" />
-                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Filtros</h3>
+                <Filter className="w-5 h-5 text-gray-600 dark:text-neutral-400" />
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-neutral-200 uppercase tracking-wide">Filtros</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-neutral-200 mb-2">
                     Nome
                   </label>
                   <div className="relative group">
-                    <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-blue-600 transition-colors" />
+                    <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-4 h-4 group-focus-within:text-blue-600 transition-colors" />
                     <input
                       type="text"
                       value={filters.nome}
                       onChange={(e) => setFilters({ ...filters, nome: e.target.value })}
                       placeholder="Buscar por nome..."
-                      className="pl-10 pr-4 py-2.5 w-full bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      className="pl-10 pr-4 py-2.5 w-full bg-white dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-neutral-200 mb-2">
                     Email
                   </label>
                   <div className="relative group">
-                    <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-blue-600 transition-colors" />
+                    <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-4 h-4 group-focus-within:text-blue-600 transition-colors" />
                     <input
                       type="text"
                       value={filters.Email}
                       onChange={(e) => setFilters({ ...filters, Email: e.target.value })}
                       placeholder="Buscar por email..."
-                      className="pl-10 pr-4 py-2.5 w-full bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      className="pl-10 pr-4 py-2.5 w-full bg-white dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-neutral-200 mb-2">
                     Telefone
                   </label>
                   <div className="relative group">
-                    <Phone className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-blue-600 transition-colors" />
+                    <Phone className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-4 h-4 group-focus-within:text-blue-600 transition-colors" />
                     <input
                       type="text"
                       value={filters.telefone}
                       onChange={(e) => setFilters({ ...filters, telefone: e.target.value })}
                       placeholder="Buscar por telefone..."
-                      className="pl-10 pr-4 py-2.5 w-full bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      className="pl-10 pr-4 py-2.5 w-full bg-white dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                     />
                   </div>
                 </div>
@@ -494,48 +524,48 @@ useEffect(() => {
 
             {/* Tabela Premium */}
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-100">
+              <table className="min-w-full divide-y divide-gray-100 dark:divide-neutral-700">
                 <thead>
-                  <tr className="bg-gradient-to-r from-gray-50 to-blue-50/20">
+                  <tr className="bg-gradient-to-r from-gray-50 to-blue-50/20 dark:from-neutral-700 dark:to-neutral-700">
                     <th
-                      className="px-6 py-4 text-left cursor-pointer group transition-colors hover:bg-blue-50/50"
+                      className="px-6 py-4 text-left cursor-pointer group transition-colors hover:bg-blue-50 dark:hover:bg-neutral-600"
                       onClick={() => handleSort('nome')}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Nome</span>
+                        <span className="text-xs font-bold text-gray-700 dark:text-neutral-200 uppercase tracking-wider">Nome</span>
                         <SortIcon field="nome" />
                       </div>
                     </th>
                     <th
-                      className="px-6 py-4 text-left cursor-pointer group transition-colors hover:bg-blue-50/50"
+                      className="px-6 py-4 text-left cursor-pointer group transition-colors hover:bg-blue-50 dark:hover:bg-neutral-600"
                       onClick={() => handleSort('Email')}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Email</span>
+                        <span className="text-xs font-bold text-gray-700 dark:text-neutral-200 uppercase tracking-wider">Email</span>
                         <SortIcon field="Email" />
                       </div>
                     </th>
                     <th
-                      className="px-6 py-4 text-left cursor-pointer group transition-colors hover:bg-blue-50/50"
+                      className="px-6 py-4 text-left cursor-pointer group transition-colors hover:bg-blue-50 dark:hover:bg-neutral-600"
                       onClick={() => handleSort('telefone')}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Telefone</span>
+                        <span className="text-xs font-bold text-gray-700 dark:text-neutral-200 uppercase tracking-wider">Telefone</span>
                         <SortIcon field="telefone" />
                       </div>
                     </th>
                     {canEditContacts && (
                       <th className="px-6 py-4 text-right">
-                        <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Ações</span>
+                        <span className="text-xs font-bold text-gray-700 dark:text-neutral-200 uppercase tracking-wider">Ações</span>
                       </th>
                     )}
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-50">
+                <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-50 dark:divide-neutral-700">
                   {paginatedContatos.map((contato) => (
                     <tr
                       key={contato.Id}
-                      className="group hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-indigo-50/30 cursor-pointer transition-all duration-200"
+                      className="group hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-indigo-50/30 dark:hover:from-neutral-700/50 dark:hover:to-neutral-700/50 cursor-pointer transition-all duration-200"
                       onClick={() => {
                         setSelectedContato(contato);
                         const { code, number } = extractCountryCode(contato.telefone || '');
@@ -554,20 +584,20 @@ useEffect(() => {
                           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold shadow-md">
                             {contato.nome?.charAt(0).toUpperCase() || '?'}
                           </div>
-                          <div className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+                          <div className="text-sm font-semibold text-gray-900 dark:text-neutral-100 group-hover:text-blue-700 transition-colors">
                             {contato.nome || '-'}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Mail className="w-4 h-4 text-gray-400" />
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-neutral-400">
+                          <Mail className="w-4 h-4 text-gray-400 dark:text-neutral-500" />
                           <span>{contato.Email || '-'}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Phone className="w-4 h-4 text-gray-400" />
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-neutral-400">
+                          <Phone className="w-4 h-4 text-gray-400 dark:text-neutral-500" />
                           <span>{formatPhoneNumber(contato.telefone)}</span>
                         </div>
                       </td>
@@ -587,7 +617,7 @@ useEffect(() => {
                               });
                               setIsModalOpen(true);
                             }}
-                            className="inline-flex items-center justify-center w-9 h-9 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                            className="inline-flex items-center justify-center w-9 h-9 text-gray-400 dark:text-neutral-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-all duration-200"
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
@@ -600,7 +630,7 @@ useEffect(() => {
             </div>
 
             {/* Paginação */}
-            <div className="border-t border-gray-100 bg-gray-50/50 px-6 py-4">
+            <div className="border-t border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-700/50 px-6 py-4">
               <Pagination
                 totalItems={filteredAndSortedContacts.length}
                 itemsPerPage={itemsPerPage}
@@ -615,7 +645,7 @@ useEffect(() => {
         {/* Modal Premium */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
+            <div className="bg-white dark:bg-neutral-800 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
               {/* Cabeçalho com Gradiente */}
               <div className="relative bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
@@ -656,11 +686,11 @@ useEffect(() => {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100 mb-2">
                         Confirmar Exclusão
                       </h3>
-                      <p className="text-gray-600">
-                        Tem certeza que deseja excluir o contato <span className="font-semibold text-gray-900">"{selectedContato?.nome}"</span>? Esta ação não pode ser desfeita.
+                      <p className="text-gray-600 dark:text-neutral-400">
+                        Tem certeza que deseja excluir o contato <span className="font-semibold text-gray-900 dark:text-neutral-100">"{selectedContato?.nome}"</span>? Esta ação não pode ser desfeita.
                       </p>
                     </div>
                   </div>
@@ -668,7 +698,7 @@ useEffect(() => {
                   <div className="flex justify-end gap-3">
                     <button
                       onClick={() => setIsConfirmingDelete(false)}
-                      className="px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 border border-gray-200 rounded-xl transition-all"
+                      className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-700 border border-gray-200 dark:border-neutral-600 rounded-xl transition-all"
                     >
                       Cancelar
                     </button>
@@ -684,11 +714,11 @@ useEffect(() => {
                 <form onSubmit={handleSubmit} className="p-8 space-y-6">
                   {/* Nome */}
                   <div>
-                    <label htmlFor="nome" className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label htmlFor="nome" className="block text-sm font-semibold text-gray-700 dark:text-neutral-200 mb-2">
                       Nome Completo <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500">
                         <Users className="w-5 h-5" />
                       </div>
                       <input
@@ -696,7 +726,7 @@ useEffect(() => {
                         id="nome"
                         value={formData.nome}
                         onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                        className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 placeholder-gray-400"
+                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500"
                         placeholder="Digite o nome completo..."
                         required
                       />
@@ -705,11 +735,11 @@ useEffect(() => {
 
                   {/* Email */}
                   <div>
-                    <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label htmlFor="email" className="block text-sm font-semibold text-gray-700 dark:text-neutral-200 mb-2">
                       Email
                     </label>
                     <div className="relative">
-                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500">
                         <Mail className="w-5 h-5" />
                       </div>
                       <input
@@ -717,7 +747,7 @@ useEffect(() => {
                         id="email"
                         value={formData.Email}
                         onChange={(e) => setFormData({ ...formData, Email: e.target.value })}
-                        className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 placeholder-gray-400"
+                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500"
                         placeholder="exemplo@email.com"
                       />
                     </div>
@@ -725,42 +755,51 @@ useEffect(() => {
 
                   {/* Telefone com Seletor de País Premium */}
                   <div>
-                    <label htmlFor="telefone" className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label htmlFor="telefone" className="block text-sm font-semibold text-gray-700 dark:text-neutral-200 mb-2">
                       Telefone WhatsApp
                     </label>
                     <div className="flex gap-2">
-                      {/* Seletor de País */}
-                      <div className="relative">
-                        <select
-                          value={countryCode}
-                          onChange={(e) => {
-                            setCountryCode(e.target.value);
-                            // Remove o código anterior e adiciona o novo
-                            const cleanPhone = phoneNumber.replace(/^\+?\d{1,3}/, '');
-                            const fullNumber = e.target.value.replace('+', '') + cleanPhone;
-                            setFormData({ ...formData, telefone: fullNumber });
-                          }}
-                          className="h-[52px] pl-4 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 font-semibold bg-gradient-to-br from-gray-50 to-white appearance-none cursor-pointer hover:border-gray-300"
+                      {/* Seletor de País Customizado */}
+                      <div className="relative" ref={countryDropdownRef}>
+                        <button
+                          type="button"
+                          onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
+                          className="h-[52px] w-[120px] pl-3 pr-10 py-3 flex items-center gap-2 border border-gray-200 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 dark:text-neutral-100 font-semibold bg-gradient-to-br from-gray-50 to-white dark:from-neutral-700 dark:to-neutral-700 cursor-pointer hover:border-gray-300 dark:hover:border-neutral-500"
                         >
-                          <option value="+55">🇧🇷 +55</option>
-                          <option value="+1">🇺🇸 +1</option>
-                          <option value="+44">🇬🇧 +44</option>
-                          <option value="+351">🇵🇹 +351</option>
-                          <option value="+34">🇪🇸 +34</option>
-                          <option value="+33">🇫🇷 +33</option>
-                          <option value="+49">🇩🇪 +49</option>
-                          <option value="+39">🇮🇹 +39</option>
-                          <option value="+52">🇲🇽 +52</option>
-                          <option value="+54">🇦🇷 +54</option>
-                        </select>
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                          <ChevronDown className="w-4 h-4 text-gray-500" />
-                        </div>
+                          <span className="text-2xl">{selectedCountry.flag}</span>
+                          <span className="text-sm">{selectedCountry.code}</span>
+                          <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-neutral-400 absolute right-3 transition-transform ${isCountryDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {isCountryDropdownOpen && (
+                          <div className="absolute top-full left-0 mt-1 w-[240px] bg-white dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 rounded-xl shadow-lg z-50 max-h-[300px] overflow-y-auto">
+                            {countries.map((country) => (
+                              <button
+                                key={country.code}
+                                type="button"
+                                onClick={() => {
+                                  setCountryCode(country.code);
+                                  const cleanPhone = phoneNumber.replace(/^\+?\d{1,3}/, '');
+                                  const fullNumber = country.code.replace('+', '') + cleanPhone;
+                                  setFormData({ ...formData, telefone: fullNumber });
+                                  setIsCountryDropdownOpen(false);
+                                }}
+                                className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-blue-50 dark:hover:bg-neutral-600 transition-colors text-left ${
+                                  countryCode === country.code ? 'bg-blue-50 dark:bg-neutral-600' : ''
+                                }`}
+                              >
+                                <span className="text-2xl">{country.flag}</span>
+                                <span className="flex-1 text-sm font-medium text-gray-900 dark:text-neutral-100">{country.name}</span>
+                                <span className="text-sm text-gray-600 dark:text-neutral-400">{country.code}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       {/* Campo de Número */}
                       <div className="flex-1 relative">
-                        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500">
                           <Phone className="w-5 h-5" />
                         </div>
                         <input
@@ -787,22 +826,22 @@ useEffect(() => {
                               setPhoneNumber(phoneOnly);
                             }
                           }}
-                          className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 placeholder-gray-400 font-medium"
+                          className="w-full pl-12 pr-4 py-3 bg-white dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-800 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 font-medium"
                           placeholder={countryCode === '+55' ? '11999999999' : 'Número do telefone'}
                         />
                       </div>
                     </div>
 
                     {/* Dica Visual Melhorada */}
-                    <div className="mt-2 flex items-start gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-lg p-3">
+                    <div className="mt-2 flex items-start gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800/50 rounded-lg p-3">
                       <div className="mt-0.5">
-                        <Globe className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                        <Globe className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-xs font-semibold text-blue-900 mb-1">
+                        <p className="text-xs font-semibold text-blue-900 dark:text-blue-300 mb-1">
                           Importante: Sempre inclua o código do país!
                         </p>
-                        <p className="text-xs text-blue-700">
+                        <p className="text-xs text-blue-700 dark:text-blue-400">
                           {countryCode === '+55'
                             ? 'Exemplo: +55 11 99999-9999 → Digite apenas: 11999999999'
                             : `Exemplo: ${countryCode} + seu número local completo`
@@ -813,12 +852,12 @@ useEffect(() => {
                   </div>
 
                   {/* Botões */}
-                  <div className="flex justify-between items-center gap-3 pt-4 border-t border-gray-100">
+                  <div className="flex justify-between items-center gap-3 pt-4 border-t border-gray-100 dark:border-neutral-700">
                     {selectedContato && (
                       <button
                         type="button"
                         onClick={() => setIsConfirmingDelete(true)}
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
                       >
                         <Trash2 className="w-4 h-4" />
                         <span>Excluir</span>
@@ -831,7 +870,7 @@ useEffect(() => {
                           setIsModalOpen(false);
                           resetForm();
                         }}
-                        className="px-5 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all"
+                        className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-neutral-200 border border-gray-200 dark:border-neutral-600 rounded-xl hover:bg-gray-50 dark:hover:bg-neutral-700 dark:bg-neutral-700 transition-all"
                       >
                         Cancelar
                       </button>
@@ -868,34 +907,34 @@ useEffect(() => {
           title="Importar Contatos"
         >
           <div className="p-6">
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-5 mb-6">
-              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <FileUp className="w-5 h-5 text-blue-600" />
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800/50 rounded-xl p-5 mb-6">
+              <h4 className="font-semibold text-gray-900 dark:text-neutral-100 mb-3 flex items-center gap-2">
+                <FileUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 Formato do Arquivo CSV
               </h4>
-              <p className="text-sm text-gray-700 mb-3">
+              <p className="text-sm text-gray-700 dark:text-neutral-300 mb-3">
                 Prepare um arquivo CSV com as seguintes colunas:
               </p>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                  <span className="font-medium text-gray-900">nome</span>
-                  <span className="text-gray-600">(obrigatório)</span>
+                  <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full"></div>
+                  <span className="font-medium text-gray-900 dark:text-neutral-100">nome</span>
+                  <span className="text-gray-600 dark:text-neutral-400">(obrigatório)</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                  <span className="font-medium text-gray-900">email</span>
-                  <span className="text-gray-600">(opcional)</span>
+                  <div className="w-2 h-2 bg-gray-400 dark:bg-neutral-500 rounded-full"></div>
+                  <span className="font-medium text-gray-900 dark:text-neutral-100">email</span>
+                  <span className="text-gray-600 dark:text-neutral-400">(opcional)</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                  <span className="font-medium text-gray-900">telefone</span>
-                  <span className="text-gray-600">(opcional)</span>
+                  <div className="w-2 h-2 bg-gray-400 dark:bg-neutral-500 rounded-full"></div>
+                  <span className="font-medium text-gray-900 dark:text-neutral-100">telefone</span>
+                  <span className="text-gray-600 dark:text-neutral-400">(opcional)</span>
                 </div>
               </div>
             </div>
 
-            <div className="relative border-2 border-dashed border-gray-300 rounded-2xl p-8 hover:border-blue-400 hover:bg-blue-50/30 transition-all duration-200 group">
+            <div className="relative border-2 border-dashed border-gray-300 dark:border-neutral-600 rounded-2xl p-8 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 group">
               <input
                 type="file"
                 accept=".csv"
@@ -914,18 +953,18 @@ useEffect(() => {
                 className="flex flex-col items-center justify-center cursor-pointer"
               >
                 <div className="relative mb-4">
-                  <div className="absolute inset-0 bg-blue-600 rounded-full blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                  <div className="relative w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <FileUp className="w-8 h-8 text-blue-600" />
+                  <div className="absolute inset-0 bg-blue-600 dark:bg-blue-500 rounded-full blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
+                  <div className="relative w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <FileUp className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                   </div>
                 </div>
-                <span className="text-base font-medium text-gray-900 mb-1">
+                <span className="text-base font-medium text-gray-900 dark:text-neutral-100 mb-1">
                   Selecione um arquivo CSV
                 </span>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-gray-500 dark:text-neutral-400">
                   ou arraste e solte aqui
                 </span>
-                <span className="text-xs text-gray-400 mt-2">
+                <span className="text-xs text-gray-400 dark:text-neutral-500 mt-2">
                   Usar vírgula (,) como separador
                 </span>
               </label>
@@ -941,7 +980,7 @@ useEffect(() => {
             {uploading && (
               <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl flex items-center justify-center gap-3">
                 <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-                <span className="font-medium text-gray-700">Processando arquivo...</span>
+                <span className="font-medium text-gray-700 dark:text-neutral-200">Processando arquivo...</span>
               </div>
             )}
           </div>

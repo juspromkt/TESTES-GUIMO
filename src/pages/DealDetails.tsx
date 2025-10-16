@@ -183,7 +183,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
     onChange: (val: string | number | boolean | null) => void
   ) => {
     const baseClasses =
-      'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500';
+      'w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-theme';
     switch (field.tipo) {
       case 'INTEGER':
         return (
@@ -365,7 +365,6 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
 
   const tabs = [
     { id: 'geral', label: 'Geral', icon: FileText },
-    ...(hideConversations ? [] : [{ id: 'conversas', label: 'Conversas', icon: MessageSquare }]),
     { id: 'agendamentos', label: 'Agendamentos', icon: Calendar }
   ];
 
@@ -1239,29 +1238,124 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
   const currentStage = currentFunnel?.estagios?.find(s => parseInt(s.Id) === selectedStageId);
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
+    <>
+      <style>{`
+        /* Estilos para os dropdowns do select no dark mode */
+        .dark select {
+          background-color: #404040 !important;
+          color: #f5f5f5 !important;
+        }
+
+        .dark select option {
+          background-color: #262626 !important;
+          color: #f5f5f5 !important;
+          padding: 8px !important;
+        }
+
+        .dark select option:checked,
+        .dark select option:hover {
+          background-color: #3b82f6 !important;
+          color: white !important;
+        }
+
+        /* Estilos adicionais para ReactQuill no dark mode */
+        .dark .ql-editor {
+          color: white !important;
+        }
+
+        .dark .ql-editor.ql-blank::before {
+          color: #a3a3a3 !important;
+        }
+
+        .dark .ql-toolbar {
+          background-color: #404040 !important;
+          border-color: #525252 !important;
+        }
+
+        .dark .ql-container {
+          background-color: #262626 !important;
+          border-color: #525252 !important;
+        }
+
+        .dark .ql-stroke {
+          stroke: #e5e5e5 !important;
+        }
+
+        .dark .ql-fill {
+          fill: #e5e5e5 !important;
+        }
+
+        .dark .ql-picker-label {
+          color: #e5e5e5 !important;
+        }
+
+        .dark .ql-picker-options {
+          background-color: #404040 !important;
+          border-color: #525252 !important;
+        }
+
+        .dark .ql-picker-item {
+          color: #e5e5e5 !important;
+        }
+
+        .dark .ql-picker-item:hover {
+          background-color: #525252 !important;
+        }
+
+        /* Estilos para conteúdo HTML renderizado no dark mode */
+        .dark .prose-sm strong,
+        .dark .prose-sm b {
+          color: white !important;
+        }
+
+        .dark .prose-sm em,
+        .dark .prose-sm i {
+          color: #f5f5f5 !important;
+        }
+
+        .dark .prose-sm h1,
+        .dark .prose-sm h2,
+        .dark .prose-sm h3 {
+          color: white !important;
+        }
+
+        .dark .prose-sm p {
+          color: #e5e5e5 !important;
+        }
+
+        .dark .prose-sm ul,
+        .dark .prose-sm ol {
+          color: #e5e5e5 !important;
+        }
+
+        .dark .prose-sm a {
+          color: #60a5fa !important;
+        }
+      `}</style>
+
+      <div className="h-full flex flex-col bg-gray-50 dark:bg-neutral-900 transition-theme">
       {/* Header */}
-      <div className="bg-white border-b border-gray-300 px-8 py-6 shadow-sm">
+      <div className="bg-white dark:bg-neutral-800 border-b border-gray-300 dark:border-neutral-700 px-8 py-6 shadow-sm transition-theme">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             {onClose ? (
               <button
                 onClick={onClose}
-                className="text-gray-500 hover:text-gray-700 transition-colors p-2 rounded-full hover:bg-gray-100"
+                className="text-gray-500 dark:text-neutral-400 dark:text-neutral-400 hover:text-gray-700 dark:text-neutral-300 dark:hover:text-neutral-200 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700"
               >
                 <X className="w-5 h-5" />
               </button>
             ) : (
               <button
                 onClick={() => navigate('/crm')}
-                className="text-gray-500 hover:text-gray-700 transition-colors p-2 rounded-full hover:bg-gray-100"
+                className="text-gray-500 dark:text-neutral-400 dark:text-neutral-400 hover:text-gray-700 dark:text-neutral-300 dark:hover:text-neutral-200 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
             )}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{deal.titulo}</h1>
-              <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">{deal.titulo}</h1>
+              <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-neutral-400 dark:text-neutral-400">
                 <div className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
                   <span>Criado em {formatDate(deal.CreatedAt)}</span>
@@ -1276,19 +1370,10 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {deal.contato?.telefone && (
-              <button
-                onClick={goToConversation}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                <MessageSquare className="w-5 h-5" />
-                Conversas
-              </button>
-            )}
             {canEditCRM && (
               <button
                 onClick={() => setIsDeleteModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-theme"
               >
                 <Trash2 className="w-5 h-5" />
                 Excluir
@@ -1298,14 +1383,14 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
         </div>
 
         {success && (
-          <div className="mt-4 p-4 bg-green-50 text-green-700 rounded-lg flex items-center gap-2">
+          <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg flex items-center gap-2">
             <Check className="w-5 h-5" />
             <span>{success}</span>
           </div>
         )}
-        
+
         {error && (
-          <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-2">
+          <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg flex items-center gap-2">
             <AlertCircle className="w-5 h-5" />
             <span>{error}</span>
           </div>
@@ -1318,10 +1403,10 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as TabType)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-theme ${
                   activeTab === tab.id
-                    ? 'bg-blue-50 text-blue-700 font-medium'
-                    : 'text-gray-600 hover:bg-gray-50'
+                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium'
+                    : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-700'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -1329,6 +1414,16 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
               </button>
             );
           })}
+
+          {deal.contato?.telefone && (
+            <button
+              onClick={goToConversation}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-theme ml-2"
+            >
+              <MessageSquare className="w-5 h-5" />
+              Ir para conversa
+            </button>
+          )}
         </div>
       </div>
 
@@ -1339,17 +1434,17 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
             {/* Left Column - Basic Info & Funnel */}
             <div className="md:col-span-2 space-y-6">
               {/* Basic Info Card */}
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-300">
+              <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-6 border border-gray-300 dark:border-neutral-700 transition-theme">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-blue-500" />
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-blue-500 dark:text-blue-400" />
                     Informações Básicas
                   </h2>
                   {!editingBasicInfo ? (
                     canEditCRM && (
                       <button
                         onClick={() => setEditingBasicInfo(true)}
-                        className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-50"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-2 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-theme"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
@@ -1359,16 +1454,16 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                       {canEditCRM && (
                         <button
                           onClick={() => setEditingBasicInfo(false)}
-                          className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-50"
+                          className="text-gray-600 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-200 p-2 rounded-full hover:bg-gray-50 dark:hover:bg-neutral-700 transition-theme"
                           disabled={savingChanges}
                         >
                           <X className="w-4 h-4" />
                         </button>
                       )}
-                      
+
                       <button
                         onClick={handleUpdateBasicInfo}
-                        className="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-50"
+                        className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 p-2 rounded-full hover:bg-green-50 dark:hover:bg-green-900/30 transition-theme"
                         disabled={savingChanges}
                       >
                         {savingChanges ? (
@@ -1382,21 +1477,21 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                 </div>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Título</label>
+                    <label className="block text-sm font-medium text-gray-500 dark:text-neutral-400 dark:text-neutral-400 mb-1">Título</label>
                     {editingBasicInfo ? (
                       <input
                         type="text"
                         value={editedDeal?.titulo}
                         onChange={(e) => setEditedDeal(prev => prev ? {...prev, titulo: e.target.value} : null)}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-theme"
                       />
                     ) : (
-                      <p className="mt-1 text-gray-900 font-medium">{deal.titulo}</p>
+                      <p className="mt-1 text-gray-900 dark:text-neutral-100 font-medium">{deal.titulo}</p>
                     )}
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Usuário Responsável</label>
+                    <label className="block text-sm font-medium text-gray-500 dark:text-neutral-400 dark:text-neutral-400 mb-1">Usuário Responsável</label>
                     {editingBasicInfo ? (
                       <select
                         value={selectedUserId || ''}
@@ -1405,7 +1500,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                           setSelectedUserId(userId);
                           setEditedDeal(prev => prev ? {...prev, id_usuario: userId} : null);
                         }}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-theme"
                       >
                         <option value="">Sem responsável</option>
                         {users.map((user) => (
@@ -1424,14 +1519,14 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                             <span className="text-gray-900">{responsibleUser.nome}</span>
                           </>
                         ) : (
-                          <span className="text-gray-500">Sem responsável</span>
+                          <span className="text-gray-500 dark:text-neutral-400">Sem responsável</span>
                         )}
                       </div>
                     )}
 
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Fonte</label>
+                    <label className="block text-sm font-medium text-gray-500 dark:text-neutral-400 dark:text-neutral-400 mb-1">Fonte</label>
                     {editingBasicInfo ? (
                       <select
                         value={selectedFonteId || ''}
@@ -1440,7 +1535,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                           setSelectedFonteId(fonteId);
                           setEditedDeal(prev => prev ? { ...prev, id_fonte: fonteId } : null);
                         }}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-theme"
                       >
                         <option value="">Sem fonte</option>
                         {fontes.map(f => (
@@ -1450,7 +1545,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                         ))}
                       </select>
                     ) : (
-                      <p className="mt-1 text-gray-900 font-medium">
+                      <p className="mt-1 text-gray-900 dark:text-neutral-100 font-medium">
                         {fonte ? (fonte.source ? `${fonte.nome} (${fonte.source})` : fonte.nome) : 'Sem fonte'}
                       </p>
                     )}
@@ -1458,22 +1553,22 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                 </div>
 
                 <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Etiquetas</label>
+                  <label className="block text-sm font-medium text-gray-500 dark:text-neutral-400 dark:text-neutral-400 mb-1">Etiquetas</label>
                   {editingTags ? (
                     <div className="space-y-2">
                       <div className="flex gap-2">
                         <select
                           value={selectedTagId || ''}
                           onChange={e => setSelectedTagId(e.target.value ? parseInt(e.target.value) : null)}
-                          className="px-3 py-2 border border-gray-300 rounded-lg"
+                          className="px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg transition-theme"
                         >
                           <option value="">Selecione</option>
                           {availableTags.map(tag => (
                             <option key={tag.Id} value={tag.Id}>{tag.nome}</option>
                           ))}
                         </select>
-                        <button onClick={handleAddTag} disabled={savingTag} className="px-3 py-2 bg-green-600 text-white rounded-lg disabled:opacity-50">Adicionar</button>
-                        <button type="button" onClick={() => setEditingTags(false)} className="px-3 py-2 bg-gray-200 rounded-lg">Concluir</button>
+                        <button onClick={handleAddTag} disabled={savingTag} className="px-3 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 disabled:opacity-50 transition-theme">Adicionar</button>
+                        <button type="button" onClick={() => setEditingTags(false)} className="px-3 py-2 bg-gray-200 dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg hover:bg-gray-300 dark:hover:bg-neutral-600 transition-theme">Concluir</button>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {dealTags.map(tag => (
@@ -1488,7 +1583,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                     </div>
                   ) : (
                     <div className="flex flex-wrap gap-1 items-center">
-                      {dealTags.length === 0 && <span className="text-sm text-gray-500">Sem etiquetas</span>}
+                      {dealTags.length === 0 && <span className="text-sm text-gray-500 dark:text-neutral-400">Sem etiquetas</span>}
                       {dealTags.map(tag => (
                         <span key={tag.Id} className="px-2 py-0.5 rounded text-xs" style={{ backgroundColor: tag.cor, color: tag.cor_texto }}>{tag.nome}</span>
                       ))}
@@ -1503,16 +1598,16 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
 
                 {deal.id_anuncio && anuncio && (
                   <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Anúncio</label>
+                    <label className="block text-sm font-medium text-gray-500 dark:text-neutral-400 dark:text-neutral-400 mb-1">Anúncio</label>
                     <AnuncioCard anuncio={anuncio} />
                   </div>
                 )}
               </div>
 
               {/* Funnel Card */}
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-300">
+              <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-6 border border-gray-300 dark:border-neutral-700 transition-theme">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 flex items-center gap-2">
                     <GitBranch className="w-5 h-5 text-indigo-500" />
                     Funil e Estágio
                   </h2>
@@ -1550,7 +1645,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                 </div>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Funil</label>
+                    <label className="block text-sm font-medium text-gray-500 dark:text-neutral-400 dark:text-neutral-400 mb-1">Funil</label>
                     {editingFunnel ? (
                       <select
                         value={selectedFunnelId || ''}
@@ -1559,7 +1654,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                           setSelectedFunnelId(funnelId);
                           setSelectedStageId(null);
                         }}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-theme"
                       >
                         <option value="">Selecione um funil</option>
                         {funnels.map((funnel) => (
@@ -1571,19 +1666,19 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                     ) : (
                       <div className="mt-1 flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
-                        <p className="text-gray-900 font-medium">
+                        <p className="text-gray-900 dark:text-neutral-100 font-medium">
                           {currentFunnel?.nome || 'Não definido'}
                         </p>
                       </div>
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Estágio</label>
+                    <label className="block text-sm font-medium text-gray-500 dark:text-neutral-400 dark:text-neutral-400 mb-1">Estágio</label>
                     {editingFunnel ? (
                       <select
                         value={selectedStageId || ''}
                         onChange={(e) => setSelectedStageId(parseInt(e.target.value))}
-                        className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-theme"
                         disabled={!selectedFunnelId}
                       >
                         <option value="">Selecione um estágio</option>
@@ -1596,7 +1691,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                     ) : (
                       <div className="mt-1 flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                        <p className="text-gray-900 font-medium">
+                        <p className="text-gray-900 dark:text-neutral-100 font-medium">
                           {currentStage?.nome || 'Não definido'}
                         </p>
                       </div>
@@ -1605,62 +1700,10 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
               </div>
             </div>
 
-              {/* Summary Card */}
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-300">
-                <div className="flex justify-between items-center mb-4">
-<h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-  <Bot className="w-5 h-5 text-violet-500" />
-  Resumo da negociação
-  <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-    BETA
-  </span>
-</h2>
-<span className="block text-xs text-gray-500 mt-1 ml-7">
-  Pode levar cerca de 1 minuto para gerar um resumo.
-</span>
-                  {summary ? (
-                    <button
-                      onClick={handleDeleteSummary}
-                      className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-50"
-                      disabled={deletingSummary}
-                    >
-                      {deletingSummary ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleCreateSummary}
-                      className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-50"
-                      disabled={creatingSummary}
-                    >
-                      {creatingSummary ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Plus className="w-4 h-4" />
-                      )}
-                    </button>
-                  )}
-                </div>
-                {loadingSummary ? (
-                  <div className="flex items-center justify-center py-4">
-                    <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                  </div>
-                ) : summary ? (
-                  <pre className="whitespace-pre-wrap text-sm text-gray-700">{summary}</pre>
-                ) : (
-                  <p className="text-sm text-gray-500">Nenhum resumo disponível.</p>
-                )}
-                {summaryError && (
-                  <p className="text-sm text-red-600 mt-2">{summaryError}</p>
-                )}
-              </div>
               {/* Activities Section */}
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-300">
+              <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-6 border border-gray-300 dark:border-neutral-700 transition-theme">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 flex items-center gap-2">
                     <MessageSquare className="w-5 h-5 text-purple-500" />
                     Atividades
                   </h2>
@@ -1668,8 +1711,8 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
 
                 {/* New Activity Form */}
                 {canEditCRM && (
-                  <div className="mb-6 border-b border-gray-300 pb-6">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Nova Atividade</h3>
+                  <div className="mb-6 border-b border-gray-300 dark:border-neutral-700 pb-6">
+                    <h3 className="text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Nova Atividade</h3>
                     <div className="space-y-3">
                       {canEditCRM && (
                         <div>
@@ -1687,14 +1730,14 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                             type="button"
                             onClick={() => document.getElementById('activity-media-upload')?.click()}
                             disabled={isUploading}
-                            className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg mb-2"
+                            className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg mb-2 transition-theme"
                           >
                             <Upload className="w-4 h-4" />
                             {isUploading ? 'Carregando...' : 'Adicionar Mídia'}
                           </button>
                         </div>
                       )}
-                      
+
                       <div className="relative">
                         {isQuillReady && (
                           <ReactQuill
@@ -1705,12 +1748,12 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                             modules={modules}
                             formats={formats}
                             placeholder="Adicione uma nova atividade..."
-                            className="bg-white rounded-lg"
+                            className="bg-white dark:bg-neutral-800 rounded-lg [&_.ql-toolbar]:dark:bg-neutral-700 [&_.ql-toolbar]:dark:border-neutral-600 [&_.ql-container]:dark:bg-neutral-800 [&_.ql-container]:dark:border-neutral-600 [&_.ql-editor]:dark:text-white [&_.ql-editor.ql-blank::before]:dark:text-neutral-400 [&_.ql-stroke]:dark:stroke-neutral-200 [&_.ql-fill]:dark:fill-neutral-200 [&_.ql-picker-label]:dark:text-neutral-200"
                           />
                         )}
                         {isUploading && (
-                          <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                          <div className="absolute inset-0 bg-white/80 dark:bg-neutral-800/80 flex items-center justify-center">
+                            <Loader2 className="w-6 h-6 animate-spin text-blue-500 dark:text-blue-400" />
                           </div>
                         )}
                       </div>
@@ -1719,7 +1762,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                         <button
                           onClick={handleCreateActivity}
                           disabled={!newActivity.trim() || savingActivity}
-                          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                          className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-theme transition-colors disabled:opacity-50"
                         >
                           {savingActivity ? (
                             <>
@@ -1740,14 +1783,14 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
 
                 {/* Activities List */}
                 <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-gray-700">Histórico de Atividades</h3>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-neutral-300">Histórico de Atividades</h3>
                   
                   {loadingActivities ? (
                     <div className="flex items-center justify-center py-8">
                       <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
                     </div>
                   ) : activities.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-gray-500 dark:text-neutral-400">
                       <p>Nenhuma atividade registrada</p>
                     </div>
                   ) : (
@@ -1756,7 +1799,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                         const activityUser = users.find(u => u.Id === activity.id_usuario);
                         
                         return (
-                          <div key={activity.Id} className="border border-gray-300 rounded-lg p-4">
+                          <div key={activity.Id} className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 rounded-lg p-4 transition-theme">
                             {editingActivity?.Id === activity.Id ? (
                               <div className="space-y-3">
                                 <div className="relative">
@@ -1767,22 +1810,22 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                                       onChange={(value) => setEditingActivity({...editingActivity, descricao: value})}
                                       modules={modules}
                                       formats={formats}
-                                      className="bg-white rounded-lg"
+                                      className="bg-white dark:bg-neutral-800 rounded-lg [&_.ql-toolbar]:dark:bg-neutral-700 [&_.ql-toolbar]:dark:border-neutral-600 [&_.ql-container]:dark:bg-neutral-800 [&_.ql-container]:dark:border-neutral-600 [&_.ql-editor]:dark:text-white [&_.ql-editor.ql-blank::before]:dark:text-neutral-400 [&_.ql-stroke]:dark:stroke-neutral-200 [&_.ql-fill]:dark:fill-neutral-200 [&_.ql-picker-label]:dark:text-neutral-200"
                                     />
                                   )}
                                 </div>
-                                
+
                                 <div className="flex justify-end gap-2">
                                   <button
                                     onClick={() => setEditingActivity(null)}
-                                    className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                                    className="px-3 py-1 text-sm text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg transition-theme"
                                   >
                                     Cancelar
                                   </button>
                                   <button
                                     onClick={handleUpdateActivity}
                                     disabled={savingActivity}
-                                    className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                    className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-theme"
                                   >
                                     {savingActivity ? (
                                       <Loader2 className="w-3 h-3 animate-spin" />
@@ -1797,33 +1840,33 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                               <>
                                 <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                                      <User className="w-4 h-4 text-blue-600" />
+                                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                      <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                     </div>
                                     <div>
-                                      <p className="font-medium text-gray-900">{activityUser?.nome || 'Usuário'}</p>
-                                      <p className="text-xs text-gray-500">
+                                      <p className="font-medium text-gray-900 dark:text-neutral-100">{activityUser?.nome || 'Usuário'}</p>
+                                      <p className="text-xs text-gray-500 dark:text-neutral-400">
                                         {formatDate(activity.CreatedAt)} às {formatTime(activity.CreatedAt)}
                                       </p>
                                     </div>
                                   </div>
-                                  
+
                                   {canEditCRM && (
                                     <div className="relative group">
-                                      <button className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
+                                      <button className="p-1 text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-700 transition-theme">
                                         <MoreVertical className="w-4 h-4" />
                                       </button>
-                                      <div className="absolute right-0 mt-1 w-36 bg-white shadow-lg rounded-lg overflow-hidden border border-gray-300 hidden group-hover:block z-10">
+                                      <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-neutral-700 shadow-lg rounded-lg overflow-hidden border border-gray-300 dark:border-neutral-600 hidden group-hover:block z-10">
                                         <button
                                           onClick={() => setEditingActivity(activity)}
-                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-600 flex items-center gap-2 transition-theme"
                                         >
                                           <Edit className="w-4 h-4" />
                                           <span>Editar</span>
                                         </button>
                                         <button
                                           onClick={() => handleDeleteActivity(activity.Id)}
-                                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                          className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2 transition-theme"
                                         >
                                           <Trash2 className="w-4 h-4" />
                                           <span>Excluir</span>
@@ -1833,8 +1876,8 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                                   )}
                                 </div>
                                 
-                                <div 
-                                  className="text-gray-700 prose-sm max-w-none"
+                                <div
+                                  className="text-gray-700 dark:text-neutral-200 prose-sm max-w-none [&_strong]:dark:text-white [&_em]:dark:text-neutral-100 [&_h1]:dark:text-white [&_h2]:dark:text-white [&_h3]:dark:text-white"
                                   dangerouslySetInnerHTML={{ __html: activity.descricao }}
                                 />
                               </>
@@ -1857,9 +1900,9 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                 contactPhone={deal.contato?.telefone}
               />
 
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-300">
+              <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-6 border border-gray-300 dark:border-neutral-700 transition-theme">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 flex items-center gap-2">
                     <User className="w-5 h-5 text-green-500" />
                     Contato
                   </h2>
@@ -1867,7 +1910,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                     canEditCRM && (
                       <button
                         onClick={() => setEditingContact(true)}
-                        className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-50"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-2 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-theme"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
@@ -1876,14 +1919,14 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                     <div className="flex gap-2">
                       <button
                         onClick={() => setEditingContact(false)}
-                        className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-50"
+                        className="text-gray-600 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-200 p-2 rounded-full hover:bg-gray-50 dark:hover:bg-neutral-700 transition-theme"
                         disabled={savingChanges}
                       >
                         <X className="w-4 h-4" />
                       </button>
                       <button
                         onClick={handleUpdateContact}
-                        className="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-50"
+                        className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 p-2 rounded-full hover:bg-green-50 dark:hover:bg-green-900/30 transition-theme"
                         disabled={savingChanges}
                       >
                         {savingChanges ? (
@@ -1898,97 +1941,68 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                 {deal.contato ? (
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
-                      <User className="w-5 h-5 text-gray-400 mt-0.5" />
+                      <User className="w-5 h-5 text-gray-400 dark:text-neutral-500 mt-0.5" />
                       <div className="flex-1">
                         {editingContact ? (
                           <input
                             type="text"
                             value={editedContact?.nome}
                             onChange={(e) => setEditedContact(prev => prev ? {...prev, nome: e.target.value} : null)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg transition-theme focus:ring-2 focus:ring-blue-500"
                           />
                         ) : (
                           <>
-                            <p className="font-medium text-gray-900">{deal.contato.nome}</p>
-                            <p className="text-xs text-gray-500">Nome</p>
+                            <p className="font-medium text-gray-900 dark:text-neutral-100">{deal.contato.nome}</p>
+                            <p className="text-xs text-gray-500 dark:text-neutral-400">Nome</p>
                           </>
                         )}
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
+                      <Mail className="w-5 h-5 text-gray-400 dark:text-neutral-500 mt-0.5" />
                       <div className="flex-1">
                         {editingContact ? (
                           <input
                             type="email"
                             value={editedContact?.email}
                             onChange={(e) => setEditedContact(prev => prev ? {...prev, email: e.target.value} : null)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg transition-theme focus:ring-2 focus:ring-blue-500"
                           />
                         ) : (
                           <>
-                            <p className="font-medium text-gray-900">{deal.contato.Email || 'Não informado'}</p>
-                            <p className="text-xs text-gray-500">Email</p>
+                            <p className="font-medium text-gray-900 dark:text-neutral-100">{deal.contato.Email || 'Não informado'}</p>
+                            <p className="text-xs text-gray-500 dark:text-neutral-400">Email</p>
                           </>
                         )}
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
+                      <Phone className="w-5 h-5 text-gray-400 dark:text-neutral-500 mt-0.5" />
                       <div className="flex-1">
                         {editingContact ? (
                           <input
                             type="tel"
                             value={editedContact?.telefone}
                             onChange={(e) => setEditedContact(prev => prev ? {...prev, telefone: e.target.value} : null)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg transition-theme focus:ring-2 focus:ring-blue-500"
                           />
                         ) : (
                           <>
-                            <p className="font-medium text-gray-900">{deal.contato.telefone || 'Não informado'}</p>
-                            <p className="text-xs text-gray-500">Telefone</p>
+                            <p className="font-medium text-gray-900 dark:text-neutral-100">{deal.contato.telefone || 'Não informado'}</p>
+                            <p className="text-xs text-gray-500 dark:text-neutral-400">Telefone</p>
                           </>
                         )}
                       </div>
                     </div>
-                    
-                    {/* Quick Actions */}
-                    {!editingContact && (
-                      <div className="mt-4 pt-4 border-t border-gray-300">
-                        <h3 className="text-sm font-medium text-gray-700 mb-2">Ações Rápidas</h3>
-                        <div className="flex flex-wrap gap-2">
-                          
-                          {deal.contato.Email && (
-                            <a 
-                              href={`mailto:${deal.contato.Email}`}
-                              className="flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm hover:bg-blue-100 transition-colors"
-                            >
-                              <Mail className="w-3 h-3" />
-                              <span>Email</span>
-                            </a>
-                          )}
-                          
-                          {deal.contato.telefone && (
-                            <a 
-                              href={`tel:${deal.contato.telefone.replace(/\D/g, '')}`}
-                              className="flex items-center gap-1 px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-sm hover:bg-purple-100 transition-colors"
-                            >
-                              <Phone className="w-3 h-3" />
-                              <span>Ligar</span>
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 ) : (
-                  <div className="text-center py-6 text-gray-500">
-                    <User className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                  <div className="text-center py-6 text-gray-500 dark:text-neutral-400">
+                    <User className="w-12 h-12 text-gray-300 dark:text-neutral-600 mx-auto mb-2" />
                     <p>Nenhum contato associado</p>
                     {canEditCRM && (
                       <button
                         onClick={() => setEditingContact(true)}
-                        className="mt-2 text-blue-600 hover:text-blue-800 text-sm"
+                        className="mt-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm"
                       >
                         Adicionar contato
                       </button>
@@ -1996,16 +2010,16 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                   </div>
                 )}
               </div>
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-300">
+              <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-6 border border-gray-300 dark:border-neutral-700 transition-theme">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 flex items-center gap-2">
                     <GitBranch className="w-5 h-5 text-purple-500" />
                     Campos personalizados
                   </h2>
                   {canEditCRM && (
                     <button
                       onClick={() => setAddingField(true)}
-                      className="flex items-center gap-1 px-3 py-1 text-sm rounded-lg text-white bg-blue-600 hover:bg-blue-700"
+                      className="flex items-center gap-1 px-3 py-1 text-sm rounded-lg text-white bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 transition-theme"
                     >
                       <Plus className="w-4 h-4" />
                       Adicionar campo
@@ -2013,7 +2027,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                   )}
                 </div>
                 {leadFields.length > 0 ? (
-                  <div className="divide-y divide-gray-200">
+                  <div className="divide-y divide-gray-200 dark:divide-neutral-700">
                     {leadFields.map((lf) => {
                       const field = customFields.find(
                         (f) => f.Id === lf.id_campo_personalizado
@@ -2027,9 +2041,9 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                           className="py-4 first:pt-0 last:pb-0 flex justify-between items-start"
                         >
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-700">{field.nome}</p>
+                            <p className="text-sm font-medium text-gray-700 dark:text-neutral-200">{field.nome}</p>
                             {!editing ? (
-                              <p className="mt-1 text-gray-900">
+                              <p className="mt-1 text-gray-900 dark:text-neutral-100">
                                 {formatFieldValue(field, value)}
                               </p>
                             ) : (
@@ -2043,7 +2057,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                                 <button
                                   onClick={() => handleSaveField(field.Id)}
                                   disabled={savingFieldId === field.Id}
-                                  className="flex items-center gap-1 px-3 py-1 text-sm rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                                  className="flex items-center gap-1 px-3 py-1 text-sm rounded-lg text-white bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 transition-theme"
                                 >
                                   {savingFieldId === field.Id ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -2060,7 +2074,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                                     }));
                                     setEditingFieldId(null);
                                   }}
-                                  className="px-3 py-1 text-sm rounded-lg bg-gray-200"
+                                  className="px-3 py-1 text-sm rounded-lg bg-gray-200 dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 hover:bg-gray-300 dark:hover:bg-neutral-600 transition-theme"
                                 >
                                   Cancelar
                                 </button>
@@ -2070,7 +2084,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                           {!editing && canEditCRM && (
                             <button
                               onClick={() => setEditingFieldId(field.Id)}
-                              className="text-blue-600 text-sm hover:underline"
+                              className="text-blue-600 dark:text-blue-400 text-sm hover:underline"
                             >
                               Editar
                             </button>
@@ -2080,14 +2094,14 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                     })}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-sm">
+                  <p className="text-gray-500 dark:text-neutral-400 text-sm">
                     Ainda não há nenhum campo cadastrado vinculado ao lead.
                   </p>
                 )}
                 {addingField && (
-                  <div className="mt-4 p-3 border rounded-lg space-y-2">
+                  <div className="mt-4 p-3 border border-gray-300 dark:border-neutral-600 bg-gray-50 dark:bg-neutral-700/50 rounded-lg space-y-2 transition-theme">
                     <select
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg transition-theme focus:ring-2 focus:ring-blue-500"
                       value={newFieldId ?? ''}
                       onChange={(e) =>
                         setNewFieldId(e.target.value ? Number(e.target.value) : null)
@@ -2120,7 +2134,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                         <div className="flex gap-2">
                           <button
                             onClick={handleAddField}
-                            className="px-3 py-1 text-sm rounded-lg text-white bg-blue-600 hover:bg-blue-700"
+                            className="px-3 py-1 text-sm rounded-lg text-white bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 transition-theme"
                           >
                             Salvar
                           </button>
@@ -2130,7 +2144,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                               setNewFieldId(null);
                               setNewFieldValue(null);
                             }}
-                            className="px-3 py-1 text-sm rounded-lg bg-gray-200"
+                            className="px-3 py-1 text-sm rounded-lg bg-gray-200 dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 hover:bg-gray-300 dark:hover:bg-neutral-600 transition-theme"
                           >
                             Cancelar
                           </button>
@@ -2146,8 +2160,8 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
 
         {!hideConversations && activeTab === 'conversas' && (
           <div className="flex justify-center">
-            <div className="w-full md:w-[480px] bg-gray-100 rounded-2xl overflow-hidden shadow-md border border-gray-300 flex flex-col" style={{ height: "600px" }}>
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 flex items-center">
+            <div className="w-full md:w-[480px] bg-gray-100 dark:bg-neutral-800 rounded-2xl overflow-hidden shadow-md border border-gray-300 dark:border-neutral-600 flex flex-col transition-theme" style={{ height: "600px" }}>
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 text-white p-4 flex items-center">
                 <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                   <span className="text-lg font-semibold">{deal.contato?.nome?.charAt(0) || 'U'}</span>
                 </div>
@@ -2174,8 +2188,8 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                       <div
                         className={`max-w-[80%] rounded-lg p-3 ${
                           message.key.fromMe
-                            ? 'bg-emerald-100 text-gray-800'
-                            : 'bg-white text-gray-800'
+                            ? 'bg-emerald-100 dark:bg-emerald-900/50 text-gray-800 dark:text-neutral-100'
+                            : 'bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-100'
                         }`}
                       >
                         {message.messageType === 'imageMessage' && message.message.mediaUrl && (
@@ -2199,14 +2213,14 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                             }}
                           />
                         )}
-                        <p className="text-right text-xs text-gray-500 mt-1">
+                        <p className="text-right text-xs text-gray-500 dark:text-neutral-400 mt-1">
                           {formatMessageDateTime(message.data)}
                         </p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center text-gray-500 text-sm">
+                  <div className="flex-1 flex flex-col items-center justify-center text-gray-500 dark:text-neutral-400 text-sm">
                     <MessageSquare className="w-12 h-12 text-gray-300 mb-2" />
                     <p>Nenhuma conversa ainda.</p>
                     <p>Este cliente ainda não interagiu.</p>
@@ -2231,14 +2245,14 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
       >
         <div className="p-6">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-red-600" />
+            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+              <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
                 Tem certeza que deseja excluir?
               </h3>
-              <p className="text-gray-500 mt-1">
+              <p className="text-gray-500 dark:text-neutral-400 mt-1">
                 Esta ação não pode ser desfeita e todos os dados relacionados a esta negociação serão perdidos.
               </p>
             </div>
@@ -2247,14 +2261,14 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
           <div className="mt-6 flex justify-end gap-3">
             <button
               onClick={() => setIsDeleteModalOpen(false)}
-              className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="px-4 py-2 text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg transition-theme"
             >
               Cancelar
             </button>
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 bg-red-600 dark:bg-red-500 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition-theme transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {deleting ? (
                 <>
@@ -2271,6 +2285,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
           </div>
         </div>
       </Modal>
-    </div>
+      </div>
+    </>
   );
 }

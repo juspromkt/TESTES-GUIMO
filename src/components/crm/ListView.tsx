@@ -238,13 +238,13 @@ export default function ListView({
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
       return (
-        <ChevronUp className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100" />
+        <ChevronUp className="w-4 h-4 text-gray-400 dark:text-neutral-500 opacity-0 group-hover:opacity-100" />
       );
     }
     return sortDirection === 'asc' ? (
-      <ChevronUp className="w-4 h-4 text-blue-600" />
+      <ChevronUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
     ) : (
-      <ChevronDown className="w-4 h-4 text-blue-600" />
+      <ChevronDown className="w-4 h-4 text-blue-600 dark:text-blue-400" />
     );
   };
 
@@ -260,23 +260,44 @@ export default function ListView({
     paginatedDeals.every(deal => selectedDeals.includes(deal.Id));
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden w-full">
+    <>
+      <style>{`
+        /* Estilos para os dropdowns do select no dark mode */
+        .dark select {
+          background-color: #404040 !important;
+          color: #f5f5f5 !important;
+        }
+
+        .dark select option {
+          background-color: #262626 !important;
+          color: #f5f5f5 !important;
+          padding: 8px !important;
+        }
+
+        .dark select option:checked,
+        .dark select option:hover {
+          background-color: #3b82f6 !important;
+          color: white !important;
+        }
+      `}</style>
+
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden w-full transition-theme">
       {selectedDeals.length > 0 && canEdit && (
-        <div className="p-4 bg-gray-50 border-b border-gray-300 flex items-center justify-between">
-          <div className="text-sm text-gray-600">
+        <div className="p-4 bg-gray-50 dark:bg-neutral-700 border-b border-gray-300 dark:border-neutral-600 flex items-center justify-between transition-theme">
+          <div className="text-sm text-gray-600 dark:text-neutral-300">
             {selectedDeals.length} negociação(ões) selecionada(s)
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={handleExportCSV}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 rounded-md"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-200 bg-white dark:bg-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-500 border border-gray-300 dark:border-neutral-500 rounded-md transition-theme"
             >
               <Download className="w-4 h-4" />
               Exportar Selecionados
             </button>
             <button
               onClick={() => setIsBulkMoveModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md transition-theme"
             >
               <GitBranch className="w-4 h-4" />
               Mover Selecionados
@@ -284,7 +305,7 @@ export default function ListView({
             <button
               onClick={handleBulkDelete}
               disabled={bulkDeleting}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-md disabled:opacity-50 transition-theme"
             >
               {bulkDeleting ? (
                 <>
@@ -302,14 +323,14 @@ export default function ListView({
         </div>
       )}
 
-      <div className="flex items-center justify-between p-4 border-b border-gray-300">
+      <div className="flex items-center justify-between p-4 border-b border-gray-300 dark:border-neutral-600 transition-theme">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Visualizar itens:</span>
+            <span className="text-sm text-gray-600 dark:text-neutral-300">Visualizar itens:</span>
             <select
               value={itemsPerPage}
               onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-              className="border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 p-2"
+              className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 p-2 transition-theme"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -321,14 +342,14 @@ export default function ListView({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Itens por página:</span>
+            <span className="text-sm text-gray-600 dark:text-neutral-300">Itens por página:</span>
             <select
               value={localItemsPerPage}
               onChange={(e) => {
                 setLocalItemsPerPage(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 p-2"
+              className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 p-2 transition-theme"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
@@ -338,11 +359,11 @@ export default function ListView({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Página:</span>
+            <span className="text-sm text-gray-600 dark:text-neutral-300">Página:</span>
             <select
               value={currentPage}
               onChange={(e) => setCurrentPage(Number(e.target.value))}
-              className="border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 p-2"
+              className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 p-2 transition-theme"
             >
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                 <option key={page} value={page}>
@@ -353,7 +374,7 @@ export default function ListView({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Funil:</span>
+            <span className="text-sm text-gray-600 dark:text-neutral-300">Funil:</span>
             <select
               value={filterFunnelId || ''}
               onChange={(e) => {
@@ -361,7 +382,7 @@ export default function ListView({
                 setFilterFunnelId(value);
                 setFilterStageId('');
               }}
-              className="border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 p-2"
+              className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 p-2 transition-theme"
             >
               <option value="">Todos</option>
               {funil && <option value={funil.id}>{funil.nome}</option>}
@@ -369,11 +390,11 @@ export default function ListView({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Estágio:</span>
+            <span className="text-sm text-gray-600 dark:text-neutral-300">Estágio:</span>
             <select
               value={filterStageId}
               onChange={(e) => setFilterStageId(e.target.value)}
-              className="border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 p-2"
+              className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 p-2 disabled:opacity-50 transition-theme"
               disabled={!filterFunnelId}
             >
               <option value="">Todos</option>
@@ -387,13 +408,13 @@ export default function ListView({
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-5 h-5" />
           <input
             type="text"
             placeholder="Buscar por título ou contato..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
+            className="pl-10 pr-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 w-64 transition-theme"
           />
         </div>
       </div>
@@ -410,8 +431,8 @@ export default function ListView({
           }
           scrollableTarget="deals-table-container"
         >
-          <table className="min-w-full divide-y divide-gray-200 table-fixed">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700 table-fixed">
+            <thead className="bg-gray-50 dark:bg-neutral-700 transition-theme">
               <tr>
                 <th scope="col" className="w-[48px] p-4">
                 {canEdit && (
@@ -419,13 +440,13 @@ export default function ListView({
                     type="checkbox"
                     checked={areAllCurrentPageDealsSelected}
                     onChange={handleSelectCurrentPage}
-                    className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="w-5 h-5 rounded border-gray-300 dark:border-neutral-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
                   />
                   )}
                 </th>
-                <th 
+                <th
                   scope="col"
-                  className="w-[300px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer group"
+                  className="w-[300px] px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-300 uppercase tracking-wider cursor-pointer group"
                   onClick={() => handleSort('titulo')}
                 >
                   <div className="flex items-center gap-1">
@@ -435,7 +456,7 @@ export default function ListView({
                 </th>
                 <th
                   scope="col"
-                  className="w-[200px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer group"
+                  className="w-[200px] px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-300 uppercase tracking-wider cursor-pointer group"
                   onClick={() => handleSort('contato')}
                 >
                   <div className="flex items-center gap-1">
@@ -443,9 +464,9 @@ export default function ListView({
                     <SortIcon field="contato" />
                   </div>
                 </th>
-                <th 
+                <th
                   scope="col"
-                  className="w-[180px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer group"
+                  className="w-[180px] px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-300 uppercase tracking-wider cursor-pointer group"
                   onClick={() => handleSort('estagio')}
                 >
                   <div className="flex items-center gap-1">
@@ -455,7 +476,7 @@ export default function ListView({
                 </th>
                 <th
                   scope="col"
-                  className="w-[140px] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer group"
+                  className="w-[140px] px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-300 uppercase tracking-wider cursor-pointer group"
                   onClick={() => handleSort('UpdatedAt')}
                 >
                   <div className="flex items-center gap-1">
@@ -463,19 +484,19 @@ export default function ListView({
                     <SortIcon field="UpdatedAt" />
                   </div>
                 </th>
-                <th scope="col" className="w-[100px] px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="w-[100px] px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-neutral-300 uppercase tracking-wider">
                   Ações
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700 transition-theme">
               {paginatedDeals.map((deal) => {
                 const stage = funil.estagios?.find(s => parseInt(s.Id) === deal.id_estagio);
                 return (
                   <tr
                     key={deal.Id}
                     onClick={() => onDealClick(deal)}
-                    className="hover:bg-gray-50 cursor-pointer"
+                    className="hover:bg-gray-50 dark:hover:bg-neutral-700 cursor-pointer transition-theme"
                   >
                     <td className="w-[48px] p-4" onClick={e => e.stopPropagation()}>
                                       {canEdit && (
@@ -483,27 +504,27 @@ export default function ListView({
                         type="checkbox"
                         checked={selectedDeals.includes(deal.Id)}
                         onChange={(e) => handleSelectDeal(deal.Id, e)}
-                        className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="w-5 h-5 rounded border-gray-300 dark:border-neutral-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
                       />
                                                                 )}
                     </td>
                     <td className="w-[300px] px-4 py-3">
-                      <div className="text-sm text-gray-900 max-w-[280px] truncate" title={deal.titulo}>
+                      <div className="text-sm text-gray-900 dark:text-neutral-100 max-w-[280px] truncate" title={deal.titulo}>
                         {deal.titulo}
                       </div>
                     </td>
                     <td className="w-[200px] px-4 py-3">
-                      <div className="text-sm text-gray-900 max-w-[180px] truncate" title={deal.contato?.nome}>
+                      <div className="text-sm text-gray-900 dark:text-neutral-100 max-w-[180px] truncate" title={deal.contato?.nome}>
                         {deal.contato?.nome}
                       </div>
                     </td>
                     <td className="w-[180px] px-4 py-3">
-                      <div className="text-sm text-gray-900 max-w-[160px] truncate" title={stage?.nome}>
+                      <div className="text-sm text-gray-900 dark:text-neutral-100 max-w-[160px] truncate" title={stage?.nome}>
                         {stage?.nome}
                       </div>
                     </td>
                     <td className="w-[140px] px-4 py-3">
-                      <div className="text-sm text-gray-500 truncate">
+                      <div className="text-sm text-gray-500 dark:text-neutral-400 truncate">
                         {formatDate(deal.UpdatedAt ?? deal.CreatedAt)}
                       </div>
                     </td>
@@ -514,14 +535,14 @@ export default function ListView({
                             e.stopPropagation();
                             onDealClick(deal);
                           }}
-                          className="text-blue-600 hover:text-blue-900 p-1"
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 p-1 transition-theme"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                                         {canEdit && (
                         <button
                           onClick={(e) => handleDelete(deal, e)}
-                          className="text-red-600 hover:text-red-900 p-1"
+                          className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-1 transition-theme"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -548,14 +569,14 @@ export default function ListView({
       >
         <div className="p-6">
           <div>
-            <label htmlFor="stage" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="stage" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
               Selecione o novo estágio
             </label>
             <select
               id="stage"
               value={selectedStageId}
               onChange={(e) => setSelectedStageId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-theme"
               required
             >
               <option value="">Selecione um estágio...</option>
@@ -567,13 +588,13 @@ export default function ListView({
             </select>
           </div>
           {error && (
-            <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-lg text-sm">
+            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="mt-4 p-4 bg-green-50 text-green-600 rounded-lg text-sm">
+            <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg text-sm">
               {success}
             </div>
           )}
@@ -586,14 +607,14 @@ export default function ListView({
                 setSelectedStageId('');
                 setError('');
               }}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-200 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md transition-theme"
             >
               Cancelar
             </button>
             <button
               onClick={handleBulkMove}
               disabled={!selectedStageId || movingDeals}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md disabled:opacity-50 transition-theme"
             >
               {movingDeals ? (
                 <>
@@ -611,6 +632,7 @@ export default function ListView({
         </div>
       </Modal>
             )}
-    </div>
+      </div>
+    </>
   );
 }

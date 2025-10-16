@@ -23,6 +23,11 @@ body {
   color: var(--foreground);
 }
 
+/* Classe de transição para elementos que mudam com o tema */
+.transition-theme {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
 /* ========== OTIMIZAÇÕES MOBILE ========== */
 /* Safe Area Insets para dispositivos com notch */
 @supports (padding: max(0px)) {

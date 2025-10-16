@@ -231,8 +231,8 @@ const fetchDeals = async (page: number) => {
       setLoadingMore(true);
     }
 
-    // 🔹 Busca negociações do funil selecionado
-    const responseFunil = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/get', {
+    // Busca negociações do funil selecionado
+    const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/get', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -245,46 +245,12 @@ const fetchDeals = async (page: number) => {
       })
     });
 
-    // 🔹 Busca negociações sem funil (para "Sem status")
-    const responseSemFunil = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/get', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        token
-      },
-      body: JSON.stringify({
-        page,
-        offset: itemsPerPage,
-        id_funil: null
-      })
-    });
-
-    if (!responseFunil.ok || !responseSemFunil.ok) {
+    if (!response.ok) {
       throw new Error('Erro ao carregar negociações');
     }
 
-    const dataFunil = await responseFunil.json();
-    const dataSemFunil = await responseSemFunil.json();
-
-// 🔹 Junta os dois resultados, mas remove duplicados pelo ID
-const allDealsRaw = [
-  ...(Array.isArray(dataFunil) ? dataFunil : []),
-  ...(Array.isArray(dataSemFunil) ? dataSemFunil : []),
-];
-
-// 🔹 Cria um mapa para remover duplicados com base no ID da negociação
-const uniqueDealsMap = new Map<number, any>();
-for (const d of allDealsRaw) {
-  if (!uniqueDealsMap.has(d.Id)) {
-    uniqueDealsMap.set(d.Id, d);
-  }
-}
-const allDeals = Array.from(uniqueDealsMap.values());
-
-console.log("📊 Negociações únicas (sem duplicatas):", allDeals);
-
-
-    console.log("📊 Todas as negociações (com e sem funil):", allDeals);
+    const data = await response.json();
+    const allDeals = Array.isArray(data) ? data : [];
 
     // Mapeia contatos com base nos contatos já carregados
     const dealsWithContacts = allDeals.map(deal => {
@@ -390,14 +356,6 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
   try {
     // Cria o payload com os dados recebidos do formulário
     const payload = { ...dealData };
-
-    // 🧩 Garante que novos leads sem funil/estágio caiam em "Sem status"
-    if (!payload.id_funil) {
-      payload.id_funil = null;
-    }
-    if (!payload.id_estagio) {
-      payload.id_estagio = null;
-    }
 
     // Remove campos opcionais vazios
     if (!payload.id_fonte) delete payload.id_fonte;
@@ -596,10 +554,31 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
   }
 
   return (
-    <div className="w-full overflow-x-hidden bg-gradient-to-br from-gray-50 via-blue-50/20 to-indigo-50/20 min-h-screen">
-      <div className="px-6 py-6">
+    <>
+      <style>{`
+        /* Estilos para o dropdown do select no dark mode */
+        .dark select {
+          background-color: #404040 !important;
+          color: #f5f5f5 !important;
+        }
+
+        .dark select option {
+          background-color: #262626 !important;
+          color: #f5f5f5 !important;
+          padding: 8px !important;
+        }
+
+        .dark select option:checked,
+        .dark select option:hover {
+          background-color: #3b82f6 !important;
+          color: white !important;
+        }
+      `}</style>
+
+      <div className="w-full overflow-x-hidden bg-gradient-to-br from-gray-50 via-blue-50/20 to-indigo-50/20 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-800 min-h-screen transition-theme">
+        <div className="px-6 py-6">
         {/* Header Premium */}
-        <div className="flex-none pb-6 bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">
+        <div className="flex-none pb-6 bg-white dark:bg-neutral-800 rounded-2xl shadow-lg border border-gray-100 dark:border-neutral-700 p-6 mb-6 transition-theme">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="relative">
@@ -611,15 +590,15 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                 </div>
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-neutral-100 dark:via-neutral-200 dark:to-neutral-100 bg-clip-text text-transparent">
                   CRM
                 </h1>
-                <p className="text-sm text-gray-600 mt-0.5">Gerencie suas negociações</p>
+                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-0.5">Gerencie suas negociações</p>
               </div>
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="ml-2 p-2.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all disabled:opacity-50 border border-gray-200"
+                className="ml-2 p-2.5 text-gray-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-neutral-700 rounded-xl transition-all disabled:opacity-50 border border-gray-200 dark:border-neutral-600"
                 title="Atualizar dados"
               >
                 <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
@@ -634,7 +613,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                     const funil = funis.find(f => f.id === Number(e.target.value));
                     setSelectedFunil(funil || null);
                   }}
-                  className="appearance-none bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 rounded-xl px-5 py-2.5 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 min-w-[220px] font-semibold text-gray-900 cursor-pointer hover:border-gray-300 transition-all"
+                  className="appearance-none bg-gradient-to-br from-gray-50 to-white dark:from-neutral-700 dark:to-neutral-800 border-2 border-gray-200 dark:border-neutral-600 rounded-xl px-5 py-2.5 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 min-w-[220px] font-semibold text-gray-900 dark:text-neutral-100 cursor-pointer hover:border-gray-300 dark:hover:border-neutral-500 transition-all"
                 >
                   <option value="">Selecione um funil</option>
                   {funis.map((funil) => (
@@ -643,7 +622,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none w-5 h-5" />
+                <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-neutral-400 pointer-events-none w-5 h-5" />
               </div>
 
               <ViewToggle view={viewMode} onViewChange={setViewMode} />
@@ -662,17 +641,17 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
           </div>
 
           {/* Filtros Premium */}
-          <div className="mt-6 p-5 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200">
+          <div className="mt-6 p-5 bg-gradient-to-br from-gray-50 to-white dark:from-neutral-800 dark:to-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-700 transition-theme">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
               {/* Busca */}
               <div className="relative group">
-                <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-blue-600 transition-colors" />
+                <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-5 h-5 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors" />
                 <input
                   type="text"
                   placeholder="Buscar por título ou contato..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-11 pr-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-gray-400 text-sm font-medium"
+                  className="w-full pl-11 pr-4 py-2.5 bg-white dark:bg-neutral-700 border-2 border-gray-200 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 transition-all placeholder-gray-400 dark:placeholder-neutral-500 text-sm font-medium text-gray-900 dark:text-neutral-100"
                 />
               </div>
 
@@ -682,20 +661,20 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                   ref={dateFilterButtonRef}
                   type="button"
                   onClick={() => setShowDateFilter(!showDateFilter)}
-                  className={`w-full flex items-center justify-between pl-3.5 pr-4 py-2.5 bg-white border-2 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20 hover:border-gray-300 transition-all ${
-                    startDate || endDate ? 'border-blue-500' : 'border-gray-200'
+                  className={`w-full flex items-center justify-between pl-3.5 pr-4 py-2.5 bg-white dark:bg-neutral-700 border-2 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20 hover:border-gray-300 dark:hover:border-neutral-500 transition-all ${
+                    startDate || endDate ? 'border-blue-500 dark:border-blue-400' : 'border-gray-200 dark:border-neutral-600'
                   }`}
                 >
                   <span className="flex items-center gap-2 flex-1 min-w-0">
-                    <Calendar className={`w-5 h-5 flex-shrink-0 ${startDate || endDate ? 'text-blue-600' : 'text-gray-500'}`} />
+                    <Calendar className={`w-5 h-5 flex-shrink-0 ${startDate || endDate ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-neutral-400'}`} />
                     {startDate || endDate ? (
-                      <span className="text-gray-900 text-xs truncate">
+                      <span className="text-gray-900 dark:text-neutral-100 text-xs truncate">
                         {startDate ? new Date(startDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '...'}
                         {' - '}
                         {endDate ? new Date(endDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '...'}
                       </span>
                     ) : (
-                      <span className="text-gray-600">Filtrar datas</span>
+                      <span className="text-gray-600 dark:text-neutral-400">Filtrar datas</span>
                     )}
                   </span>
                   {(startDate || endDate) ? (
@@ -706,12 +685,12 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                         setStartDate('');
                         setEndDate('');
                       }}
-                      className="p-0.5 hover:bg-gray-100 rounded flex-shrink-0"
+                      className="p-0.5 hover:bg-gray-100 dark:hover:bg-neutral-600 rounded flex-shrink-0"
                     >
-                      <X className="w-4 h-4 text-gray-500" />
+                      <X className="w-4 h-4 text-gray-500 dark:text-neutral-400" />
                     </button>
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                    <ChevronDown className="w-4 h-4 text-gray-500 dark:text-neutral-400 flex-shrink-0" />
                   )}
                 </button>
 
@@ -723,28 +702,28 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                   <div className="p-5 w-72">
                     <div className="flex flex-col gap-4">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2">
                           Data Inicial
                         </label>
                         <input
                           type="date"
                           value={startDate}
                           onChange={(e) => setStartDate(e.target.value)}
-                          className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                          className="w-full border-2 border-gray-200 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 transition-all"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2">
                           Data Final
                         </label>
                         <input
                           type="date"
                           value={endDate}
                           onChange={(e) => setEndDate(e.target.value)}
-                          className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                          className="w-full border-2 border-gray-200 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 transition-all"
                         />
                       </div>
-                      <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                      <div className="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-neutral-700">
                         <button
                           type="button"
                           onClick={() => {
@@ -752,7 +731,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                             setEndDate('');
                             setShowDateFilter(false);
                           }}
-                          className="text-sm font-medium text-gray-600 hover:text-gray-900 px-4 py-2 hover:bg-gray-100 rounded-lg transition-all"
+                          className="text-sm font-medium text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-100 px-4 py-2 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg transition-all"
                         >
                           Limpar
                         </button>
@@ -775,20 +754,20 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                   ref={tagFilterButtonRef}
                   type="button"
                   onClick={() => setShowTagFilter(!showTagFilter)}
-                  className={`w-full flex items-center justify-between px-4 py-2.5 bg-white border-2 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20 hover:border-gray-300 transition-all ${
-                    selectedTagIds.length > 0 ? 'border-blue-500' : 'border-gray-200'
+                  className={`w-full flex items-center justify-between px-4 py-2.5 bg-white dark:bg-neutral-700 border-2 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20 hover:border-gray-300 dark:hover:border-neutral-500 transition-all ${
+                    selectedTagIds.length > 0 ? 'border-blue-500 dark:border-blue-400' : 'border-gray-200 dark:border-neutral-600'
                   }`}
                 >
                   <span className="flex items-center gap-2">
-                    <Tags className={`w-5 h-5 ${selectedTagIds.length > 0 ? 'text-blue-600' : 'text-gray-500'}`} />
-                    <span className="text-gray-600">Tags</span>
+                    <Tags className={`w-5 h-5 ${selectedTagIds.length > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-neutral-400'}`} />
+                    <span className="text-gray-600 dark:text-neutral-400">Tags</span>
                     {selectedTagIds.length > 0 && (
-                      <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
+                      <span className="ml-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-xs font-bold">
                         {selectedTagIds.length}
                       </span>
                     )}
                   </span>
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                  <ChevronDown className="w-4 h-4 text-gray-500 dark:text-neutral-400" />
                 </button>
 
                 <FilterDropdown
@@ -852,7 +831,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
         <div className="flex-1">
           {selectedFunil?.estagios && selectedFunil.estagios.length > 0 ? (
             viewMode === 'kanban' ? (
-<div className="w-[75vw] h-full border border-dashed border-dark rounded-xl p-4 shadow-sm">
+<div className="w-[75vw] h-full border border-dashed border-gray-300 dark:border-neutral-600 rounded-xl p-4 shadow-sm bg-white dark:bg-neutral-800 transition-theme">
   <DragDropContext onDragEnd={handleDragEnd}>
                   <KanbanBoard
                     funil={selectedFunil}
@@ -904,5 +883,6 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
         />
       </div>
     </div>
+    </>
   );
 }
