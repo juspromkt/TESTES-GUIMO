@@ -91,17 +91,17 @@ export function MultiSelectDropdown({
         disabled={disabled}
         className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
           disabled
-            ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
+            ? 'bg-gray-50 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
             : hasSelection
-            ? 'bg-blue-500 text-white hover:bg-blue-600'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ? 'bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700'
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
         }`}
       >
         {icon}
         <span className="max-w-[150px] truncate">{getDisplayText()}</span>
         {hasSelection && (
           <X
-            className="w-3.5 h-3.5 hover:bg-blue-600 rounded"
+            className="w-3.5 h-3.5 hover:bg-blue-600 dark:hover:bg-blue-700 rounded"
             onClick={clearAll}
           />
         )}
@@ -111,7 +111,7 @@ export function MultiSelectDropdown({
       {isOpen && createPortal(
         <div
           ref={dropdownRef}
-          className="fixed w-72 bg-white border border-gray-200 rounded-xl shadow-2xl max-h-96 overflow-y-auto"
+          className="fixed w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-96 overflow-y-auto transition-colors duration-200"
           style={{
             zIndex: 999999,
             top: `${dropdownPosition.top}px`,
@@ -120,7 +120,7 @@ export function MultiSelectDropdown({
         >
           <div className="p-3 space-y-1">
             {options.length === 0 ? (
-              <div className="px-3 py-6 text-sm text-gray-500 text-center">
+              <div className="px-3 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">
                 Nenhuma opção disponível
               </div>
             ) : (
@@ -133,20 +133,20 @@ export function MultiSelectDropdown({
                     onClick={() => toggleOption(option.id)}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                       isSelected
-                        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 hover:from-blue-100 hover:to-indigo-100 shadow-sm'
-                        : 'text-gray-700 hover:bg-gray-50'
+                        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-400 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/50 dark:hover:to-indigo-900/50 shadow-sm'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                     }`}
                   >
                     <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all flex-shrink-0 ${
                       isSelected
-                        ? 'bg-gradient-to-br from-blue-500 to-indigo-600 border-blue-500 shadow-sm'
-                        : 'border-gray-300 bg-white'
+                        ? 'bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 border-blue-500 dark:border-blue-600 shadow-sm'
+                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
                     }`}>
                       {isSelected && <Check className="w-3.5 h-3.5 text-white font-bold" strokeWidth={3} />}
                     </div>
                     {option.color && (
                       <div
-                        className="w-3 h-3 rounded-full ring-2 ring-white shadow-sm flex-shrink-0"
+                        className="w-3 h-3 rounded-full ring-2 ring-white dark:ring-gray-800 shadow-sm flex-shrink-0"
                         style={{ backgroundColor: option.color }}
                       />
                     )}

@@ -220,7 +220,7 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
     openMenuId !== null && menuPosition
       ? createPortal(
           <div
-            className="fixed z-[9999] w-44 rounded-lg border border-gray-300 bg-white shadow-xl"
+            className="fixed z-[9999] w-44 rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-xl"
             style={{ left: menuPosition.x, top: menuPosition.y }}
           >
             <button
@@ -235,7 +235,7 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
                   setIsFormOpen(true);
                 }
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-700 hover:bg-gray-50"
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700"
             >
               <Edit3 className="h-4 w-4" /> Editar
             </button>
@@ -245,7 +245,7 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
                 const t = tags.find((t) => t.Id === openMenuId);
                 if (t) handleDuplicate(t);
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-700 hover:bg-gray-50"
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700"
             >
               <Copy className="h-4 w-4" /> Duplicar
             </button>
@@ -255,7 +255,7 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
                 const t = tags.find((t) => t.Id === openMenuId);
                 if (t) setDeleteTarget(t);
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-red-600 hover:bg-red-50"
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950"
             >
               <Trash2 className="h-4 w-4" /> Excluir
             </button>
@@ -268,16 +268,16 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
     <div className="mt-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold text-gray-900">Etiquetas</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Etiquetas</h2>
 
           {/* Tooltip detalhada do código 1 */}
           <div className="relative group">
             <button
-              className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-colors"
+              className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 dark:border-neutral-600 text-gray-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
             >
               ?
             </button>
-            <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10">
+            <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-800 dark:bg-neutral-900 text-white dark:text-neutral-100 text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10 border border-gray-700 dark:border-neutral-700">
               As <strong>etiquetas</strong> servem para organizar e acompanhar os leads dentro do sistema. Durante o atendimento a IA ou a equipe podem atribuir ou remover etiquetas automaticamente, conforme as ações do lead. <strong>O recomendado é que use o STATUS DO LEAD como principal controle</strong>, e as Etiquetas como um apoio visual e organizacional.
             </div>
           </div>
@@ -292,7 +292,7 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
               setFormCor("#000000");
               setIsFormOpen(true);
             }}
-            className="flex items-center gap-2 bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700"
+            className="flex items-center gap-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg px-4 py-2 hover:bg-blue-700 dark:hover:bg-blue-600"
           >
             <Plus size={18} /> Criar Etiqueta
           </button>
@@ -304,10 +304,10 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Pesquisar etiquetas..."
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 pl-10 outline-none focus:ring-2 focus:ring-blue-300"
+          className="w-full rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 px-4 py-2 pl-10 outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-400 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
         />
         <svg
-          className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+          className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 dark:text-neutral-500"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -319,12 +319,12 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
 
       {loading ? (
         <div className="flex h-32 items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600 dark:text-blue-400" />
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-gray-300 bg-white">
+        <div className="overflow-hidden rounded-xl border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800">
           <table className="min-w-full">
-            <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+            <thead className="bg-gray-50 dark:bg-neutral-900 text-xs uppercase text-gray-500 dark:text-neutral-400">
               <tr>
                 <th className="w-10 px-4 py-3"></th>
                 <th className="px-4 py-3 text-left">Nome</th>
@@ -337,10 +337,10 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
                 <th className="w-16 px-4 py-3 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-sm">
+            <tbody className="divide-y divide-gray-100 dark:divide-neutral-700 text-sm">
               {filtered.map((t) => (
-                <tr key={t.Id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-400">
+                <tr key={t.Id} className="hover:bg-gray-50 dark:hover:bg-neutral-700">
+                  <td className="px-4 py-3 text-gray-400 dark:text-neutral-500">
                     <GripVertical className="h-4 w-4" />
                   </td>
                   <td className="px-4 py-3">
@@ -353,12 +353,12 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
                   </td>
                   <td className="px-4 py-3">
                     {descMap[t.Id] ? (
-                      <span className="text-gray-700">{descMap[t.Id]}</span>
+                      <span className="text-gray-700 dark:text-neutral-300">{descMap[t.Id]}</span>
                     ) : (
-                      <span className="text-gray-400">—</span>
+                      <span className="text-gray-400 dark:text-neutral-500">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">
+                  <td className="px-4 py-3 text-gray-600 dark:text-neutral-300">
                     {tagCounts[t.Id] ?? 0}
                   </td>
                   <td className="px-4 py-3 text-right relative" data-tag-actions>
@@ -372,16 +372,16 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
                           y: rect.bottom + window.scrollY,
                         });
                       }}
-                      className="rounded-md p-1 hover:bg-gray-100"
+                      className="rounded-md p-1 hover:bg-gray-100 dark:hover:bg-neutral-700"
                     >
-                      <MoreVertical className="h-5 w-5 text-gray-600" />
+                      <MoreVertical className="h-5 w-5 text-gray-600 dark:text-neutral-400" />
                     </button>
                   </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
+                  <td colSpan={5} className="px-4 py-6 text-center text-gray-500 dark:text-neutral-400">
                     Nenhuma etiqueta encontrada.
                   </td>
                 </tr>
@@ -400,29 +400,29 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
       >
         <form onSubmit={handleCreateEdit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
               Nome
             </label>
             <input
               value={formNome}
               onChange={(e) => setFormNome(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-300"
+              className="w-full rounded-lg border border-gray-300 dark:border-neutral-600 px-3 py-2 focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
               Descrição
             </label>
             <textarea
               value={formDescricao}
               onChange={(e) => setFormDescricao(e.target.value)}
               rows={3}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-300"
+              className="w-full rounded-lg border border-gray-300 dark:border-neutral-600 px-3 py-2 focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
               Cor
             </label>
             <ColorGrid value={formCor} onChange={setFormCor} />
@@ -431,14 +431,14 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
             <button
               type="button"
               onClick={() => setIsFormOpen(false)}
-              className="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+              className="rounded-md border border-gray-300 dark:border-neutral-600 px-4 py-2 text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-60"
+              className="rounded-md bg-blue-600 dark:bg-blue-700 px-4 py-2 text-white hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-60"
             >
               {submitting ? "Salvando..." : editingTag ? "Salvar" : "Criar"}
             </button>
@@ -454,24 +454,24 @@ export default function TagsSection({ isActive, canEdit }: TagsSectionProps) {
         maxWidth="sm"
       >
         <div className="flex items-start gap-3">
-          <div className="rounded-full bg-red-100 p-2">
-            <AlertTriangle className="h-5 w-5 text-red-600" />
+          <div className="rounded-full bg-red-100 dark:bg-red-950 p-2">
+            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
           </div>
-          <p className="text-gray-700">
+          <p className="text-gray-700 dark:text-neutral-300">
             Deseja realmente excluir <strong>{deleteTarget?.nome}</strong>?
           </p>
         </div>
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={() => setDeleteTarget(null)}
-            className="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+            className="rounded-md border border-gray-300 dark:border-neutral-600 px-4 py-2 text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700"
           >
             Cancelar
           </button>
           <button
             onClick={handleDeleteConfirm}
             disabled={deleting}
-            className="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-60"
+            className="rounded-md bg-red-600 dark:bg-red-700 px-4 py-2 text-white hover:bg-red-700 dark:hover:bg-red-600 disabled:opacity-60"
           >
             {deleting ? "Excluindo..." : "Excluir"}
           </button>

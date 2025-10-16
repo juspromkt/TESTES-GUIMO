@@ -735,23 +735,23 @@ const handleUpdateName = async () => {
     <div
       className={`
         fixed md:absolute right-0 top-[135px] md:top-0 bottom-0 md:h-full
-        bg-white border-l border-gray-300 shadow-lg
+        bg-white dark:bg-gray-800 border-l border-gray-300 dark:border-gray-700 shadow-lg
         transition-all duration-300 ease-in-out
         flex flex-col z-50
         ${isOpen ? "w-[420px] opacity-100" : "w-0 opacity-0 overflow-hidden"}
       `}
     >
       {/* Header da sidebar */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-300 bg-gray-50">
-        <h2 className="text-sm font-semibold text-gray-700 tracking-tight">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 tracking-tight transition-colors duration-200">
           Informações do Contato
         </h2>
 
         <button
           onClick={onToggle}
-          className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
+          className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
         >
-          <ChevronRight className="w-5 h-5 text-gray-600" />
+          <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400 transition-colors duration-200" />
         </button>
       </div>
 
@@ -759,18 +759,18 @@ const handleUpdateName = async () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {loading && initialLoad ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
+            <Loader2 className="w-6 h-6 text-gray-400 dark:text-gray-500 animate-spin transition-colors duration-200" />
           </div>
         ) : (
           <>
             {/* Foto, Nome e Telefone */}
-            <div className="rounded-xl border border-gray-300 p-4 bg-white space-y-3">
+            <div className="rounded-xl border border-gray-300 dark:border-gray-600 p-4 bg-white dark:bg-gray-800 space-y-3 transition-colors duration-200">
               <div className="flex items-center space-x-3">
                 {selectedChat.profilePicUrl ? (
                   <img
                     src={selectedChat.profilePicUrl}
                     alt={contactData?.nome || selectedChat.pushName}
-                    className="h-16 w-16 rounded-full object-cover ring-2 ring-gray-200"
+                    className="h-16 w-16 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-600 transition-colors duration-200"
                   />
                 ) : (
                   <div className="h-16 w-16 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold text-lg">
@@ -784,12 +784,12 @@ const handleUpdateName = async () => {
                         type="text"
                         value={editedName}
                         onChange={(e) => setEditedName(e.target.value)}
-                        className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-colors duration-200"
                       />
                       <button
                         onClick={handleUpdateName}
                         disabled={savingName}
-                        className="p-1 text-green-600 hover:bg-green-50 rounded"
+                        className="p-1 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors duration-200"
                       >
                         {savingName ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -802,17 +802,17 @@ const handleUpdateName = async () => {
                           setEditingName(false);
                           setEditedName(contactData?.nome || "");
                         }}
-                        className="p-1 text-gray-600 hover:bg-gray-50 rounded"
+                        className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors duration-200"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
-                    <h3 className="font-semibold text-gray-900">
+                    <h3 className="font-semibold text-gray-900 dark:text-white transition-colors duration-200">
                       {contactData?.nome || selectedChat.pushName}
                     </h3>
                   )}
-                  <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
+                  <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 mt-1 transition-colors duration-200">
                     <Phone className="w-3 h-3" />
                     <span>
                       {contactData?.telefone ||
@@ -826,7 +826,7 @@ const handleUpdateName = async () => {
               {contactData && onOpenContactModal && (
                 <button
                   onClick={onOpenContactModal}
-                  className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors text-sm"
+                  className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors duration-200 text-sm"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   <span>Ver contato completo</span>
@@ -835,22 +835,22 @@ const handleUpdateName = async () => {
             </div>
 
             {/* Controle da IA */}
-            <div className="rounded-xl border border-gray-300 p-4 bg-white space-y-3">
-              <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
+            <div className="rounded-xl border border-gray-300 dark:border-gray-600 p-4 bg-white dark:bg-gray-800 space-y-3 transition-colors duration-200">
+              <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-200">
                 <Bot className="w-4 h-4" />
                 <span>Controle da IA</span>
               </div>
 
               <div className="space-y-2">
                 {aiStatus.permanentExclusion ? (
-                  <div className="flex items-center justify-between p-2 bg-red-50 border border-red-200 rounded-lg">
-                    <span className="text-xs text-red-700 font-medium">
+                  <div className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg transition-colors duration-200">
+                    <span className="text-xs text-red-700 dark:text-red-400 font-medium transition-colors duration-200">
                       IA desativada permanentemente
                     </span>
                     <button
                       onClick={handleRemovePermanentExclusion}
                       disabled={updatingAI}
-                      className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
+                      className="p-1 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 rounded transition-colors duration-200 disabled:opacity-50"
                       title="Remover exclusão permanente"
                     >
                       {updatingAI ? (
@@ -861,28 +861,28 @@ const handleUpdateName = async () => {
                     </button>
                   </div>
                 ) : aiStatus.intervention ? (
-                  <div className="flex items-center justify-between p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <span className="text-xs text-yellow-700 font-medium">
+                  <div className="flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg transition-colors duration-200">
+                    <span className="text-xs text-yellow-700 dark:text-yellow-400 font-medium transition-colors duration-200">
                       IA pausada (intervenção)
                     </span>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded-lg">
-                    <span className="text-xs text-green-700 font-medium">
+                  <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg transition-colors duration-200">
+                    <span className="text-xs text-green-700 dark:text-green-400 font-medium transition-colors duration-200">
                       IA ativa
                     </span>
                   </div>
                 )}
 
                 {isTransferChat && (
-                  <div className="flex items-center justify-between p-2 bg-yellow-50 border border-yellow-300 rounded-lg">
-                    <span className="text-xs text-yellow-800 font-medium">
+                  <div className="flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg transition-colors duration-200">
+                    <span className="text-xs text-yellow-800 dark:text-yellow-400 font-medium transition-colors duration-200">
                       Em transferência
                     </span>
                     <button
                       onClick={handleRemoveTransfer}
                       disabled={updatingAI}
-                      className="p-1 text-yellow-700 hover:bg-yellow-100 rounded transition-colors disabled:opacity-50"
+                      className="p-1 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 rounded transition-colors duration-200 disabled:opacity-50"
                       title="Cancelar transferência"
                     >
                       {updatingAI ? (
@@ -898,31 +898,31 @@ const handleUpdateName = async () => {
                   <button
                     onClick={handleActivateAI}
                     disabled={updatingAI || (!aiStatus.intervention && !aiStatus.permanentExclusion)}
-                    className="flex flex-col items-center justify-center p-2 rounded-lg border border-green-300 bg-green-50 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex flex-col items-center justify-center p-2 rounded-lg border border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                     title="Ativar IA"
                   >
-                    <PlayCircle className="w-4 h-4 text-green-600 mb-1" />
-                    <span className="text-[10px] text-green-700 font-medium">Ativar</span>
+                    <PlayCircle className="w-4 h-4 text-green-600 dark:text-green-400 mb-1 transition-colors duration-200" />
+                    <span className="text-[10px] text-green-700 dark:text-green-400 font-medium transition-colors duration-200">Ativar</span>
                   </button>
 
                   <button
                     onClick={handlePauseAI}
                     disabled={updatingAI || aiStatus.intervention || aiStatus.permanentExclusion}
-                    className="flex flex-col items-center justify-center p-2 rounded-lg border border-yellow-300 bg-yellow-50 hover:bg-yellow-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex flex-col items-center justify-center p-2 rounded-lg border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                     title="Pausar IA temporariamente"
                   >
-                    <Pause className="w-4 h-4 text-yellow-600 mb-1" />
-                    <span className="text-[10px] text-yellow-700 font-medium">Pausar</span>
+                    <Pause className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mb-1 transition-colors duration-200" />
+                    <span className="text-[10px] text-yellow-700 dark:text-yellow-400 font-medium transition-colors duration-200">Pausar</span>
                   </button>
 
                   <button
                     onClick={handleDisableAI}
                     disabled={updatingAI || aiStatus.permanentExclusion}
-                    className="flex flex-col items-center justify-center p-2 rounded-lg border border-red-300 bg-red-50 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex flex-col items-center justify-center p-2 rounded-lg border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                     title="Desativar IA permanentemente"
                   >
-                    <BanIcon className="w-4 h-4 text-red-600 mb-1" />
-                    <span className="text-[10px] text-red-700 font-medium">Desativar</span>
+                    <BanIcon className="w-4 h-4 text-red-600 dark:text-red-400 mb-1 transition-colors duration-200" />
+                    <span className="text-[10px] text-red-700 dark:text-red-400 font-medium transition-colors duration-200">Desativar</span>
                   </button>
                 </div>
               </div>
@@ -930,8 +930,8 @@ const handleUpdateName = async () => {
 
             {/* Responsável */}
             {dealData && (
-              <div className="rounded-xl border border-gray-300 p-4 bg-white space-y-3">
-                <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
+              <div className="rounded-xl border border-gray-300 dark:border-gray-600 p-4 bg-white dark:bg-gray-800 space-y-3 transition-colors duration-200">
+                <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-200">
                   <Users className="w-4 h-4" />
                   <span>Responsável</span>
                 </div>
@@ -939,8 +939,8 @@ const handleUpdateName = async () => {
                 <select
                   value={dealData.id_usuario || ""}
                   onChange={(e) => handleUpdateResponsavel(Number(e.target.value))}
-                  className={`w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                    dealData.id_usuario ? 'text-gray-900 font-medium' : 'text-gray-500'
+                  className={`w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 text-sm bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-colors duration-200 ${
+                    dealData.id_usuario ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   <option value="" disabled>Selecione um responsável</option>
@@ -955,8 +955,8 @@ const handleUpdateName = async () => {
 
             {/* Etapa do Funil */}
             {dealData && (
-              <div className="rounded-xl border border-gray-300 p-4 bg-white space-y-3">
-                <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
+              <div className="rounded-xl border border-gray-300 dark:border-gray-600 p-4 bg-white dark:bg-gray-800 space-y-3 transition-colors duration-200">
+                <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-200">
                   <Filter className="w-4 h-4" />
                   <span>Funil e Estágio</span>
                 </div>
@@ -971,7 +971,7 @@ const handleUpdateName = async () => {
                         handleUpdateStage(funnelId, Number(firstStage.Id));
                       }
                     }}
-                    className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-colors duration-200"
                   >
                     <option value="">Selecione um funil</option>
                     {funnels.map((funnel) => (
@@ -987,7 +987,7 @@ const handleUpdateName = async () => {
                       onChange={(e) =>
                         handleUpdateStage(dealData.id_funil, Number(e.target.value))
                       }
-                      className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-colors duration-200"
                     >
                       <option value="">Selecione um estágio</option>
                       {currentFunnel.estagios?.map((stage) => (
@@ -1003,8 +1003,8 @@ const handleUpdateName = async () => {
 
             {/* Etiquetas (Tags) */}
             {dealData && (
-              <div className="rounded-xl border border-gray-300 p-4 bg-white space-y-3">
-                <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
+              <div className="rounded-xl border border-gray-300 dark:border-gray-600 p-4 bg-white dark:bg-gray-800 space-y-3 transition-colors duration-200">
+                <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-200">
                   <TagIcon className="w-4 h-4" />
                   <span>Etiquetas</span>
                 </div>
@@ -1015,7 +1015,7 @@ const handleUpdateName = async () => {
                     dealTags.map((tag) => (
                       <div
                         key={tag.Id}
-                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium transition-colors duration-200"
                         style={{
                           backgroundColor: tag.cor,
                           color: tag.cor_texto,
@@ -1024,14 +1024,14 @@ const handleUpdateName = async () => {
                         {tag.nome}
                         <button
                           onClick={() => handleRemoveTag(tag.Id)}
-                          className="ml-1 hover:opacity-80"
+                          className="ml-1 hover:opacity-80 transition-opacity duration-200"
                         >
                           <X className="w-3 h-3" />
                         </button>
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs text-gray-500">Nenhuma etiqueta adicionada</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">Nenhuma etiqueta adicionada</p>
                   )}
                 </div>
 
@@ -1044,7 +1044,7 @@ const handleUpdateName = async () => {
                       e.target.value = "";
                     }
                   }}
-                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-colors duration-200"
                 >
                   <option value="">+ Adicionar etiqueta</option>
                   {availableTags
@@ -1071,7 +1071,7 @@ const handleUpdateName = async () => {
             {dealData && (
               <button
                 onClick={handleOpenCRM}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md"
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-700 dark:to-purple-700 text-white rounded-xl font-medium hover:from-indigo-700 hover:to-purple-700 dark:hover:from-indigo-800 dark:hover:to-purple-800 transition-all duration-200 shadow-md"
               >
                 <ExternalLink className="w-4 h-4" />
                 <span>Abrir no CRM</span>

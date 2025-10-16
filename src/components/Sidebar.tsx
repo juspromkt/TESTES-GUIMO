@@ -31,6 +31,7 @@ import { ThemeContext } from '../context/ThemeContext';
 import { clearChatCache } from '../utils/chatCache';
 import type { LoginResponse } from '../types/auth';
 import { Send, FileText, Sliders } from "lucide-react";
+import { ThemeToggleButton } from './ThemeToggleButton';
 
 
 interface LinkedAccount {
@@ -604,23 +605,23 @@ const Sidebar = () => {
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
-            className={`fixed top-0 left-0 bottom-0 w-72 max-w-[85vw] z-[9999] ${domainConfig.getSidebarColor()} border-r border-gray-300 backdrop-blur-md shadow-2xl transform transition-transform duration-300 ease-out ${
+            className={`fixed top-0 left-0 bottom-0 w-72 max-w-[85vw] z-[9999] ${domainConfig.getSidebarColor()} border-r border-gray-300 dark:border-neutral-700 backdrop-blur-md shadow-2xl transform transition-transform duration-300 ease-out transition-theme ${
               isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
             }`}
           >
             {/* Header do drawer */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-300/50" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+            <div className="flex items-center justify-between p-4 border-b border-gray-300/50 dark:border-neutral-700" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
               <img
-                src={logos.full}
+                src={theme === 'dark' ? logos.fullDark : logos.full}
                 alt="Logo"
                 className="h-12 object-contain"
               />
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 rounded-lg hover:bg-white/10 active:bg-white/20 transition-colors touch-manipulation"
+                className="p-2 rounded-lg hover:bg-white/10 dark:hover:bg-neutral-700 active:bg-white/20 dark:active:bg-neutral-600 transition-colors touch-manipulation"
                 aria-label="Fechar menu"
               >
-                <X className="w-6 h-6 text-gray-700" />
+                <X className="w-6 h-6 text-gray-700 dark:text-neutral-300" />
               </button>
             </div>
 
@@ -632,17 +633,17 @@ const Sidebar = () => {
                   setIsWorkspaceModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-white/60 backdrop-blur-sm border border-gray-300/70 hover:bg-white active:bg-white/90 hover:shadow-md active:scale-[0.98] transition-all duration-200 text-gray-800 touch-manipulation"
+                className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-white/60 dark:bg-neutral-700/60 backdrop-blur-sm border border-gray-300/70 dark:border-neutral-600 hover:bg-white dark:hover:bg-neutral-600 active:bg-white/90 dark:active:bg-neutral-500 hover:shadow-md active:scale-[0.98] transition-all duration-200 text-gray-800 dark:text-neutral-100 touch-manipulation"
                 aria-label="Selecionar Workspace"
               >
-                <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600">
+                <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-neutral-600 text-gray-600 dark:text-neutral-200">
                   <Users className="w-5 h-5" />
                 </div>
                 <div className="flex flex-col items-start text-left">
                   <span className="text-[13px] font-semibold tracking-tight">
                     Workspace
                   </span>
-                  <span className="text-xs text-gray-500 truncate mt-[2px]">
+                  <span className="text-xs text-gray-500 dark:text-neutral-400 truncate mt-[2px]">
                     {currentWorkspaceName ?? 'Desconhecido'}
                   </span>
                 </div>
@@ -720,7 +721,7 @@ const Sidebar = () => {
               </div>
 
               {/* Profile Section */}
-              <div className="mt-auto pt-4 border-t border-gray-300/40 space-y-3">
+              <div className="mt-auto pt-4 border-t border-gray-300/40 dark:border-neutral-700 space-y-3">
                 <button
                   onClick={() => {
                     setIsPasswordModalOpen(true);
@@ -729,7 +730,7 @@ const Sidebar = () => {
                   className={`group w-full flex items-center gap-3 px-4 py-3.5 rounded-xl active:scale-[0.98] touch-manipulation ${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} hover:shadow-md active:shadow-lg transition-all`}
                   aria-label="Trocar senha"
                 >
-                  <div className="p-2 rounded-lg bg-white/10 group-hover:bg-white/20 transition-all">
+                  <div className="p-2 rounded-lg bg-white/10 dark:bg-white/5 group-hover:bg-white/20 dark:group-hover:bg-white/10 transition-all">
                     <Key className="w-5 h-5" />
                   </div>
                   <span className="text-sm font-semibold">Trocar senha</span>
@@ -740,10 +741,10 @@ const Sidebar = () => {
                     handleLogout();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="group w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-red-50 text-red-700 hover:bg-red-100 active:bg-red-200 hover:shadow-md active:shadow-lg active:scale-[0.98] touch-manipulation transition-all"
+                  className="group w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900 active:bg-red-200 dark:active:bg-red-800 hover:shadow-md active:shadow-lg active:scale-[0.98] touch-manipulation transition-all"
                   aria-label="Sair da conta"
                 >
-                  <div className="p-2 rounded-lg bg-red-100 group-hover:bg-red-200 transition-all">
+                  <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900 group-hover:bg-red-200 dark:group-hover:bg-red-800 transition-all">
                     <LogOut className="w-5 h-5" />
                   </div>
                   <span className="text-sm font-semibold">Sair</span>
@@ -754,7 +755,7 @@ const Sidebar = () => {
 
           {/* Top Navigation Bar - Fixo no topo */}
           <div
-            className="fixed top-0 left-0 right-0 z-[9997] bg-white border-b border-gray-200 shadow-sm"
+            className="fixed top-0 left-0 right-0 z-[9997] bg-white dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700 shadow-sm transition-theme"
             style={{ paddingTop: 'env(safe-area-inset-top)' }}
           >
             {/* Header com logo e botão de usuário */}
@@ -762,20 +763,20 @@ const Sidebar = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsMobileMenuOpen(true)}
-                  className="p-2 -ml-1 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation"
+                  className="p-2 -ml-1 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 active:bg-gray-200 dark:active:bg-neutral-600 transition-colors touch-manipulation"
                   aria-label="Abrir menu"
                 >
-                  <Menu className="w-5 h-5 text-gray-700" />
+                  <Menu className="w-5 h-5 text-gray-700 dark:text-neutral-300" />
                 </button>
                 <img
-                  src={logos.full}
+                  src={theme === 'dark' ? logos.fullDark : logos.full}
                   alt="Logo"
                   className="h-14 object-contain"
                 />
               </div>
               <button
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className={`w-9 h-9 rounded-full ${domainConfig.getProfileBg()} flex items-center justify-center text-sm font-bold shadow-sm hover:shadow-md transition-shadow touch-manipulation`}
+                className={`w-9 h-9 rounded-full ${domainConfig.getProfileBg()} flex items-center justify-center text-sm font-bold shadow-sm hover:shadow-md transition-shadow touch-manipulation text-gray-700 dark:text-neutral-100`}
               >
                 {initials}
               </button>
@@ -789,15 +790,15 @@ const Sidebar = () => {
                   className="fixed inset-0 z-40"
                   onClick={() => setIsProfileMenuOpen(false)}
                 />
-                <div className="absolute top-full right-4 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
-                <div className="p-4 border-b border-gray-100">
+                <div className="absolute top-full right-4 mt-2 w-64 bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-gray-200 dark:border-neutral-700 z-50 overflow-hidden transition-theme">
+                <div className="p-4 border-b border-gray-100 dark:border-neutral-700">
                   <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-full ${domainConfig.getProfileBg()} flex items-center justify-center text-base font-bold`}>
+                    <div className={`w-12 h-12 rounded-full ${domainConfig.getProfileBg()} flex items-center justify-center text-base font-bold text-gray-700 dark:text-neutral-100`}>
                       {initials}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">{userName}</p>
-                      <p className="text-xs text-gray-500">{currentWorkspaceName}</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-neutral-100">{userName}</p>
+                      <p className="text-xs text-gray-500 dark:text-neutral-400">{currentWorkspaceName}</p>
                     </div>
                   </div>
                 </div>
@@ -807,29 +808,29 @@ const Sidebar = () => {
                       setIsWorkspaceModalOpen(true);
                       setIsProfileMenuOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation text-left"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 active:bg-gray-100 dark:active:bg-neutral-600 transition-colors touch-manipulation text-left"
                   >
-                    <Users className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-gray-700">Trocar Workspace</span>
+                    <Users className="w-4 h-4 text-gray-600 dark:text-neutral-400" />
+                    <span className="text-sm text-gray-700 dark:text-neutral-200">Trocar Workspace</span>
                   </button>
                   <button
                     onClick={() => {
                       setIsPasswordModalOpen(true);
                       setIsProfileMenuOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation text-left"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 active:bg-gray-100 dark:active:bg-neutral-600 transition-colors touch-manipulation text-left"
                   >
-                    <Key className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-gray-700">Trocar Senha</span>
+                    <Key className="w-4 h-4 text-gray-600 dark:text-neutral-400" />
+                    <span className="text-sm text-gray-700 dark:text-neutral-200">Trocar Senha</span>
                   </button>
                 </div>
-                <div className="p-2 border-t border-gray-100">
+                <div className="p-2 border-t border-gray-100 dark:border-neutral-700">
                   <button
                     onClick={() => {
                       handleLogout();
                       setIsProfileMenuOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 active:bg-red-100 transition-colors touch-manipulation text-left text-red-600"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/50 active:bg-red-100 dark:active:bg-red-900 transition-colors touch-manipulation text-left text-red-600 dark:text-red-400"
                   >
                     <LogOut className="w-4 h-4" />
                     <span className="text-sm font-medium">Sair</span>
@@ -851,7 +852,7 @@ const Sidebar = () => {
   onMouseLeave={handleMouseLeave}
   className={`fixed top-0 left-0 bottom-0 z-[9999] transition-all duration-500 ease-in-out transform ${
     domainConfig.getSidebarColor()
-  } border-r border-gray-300 backdrop-blur-md shadow-xl
+  } border-r border-gray-300 dark:border-neutral-700 backdrop-blur-md shadow-xl transition-theme
   ${isExpanded ? 'w-56' : 'w-16'}
   ${isMobile ? 'hidden' : ''}
   `}
@@ -863,23 +864,23 @@ const Sidebar = () => {
 
         {/* Background overlay */}
         {!isMobile && (
-          <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-white/2 backdrop-blur-sm"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-white/5 dark:from-black/10 to-white/2 dark:to-transparent backdrop-blur-sm"></div>
         )}
 
         {!isMobile && (
           <div className={`relative z-10 flex items-center px-4 pt-3 mb-2 ${isExpanded ? '' : 'justify-center'}`}>
             <div className="relative group">
-              <img 
-                src={isExpanded ? logos.full : logos.reduced}
-                alt="Logo" 
+              <img
+                src={isExpanded ? (theme === 'dark' ? logos.fullDark : logos.full) : (theme === 'dark' ? logos.reducedDark : logos.reduced)}
+                alt="Logo"
                 className={`transition-all duration-300 ${
-                  isExpanded 
-                    ? 'w-[180px] h-[60px] object-contain group-hover:scale-105' 
+                  isExpanded
+                    ? 'w-[180px] h-[60px] object-contain group-hover:scale-105'
                     : 'w-12 h-10 object-contain group-hover:scale-110'
                 } filter drop-shadow-lg`}
               />
               {/* Glow effect */}
-              <div className="absolute inset-0 bg-white/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
+              <div className="absolute inset-0 bg-white/10 dark:bg-white/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
             </div>
           </div>
         )}
@@ -1004,25 +1005,25 @@ const Sidebar = () => {
 
 
         {!isMobile && (
-          <div className="absolute bottom-0 left-0 w-full z-20 border-t border-white/10 backdrop-blur-sm bg-white/30 p-3">
+          <div className="absolute bottom-0 left-0 w-full z-20 border-t border-white/10 dark:border-neutral-700 backdrop-blur-sm bg-white/30 dark:bg-neutral-900/50 p-3">
             {/* Novo botão Workspaces */}
 <div className="relative mb-4">
   <button
     onClick={() => setIsWorkspaceModalOpen(true)}
     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl
-               bg-white/60 backdrop-blur-sm border border-gray-300/70
-               hover:bg-white hover:shadow-md
-               transition-all duration-300 text-gray-800 group"
+               bg-white/60 dark:bg-neutral-700/60 backdrop-blur-sm border border-gray-300/70 dark:border-neutral-600
+               hover:bg-white dark:hover:bg-neutral-600 hover:shadow-md
+               transition-all duration-300 text-gray-800 dark:text-neutral-100 group"
   >
-    <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors duration-300">
+    <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-neutral-600 text-gray-600 dark:text-neutral-200 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900 group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors duration-300">
       <Users className="w-5 h-5" />
     </div>
     {isExpanded && (
       <div className="flex flex-col items-start text-left">
-        <span className="text-[13px] font-semibold tracking-tight group-hover:text-emerald-700">
+        <span className="text-[13px] font-semibold tracking-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
           Workspace
         </span>
-        <span className="text-xs text-gray-500 truncate mt-[2px]">
+        <span className="text-xs text-gray-500 dark:text-neutral-400 truncate mt-[2px]">
           {currentWorkspaceName ?? 'Desconhecido'}
         </span>
       </div>
@@ -1038,25 +1039,25 @@ const Sidebar = () => {
                   className={`group w-full flex items-center gap-3 p-3 rounded-xl ${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} transition-all duration-300 hover:scale-[1.02] hover:shadow-lg relative overflow-hidden`}
                 >
                   {/* Background gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  
-                  <div className={`relative z-10 w-10 h-10 rounded-xl ${domainConfig.getProfileBg()} flex items-center justify-center text-sm font-bold shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/5 dark:from-white/2 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                  <div className={`relative z-10 w-10 h-10 rounded-xl ${domainConfig.getProfileBg()} flex items-center justify-center text-sm font-bold text-gray-700 dark:text-neutral-100 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                     {initials}
                   </div>
                   <div className="relative z-10 flex-1 text-left">
                     <p className="text-sm font-semibold truncate">{userName}</p>
                     <p className="text-xs opacity-70">Minha conta</p>
                   </div>
-                  <ChevronDown className={`relative z-10 w-5 h-5 transition-all duration-300 ${isProfileMenuOpen ? 'rotate-180 text-white/80' : 'group-hover:scale-110'}`} />
+                  <ChevronDown className={`relative z-10 w-5 h-5 transition-all duration-300 ${isProfileMenuOpen ? 'rotate-180' : 'group-hover:scale-110'}`} />
                 </button>
 
                 {isProfileMenuOpen && (
-                  <div className={`mt-3 p-2 ${domainConfig.getActiveBg()} rounded-xl backdrop-blur-sm border border-white/10 shadow-xl space-y-2`}>
+                  <div className={`mt-3 p-2 ${domainConfig.getActiveBg()} rounded-xl backdrop-blur-sm border border-white/10 dark:border-neutral-700 shadow-xl space-y-2`}>
                     <button
                       onClick={() => setIsPasswordModalOpen(true)}
                       className={`group w-full flex items-center gap-3 px-3 py-2 text-sm ${domainConfig.getActiveColor()} ${domainConfig.getHoverBg()} rounded-lg transition-all duration-300 hover:scale-[1.02]`}
                     >
-                      <div className="p-1.5 rounded-lg bg-white/10 group-hover:bg-white/20 transition-colors duration-300">
+                      <div className="p-1.5 rounded-lg bg-white/10 dark:bg-white/5 group-hover:bg-white/20 dark:group-hover:bg-white/10 transition-colors duration-300">
                         <Key className="w-4 h-4" />
                       </div>
                       <span className="font-medium">Trocar senha</span>
@@ -1066,16 +1067,24 @@ const Sidebar = () => {
               </div>
             )}
 
+            {/* Botão de toggle de tema */}
+            <div className={`flex items-center ${isExpanded ? 'justify-between' : 'justify-center'} mb-3`}>
+              {isExpanded && (
+                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Tema</span>
+              )}
+              <ThemeToggleButton />
+            </div>
+
             <button
               onClick={handleLogout}
-              className={`group w-full flex items-center gap-3 px-3 py-3 mt-3 rounded-xl transition-all duration-300 ${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} hover:scale-[1.02] hover:shadow-lg relative overflow-hidden ${isExpanded ? '' : 'justify-center px-3'}`}
+              className={`group w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 ${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} hover:scale-[1.02] hover:shadow-lg relative overflow-hidden ${isExpanded ? '' : 'justify-center px-3'}`}
               title={isExpanded ? undefined : 'Sair'}
             >
               {/* Background gradient */}
-              <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              
-              <div className="relative z-10 p-1.5 rounded-lg bg-white/10 group-hover:bg-red-500/20 transition-all duration-300 group-hover:scale-110">
-                <LogOut className="w-5 h-5 group-hover:text-red-300 transition-colors duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 dark:from-red-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+              <div className="relative z-10 p-1.5 rounded-lg bg-white/10 dark:bg-white/5 group-hover:bg-red-500/20 dark:group-hover:bg-red-500/30 transition-all duration-300 group-hover:scale-110">
+                <LogOut className="w-5 h-5 group-hover:text-red-300 dark:group-hover:text-red-400 transition-colors duration-300" />
               </div>
               {isExpanded && (
                 <span className="relative z-10 text-sm font-semibold">Sair</span>
@@ -1103,10 +1112,10 @@ const Sidebar = () => {
         title="Alterar Senha"
         maxWidth="md"
       >
-        <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-300/50 p-6">
+        <div className="bg-gradient-to-br from-white to-gray-50 dark:from-neutral-800 dark:to-neutral-900 rounded-xl border border-gray-300/50 dark:border-neutral-700 p-6 transition-theme">
           <form onSubmit={handlePasswordSubmit} className="space-y-6">
             <div>
-              <label htmlFor="currentPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="currentPassword" className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2">
                 Senha Atual
               </label>
               <input
@@ -1116,13 +1125,13 @@ const Sidebar = () => {
                 onChange={(e) =>
                   setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
                 }
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white/80 backdrop-blur-sm transition-all duration-200"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 backdrop-blur-sm transition-all duration-200"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="newPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="newPassword" className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2">
                 Nova Senha
               </label>
               <input
@@ -1132,13 +1141,13 @@ const Sidebar = () => {
                 onChange={(e) =>
                   setPasswordForm({ ...passwordForm, newPassword: e.target.value })
                 }
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white/80 backdrop-blur-sm transition-all duration-200"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 backdrop-blur-sm transition-all duration-200"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2">
                 Confirme a Nova Senha
               </label>
               <input
@@ -1148,30 +1157,30 @@ const Sidebar = () => {
                 onChange={(e) =>
                   setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
                 }
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white/80 backdrop-blur-sm transition-all duration-200"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 backdrop-blur-sm transition-all duration-200"
                 required
               />
             </div>
 
             {error && (
-              <div className="p-4 bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl">
+              <div className="p-4 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950 dark:to-rose-950 border border-red-200 dark:border-red-800 rounded-xl">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-red-700 font-medium text-sm">{error}</span>
+                  <div className="w-2 h-2 bg-red-500 dark:bg-red-400 rounded-full animate-pulse"></div>
+                  <span className="text-red-700 dark:text-red-300 font-medium text-sm">{error}</span>
                 </div>
               </div>
             )}
 
             {success && (
-              <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl">
+              <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border border-green-200 dark:border-green-800 rounded-xl">
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-600" />
-                  <span className="text-green-700 font-medium text-sm">{success}</span>
+                  <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <span className="text-green-700 dark:text-green-300 font-medium text-sm">{success}</span>
                 </div>
               </div>
             )}
 
-            <div className="flex justify-end gap-3 pt-6 border-t border-gray-300/50">
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-300/50 dark:border-neutral-700">
               <button
                 type="button"
                 onClick={() => {
@@ -1184,14 +1193,14 @@ const Sidebar = () => {
                   setError('');
                   setSuccess('');
                 }}
-                className="px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200"
+                className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-xl transition-all duration-200"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+                className="flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-700 dark:to-indigo-700 dark:hover:from-blue-600 dark:hover:to-indigo-600 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
               >
                 {loading ? (
                   <>
@@ -1215,57 +1224,57 @@ const Sidebar = () => {
   title="Selecionar Workspace"
   maxWidth="lg"
 >
-  <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-300/50 p-6 space-y-6">
+  <div className="bg-gradient-to-br from-white to-gray-50 dark:from-neutral-800 dark:to-neutral-900 rounded-xl border border-gray-300/50 dark:border-neutral-700 p-6 space-y-6 transition-theme">
     {/* 🧭 BLOCO SUPERIOR - WORKSPACE ATUAL */}
-    <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl flex items-start gap-3">
-      <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+    <div className="p-4 bg-emerald-50 dark:bg-emerald-950 border border-emerald-100 dark:border-emerald-900 rounded-xl flex items-start gap-3">
+      <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300">
         <GitBranch className="w-5 h-5" />
       </div>
       <div className="flex flex-col">
-        <span className="text-sm font-medium text-gray-700">
+        <span className="text-sm font-medium text-gray-700 dark:text-neutral-300">
           Você está no workspace:
         </span>
-        <span className="text-base font-semibold text-emerald-700">
+        <span className="text-base font-semibold text-emerald-700 dark:text-emerald-400">
           {storedUser?.nome_cliente ?? 'Desconhecido'}
         </span>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
           Selecione outro workspace abaixo para mudar.
         </p>
       </div>
     </div>
 
     {/* 🧭 CABEÇALHO */}
-    <div className="flex items-center justify-between border-b border-gray-300 pb-3">
-      <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-        <Users className="w-5 h-5 text-emerald-600" />
+    <div className="flex items-center justify-between border-b border-gray-300 dark:border-neutral-700 pb-3">
+      <h2 className="text-lg font-semibold text-gray-800 dark:text-neutral-100 flex items-center gap-2">
+        <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
         Workspaces
       </h2>
-      <span className="text-sm text-gray-400">{linkedAccounts.length}</span>
+      <span className="text-sm text-gray-400 dark:text-neutral-500">{linkedAccounts.length}</span>
     </div>
 
     {/* 🔍 CAMPO DE BUSCA */}
     <div className="relative">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-neutral-500" />
       <input
         type="text"
         value={linkedAccountsSearch}
         onChange={(e) => setLinkedAccountsSearch(e.target.value)}
         placeholder="Buscar workspace..."
-        className="w-full pl-9 pr-3 py-2.5 text-sm rounded-lg border border-gray-300 bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+        className="w-full pl-9 pr-3 py-2.5 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-700 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
       />
     </div>
 
     {/* 🧾 LISTA DE WORKSPACES */}
     <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
       {linkedAccountsLoading ? (
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-neutral-400">
           <Loader2 className="w-4 h-4 animate-spin" />
           <span>Carregando contas...</span>
         </div>
       ) : linkedAccountsError ? (
-        <p className="text-sm text-rose-500">{linkedAccountsError}</p>
+        <p className="text-sm text-rose-500 dark:text-rose-400">{linkedAccountsError}</p>
       ) : filteredLinkedAccounts.length === 0 ? (
-        <p className="text-sm text-gray-500">Nenhuma conta encontrada.</p>
+        <p className="text-sm text-gray-500 dark:text-neutral-400">Nenhuma conta encontrada.</p>
       ) : (
         filteredLinkedAccounts.map((account, index) => {
           // Normaliza IDs
@@ -1294,14 +1303,14 @@ const Sidebar = () => {
               disabled={isSwitching || isCurrent}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium border transition-all duration-200 ${
                 isCurrent
-                  ? 'bg-emerald-50 border-emerald-300 text-emerald-800 shadow-sm'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-emerald-50/70 hover:border-emerald-400 hover:shadow-sm'
+                  ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 shadow-sm'
+                  : 'bg-white dark:bg-neutral-700 border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-200 hover:bg-emerald-50/70 dark:hover:bg-emerald-950/50 hover:border-emerald-400 dark:hover:border-emerald-700 hover:shadow-sm'
               }`}
             >
               <div className="flex items-center gap-3">
                 <div
                   className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    isCurrent ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                    isCurrent ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300' : 'bg-gray-100 dark:bg-neutral-600 text-gray-500 dark:text-neutral-300'
                   }`}
                 >
                   <GitBranch className="w-4 h-4" />
@@ -1310,9 +1319,9 @@ const Sidebar = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                {isSwitching && <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />}
+                {isSwitching && <Loader2 className="w-4 h-4 animate-spin text-emerald-500 dark:text-emerald-400" />}
                 {isCurrent && (
-                  <span className="text-[11px] font-bold text-emerald-600 uppercase bg-emerald-100 px-2 py-1 rounded-lg">
+                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase bg-emerald-100 dark:bg-emerald-900 px-2 py-1 rounded-lg">
                     Ativo
                   </span>
                 )}
@@ -1325,7 +1334,7 @@ const Sidebar = () => {
 
     {/* ⚠️ MENSAGEM DE ERRO */}
     {workspaceSwitchError && (
-      <p className="mt-3 text-sm font-medium text-rose-500">{workspaceSwitchError}</p>
+      <p className="mt-3 text-sm font-medium text-rose-500 dark:text-rose-400">{workspaceSwitchError}</p>
     )}
   </div>
 </Modal>

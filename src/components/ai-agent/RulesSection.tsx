@@ -190,20 +190,20 @@ async function handleSaveRules() {
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-8">
+    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-md p-8">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-          <Book className="w-6 h-6 text-blue-600" />
+        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+          <Book className="w-6 h-6 text-blue-600 dark:text-blue-400" />
         </div>
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Regras Gerais</h2>
-          <p className="text-sm text-gray-500 mt-1">Defina as regras gerais de comportamento do agente (o que ele pode e não pode fazer)</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Regras Gerais</h2>
+          <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">Defina as regras gerais de comportamento do agente (o que ele pode e não pode fazer)</p>
         </div>
       </div>
 
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Regras do Agente</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Regras do Agente</label>
 
           <input
             id="rules-file-upload"
@@ -218,7 +218,7 @@ async function handleSaveRules() {
             type="button"
             onClick={() => document.getElementById('rules-file-upload')?.click()}
             disabled={isUploading}
-            className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 text-gray-900 dark:text-neutral-100 rounded-lg"
           >
             <Upload className="w-4 h-4" />
             {isUploading ? 'Carregando...' : 'Adicionar Mídia'}
@@ -235,23 +235,23 @@ async function handleSaveRules() {
               formats={formats}
               placeholder="Defina as regras gerais que o agente deve seguir..."
               readOnly={!canEdit}
-              className="bg-white rounded-lg"
+              className="bg-white dark:bg-neutral-700 rounded-lg"
             />
             {isUploading && (
-              <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+              <div className="absolute inset-0 bg-white/80 dark:bg-neutral-800/80 flex items-center justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-500 dark:text-blue-400" />
               </div>
             )}
           </div>
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-md">
+          <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-2 rounded-md">
             {error}
           </div>
         )}
         {success && (
-          <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-2 rounded-md">
+          <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-2 rounded-md">
             {success}
           </div>
         )}
@@ -260,7 +260,7 @@ async function handleSaveRules() {
           <button
             onClick={handleSaveRules}
             disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+            className="flex items-center gap-2 px-6 py-3 bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-800 text-white rounded-lg font-medium"
           >
             {saving ? (
               <>
@@ -279,11 +279,11 @@ async function handleSaveRules() {
         <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Sucesso">
   {modalLoading ? (
     <div className="flex items-center justify-center gap-2 py-4">
-      <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
-      <p className="text-sm text-gray-600">Processando regras...</p>
+      <Loader2 className="w-5 h-5 animate-spin text-blue-500 dark:text-blue-400" />
+      <p className="text-sm text-gray-600 dark:text-neutral-400">Processando regras...</p>
     </div>
   ) : (
-    <p className="text-gray-700">Regras salvas com sucesso!</p>
+    <p className="text-gray-700 dark:text-neutral-300">Regras salvas com sucesso!</p>
   )}
 </Modal>
 

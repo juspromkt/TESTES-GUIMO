@@ -330,7 +330,7 @@ const AIAgent = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-6rem)]">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-neutral-500" />
       </div>
     );
   }
@@ -338,22 +338,22 @@ const AIAgent = () => {
   return (
     <div className="flex flex-col md:grid md:grid-cols-[280px_1fr] gap-4 md:gap-6 pb-20 md:pb-0">
       {/* Mobile Header com botão de menu */}
-      <div className="md:hidden sticky top-0 z-10 bg-white border-b border-gray-300 px-4 py-3 flex items-center justify-between shadow-sm">
+      <div className="md:hidden sticky top-0 z-10 bg-white dark:bg-neutral-800 border-b border-gray-300 dark:border-neutral-700 px-4 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-            <Bot className="w-5 h-5 text-indigo-600" />
+          <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+            <Bot className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
-            <h1 className="text-sm font-semibold text-gray-900">Agente de IA</h1>
-            <p className="text-xs text-gray-500">{getCurrentSectionLabel()}</p>
+            <h1 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">Agente de IA</h1>
+            <p className="text-xs text-gray-500 dark:text-neutral-400">{getCurrentSectionLabel()}</p>
           </div>
         </div>
         <button
           onClick={() => setIsMobileSidebarOpen(true)}
-          className="p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation"
+          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 active:bg-gray-200 dark:active:bg-neutral-600 transition-colors touch-manipulation"
           aria-label="Abrir menu"
         >
-          <Menu className="w-5 h-5 text-gray-700" />
+          <Menu className="w-5 h-5 text-gray-700 dark:text-neutral-300" />
         </button>
       </div>
 
@@ -366,39 +366,39 @@ const AIAgent = () => {
       )}
 
       {/* Sidebar */}
-      <aside className={`bg-white rounded-2xl border border-gray-300 shadow-sm p-4 flex flex-col h-[calc(100vh-6rem)]
+      <aside className={`bg-white dark:bg-neutral-800 rounded-2xl border border-gray-300 dark:border-neutral-700 shadow-sm p-4 flex flex-col h-[calc(100vh-6rem)]
         md:relative md:translate-x-0
         fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] z-50 transition-transform duration-300
         ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         {/* Header */}
-        <div className="flex flex-col gap-3 px-2 pb-3 border-b border-gray-300">
+        <div className="flex flex-col gap-3 px-2 pb-3 border-b border-gray-300 dark:border-neutral-700">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Bot className="w-5 h-5 text-gray-600" />
+              <div className="w-9 h-9 bg-gray-100 dark:bg-neutral-700 rounded-lg flex items-center justify-center">
+                <Bot className="w-5 h-5 text-gray-600 dark:text-neutral-300" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-gray-900">
+                <h2 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">
                   Agente de IA
                 </h2>
-                <p className="text-xs text-gray-500">Configure o comportamento</p>
+                <p className="text-xs text-gray-500 dark:text-neutral-400">Configure o comportamento</p>
               </div>
             </div>
             {/* Botão fechar apenas no mobile */}
             <button
               onClick={() => setIsMobileSidebarOpen(false)}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation"
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 active:bg-gray-200 dark:active:bg-neutral-600 transition-colors touch-manipulation"
               aria-label="Fechar menu"
             >
-              <X className="w-5 h-5 text-gray-600" />
+              <X className="w-5 h-5 text-gray-600 dark:text-neutral-300" />
             </button>
           </div>
 
           {/* IA Toggle */}
-          <div className="flex items-center justify-between bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 mt-2">
+          <div className="flex items-center justify-between bg-gray-50 dark:bg-neutral-700/50 border border-gray-300 dark:border-neutral-600 rounded-lg px-3 py-2 mt-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">
+              <span className="text-sm text-gray-700 dark:text-neutral-300">
                 {toggling
                   ? isEnabled
                     ? 'Desativando IA...'
@@ -408,7 +408,7 @@ const AIAgent = () => {
                   : 'IA Desativada'}
               </span>
               {toggling && (
-                <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                <Loader2 className="w-4 h-4 animate-spin text-gray-400 dark:text-neutral-500" />
               )}
             </div>
 
@@ -449,7 +449,7 @@ const AIAgent = () => {
               }}
               disabled={toggling}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${
-                isEnabled ? 'bg-emerald-600' : 'bg-red-500'
+                isEnabled ? 'bg-emerald-600 dark:bg-emerald-500' : 'bg-red-500 dark:bg-red-600'
               } ${toggling ? 'opacity-70 cursor-wait' : 'cursor-pointer'}`}
             >
               <span
@@ -460,7 +460,7 @@ const AIAgent = () => {
             </button>
           </div>
 
-          <p className="text-[11px] text-gray-500 ml-1">
+          <p className="text-[11px] text-gray-500 dark:text-neutral-400 ml-1">
             {toggling
               ? 'Aguarde... aplicando alteração'
               : isEnabled
@@ -475,8 +475,8 @@ const AIAgent = () => {
             onClick={() => setConfigOpen(!configOpen)}
             className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg ${
               mainSection === 'config'
-                ? 'bg-indigo-50 text-indigo-700'
-                : 'text-gray-700 hover:bg-gray-50'
+                ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400'
+                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700'
             }`}
           >
             <span className="flex items-center gap-2">
@@ -514,8 +514,8 @@ const AIAgent = () => {
                   }}
                   className={`w-full text-left px-3 py-1.5 text-sm rounded-lg touch-manipulation ${
                     mainSection === 'config' && subSection === key
-                      ? 'bg-indigo-50 text-indigo-700 font-medium'
-                      : 'hover:bg-gray-50 text-gray-700'
+                      ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 font-medium'
+                      : 'hover:bg-gray-50 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-300'
                   }`}
                 >
                   {label}
@@ -524,7 +524,7 @@ const AIAgent = () => {
             </div>
           )}
 
-          <div className="my-3 border-t border-gray-300"></div>
+          <div className="my-3 border-t border-gray-300 dark:border-neutral-700"></div>
 
           <button
             onClick={() => {
@@ -533,8 +533,8 @@ const AIAgent = () => {
             }}
             className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg touch-manipulation ${
               mainSection === 'follow'
-                ? 'bg-emerald-50 text-emerald-700'
-                : 'hover:bg-gray-50 text-gray-700'
+                ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                : 'hover:bg-gray-50 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-300'
             }`}
           >
             <MessageCircle className="w-4 h-4" />
@@ -548,8 +548,8 @@ const AIAgent = () => {
             }}
             className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg touch-manipulation ${
               mainSection === 'movement'
-                ? 'bg-blue-50 text-blue-700'
-                : 'hover:bg-gray-50 text-gray-700'
+                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                : 'hover:bg-gray-50 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-300'
             }`}
           >
             <RefreshCw className="w-4 h-4" />
@@ -563,8 +563,8 @@ const AIAgent = () => {
             }}
             className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg touch-manipulation ${
               mainSection === 'test'
-                ? 'bg-amber-50 text-amber-700'
-                : 'hover:bg-gray-50 text-gray-700'
+                ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                : 'hover:bg-gray-50 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-300'
             }`}
           >
             <FlaskConical className="w-4 h-4" />
@@ -574,7 +574,7 @@ const AIAgent = () => {
       </aside>
 
       {/* Painel direito */}
-      <main className="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-300 p-4 md:p-6 overflow-y-auto mx-2 md:mx-0">
+      <main className="bg-white dark:bg-neutral-800 rounded-xl md:rounded-2xl shadow-sm border border-gray-300 dark:border-neutral-700 p-4 md:p-6 overflow-y-auto mx-2 md:mx-0">
         {mainSection === 'config' && (
           <>
             {subSection === 'personalidade' && (

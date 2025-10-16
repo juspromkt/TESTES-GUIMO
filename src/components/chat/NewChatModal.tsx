@@ -157,26 +157,26 @@ export function NewChatModal({ isOpen, onClose, onSuccess }: NewChatModalProps) 
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Overlay */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm"
         onClick={loading ? undefined : handleClose}
       />
 
       {/* Modal */}
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl mx-4">
+      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-2xl mx-4 transition-colors duration-200">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-100">
-              <MessageSquarePlus className="w-6 h-6 text-emerald-600" />
+            <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+              <MessageSquarePlus className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-800">Nova Conversa</h2>
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Nova Conversa</h2>
           </div>
           <button
             onClick={handleClose}
             disabled={loading}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
@@ -185,7 +185,7 @@ export function NewChatModal({ isOpen, onClose, onSuccess }: NewChatModalProps) 
           <div>
             <label
               htmlFor="nome"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
               Nome do Contato
             </label>
@@ -196,7 +196,7 @@ export function NewChatModal({ isOpen, onClose, onSuccess }: NewChatModalProps) 
               onChange={(e) => setNome(e.target.value)}
               placeholder="Digite o nome..."
               disabled={loading}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent transition-all disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
               autoFocus
             />
           </div>
@@ -204,7 +204,7 @@ export function NewChatModal({ isOpen, onClose, onSuccess }: NewChatModalProps) 
           <div>
             <label
               htmlFor="telefone"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
               Telefone (com DDD)
             </label>
@@ -215,9 +215,9 @@ export function NewChatModal({ isOpen, onClose, onSuccess }: NewChatModalProps) 
               onChange={handlePhoneChange}
               placeholder="+55 (11) 91234-5678"
               disabled={loading}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent transition-all disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Formato: +55 (DDD) 91234-5678
             </p>
           </div>
@@ -228,14 +228,14 @@ export function NewChatModal({ isOpen, onClose, onSuccess }: NewChatModalProps) 
               type="button"
               onClick={handleClose}
               disabled={loading}
-              className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2.5 rounded-lg text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2.5 rounded-lg text-sm font-medium text-white bg-emerald-500 dark:bg-emerald-600 hover:bg-emerald-600 dark:hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {loading ? (
                 <>

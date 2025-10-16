@@ -36,11 +36,11 @@ export default function ProspectarLayout({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50 p-4 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
         {/* Sidebar lateral */}
-        <aside className="w-full lg:w-72 bg-white rounded-2xl shadow-sm border border-gray-300 p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-6">
+        <aside className="w-full lg:w-72 bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-300 dark:border-neutral-700 p-6">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-neutral-100 mb-6">
             Envios em Massa
           </h2>
 
@@ -54,13 +54,13 @@ export default function ProspectarLayout({
                   onClick={() => setActiveSection(section.id)}
                   className={`w-full flex items-center gap-3 px-5 py-3 rounded-xl text-[15px] font-medium transition-all duration-200 ${
                     isActive
-                      ? "bg-emerald-100/80 text-emerald-700 shadow-sm ring-1 ring-emerald-200"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-800 border border-transparent hover:border-gray-300"
+                      ? "bg-emerald-100/80 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 shadow-sm ring-1 ring-emerald-200 dark:ring-emerald-800"
+                      : "text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-700 hover:text-gray-800 dark:hover:text-neutral-200 border border-transparent hover:border-gray-300 dark:hover:border-neutral-600"
                   }`}
                 >
                   <Icon
                     className={`w-5 h-5 flex-shrink-0 ${
-                      isActive ? "text-emerald-600" : "text-gray-500"
+                      isActive ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-neutral-500"
                     }`}
                   />
                   <span className="truncate">{section.label}</span>
@@ -71,7 +71,7 @@ export default function ProspectarLayout({
         </aside>
 
         {/* Conteúdo principal */}
-        <main className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-300 p-8">
+        <main className="flex-1 bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-300 dark:border-neutral-700 p-8">
           {children}
         </main>
       </div>

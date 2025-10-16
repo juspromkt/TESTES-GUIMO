@@ -285,20 +285,20 @@ export default function FAQSection({
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
+    <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-gray-300 dark:border-neutral-700 p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
             Perguntas frequentes e informações do seu escritório
           </h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-neutral-400">
             Adicione as principais informações do seu escritório e as perguntas mais frequentes que a IA deve saber responder
           </p>
         </div>
         {canEdit && (
           <button
             onClick={handleAddFAQ}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-500 rounded-lg hover:bg-emerald-600"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-500 dark:bg-emerald-600 rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-500"
           >
             <Plus className="w-4 h-4" /> Adicionar
           </button>
@@ -325,23 +325,23 @@ export default function FAQSection({
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        className="border border-gray-300 rounded-lg p-4 bg-gray-50"
+                        className="border border-gray-300 dark:border-neutral-600 rounded-lg p-4 bg-gray-50 dark:bg-neutral-700/50"
                       >
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="flex items-start gap-3">
                             <div
                               {...provided.dragHandleProps}
-                              className="cursor-grab text-gray-400 hover:text-gray-600"
+                              className="cursor-grab text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-400"
                             >
                               <GripVertical className="w-5 h-5" />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-gray-700">
+                              <p className="text-sm font-medium text-gray-700 dark:text-neutral-300">
                                 Pergunta {faq.ordem}
                               </p>
                               {isCollapsed && (
                                 <p
-                                  className="text-sm font-semibold text-gray-900 truncate"
+                                  className="text-sm font-semibold text-gray-900 dark:text-neutral-100 truncate"
                                   title={faq.pergunta || "Pergunta sem título"}
                                 >
                                   {faq.pergunta || "Pergunta sem título"}
@@ -354,7 +354,7 @@ export default function FAQSection({
                               <button
                                 type="button"
                                 onClick={() => handleRemoveFAQ(faq.ordem)}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                                 title="Excluir pergunta"
                               >
                                 <Trash2 className="w-5 h-5" />
@@ -364,7 +364,7 @@ export default function FAQSection({
                               type="button"
                               onClick={() => toggleFaqCollapse(index)}
                               aria-expanded={!isCollapsed}
-                              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-emerald-600 bg-emerald-100 rounded-lg hover:bg-emerald-200 transition-colors"
+                              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors"
                             >
                               {isCollapsed ? (
                                 <>
@@ -384,7 +384,7 @@ export default function FAQSection({
                         {!isCollapsed && (
                           <div className="mt-4 space-y-4">
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                                 Pergunta {faq.ordem}
                               </label>
                               <input
@@ -397,14 +397,14 @@ export default function FAQSection({
                                     e.target.value
                                   )
                                 }
-                                className="w-full px-3 py-2 border rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
                                 placeholder="Digite a pergunta"
                                 disabled={!canEdit}
                               />
                             </div>
 
                             <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                               Resposta
                             </label>
                             {canEdit && (
@@ -430,7 +430,7 @@ export default function FAQSection({
                                       ?.click()
                                   }
                                   disabled={activeUpload === faq.ordem}
-                                  className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"
+                                  className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 text-gray-700 dark:text-neutral-300 rounded-lg mb-2"
                                 >
                                   <Upload className="w-4 h-4" /> Adicionar Mídia
                                 </button>
@@ -459,12 +459,27 @@ export default function FAQSection({
                                 formats={formats}
                                 readOnly={!canEdit}
                                 placeholder="Digite a resposta"
-                                className="bg-white rounded-lg"
+                                className="bg-white dark:bg-neutral-700 rounded-lg
+                                  [&_.ql-editor]:text-gray-900 [&_.ql-editor]:dark:text-neutral-100
+                                  [&_.ql-editor]:min-h-[120px]
+                                  [&_.ql-toolbar]:dark:bg-neutral-800
+                                  [&_.ql-toolbar]:dark:border-neutral-600
+                                  [&_.ql-container]:dark:border-neutral-600
+                                  [&_.ql-container]:dark:bg-neutral-700
+                                  [&_.ql-stroke]:dark:stroke-neutral-300
+                                  [&_.ql-fill]:dark:fill-neutral-300
+                                  [&_.ql-picker-label]:dark:text-neutral-300
+                                  [&_.ql-picker-options]:dark:bg-neutral-700
+                                  [&_.ql-picker-item]:dark:text-neutral-300
+                                  [&_.ql-picker-item:hover]:dark:bg-neutral-600
+                                  [&_button:hover]:dark:bg-neutral-600
+                                  [&_button.ql-active]:dark:bg-emerald-900/30
+                                  [&_.ql-editor.ql-blank::before]:dark:text-neutral-500"
                               />
                       )}
                               {activeUpload === faq.ordem && (
-                                <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                                  <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+                                <div className="absolute inset-0 bg-white/80 dark:bg-neutral-800/80 flex items-center justify-center">
+                                  <Loader2 className="w-6 h-6 animate-spin text-emerald-500 dark:text-emerald-400" />
                                 </div>
                               )}
                             </div>
@@ -475,7 +490,7 @@ export default function FAQSection({
                               <button
                                 onClick={handleSave}
                                 disabled={savingFAQs || modalLoading}
-                                className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+                                className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 disabled:opacity-50"
                               >
                                 {savingFAQs || modalLoading ? (
                                   <>
@@ -511,11 +526,11 @@ export default function FAQSection({
       >
         {modalLoading ? (
           <div className="flex items-center justify-center gap-2 py-4">
-            <Loader2 className="w-5 h-5 animate-spin text-emerald-500" />
-            <p className="text-sm text-gray-600">Processando resposta...</p>
+            <Loader2 className="w-5 h-5 animate-spin text-emerald-500 dark:text-emerald-400" />
+            <p className="text-sm text-gray-600 dark:text-neutral-400">Processando resposta...</p>
           </div>
         ) : (
-          <p className="text-gray-700">Alterações salvas com sucesso!</p>
+          <p className="text-gray-700 dark:text-neutral-300">Alterações salvas com sucesso!</p>
         )}
       </Modal>
     </div>

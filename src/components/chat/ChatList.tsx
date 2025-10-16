@@ -2177,20 +2177,20 @@ const getLastMessageText = (chat) => {
 
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
+    <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Header - oculto quando controlado externamente */}
       {!isExternallyControlled && (
-        <div className="border-b border-gray-300 bg-white/90">
+        <div className="border-b border-gray-300 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 transition-colors duration-200">
           <div className="px-3 py-3 space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h1 className="text-lg font-semibold text-gray-700">Conversas</h1>
+                <h1 className="text-lg font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-200">Conversas</h1>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowControls(prev => !prev)}
                   className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                    showControls ? 'bg-gray-100 text-gray-700 border-gray-300' : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-300'
+                    showControls ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600'
                   }`}
                 >
                   <span>{showControls ? 'Ocultar filtros' : 'Mostrar filtros'}</span>
@@ -2201,7 +2201,7 @@ const getLastMessageText = (chat) => {
                 </button>
                 <button
                   onClick={handleManualRefresh}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 text-gray-500 transition-colors hover:bg-gray-50"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
                   title="Atualizar lista"
                 >
                   <RefreshCw className="h-4 w-4" />
@@ -2210,7 +2210,7 @@ const getLastMessageText = (chat) => {
             </div>
 
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-200" />
               <input
                 type="text"
                 placeholder="Buscar conversas..."
@@ -2219,28 +2219,28 @@ const getLastMessageText = (chat) => {
                   lastUserInteractionRef.current = Date.now();
                   setSearchTerm(e.target.value);
                 }}
-                className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-700 placeholder:text-gray-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-2 pl-9 pr-3 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-colors duration-200"
               />
             </div>
 
             {showControls && (
-            <div className="border-t border-gray-300 pt-3">
+            <div className="border-t border-gray-300 dark:border-gray-700 pt-3 transition-colors duration-200">
               <div
-                className="space-y-3 rounded-lg border border-gray-300 bg-white/95 p-3 shadow-sm max-h-64 overflow-y-auto"
+                className="space-y-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white/95 dark:bg-gray-800/95 p-3 shadow-sm max-h-64 overflow-y-auto transition-colors duration-200"
                 style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(148, 163, 184, 0.35) transparent' }}
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <Popover.Root open={contactPopoverOpen} onOpenChange={setContactPopoverOpen}>
                     <Popover.Trigger asChild>
                       <button
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-50"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
                         title="Nova conversa"
                       >
                         <MessageSquarePlus className="h-4 w-4" />
                       </button>
                     </Popover.Trigger>
                     <Popover.Portal>
-                      <Popover.Content sideOffset={6} className="z-50 w-60 rounded-xl border border-gray-300 bg-white p-3 shadow-2xl">
+                      <Popover.Content sideOffset={6} className="z-50 w-60 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-3 shadow-2xl transition-colors duration-200">
                         <input
                           type="text"
                           value={contactSearch}
@@ -2249,19 +2249,19 @@ const getLastMessageText = (chat) => {
                             setContactSearch(e.target.value);
                           }}
                           placeholder="Buscar contato"
-                          className="mb-2 w-full rounded border border-gray-300 p-2 text-sm focus:border-emerald-400 focus:outline-none"
+                          className="mb-2 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 p-2 text-sm focus:border-emerald-400 focus:outline-none transition-colors duration-200"
                         />
                         <div className="max-h-60 overflow-y-auto">
                           {filteredContacts.map(c => (
                             <button
                               key={c.id}
                               onClick={() => handleStartChat(c)}
-                              className="flex w-full items-center rounded px-2 py-1.5 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                              className="flex w-full items-center rounded px-2 py-1.5 text-left text-sm text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
                             >
                               {c.profilePicUrl ? (
                                 <img src={c.profilePicUrl} alt="avatar" className="h-8 w-8 rounded-full object-cover" />
                               ) : (
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-500 text-xs font-medium text-white">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-500 dark:bg-gray-600 text-xs font-medium text-white transition-colors duration-200">
                                   {getInitials(c.pushName)}
                                 </div>
                               )}
@@ -2276,10 +2276,10 @@ const getLastMessageText = (chat) => {
                   <Popover.Root>
                     <Popover.Trigger asChild>
                       <button
-                        className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-gray-600 transition-colors ${
+                        className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-gray-600 dark:text-gray-400 transition-colors ${
                           iaStatusFilter !== 'all'
                             ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                            : 'border-gray-300 bg-white hover:bg-gray-50'
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700'
                         }`}
                         title="Filtrar por status de IA"
                       >
@@ -2289,23 +2289,23 @@ const getLastMessageText = (chat) => {
                       </button>
                     </Popover.Trigger>
                     <Popover.Portal>
-                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-300 bg-white p-3 shadow-2xl">
+                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-3 shadow-2xl transition-colors duration-200">
                         <div className="space-y-1">
                           <button
                             onClick={() => setIaStatusFilter('active')}
-                            className="block w-full rounded px-3 py-1.5 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                            className="block w-full rounded px-3 py-1.5 text-left text-sm text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
                           >
                             IA Ativa
                           </button>
                           <button
                             onClick={() => setIaStatusFilter('inactive')}
-                            className="block w-full rounded px-3 py-1.5 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
+                            className="block w-full rounded px-3 py-1.5 text-left text-sm text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
                           >
                             Intervenção
                           </button>
                           <button
                             onClick={() => setIaStatusFilter('all')}
-                            className="block w-full rounded px-3 py-1.5 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                            className="block w-full rounded px-3 py-1.5 text-left text-sm text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
                           >
                             Mostrar todas
                           </button>
@@ -2317,10 +2317,10 @@ const getLastMessageText = (chat) => {
                   <Popover.Root>
                     <Popover.Trigger asChild>
                       <button
-                        className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-gray-600 transition-colors ${
+                        className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-gray-600 dark:text-gray-400 transition-colors ${
                           usuarioFiltroId !== null
                             ? 'border-blue-300 bg-blue-50 text-blue-700'
-                            : 'border-gray-300 bg-white hover:bg-gray-50'
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700'
                         }`}
                         title="Filtrar por usuário"
                       >
@@ -2330,11 +2330,11 @@ const getLastMessageText = (chat) => {
                       </button>
                     </Popover.Trigger>
                     <Popover.Portal>
-                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-300 bg-white p-3 shadow-2xl">
+                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-3 shadow-2xl transition-colors duration-200">
                         <div className="max-h-60 space-y-1 overflow-y-auto">
                           <button
                             onClick={() => setUsuarioFiltroId(null)}
-                            className="block w-full rounded px-3 py-1.5 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                            className="block w-full rounded px-3 py-1.5 text-left text-sm text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
                           >
                             Todos os usuários
                           </button>
@@ -2343,7 +2343,7 @@ const getLastMessageText = (chat) => {
                               key={u.Id}
                               onClick={() => setUsuarioFiltroId(u.Id)}
                               className={`block w-full rounded px-3 py-1.5 text-left text-sm transition-colors ${
-                                usuarioFiltroId === u.Id ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-blue-50'
+                                usuarioFiltroId === u.Id ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20'
                               }`}
                             >
                               {u.nome}
@@ -2357,10 +2357,10 @@ const getLastMessageText = (chat) => {
                   <Popover.Root>
                     <Popover.Trigger asChild>
                       <button
-                        className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-gray-600 transition-colors ${
+                        className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-gray-600 dark:text-gray-400 transition-colors ${
                           tagFiltroId !== null
                             ? 'border-purple-300 bg-purple-50 text-purple-700'
-                            : 'border-gray-300 bg-white hover:bg-gray-50'
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700'
                         }`}
                         title="Filtrar por etiqueta"
                       >
@@ -2370,11 +2370,11 @@ const getLastMessageText = (chat) => {
                       </button>
                     </Popover.Trigger>
                     <Popover.Portal>
-                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-300 bg-white p-3 shadow-2xl">
+                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-3 shadow-2xl transition-colors duration-200">
                         <div className="max-h-60 space-y-1 overflow-y-auto">
                           <button
                             onClick={() => setTagFiltroId(null)}
-                            className="block w-full rounded px-3 py-1.5 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                            className="block w-full rounded px-3 py-1.5 text-left text-sm text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
                           >
                             Todas as etiquetas
                           </button>
@@ -2398,7 +2398,7 @@ const getLastMessageText = (chat) => {
                   </Popover.Root>
                 </div>
 
-                <div className="flex flex-wrap gap-1 text-[11px] font-medium text-gray-600">
+                <div className="flex flex-wrap gap-1 text-[11px] font-medium text-gray-600 dark:text-gray-400 transition-colors duration-200">
                   {[
                     { key: 'all', label: 'Todas as Conversas' },
                     { key: 'ia', label: 'IA Ativa' },
@@ -2412,7 +2412,7 @@ const getLastMessageText = (chat) => {
                       className={`flex-1 min-w-[120px] rounded-md border px-2.5 py-1 transition-colors ${
                         activeTab === tab.key
                           ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                          : 'border-transparent bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                          : 'border-transparent bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                       }`}
                     >
                       {tab.label}
@@ -2438,10 +2438,10 @@ const getLastMessageText = (chat) => {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <div className="relative">
-              <div className="w-12 h-12 border-4 border-gray-300 rounded-full animate-spin"></div>
-              <div className="absolute top-0 left-0 w-12 h-12 border-4 border-transparent border-t-gray-600 rounded-full animate-spin"></div>
+              <div className="w-12 h-12 border-4 border-gray-300 dark:border-gray-600 rounded-full animate-spin transition-colors duration-200"></div>
+              <div className="absolute top-0 left-0 w-12 h-12 border-4 border-transparent border-t-gray-600 dark:border-t-gray-400 rounded-full animate-spin transition-colors duration-200"></div>
             </div>
-            <p className="text-gray-600/70 text-sm">Carregando conversas...</p>
+            <p className="text-gray-600/70 dark:text-gray-400/70 text-sm transition-colors duration-200">Carregando conversas...</p>
           </div>
         ) : (
           <div className="space-y-1.5">
@@ -2465,16 +2465,16 @@ const getLastMessageText = (chat) => {
 
               // Clean WhatsApp Web style
               const baseContainerClasses =
-                'group relative flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-all duration-150 border-b border-gray-100';
+                'group relative flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-all duration-150 border-b border-gray-100 dark:border-gray-700';
 
-              let containerTone = 'bg-white hover:bg-gray-50';
+              let containerTone = 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700';
               if (isSelected) {
-                containerTone = 'bg-gray-100';
+                containerTone = 'bg-gray-100 dark:bg-gray-700';
               }
 
-              const nameColorClass = unreadCount > 0 ? 'text-gray-900 font-semibold' : 'text-gray-900';
-              const metaTextClass = unreadCount > 0 ? 'text-teal-600 font-semibold' : 'text-gray-500';
-              const messageTextClass = unreadCount > 0 ? 'text-gray-900 font-medium' : 'text-gray-600';
+              const nameColorClass = unreadCount > 0 ? 'text-gray-900 dark:text-white font-semibold' : 'text-gray-900 dark:text-white';
+              const metaTextClass = unreadCount > 0 ? 'text-teal-600 dark:text-teal-400 font-semibold' : 'text-gray-500 dark:text-gray-400';
+              const messageTextClass = unreadCount > 0 ? 'text-gray-900 dark:text-gray-300 font-medium' : 'text-gray-600 dark:text-gray-400';
 
               const containerClasses = [
                 baseContainerClasses,
@@ -2512,7 +2512,7 @@ const getLastMessageText = (chat) => {
                         className="h-12 w-12 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-gray-600 font-semibold text-sm">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 font-semibold text-sm transition-colors duration-200">
                         {getInitials(chat.pushName)}
                       </div>
                     )}
@@ -2522,10 +2522,10 @@ const getLastMessageText = (chat) => {
                   <div className="flex-1 min-w-0">
                     {/* Linha 1: Nome + Timestamp */}
                     <div className="flex items-baseline justify-between gap-2 mb-0.5">
-                      <h3 className={`text-[15px] truncate flex-1 ${nameColorClass}`}>
+                      <h3 className={`text-[15px] truncate flex-1 ${nameColorClass} transition-colors duration-200`}>
                         {displayName}
                       </h3>
-                      <span className={`text-xs flex-shrink-0 ${metaTextClass}`}>
+                      <span className={`text-xs flex-shrink-0 ${metaTextClass} transition-colors duration-200`}>
                         {formatTimestamp(normalizeTimestamp(chat.lastMessage.messageTimestamp))}
                       </span>
                     </div>
@@ -2534,11 +2534,11 @@ const getLastMessageText = (chat) => {
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 flex-1 min-w-0">
                         {chat.lastMessage.fromMe && (
-                          <svg className="w-4 h-4 flex-shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 flex-shrink-0 text-gray-500 dark:text-gray-400 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                         )}
-                        <p className={`text-sm truncate ${messageTextClass}`}>
+                        <p className={`text-sm truncate ${messageTextClass} transition-colors duration-200`}>
                           {getLastMessageText(chat)}
                         </p>
                       </div>
@@ -2617,7 +2617,7 @@ const getLastMessageText = (chat) => {
 
                       {/* Responsável */}
                       {dono && (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
+                        <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400 transition-colors duration-200">
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
@@ -2633,12 +2633,12 @@ const getLastMessageText = (chat) => {
 
             {loadingMore && (
               <div className="flex justify-center py-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-3000"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-300 dark:border-gray-600 transition-colors duration-200"></div>
               </div>
             )}
-            
+
             {!hasMore && (
-              <div className="text-center py-4 text-sm text-gray-600/70">
+              <div className="text-center py-4 text-sm text-gray-600/70 dark:text-gray-400/70 transition-colors duration-200">
                 Você chegou ao final da lista
               </div>
             )}

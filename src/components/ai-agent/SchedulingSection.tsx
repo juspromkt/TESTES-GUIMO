@@ -88,8 +88,8 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
 
   return (
     <>
-    <section className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">
+    <section className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-gray-300 dark:border-neutral-700 p-6">
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 mb-6">
         Configurações de Agendamento
       </h2>
 
@@ -107,22 +107,22 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
   />
   <div
     className={`
-      w-11 h-6 bg-gray-200 rounded-full relative transition-all
-      peer-focus:ring-4 peer-focus:ring-emerald-300
-      peer-checked:bg-emerald-500
+      w-11 h-6 bg-gray-200 dark:bg-neutral-600 rounded-full relative transition-all
+      peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-700
+      peer-checked:bg-emerald-500 dark:peer-checked:bg-emerald-600
       after:content-[''] after:absolute after:top-[2px] after:left-[2px]
-      after:h-5 after:w-5 after:rounded-full after:bg-white after:border after:border-gray-300
+      after:h-5 after:w-5 after:rounded-full after:bg-white after:border after:border-gray-300 dark:after:border-neutral-500
       after:transition-all peer-checked:after:translate-x-5 peer-checked:after:border-white
       ${!canEdit ? 'opacity-50 cursor-not-allowed' : ''}
     `}
   />
-  <span className="ml-3 text-gray-700">Ativar agendamento automático</span>
+  <span className="ml-3 text-gray-700 dark:text-neutral-300">Ativar agendamento automático</span>
 </label>
 
         {canEdit && (
           <button
             onClick={applyDefaultTexts}
-            className="text-xs text-gray-500 hover:text-gray-700 underline"
+            className="text-xs text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300 underline"
           >
             Aplicar textos padrão
           </button>
@@ -130,7 +130,7 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
           Agenda Padrão
         </label>
         <select
@@ -139,7 +139,7 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
           onChange={(e) =>
             setScheduling({ ...scheduling, agenda_padrao: e.target.value as Scheduling['agenda_padrao'] })
           }
-          className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+          className="w-full rounded-md border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500 dark:focus:ring-emerald-400"
         >
           <option value="GOOGLE_MEET">Google Agenda</option>
           <option value="AGENDA_INTERNA">Agenda Interna</option>
@@ -148,7 +148,7 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
 
       {scheduling.agenda_padrao === 'GOOGLE_MEET' && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
             ID da Agenda
           </label>
           <input
@@ -158,7 +158,7 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
             onChange={(e) =>
               setScheduling({ ...scheduling, id_agenda: e.target.value })
             }
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+            className="w-full rounded-md border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500 dark:focus:ring-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
             placeholder="Digite o ID da agenda"
           />
         </div>
@@ -167,7 +167,7 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
       {scheduling.agenda_padrao === 'SISTEMA_EXTERNO' && (
         <>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
               URL do Webhook para Consulta Externa
             </label>
             <input
@@ -180,12 +180,12 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
                   url_consulta_externa: e.target.value,
                 })
               }
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+              className="w-full rounded-md border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500 dark:focus:ring-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
               placeholder="Informe a URL de consulta"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
               URL do Webhook para Marcação Externa
             </label>
             <input
@@ -198,7 +198,7 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
                   url_marcacao_externa: e.target.value,
                 })
               }
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+              className="w-full rounded-md border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500 dark:focus:ring-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
               placeholder="Informe a URL de marcação"
             />
           </div>
@@ -206,7 +206,7 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
       )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
             Prompt para Consulta de Horários
           </label>
           <textarea
@@ -219,13 +219,13 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
               })
             }
             rows={3}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+            className="w-full rounded-md border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500 dark:focus:ring-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
             placeholder="Digite o prompt para consulta de horários"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
             Prompt para Marcar Horário
           </label>
           <textarea
@@ -238,13 +238,13 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
               })
             }
             rows={3}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+            className="w-full rounded-md border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500 dark:focus:ring-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
             placeholder="Digite o prompt para marcar horário"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
             Duração do Horário
           </label>
           <select
@@ -253,7 +253,7 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
             onChange={(e) =>
               setScheduling({ ...scheduling, duracao_horario: e.target.value })
             }
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+            className="w-full rounded-md border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500 dark:focus:ring-emerald-400"
           >
             <option value="">Selecione a duração</option>
             {durationOptions.map((option) => (
@@ -265,7 +265,7 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
             Limite de agendamentos por horário
           </label>
           <input
@@ -281,16 +281,16 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
                   : null,
               })
             }
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+            className="w-full rounded-md border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500 dark:focus:ring-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
             placeholder="Quantos agendamentos podem ocorrer no mesmo horário?"
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
             Define a quantidade máxima de reuniões simultâneas para um mesmo horário.
           </p>
         </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
           Instruções para Nome do Agendamento
         </label>
         <textarea
@@ -303,16 +303,16 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
             })
           }
           rows={2}
-          className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+          className="w-full rounded-md border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500 dark:focus:ring-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
           placeholder="Explique para a IA como definir o nome"
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
           Descreva para a IA as regras para gerar o nome do agendamento.
         </p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
           Instruções para Descrição do Agendamento
         </label>
         <textarea
@@ -325,10 +325,10 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
             })
           }
           rows={3}
-          className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+          className="w-full rounded-md border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500 dark:focus:ring-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
           placeholder="Explique para a IA como definir a descrição"
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
           A IA usará estas instruções para preencher a descrição.
         </p>
       </div>
@@ -338,7 +338,7 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
           <button
             onClick={handleSaveWithModal}
             disabled={saving}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-500 dark:bg-emerald-600 hover:bg-emerald-600 dark:hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? (
               <>
@@ -361,13 +361,13 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
         >
           {modalLoading ? (
             <div className="flex items-center justify-center gap-2 py-4">
-              <Loader2 className="w-5 h-5 animate-spin text-emerald-500" />
-              <p className="text-sm text-gray-600">
+              <Loader2 className="w-5 h-5 animate-spin text-emerald-500 dark:text-emerald-400" />
+              <p className="text-sm text-gray-600 dark:text-neutral-400">
                 Processando agendamento...
               </p>
             </div>
           ) : (
-            <p className="text-gray-700">
+            <p className="text-gray-700 dark:text-neutral-300">
               Configurações de agendamento salvas com sucesso!
             </p>
           )}

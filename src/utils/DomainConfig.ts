@@ -1,3 +1,5 @@
+import { colors, backgrounds, getColorScale } from '../styles/tokens';
+
 export class DomainConfig {
   private static instance: DomainConfig;
   private isCustomDomain: boolean;
@@ -17,23 +19,52 @@ export class DomainConfig {
 
   private readonly DOMAIN_THEMES = {
     'default': {
-      gradient: 'from-[#f9fafb] to-[#f9fafb]',
+      name: 'Guimoo',
+      gradient: 'from-neutral-50 to-neutral-50',
       path: '/guimoo',
 
-      // 🎨 Cores neutras
-      activeColor: 'text-gray-900',
-      defaultColor: 'text-gray-700',
-      hoverBg: 'hover:bg-gray-100',
-      activeBg: 'bg-white border border-gray-300 shadow-sm',
-      sidebarBg: 'bg-[#f9fafb]',
-      profileBg: 'bg-gray-100',
-      textLoginColor: 'text-gray-900',
+      // 🎨 Cores do Design System
+      activeColor: 'text-neutral-900 dark:text-neutral-100',
+      defaultColor: 'text-neutral-700 dark:text-neutral-300',
+      hoverBg: 'hover:bg-neutral-100 dark:hover:bg-neutral-800',
+      activeBg: 'bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 shadow-sm',
+      sidebarBg: 'bg-neutral-50 dark:bg-neutral-900',
+      profileBg: 'bg-neutral-100 dark:bg-neutral-800',
+      textLoginColor: 'text-neutral-900 dark:text-neutral-100',
+
+      // Design Tokens
+      colors: {
+        primary: 'primary',
+        secondary: 'neutral',
+        accent: 'accent'
+      },
+
+      // Backgrounds
+      backgroundLight: backgrounds.light.primary,
+      backgroundDark: backgrounds.dark.primary,
+    },
+    'purple': {
+      name: 'Guimoo Purple',
+      gradient: 'from-purple-50 to-purple-50',
+      path: '/guimoo',
+
+      // 🟣 Tema roxo alternativo (usado no login)
+      activeColor: 'text-purple-900 dark:text-purple-100',
+      defaultColor: 'text-purple-700 dark:text-purple-300',
+      hoverBg: 'hover:bg-purple-100 dark:hover:bg-purple-900',
+      activeBg: 'bg-white dark:bg-purple-900 border border-purple-300 dark:border-purple-700 shadow-sm',
+      sidebarBg: 'bg-purple-50 dark:bg-purple-950',
+      profileBg: 'bg-purple-100 dark:bg-purple-900',
+      textLoginColor: 'text-purple-900 dark:text-purple-100',
 
       colors: {
-        primary: 'gray',
-        secondary: 'slate',
-        accent: 'emerald'
-      }
+        primary: 'purple',
+        secondary: 'neutral',
+        accent: 'accent'
+      },
+
+      backgroundLight: backgrounds.light.primary,
+      backgroundDark: backgrounds.dark.primary,
     }
   };
 
@@ -103,7 +134,9 @@ export class DomainConfig {
     const theme = this.getDomainTheme();
     return {
       full: `${theme.path}/logo-cumprida.png`,
+      fullDark: `${theme.path}/logo-dark-mode.png`,
       reduced: `${theme.path}/logo-reduzida.png`,
+      reducedDark: `${theme.path}/icon-dark-mode.png`,
       login: `${theme.path}/logo-login.png`,
       favicon: `${theme.path}/favicon.ico`
     };
@@ -131,6 +164,7 @@ export class DomainConfig {
     ];
   }
 
+  // 🎯 Métodos para acessar cores dos tokens
   getPrimaryColor(shade: number = 600): string {
     const theme = this.getDomainTheme();
     return `${theme.colors.primary}-${shade}`;
@@ -146,23 +180,29 @@ export class DomainConfig {
     return `${theme.colors.accent}-${shade}`;
   }
 
+  // 🎨 Classes utilitárias com suporte a dark mode
   getButtonClasses(): string {
     const theme = this.getDomainTheme();
-    return `bg-${theme.colors.primary}-600 hover:bg-${theme.colors.primary}-700 text-white`;
+    return `bg-${theme.colors.primary}-600 hover:bg-${theme.colors.primary}-700 dark:bg-${theme.colors.primary}-700 dark:hover:bg-${theme.colors.primary}-600 text-white transition-theme`;
   }
 
   getCardClasses(): string {
     const theme = this.getDomainTheme();
-    return `bg-${theme.colors.primary}-50 border-${theme.colors.primary}-100`;
+    return `bg-white dark:bg-neutral-800 border border-${theme.colors.primary}-100 dark:border-neutral-700 transition-theme`;
   }
 
   getStageClasses(): string {
     const theme = this.getDomainTheme();
-    return `bg-${theme.colors.secondary}-50 border-${theme.colors.secondary}-100`;
+    return `bg-${theme.colors.secondary}-50 dark:bg-${theme.colors.secondary}-900 border-${theme.colors.secondary}-100 dark:border-${theme.colors.secondary}-700 transition-theme`;
   }
 
   getAgentClasses(): string {
     const theme = this.getDomainTheme();
-    return `bg-${theme.colors.accent}-50 border-${theme.colors.accent}-100`;
+    return `bg-${theme.colors.accent}-50 dark:bg-${theme.colors.accent}-900 border-${theme.colors.accent}-100 dark:border-${theme.colors.accent}-700 transition-theme`;
+  }
+
+  // 🔧 Helper para obter cor do design system
+  getColorFromTokens(color: keyof typeof colors, shade: number): string {
+    return getColorScale(color, shade);
   }
 }

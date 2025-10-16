@@ -79,15 +79,15 @@ export default function OperatingHoursSection({ token, canEdit }: OperatingHours
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-500 dark:text-emerald-400" />
       </div>
     );
   }
 
   return (
-    <section className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-        <Clock className="w-6 h-6 text-emerald-600" />
+    <section className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-gray-300 dark:border-neutral-700 p-6">
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 mb-6 flex items-center gap-2">
+        <Clock className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
         Horário de Funcionamento
       </h2>
 
@@ -102,16 +102,16 @@ export default function OperatingHoursSection({ token, canEdit }: OperatingHours
               disabled={!canEdit}
             />
             <div
-              className={`w-11 h-6 bg-gray-200 rounded-full peer-focus:ring-4 peer-focus:ring-emerald-300 peer-checked:bg-emerald-500 transition-all relative ${!canEdit ? 'opacity-50' : ''}`}
+              className={`w-11 h-6 bg-gray-200 dark:bg-neutral-600 rounded-full peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-700 peer-checked:bg-emerald-500 dark:peer-checked:bg-emerald-600 transition-all relative ${!canEdit ? 'opacity-50' : ''}`}
             >
-              <span className="absolute top-[2px] left-[2px] h-5 w-5 bg-white border border-gray-300 rounded-full transition-transform duration-200 peer-checked:translate-x-5" />
+              <span className="absolute top-[2px] left-[2px] h-5 w-5 bg-white border border-gray-300 dark:border-neutral-500 rounded-full transition-transform duration-200 peer-checked:translate-x-5" />
             </div>
-            <span className="ml-3 text-gray-700">Ativar horário de funcionamento</span>
+            <span className="ml-3 text-gray-700 dark:text-neutral-300">Ativar horário de funcionamento</span>
           </label>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Horário de Início</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">Horário de Início</label>
           <input
             type="number"
             min="0"
@@ -119,12 +119,12 @@ export default function OperatingHoursSection({ token, canEdit }: OperatingHours
             value={startHour}
             onChange={(e) => setStartHour(parseInt(e.target.value))}
             disabled={!canEdit}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+            className="w-full rounded-md border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500 dark:focus:ring-emerald-400"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Horário Final</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">Horário Final</label>
           <input
             type="number"
             min="0"
@@ -132,19 +132,19 @@ export default function OperatingHoursSection({ token, canEdit }: OperatingHours
             value={endHour}
             onChange={(e) => setEndHour(parseInt(e.target.value))}
             disabled={!canEdit}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+            className="w-full rounded-md border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500 dark:focus:ring-emerald-400"
           />
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2">
+          <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg flex items-center gap-2">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {success && (
-          <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg">
+          <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 px-4 py-3 rounded-lg">
             {success}
           </div>
         )}
@@ -155,7 +155,7 @@ export default function OperatingHoursSection({ token, canEdit }: OperatingHours
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 inline-flex items-center gap-2 disabled:opacity-50"
+              className="mt-4 px-4 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-md hover:bg-emerald-700 dark:hover:bg-emerald-600 inline-flex items-center gap-2 disabled:opacity-50"
             >
               {saving ? (
                 <>

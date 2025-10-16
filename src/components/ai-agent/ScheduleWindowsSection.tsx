@@ -216,7 +216,7 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
             prev ? { ...prev, window: { ...prev.window, horarioInicio: e.target.value } } : null
           )
         }
-        className="border rounded-md px-2 py-1"
+        className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md px-2 py-1"
       >
         {timeOptions.map((t) => (
           <option key={t} value={t}>
@@ -224,7 +224,7 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
           </option>
         ))}
       </select>
-      <span>-</span>
+      <span className="text-gray-700 dark:text-neutral-300">-</span>
       <select
         value={editing?.window.horarioFinal}
         onChange={(e) =>
@@ -232,7 +232,7 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
             prev ? { ...prev, window: { ...prev.window, horarioFinal: e.target.value } } : null
           )
         }
-        className="border rounded-md px-2 py-1"
+        className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md px-2 py-1"
       >
         {timeOptions.map((t) => (
           <option key={t} value={t}>
@@ -242,11 +242,11 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
       </select>
       <button
         onClick={handleSave}
-        className="p-1 text-emerald-600 hover:text-emerald-800"
+        className="p-1 text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300"
       >
         <Save className="w-4 h-4" />
       </button>
-      <button onClick={cancelEditing} className="p-1 text-red-600 hover:text-red-800">
+      <button onClick={cancelEditing} className="p-1 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">
         <X className="w-4 h-4" />
       </button>
     </div>
@@ -254,23 +254,23 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
 
   if (loading) {
     return (
-      <section className="bg-white rounded-lg shadow-sm border border-gray-300 p-6 mt-6 flex justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+      <section className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-gray-300 dark:border-neutral-700 p-6 mt-6 flex justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-emerald-500 dark:text-emerald-400" />
       </section>
     );
   }
 
   return (
-    <section className="bg-white rounded-lg shadow-sm border border-gray-300 p-6 mt-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Horários Disponíveis (Funciona na agenda interna e Google Agenda)</h2>
+    <section className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-gray-300 dark:border-neutral-700 p-6 mt-6">
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 mb-6">Horários Disponíveis (Funciona na agenda interna e Google Agenda)</h2>
       {days.map((day) => (
         <div key={day} className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="font-medium text-gray-700">{dayLabels[day]}</span>
+            <span className="font-medium text-gray-700 dark:text-neutral-300">{dayLabels[day]}</span>
             {canEdit && (!editing || editing.day !== day) && (
               <button
                 onClick={() => startEditing(day)}
-                className="flex items-center gap-1 text-sm text-emerald-600 hover:underline"
+                className="flex items-center gap-1 text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
               >
                 <Plus className="w-4 h-4" /> Adicionar
               </button>
@@ -281,7 +281,7 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
                 editing && editing.day === day && editing.window.Id === w.Id ? (
                   <React.Fragment key={w.Id}>{renderEditRow()}</React.Fragment>
                 ) : (
-                <div key={w.Id} className="flex items-center gap-2 text-gray-700">
+                <div key={w.Id} className="flex items-center gap-2 text-gray-700 dark:text-neutral-300">
                   <span>
                     {w.horarioInicio} - {w.horarioFinal}
                   </span>
@@ -289,13 +289,13 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
                     <>
                       <button
                         onClick={() => startEditing(day, w)}
-                        className="p-1 text-blue-600 hover:text-blue-800"
+                        className="p-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(w.Id!)}
-                        className="p-1 text-red-600 hover:text-red-800"
+                        className="p-1 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -306,10 +306,10 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
             ))}
               {editing && editing.day === day && !editing.window.Id && renderEditRow()}
             {windows[day].length === 0 && (!editing || editing.day !== day) && (
-              <p className="text-sm text-gray-500">Nenhuma janela cadastrada</p>
+              <p className="text-sm text-gray-500 dark:text-neutral-400">Nenhuma janela cadastrada</p>
             )}
             {editing && editing.day === day && error && (
-              <p className="text-sm text-red-600">{error}</p>
+              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
             )}
           </div>
         </div>

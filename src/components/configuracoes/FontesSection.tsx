@@ -122,19 +122,19 @@ const fetchFontes = async () => {
     <div className="mt-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-  <h2 className="text-xl font-semibold text-gray-900">Origem do Lead</h2>
+  <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Origem do Lead</h2>
 
   {/* Botão de informação */}
   <div className="relative group">
     <button
-      className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-colors"
+      className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 dark:border-neutral-600 text-gray-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
       title=""
     >
       ?
     </button>
 
     {/* Tooltip */}
-    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10">
+    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-800 dark:bg-neutral-900 text-white dark:text-neutral-100 text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10 border border-gray-700 dark:border-neutral-700">
       A <strong>origem do lead</strong> é preenchida de forma automática pelo sistema, você não precisa configurar. Automaticamente o sistema identificará de onde o lead veio (ex: facebook ads) e mostrará essa informação aqui (e no cartão CRM do lead). Se o lead não tiver uma origem identificada, será mostrado como <em>Indefinida</em>. Se você quiser ter controle total da fonte, fale com seu gestor de tráfego - ele saberá configurar, caso necessário.
     </div>
   </div>
@@ -142,7 +142,7 @@ const fetchFontes = async () => {
         {canEdit && (
   <button
     onClick={() => setIsModalOpen(true)}
-    className="flex items-center gap-2 bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors"
+    className="flex items-center gap-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg px-4 py-2 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
   >
     <Plus size={20} />
     Nova Fonte
@@ -152,49 +152,49 @@ const fetchFontes = async () => {
 
       {loading ? (
         <div className="flex items-center justify-center h-32">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" />
         </div>
       ) : error ? (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
+        <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded-md">
           {error}
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+            <thead className="bg-gray-50 dark:bg-neutral-900">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                   ID
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                   Nome
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                   Source
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                   Ações
                 </th>
               </tr>
             </thead>
-<tbody className="bg-white divide-y divide-gray-200">
+<tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
   {paginatedFontes.length === 0 ? (
     <tr>
-      <td colSpan={4} className="text-center text-gray-500 py-6 text-sm">
+      <td colSpan={4} className="text-center text-gray-500 dark:text-neutral-400 py-6 text-sm">
         Não há fontes cadastradas.
       </td>
     </tr>
   ) : (
     paginatedFontes.map((fonte) => (
-      <tr key={fonte.Id} className="hover:bg-gray-50">
+      <tr key={fonte.Id} className="hover:bg-gray-50 dark:hover:bg-neutral-700">
         <td className="px-6 py-4 whitespace-nowrap">
-          <div className="text-sm text-gray-500">#{fonte.Id}</div>
+          <div className="text-sm text-gray-500 dark:text-neutral-400">#{fonte.Id}</div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
-          <div className="text-sm font-medium text-gray-900">{fonte.nome}</div>
+          <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{fonte.nome}</div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
-          <div className="text-sm text-gray-900">{fonte.source || '-'}</div>
+          <div className="text-sm text-gray-900 dark:text-neutral-200">{fonte.source || '-'}</div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap text-right">
 {canEdit && (
@@ -203,7 +203,7 @@ const fetchFontes = async () => {
       setSelectedFonte(fonte);
       setIsDeleteModalOpen(true);
     }}
-    className="text-red-600 hover:text-red-900"
+    className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
   >
     <Trash2 className="w-5 h-5" />
   </button>
@@ -227,13 +227,13 @@ const fetchFontes = async () => {
 
       {/* Nova Fonte Modal */}
 {canEdit && isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-6 border-b border-gray-300">
-              <h2 className="text-xl font-semibold text-gray-900">Nova Fonte</h2>
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-lg border border-gray-200 dark:border-neutral-700">
+            <div className="flex items-center justify-between p-6 border-b border-gray-300 dark:border-neutral-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Nova Fonte</h2>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-gray-500"
+                className="text-gray-400 dark:text-neutral-500 hover:text-gray-500 dark:hover:text-neutral-300"
               >
                 <X size={20} />
               </button>
@@ -242,7 +242,7 @@ const fetchFontes = async () => {
             <form onSubmit={handleSubmit} className="p-6">
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="nome" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
                     Nome da Fonte
                   </label>
                   <input
@@ -250,14 +250,14 @@ const fetchFontes = async () => {
                     id="nome"
                     value={newFonteName}
                     onChange={(e) => setNewFonteName(e.target.value)}
-                    className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full px-4 py-3 text-base border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
                     placeholder="Digite o nome da fonte..."
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="source" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="source" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
                     Source
                   </label>
                   <input
@@ -265,13 +265,13 @@ const fetchFontes = async () => {
                     id="source"
                     value={newFonteSource}
                     onChange={(e) => setNewFonteSource(e.target.value)}
-                    className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full px-4 py-3 text-base border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
                     placeholder="Digite o source da fonte..."
                   />
                 </div>
 
                 {formError && (
-                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+                  <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded-md text-sm">
                     {formError}
                   </div>
                 )}
@@ -280,14 +280,14 @@ const fetchFontes = async () => {
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex items-center gap-2 bg-blue-600 text-white rounded-md px-6 py-2 text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    className="flex items-center gap-2 bg-blue-600 dark:bg-blue-700 text-white rounded-md px-6 py-2 text-sm font-medium hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                   >
                     {submitting ? (
                       <>
@@ -307,18 +307,18 @@ const fetchFontes = async () => {
 
       {/* Delete Confirmation Modal */}
 {canEdit && isDeleteModalOpen && selectedFonte && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-md border border-gray-200 dark:border-neutral-700">
             <div className="p-6">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-red-600" />
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-950 rounded-full flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">
                     Confirmar Exclusão
                   </h2>
-                  <p className="text-gray-500 mt-1">
+                  <p className="text-gray-500 dark:text-neutral-400 mt-1">
                     Tem certeza que deseja excluir a fonte "{selectedFonte.nome}"?
                   </p>
                 </div>
@@ -330,13 +330,13 @@ const fetchFontes = async () => {
                     setIsDeleteModalOpen(false);
                     setSelectedFonte(null);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-md"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md"
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-600 rounded-md"
                 >
                   Sim, Excluir
                 </button>

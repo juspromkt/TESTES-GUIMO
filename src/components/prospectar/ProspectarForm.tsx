@@ -58,15 +58,15 @@ const canEditProspect = hasPermission('can_edit_prospect');
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6">
+    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-neutral-700">
       <div className="flex items-center gap-2 mb-6">
-        <Search className="w-5 h-5 text-gray-500" />
-        <h2 className="text-xl font-semibold">Prospectar Segmento</h2>
+        <Search className="w-5 h-5 text-gray-500 dark:text-neutral-400" />
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Prospectar Segmento</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div>
-          <label htmlFor="segmento" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="segmento" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
             Segmento
           </label>
           <input
@@ -76,18 +76,18 @@ const canEditProspect = hasPermission('can_edit_prospect');
             placeholder="Ex: Restaurantes, Clínicas..."
             value={segmento}
             onChange={(e) => setSegmento(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-3000"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:border-gray-900 dark:focus:border-neutral-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
             required
           />
           {isAlimenticio(segmento) && (
-            <p className="mt-2 text-sm text-red-600">
+            <p className="mt-2 text-sm text-red-600 dark:text-red-400">
               O Google impõe restrições à exibição de números de telefone em certos segmentos, como o alimentício, o que pode comprometer a eficácia da prospecção.
             </p>
           )}
         </div>
 
         <div>
-          <label htmlFor="cidade" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="cidade" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
             Cidade
           </label>
           <input
@@ -97,13 +97,13 @@ const canEditProspect = hasPermission('can_edit_prospect');
             placeholder="Digite uma cidade por vez"
             value={cidade}
             onChange={(e) => setCidade(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-3000"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:border-gray-900 dark:focus:border-neutral-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
             required
           />
         </div>
 
         <div>
-          <label htmlFor="filtros" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="filtros" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
             Filtros Adicionais
           </label>
           <input
@@ -113,13 +113,13 @@ const canEditProspect = hasPermission('can_edit_prospect');
             placeholder="Ex: apenas lojas físicas..."
             value={filtros}
             onChange={(e) => setFiltros(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-3000"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:border-gray-900 dark:focus:border-neutral-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
           />
         </div>
 
         {error && (
           <div className="col-span-full">
-            <p className="text-red-600 text-sm">{error}</p>
+            <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
           </div>
         )}
 
@@ -129,7 +129,7 @@ const canEditProspect = hasPermission('can_edit_prospect');
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+            className="px-6 py-2 bg-gray-500 dark:bg-gray-600 text-white rounded-lg hover:bg-gray-600 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
             {loading ? 'Iniciando...' : 'Iniciar Prospecção'}
           </button>

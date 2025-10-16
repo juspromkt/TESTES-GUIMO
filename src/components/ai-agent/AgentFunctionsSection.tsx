@@ -574,8 +574,8 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-        <span className="ml-2 text-gray-600">Carregando notificações...</span>
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-500 dark:text-emerald-400" />
+        <span className="ml-2 text-gray-600 dark:text-neutral-400">Carregando notificações...</span>
       </div>
     );
   }
@@ -594,39 +594,39 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
       `}</style>
 
       <div className="space-y-6">
-        <div className="bg-white rounded-xl shadow-md p-8">
+        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-md p-8">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                <Zap className="w-6 h-6 text-emerald-600" />
+              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+                <Zap className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">
                   Notificações no WhatsApp
-                  <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                  <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 text-xs font-medium rounded-full">
                     BETA
                   </span>
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">
                   Configure e visualize as notificações automáticas enviadas pela IA
                 </p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-gray-900">{functions.length}/5</p>
-              <p className="text-xs text-gray-500">Notificações</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-neutral-100">{functions.length}/5</p>
+              <p className="text-xs text-gray-500 dark:text-neutral-400">Notificações</p>
             </div>
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4">
+            <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg mb-4">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg mb-4">
+            <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 px-4 py-3 rounded-lg mb-4">
               {success}
             </div>
           )}
@@ -636,7 +636,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
             {functions.map((func, index) => (
               <div
                 key={func.id}
-                className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-4 hover:bg-gray-100 transition-colors animate-fadeIn"
+                className="flex items-center justify-between bg-gray-50 dark:bg-neutral-700/50 border border-gray-200 dark:border-neutral-600 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors animate-fadeIn"
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
                 <div className="flex items-center gap-3 flex-1">
@@ -648,11 +648,11 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                       disabled={saving}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    <div className="w-11 h-6 bg-gray-300 dark:bg-neutral-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-700 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600 dark:peer-checked:bg-emerald-500"></div>
                   </label>
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">{func.nome}</p>
-                    <p className="text-xs text-gray-500">{func.mensagem || 'Mensagem não configurada'}</p>
+                    <p className="font-medium text-gray-900 dark:text-neutral-100">{func.nome}</p>
+                    <p className="text-xs text-gray-500 dark:text-neutral-400">{func.mensagem || 'Mensagem não configurada'}</p>
                   </div>
                 </div>
                 {canEdit && (
@@ -663,14 +663,14 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                         setShowDeleteModal(true);
                       }}
                       disabled={saving}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                       title="Deletar notificação"
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => handleOpenConfig(func)}
-                      className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+                      className="p-2 text-gray-600 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
                       title="Configurar notificação"
                     >
                       <Settings className="w-5 h-5" />
@@ -681,10 +681,10 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
             ))}
 
             {functions.length === 0 && (
-              <div className="text-center py-12 text-gray-500">
-                <Zap className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <h4 className="text-lg font-medium text-gray-900 mb-2">Nenhuma notificação cadastrada</h4>
-                <p className="text-gray-500 mb-4">
+              <div className="text-center py-12 text-gray-500 dark:text-neutral-400">
+                <Zap className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-neutral-600" />
+                <h4 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">Nenhuma notificação cadastrada</h4>
+                <p className="text-gray-500 dark:text-neutral-400 mb-4">
                   Crie sua primeira notificação para começar a receber alertas automáticos.
                 </p>
               </div>
@@ -696,7 +696,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
             <button
               onClick={() => setShowCreateModal(true)}
               disabled={functions.length >= 5}
-              className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
             >
               <Plus className="w-5 h-5" />
               Criar Nova Notificação
@@ -710,16 +710,16 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
       {showCreateModal && createPortal(
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}
              onClick={() => setShowCreateModal(false)}>
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white dark:bg-neutral-800 rounded-xl max-w-md w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Nova Notificação</h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-gray-600">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100">Nova Notificação</h3>
+              <button onClick={() => setShowCreateModal(false)} className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-400">
                 <X className="w-6 h-6" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
                   Nome da Notificação
                 </label>
                 <input
@@ -727,7 +727,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                   value={newFunctionName}
                   onChange={(e) => setNewFunctionName(e.target.value)}
                   placeholder="Ex: Contrato Enviado"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
                   maxLength={100}
                   autoFocus
                 />
@@ -735,14 +735,14 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleCreateFunction}
                   disabled={saving || !newFunctionName.trim()}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 disabled:opacity-50 transition-colors"
                 >
                   {saving ? (
                     <>
@@ -767,10 +767,10 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
       {showConfigModal && selectedFunction && createPortal(
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}
              onClick={() => setShowConfigModal(false)}>
-          <div className="bg-white rounded-xl max-w-3xl w-full shadow-2xl flex flex-col" style={{ maxHeight: '90vh' }}
+          <div className="bg-white dark:bg-neutral-800 rounded-xl max-w-3xl w-full shadow-2xl flex flex-col" style={{ maxHeight: '90vh' }}
                onClick={(e) => e.stopPropagation()}>
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-neutral-700">
               <div className="flex items-center gap-3 flex-1">
                 {isEditingName ? (
                   <div className="flex items-center gap-2 flex-1">
@@ -778,13 +778,13 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                       type="text"
                       value={editingName}
                       onChange={(e) => setEditingName(e.target.value)}
-                      className="flex-1 px-3 py-1 border border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="flex-1 px-3 py-1 border border-emerald-300 dark:border-emerald-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400"
                       autoFocus
                     />
                     <button
                       onClick={handleSaveName}
                       disabled={saving}
-                      className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                      className="p-2 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition-colors"
                     >
                       <Check className="w-5 h-5" />
                     </button>
@@ -793,18 +793,18 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                         setIsEditingName(false);
                         setEditingName(selectedFunction.nome);
                       }}
-                      className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="p-2 text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
                     >
                       <X className="w-5 h-5" />
                     </button>
                   </div>
                 ) : (
                   <>
-                    <h3 className="text-xl font-bold text-gray-900">Configurar Notificação – {selectedFunction.nome}</h3>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100">Configurar Notificação – {selectedFunction.nome}</h3>
                     {canEdit && (
                       <button
                         onClick={() => setIsEditingName(true)}
-                        className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                        className="p-1 text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded transition-colors"
                         title="Renomear"
                       >
                         <Edit3 className="w-4 h-4" />
@@ -813,19 +813,19 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                   </>
                 )}
               </div>
-              <button onClick={() => setShowConfigModal(false)} className="text-gray-400 hover:text-gray-600 ml-4">
+              <button onClick={() => setShowConfigModal(false)} className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-400 ml-4">
                 <X className="w-6 h-6" />
               </button>
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-gray-200 px-6">
+            <div className="flex border-b border-gray-200 dark:border-neutral-700 px-6">
               <button
                 onClick={() => setConfigTab('message')}
                 className={`px-4 py-3 font-medium transition-colors ${
                   configTab === 'message'
-                    ? 'text-emerald-600 border-b-2 border-emerald-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400'
+                    : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300'
                 }`}
               >
                 Mensagem
@@ -834,8 +834,8 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                 onClick={() => setConfigTab('guide')}
                 className={`px-4 py-3 font-medium transition-colors ${
                   configTab === 'guide'
-                    ? 'text-emerald-600 border-b-2 border-emerald-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400'
+                    : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300'
                 }`}
               >
                 Guia IA
@@ -844,8 +844,8 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                 onClick={() => setConfigTab('recipients')}
                 className={`px-4 py-3 font-medium transition-colors ${
                   configTab === 'recipients'
-                    ? 'text-emerald-600 border-b-2 border-emerald-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400'
+                    : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300'
                 }`}
               >
                 Destinatários
@@ -857,7 +857,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
               {configTab === 'message' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
                       Mensagem da Notificação
                     </label>
                     <div className="flex flex-wrap gap-2 mb-3">
@@ -866,7 +866,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                           key={tag.value}
                           type="button"
                           onClick={() => setEditingMessage(prev => prev + tag.value)}
-                          className="px-3 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full hover:bg-emerald-100 transition-colors"
+                          className="px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-full hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"
                         >
                           {tag.value}
                         </button>
@@ -877,10 +877,10 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                       value={editingMessage}
                       onChange={e => setEditingMessage(e.target.value)}
                       placeholder="Contrato enviado com sucesso para {{nome}} ({{telefone}})."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-vertical bg-teal-50"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 resize-vertical placeholder:text-gray-400 dark:placeholder:text-neutral-500"
                       maxLength={500}
                     />
-                    <p className="text-xs text-gray-500 mt-2">
+                    <p className="text-xs text-gray-500 dark:text-neutral-400 mt-2">
                       Utilize as tags acima para personalizar a mensagem com dados do lead.
                     </p>
                   </div>
@@ -890,7 +890,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
               {configTab === 'guide' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
                       Guia para IA
                     </label>
                     <textarea
@@ -898,7 +898,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                       value={editingGuide}
                       onChange={e => setEditingGuide(e.target.value)}
                       placeholder="Use esta notificação quando o cliente receber o contrato via WhatsApp."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-vertical"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 resize-vertical placeholder:text-gray-400 dark:placeholder:text-neutral-500"
                       maxLength={500}
                     />
                   </div>
@@ -908,11 +908,11 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
               {configTab === 'recipients' && (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-4">Adicionar Novo Destinatário</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-neutral-100 mb-4">Adicionar Novo Destinatário</h3>
 
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
                           Quem deve ser notificado?
                         </label>
                         <select
@@ -922,7 +922,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                             setRecipientPhone('');
                             setRecipientUserId('');
                           }}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400"
                         >
                           <option value="">Selecione uma opção</option>
                           <option value="numero">Número de telefone</option>
@@ -933,7 +933,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
 
                       {recipientType === 'numero' && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
                             Número de telefone
                           </label>
                           <input
@@ -941,7 +941,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                             placeholder="Ex: +55 11 91234-5678"
                             value={recipientPhone}
                             onChange={e => setRecipientPhone(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
                             maxLength={60}
                           />
                         </div>
@@ -949,13 +949,13 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
 
                       {recipientType === 'usuario' && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
                             Usuário
                           </label>
                           <select
                             value={recipientUserId}
                             onChange={e => setRecipientUserId(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400"
                             disabled={loadingUsuarios || usuarios.length === 0}
                           >
                             <option value="">Selecione um usuário</option>
@@ -966,17 +966,17 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                             ))}
                           </select>
                           {loadingUsuarios && (
-                            <p className="text-xs text-gray-500 mt-1">Carregando usuários...</p>
+                            <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">Carregando usuários...</p>
                           )}
                           {!loadingUsuarios && usuarios.length === 0 && (
-                            <p className="text-xs text-gray-500 mt-1">Nenhum usuário disponível</p>
+                            <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">Nenhum usuário disponível</p>
                           )}
                         </div>
                       )}
 
                       {recipientType === 'responsavel' && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                          <p className="text-sm text-gray-700">
+                        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                          <p className="text-sm text-gray-700 dark:text-neutral-300">
                             O responsável atual da negociação receberá esta notificação automaticamente.
                           </p>
                         </div>
@@ -986,7 +986,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                         <button
                           onClick={handleAddRecipient}
                           disabled={saving}
-                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors font-medium"
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 disabled:opacity-50 transition-colors font-medium"
                         >
                           {saving ? (
                             <>
@@ -1026,20 +1026,20 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                           return (
                             <div
                               key={attr.id}
-                              className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-3"
+                              className="flex items-center justify-between bg-gray-50 dark:bg-neutral-700/50 border border-gray-200 dark:border-neutral-600 rounded-lg p-3"
                             >
                               <div>
-                                <p className="text-sm font-medium text-gray-900">{label}</p>
-                                <p className="text-xs text-gray-600">{description}</p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-neutral-100">{label}</p>
+                                <p className="text-xs text-gray-600 dark:text-neutral-400">{description}</p>
                               </div>
                               {canEdit && (
                                 <button
                                   onClick={() => handleDeleteRecipient(attr.id, attr.id_funcao)}
                                   disabled={saving}
-                                  className="p-1 hover:bg-red-100 rounded transition-colors"
+                                  className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
                                   title="Remover"
                                 >
-                                  <Trash2 className="w-4 h-4 text-red-600" />
+                                  <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
                                 </button>
                               )}
                             </div>
@@ -1047,7 +1047,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                         })}
                       </div>
                     ) : (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="text-center py-8 text-gray-500 dark:text-neutral-400">
                         <p className="text-sm">Nenhum destinatário cadastrado.</p>
                       </div>
                     )}
@@ -1057,12 +1057,12 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end gap-2 p-6 border-t border-gray-200">
+            <div className="flex justify-end gap-2 p-6 border-t border-gray-200 dark:border-neutral-700">
               {configTab === 'message' && (
                 <button
                   onClick={handleSaveMessage}
                   disabled={saving}
-                  className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors font-medium"
+                  className="flex items-center gap-2 px-6 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 disabled:opacity-50 transition-colors font-medium"
                 >
                   {saving ? (
                     <>
@@ -1078,7 +1078,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                 <button
                   onClick={handleSaveGuide}
                   disabled={saving}
-                  className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors font-medium"
+                  className="flex items-center gap-2 px-6 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 disabled:opacity-50 transition-colors font-medium"
                 >
                   {saving ? (
                     <>
@@ -1093,7 +1093,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
               {configTab === 'recipients' && (
                 <button
                   onClick={() => setShowConfigModal(false)}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  className="px-6 py-2 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors font-medium"
                 >
                   Fechar
                 </button>
@@ -1108,26 +1108,26 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
       {showDeleteModal && createPortal(
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 10000 }}
              onClick={() => { setShowDeleteModal(false); setFunctionToDelete(null); }}>
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white dark:bg-neutral-800 rounded-xl max-w-md w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Trash2 className="w-8 h-8 text-red-600" />
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Deletar Notificação</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100 mb-2">Deletar Notificação</h3>
+              <p className="text-gray-600 dark:text-neutral-400 mb-6">
                 Tem certeza que deseja deletar esta notificação? Esta ação não pode ser desfeita.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => { setShowDeleteModal(false); setFunctionToDelete(null); }}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleDeleteFunction}
                   disabled={saving}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-600 disabled:opacity-50 transition-colors"
                 >
                   {saving ? (
                     <>

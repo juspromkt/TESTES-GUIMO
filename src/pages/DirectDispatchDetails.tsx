@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Upload, 
-  Loader2, 
-  X, 
-  Users, 
-  Send, 
-  Play, 
-  Square, 
+import {
+  Upload,
+  Loader2,
+  X,
+  Users,
+  Send,
+  Play,
+  Square,
   CheckCircle,
   AlertCircle,
   ArrowUpDown,
@@ -417,12 +417,12 @@ const handleManualImport = async () => {
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortConfig.field !== field) {
-      return <ArrowUpDown className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100" />;
+      return <ArrowUpDown className="w-4 h-4 text-gray-400 dark:text-neutral-500 opacity-0 group-hover:opacity-100" />;
     }
     return sortConfig.direction === 'asc' ? (
-      <ArrowUpDown className="w-4 h-4 text-blue-600" />
+      <ArrowUpDown className="w-4 h-4 text-blue-600 dark:text-blue-400" />
     ) : (
-      <ArrowUpDown className="w-4 h-4 text-blue-600 transform rotate-180" />
+      <ArrowUpDown className="w-4 h-4 text-blue-600 dark:text-blue-400 transform rotate-180" />
     );
   };
 
@@ -534,37 +534,37 @@ const filteredAndSortedLeads = [...leads]
   return (
     <div className="space-y-8">
       {allDispatchesCompleted && (
-        <div className="bg-green-50 border-l-4 border-green-500 p-4 flex items-center gap-3">
-          <CheckCircle className="w-6 h-6 text-green-500" />
-          <p className="text-green-700 font-medium">
+        <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 dark:border-green-600 p-4 flex items-center gap-3">
+          <CheckCircle className="w-6 h-6 text-green-500 dark:text-green-400" />
+          <p className="text-green-700 dark:text-green-300 font-medium">
             TODOS OS DISPAROS FORAM EXECUTADOS COM SUCESSO
           </p>
         </div>
       )}
 
-      <div className="bg-white border-b border-gray-300 px-8 py-4">
+      <div className="bg-white dark:bg-neutral-800 border-b border-gray-300 dark:border-neutral-700 px-8 py-4">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/prospectar')}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 transition-colors"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{dispatch.nome}</h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">{dispatch.nome}</h1>
+            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">
               {dispatch.publico} • {dispatch.cidade}
             </p>
           </div>
         </div>
 
         {success && (
-          <div className="mt-4 p-4 bg-green-50 text-green-700 rounded-lg">
+          <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg border border-green-200 dark:border-green-800">
             {success}
           </div>
         )}
         {error && (
-          <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-lg">
+          <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg border border-red-200 dark:border-red-800">
             {error}
           </div>
         )}
@@ -572,23 +572,23 @@ const filteredAndSortedLeads = [...leads]
 
       <div className="px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-neutral-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Total de Leads na lista</p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">{dispatch.qtdLeads}</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-neutral-400">Total de Leads na lista</p>
+                <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-neutral-100">{dispatch.qtdLeads}</p>
               </div>
-              <Users className="w-8 h-8 text-blue-500" />
+              <Users className="w-8 h-8 text-blue-500 dark:text-blue-400" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-neutral-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Envios Realizados</p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">{dispatch.qtdDisparosRealizados}</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-neutral-400">Envios Realizados</p>
+                <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-neutral-100">{dispatch.qtdDisparosRealizados}</p>
               </div>
-              <Send className="w-8 h-8 text-green-500" />
+              <Send className="w-8 h-8 text-green-500 dark:text-green-400" />
             </div>
           </div>
         </div>
@@ -596,39 +596,39 @@ const filteredAndSortedLeads = [...leads]
 
       <div className="px-8">
         {leads.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-            <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-8 text-center border border-gray-200 dark:border-neutral-700">
+            <Upload className="w-16 h-16 text-gray-400 dark:text-neutral-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 mb-2">
               Nenhum lead importado
             </h2>
-            <p className="text-gray-500 mb-6">
+            <p className="text-gray-500 dark:text-neutral-400 mb-6">
               Importe seus leads através de um arquivo CSV com as colunas: nome e telefone
             </p>
             <div className="flex flex-col items-center gap-4">
               <button
                 onClick={() => setIsUploadModalOpen(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
               >
                 <Upload className="w-5 h-5" />
                 Importar Leads
               </button>
               <a
                 href="https://drive.google.com/uc?export=download&id=1yeH1QitK8laPUoNgjh2Y6tPQnAveM7qg"
-                className="text-blue-600 hover:text-blue-800 underline text-sm"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline text-sm"
               >
                 Baixar planilha modelo
               </a>
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-gray-300">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm overflow-hidden border border-gray-200 dark:border-neutral-700">
+            <div className="p-6 border-b border-gray-300 dark:border-neutral-700">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold">Leads Importados</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Leads Importados</h2>
                   <div className="flex gap-3">
                     <button
                       onClick={() => setIsUploadModalOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
                     >
                       <Upload className="w-5 h-5" />
                       Importar leads via CSV
@@ -636,7 +636,7 @@ const filteredAndSortedLeads = [...leads]
 
                     <button
                       onClick={() => setIsManualModalOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors"
                     >
                       <Send className="w-5 h-5" />
                       Importar Manualmente
@@ -648,25 +648,25 @@ const filteredAndSortedLeads = [...leads]
               <div className="flex items-center gap-4">
                 <div className="flex-1">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-5 h-5" />
                     <input
                       type="text"
                       placeholder="Buscar por nome ou telefone..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500"
                     />
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Itens por página:</span>
+                  <span className="text-sm text-gray-600 dark:text-neutral-400">Itens por página:</span>
                   <select
                     value={itemsPerPage}
                     onChange={(e) => {
                       setItemsPerPage(Number(e.target.value));
                       setCurrentPage(1);
                     }}
-                    className="border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 p-2"
+                    className="border border-gray-300 dark:border-neutral-600 rounded-md text-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 p-2 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                   >
                     <option value={10}>10</option>
                     <option value={20}>20</option>
@@ -679,25 +679,25 @@ const filteredAndSortedLeads = [...leads]
 
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 dark:bg-neutral-900/50">
                   <tr>
-                    <th 
+                    <th
                       className="px-6 py-3 text-left cursor-pointer group"
                       onClick={() => handleSort('nome')}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <span className="text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                           Nome
                         </span>
                         <SortIcon field="nome" />
                       </div>
                     </th>
-                    <th 
+                    <th
                       className="px-6 py-3 text-left cursor-pointer group"
                       onClick={() => handleSort('telefone')}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <span className="text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                           Telefone
                         </span>
                         <SortIcon field="telefone" />
@@ -705,13 +705,13 @@ const filteredAndSortedLeads = [...leads]
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
                   {paginatedLeads.map((lead) => (
-                    <tr key={lead.Id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <tr key={lead.Id} className="hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-neutral-100">
                         {lead.nome}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-neutral-100">
                         {lead.telefone}
                       </td>
                     </tr>
@@ -729,12 +729,12 @@ const filteredAndSortedLeads = [...leads]
             />
 
 {canEditProspect && (
-            <div className="p-6 border-t border-gray-300">
+            <div className="p-6 border-t border-gray-300 dark:border-neutral-700">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold">Controle de Envios</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Controle de Envios</h2>
                   {ordemDisparo && (
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">
                       Último disparo: {formatDate(ordemDisparo.data)}
                     </p>
                   )}
@@ -748,7 +748,7 @@ const filteredAndSortedLeads = [...leads]
                 </button>
               </div>
               {error && (
-                <p className="mt-2 text-sm text-red-600">{error}</p>
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>
               )}
             </div>
             )}
@@ -763,8 +763,8 @@ const filteredAndSortedLeads = [...leads]
       >
         <div className="p-6">
           <div className="mb-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Instruções:</h3>
-            <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Instruções:</h3>
+            <ul className="list-disc list-inside text-sm text-gray-600 dark:text-neutral-400 space-y-1">
               <li>O arquivo deve estar no formato CSV separado por vírgula</li>
               <li>Dados necessários são: nome e telefone (João,5511999999999)</li>
               <li>Certifique-se que os números de telefone estão no formato correto (55xx912345678)</li>
@@ -772,14 +772,14 @@ const filteredAndSortedLeads = [...leads]
             <div className="mt-4">
               <a
                 href="https://drive.google.com/uc?export=download&id=1yeH1QitK8laPUoNgjh2Y6tPQnAveM7qg"
-                className="text-blue-600 hover:text-blue-800 underline text-sm"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline text-sm"
               >
                 Baixar planilha modelo
               </a>
             </div>
           </div>
 
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+          <div className="border-2 border-dashed border-gray-300 dark:border-neutral-600 rounded-lg p-6 bg-gray-50 dark:bg-neutral-700/50">
             <input
               type="file"
               accept=".csv"
@@ -796,23 +796,23 @@ const filteredAndSortedLeads = [...leads]
               htmlFor="csv-upload"
               className="flex flex-col items-center justify-center cursor-pointer"
             >
-              <Upload className="w-12 h-12 text-gray-400 mb-4" />
-              <span className="text-sm text-gray-500">
+              <Upload className="w-12 h-12 text-gray-400 dark:text-neutral-500 mb-4" />
+              <span className="text-sm text-gray-500 dark:text-neutral-400">
                 Clique para selecionar ou arraste um arquivo CSV
               </span>
             </label>
           </div>
 
           {uploadError && (
-            <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-lg text-sm">
+            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm border border-red-200 dark:border-red-800">
               {uploadError}
             </div>
           )}
 
           {uploading && (
             <div className="mt-4 flex items-center justify-center">
-              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-              <span className="ml-2 text-gray-600">Processando arquivo...</span>
+              <Loader2 className="w-6 h-6 animate-spin text-blue-600 dark:text-blue-400" />
+              <span className="ml-2 text-gray-600 dark:text-neutral-400">Processando arquivo...</span>
             </div>
           )}
         </div>
@@ -824,8 +824,8 @@ const filteredAndSortedLeads = [...leads]
         title="Importar Leads Manualmente"
       >
         <div className="p-6 space-y-4">
-          <p className="text-sm text-gray-600">
-            Cole abaixo os nomes e telefones, um por linha, no formato <b>nome,telefone</b>:
+          <p className="text-sm text-gray-600 dark:text-neutral-400">
+            Cole abaixo os nomes e telefones, um por linha, no formato <b className="text-gray-900 dark:text-neutral-100">nome,telefone</b>:
           </p>
 
           <textarea
@@ -833,11 +833,11 @@ const filteredAndSortedLeads = [...leads]
             onChange={(e) => setManualLeads(e.target.value)}
             placeholder={`Exemplo:\njoao,5511912345678\npedro paulo,551231231231`}
             rows={8}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono text-sm"
+            className="w-full p-3 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 font-mono text-sm bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500"
           />
 
           {manualError && (
-            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-2">
+            <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-2">
               {manualError}
             </div>
           )}
@@ -845,14 +845,14 @@ const filteredAndSortedLeads = [...leads]
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={() => setIsManualModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={handleManualImport}
               disabled={importingManual || !manualLeads.trim()}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-700 dark:hover:bg-emerald-600 rounded-md disabled:opacity-50 transition-colors"
             >
               {importingManual ? (
                 <>
@@ -870,8 +870,6 @@ const filteredAndSortedLeads = [...leads]
         </div>
       </Modal>
 
-
-
       <Modal
         isOpen={isModeloModalOpen}
         onClose={() => {
@@ -883,14 +881,14 @@ const filteredAndSortedLeads = [...leads]
       >
         <form onSubmit={handleModeloSubmit} className="space-y-4">
           <div>
-            <label htmlFor="modelo" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="modelo" className="block text-sm font-medium text-gray-700 dark:text-neutral-300">
               Escolha um modelo de mensagem
             </label>
             <select
               id="modelo"
               value={selectedModeloId || ''}
               onChange={(e) => setSelectedModeloId(Number(e.target.value))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-600 shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400 p-2 border bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
               required
             >
               <option value="">Selecione um modelo...</option>
@@ -903,7 +901,7 @@ const filteredAndSortedLeads = [...leads]
           </div>
 
           {error && (
-            <p className="text-sm text-red-600">{error}</p>
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           )}
 
           <div className="flex justify-end gap-3">
@@ -914,14 +912,14 @@ const filteredAndSortedLeads = [...leads]
                 setSelectedModeloId(null);
                 setError('');
               }}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={!selectedModeloId}
-              className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-white bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-600 rounded-md disabled:opacity-50 transition-colors"
             >
               Iniciar Envio
             </button>

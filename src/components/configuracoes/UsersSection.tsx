@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Loader2, Pencil, Settings, Copy, Check } from 'lucide-react';
+import { Users, Plus, Loader2, Pencil, Settings, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import type { User, CreateUserPayload, UpdateUserPayload } from '../../types/user';
 import Modal from '../Modal';
 import { hasPermission } from '../../utils/permissions';
@@ -62,6 +62,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
   const [resetPassword, setResetPassword] = useState<string | null>(null);
   const [resetModalError, setResetModalError] = useState('');
   const [hasCopiedPassword, setHasCopiedPassword] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
 
   const user = localStorage.getItem('user');
   const token = user ? JSON.parse(user).token : null;
@@ -136,6 +137,16 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
 
   const handleToggleStatus = async (userId: number) => {
     setTogglingUser(userId);
+
+    // Atualização otimista da UI
+    setUsers(prevUsers =>
+      prevUsers.map(user =>
+        user.Id === userId
+          ? { ...user, isAtivo: !user.isAtivo }
+          : user
+      )
+    );
+
     try {
       const response = await fetch(`https://n8n.lumendigital.com.br/webhook/prospectai/usuario/desativar?id=${userId}`, {
         method: 'PUT',
@@ -143,9 +154,18 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
       });
 
       if (!response.ok) {
+        // Reverte a mudança em caso de erro
+        setUsers(prevUsers =>
+          prevUsers.map(user =>
+            user.Id === userId
+              ? { ...user, isAtivo: !user.isAtivo }
+              : user
+          )
+        );
         throw new Error('Erro ao alterar status do usuário');
       }
 
+      // Atualiza do servidor após sucesso
       await fetchUsers();
     } catch (err) {
       console.error('Erro ao alterar status:', err);
@@ -412,23 +432,27 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
 
   if (!isActive) return null;
 
+  // Separa usuários ativos e inativos
+  const activeUsers = users.filter(user => user.isAtivo);
+  const inactiveUsers = users.filter(user => !user.isAtivo);
+
  return (
     <div className="mt-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-  <h2 className="text-xl font-semibold text-gray-900">Usuários</h2>
+  <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Usuários</h2>
 
   {/* Botão de informação */}
   <div className="relative group">
     <button
-      className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-colors"
+      className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 dark:border-neutral-600 text-gray-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-400 dark:hover:border-blue-400 transition-colors"
       title=""
     >
       ?
     </button>
 
     {/* Tooltip */}
-    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10">
+    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-800 dark:bg-neutral-700 text-white dark:text-neutral-100 text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10">
       A <strong>gestão de usuários</strong> permite que você adicione, edite e gerencie os usuários que têm acesso ao sistema.
     </div>
   </div>
@@ -436,7 +460,7 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
         {canEdit && (
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg px-4 py-2 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
           >
             <Plus size={20} />
             Novo Usuário
@@ -445,54 +469,54 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
       </div>
 
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+        <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="mb-4 bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg">
+        <div className="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 px-4 py-3 rounded-lg">
           {success}
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-neutral-700">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+          <thead className="bg-gray-50 dark:bg-neutral-900">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                 Nome
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                 Email
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                 Telefone
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                 Tipo
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                 Status
               </th>
               {canEdit && (
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                   Ações
                 </th>
               )}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {users.map((user) => (
-              <tr key={user.Id} className="hover:bg-gray-50">
+          <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
+            {activeUsers.map((user) => (
+              <tr key={user.Id} className="hover:bg-gray-50 dark:hover:bg-neutral-700">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{user.nome}</div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{user.nome}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500">{user.email}</div>
+                  <div className="text-sm text-gray-500 dark:text-neutral-400">{user.email}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500">{user.telefone || '-'}</div>
+                  <div className="text-sm text-gray-500 dark:text-neutral-400">{user.telefone || '-'}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeStyle(user.tipo)}`}>
@@ -508,7 +532,7 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                       onChange={canEdit ? () => handleToggleStatus(user.Id) : undefined}
                       disabled={!canEdit || togglingUser === user.Id}
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-700"></div>
                   </label>
                 </td>
                 {canEdit && (
@@ -516,21 +540,21 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                     <div className="flex items-center justify-end gap-3">
                       <button
                         onClick={() => handleOpenResetModal(user)}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                        className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline"
                         title="Resetar senha"
                       >
                         Resetar senha
                       </button>
                       <button
                         onClick={() => handleOpenEditUser(user)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
                         title="Editar usuário"
                       >
                         <Pencil className="w-5 h-5" />
                       </button>
                       <button
                         onClick={() => handleEditPermissions(user)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
                         title="Editar permissões"
                       >
                         <Settings className="w-5 h-5" />
@@ -544,6 +568,115 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
         </table>
       </div>
 
+      {/* Seção de Usuários Inativos */}
+      {inactiveUsers.length > 0 && (
+        <div className="mt-4">
+          <button
+            onClick={() => setShowInactive(!showInactive)}
+            className="flex items-center gap-2 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-100 transition-colors"
+          >
+            {showInactive ? (
+              <ChevronUp className="w-5 h-5" />
+            ) : (
+              <ChevronDown className="w-5 h-5" />
+            )}
+            <span className="text-sm font-medium">
+              Usuários Inativos ({inactiveUsers.length})
+            </span>
+          </button>
+
+          {showInactive && (
+            <div className="mt-4 bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-neutral-700">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+                <thead className="bg-gray-50 dark:bg-neutral-900">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                      Nome
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                      Telefone
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                      Tipo
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                      Status
+                    </th>
+                    {canEdit && (
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                        Ações
+                      </th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
+                  {inactiveUsers.map((user) => (
+                    <tr key={user.Id} className="hover:bg-gray-50 dark:hover:bg-neutral-700 opacity-60">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{user.nome}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500 dark:text-neutral-400">{user.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500 dark:text-neutral-400">{user.telefone || '-'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeStyle(user.tipo)}`}>
+                          {user.tipo}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={user.isAtivo}
+                            onChange={canEdit ? () => handleToggleStatus(user.Id) : undefined}
+                            disabled={!canEdit || togglingUser === user.Id}
+                          />
+                          <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-700"></div>
+                        </label>
+                      </td>
+                      {canEdit && (
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end gap-3">
+                            <button
+                              onClick={() => handleOpenResetModal(user)}
+                              className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline"
+                              title="Resetar senha"
+                            >
+                              Resetar senha
+                            </button>
+                            <button
+                              onClick={() => handleOpenEditUser(user)}
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
+                              title="Editar usuário"
+                            >
+                              <Pencil className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => handleEditPermissions(user)}
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
+                              title="Editar permissões"
+                            >
+                              <Settings className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Reset Password Modal */}
       <Modal
         isOpen={!!resetModalUser}
@@ -553,14 +686,14 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
       >
         <div className="space-y-4">
           {resetModalError && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg">
               {resetModalError}
             </div>
           )}
 
           {!resetPassword ? (
             <>
-              <p className="text-gray-700">
+              <p className="text-gray-700 dark:text-neutral-300">
                 Tem certeza de que deseja resetar a senha do usuário{' '}
                 <span className="font-semibold">{resetModalUser?.nome}</span>? Uma nova senha será gerada e você deverá
                 compartilhá-la com o usuário.
@@ -569,7 +702,7 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                 <button
                   type="button"
                   onClick={handleCloseResetModal}
-                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700"
                   disabled={isResetConfirming}
                 >
                   Cancelar
@@ -577,7 +710,7 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                 <button
                   type="button"
                   onClick={handleConfirmResetPassword}
-                  className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2"
+                  className="px-4 py-2 rounded-lg bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-60 flex items-center gap-2"
                   disabled={isResetConfirming}
                 >
                   {isResetConfirming ? (
@@ -594,15 +727,15 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
           ) : (
             <>
               <div className="space-y-3">
-                <p className="text-gray-700">
+                <p className="text-gray-700 dark:text-neutral-300">
                   A senha foi resetada com sucesso. Envie a nova senha para o usuário ou peça para que ele altere após o login.
                 </p>
-                <div className="flex items-center justify-between gap-3 bg-gray-100 border border-gray-300 rounded-lg px-4 py-3">
-                  <span className="font-mono text-lg text-gray-900 break-all">{resetPassword}</span>
+                <div className="flex items-center justify-between gap-3 bg-gray-100 dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg px-4 py-3">
+                  <span className="font-mono text-lg text-gray-900 dark:text-neutral-100 break-all">{resetPassword}</span>
                   <button
                     type="button"
                     onClick={handleCopyPassword}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
                   >
                     {hasCopiedPassword ? (
                       <>
@@ -618,14 +751,14 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                   </button>
                 </div>
                 {hasCopiedPassword && (
-                  <p className="text-sm text-green-600">Senha copiada para a área de transferência.</p>
+                  <p className="text-sm text-green-600 dark:text-green-400">Senha copiada para a área de transferência.</p>
                 )}
               </div>
               <div className="flex justify-end pt-4">
                 <button
                   type="button"
                   onClick={handleCloseResetModal}
-                  className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                  className="px-4 py-2 rounded-lg bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
                 >
                   Fechar
                 </button>
@@ -654,7 +787,7 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
         >
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="nome" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                 Nome
               </label>
               <input
@@ -662,13 +795,13 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                 id="nome"
                 value={formData.nome}
                 onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                 Email
               </label>
               <input
@@ -676,13 +809,13 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                 id="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="senha" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="senha" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                 Senha
               </label>
               <input
@@ -690,13 +823,13 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                 id="senha"
                 value={formData.senha}
                 onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                 Telefone
               </label>
 <input
@@ -705,21 +838,21 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
   value={formData.telefone}
   onChange={(e) => setFormData({ ...formData, telefone: e.target.value.replace(/\D/g, "") })}
   placeholder="+55 (11) 98888-8888 — apenas números"
-  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 placeholder:text-gray-400 text-sm"
+  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 text-sm"
   required
 />
 
             </div>
 
             <div>
-              <label htmlFor="tipo" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="tipo" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                 Tipo
               </label>
               <select
                 id="tipo"
                 value={formData.tipo}
                 onChange={(e) => setFormData({ ...formData, tipo: e.target.value as CreateUserPayload['tipo'] })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                 required
               >
                 <option value="USER">Usuário</option>
@@ -740,14 +873,14 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                     tipo: 'USER'
                   });
                 }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 rounded-md disabled:opacity-50"
               >
                 {submitting ? (
                   <>
@@ -776,7 +909,7 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
           {editFormData && (
             <form onSubmit={handleUpdateUser} className="space-y-4">
               <div>
-                <label htmlFor="edit-nome" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="edit-nome" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                   Nome
                 </label>
                 <input
@@ -784,13 +917,13 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                   id="edit-nome"
                   value={editFormData.nome}
                   onChange={(e) => setEditFormData({ ...editFormData, nome: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                   required
                 />
               </div>
 
               <div>
-                <label htmlFor="edit-telefone" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="edit-telefone" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                   Telefone
                 </label>
 <input
@@ -804,14 +937,14 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
     })
   }
   placeholder="+55 (11) 98888-8888 — apenas números"
-  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 placeholder:text-gray-400 text-sm"
+  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 text-sm"
   required
 />
 
               </div>
 
               <div>
-                <label htmlFor="edit-tipo" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="edit-tipo" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                   Tipo
                 </label>
                 <select
@@ -820,7 +953,7 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                   onChange={(e) =>
                     setEditFormData({ ...editFormData, tipo: e.target.value as UpdateUserPayload['tipo'] })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                   required
                 >
                   <option value="USER">Usuário</option>
@@ -835,14 +968,14 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                     setIsEditModalOpen(false);
                     setEditFormData(null);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={updatingUser}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 rounded-md disabled:opacity-50"
                 >
                   {updatingUser ? (
                     <>
@@ -872,19 +1005,19 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
       >
         {loadingPermissions ? (
           <div className="flex items-center justify-center h-64">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400" />
           </div>
         ) : (
-<div className="p-6 space-y-8 bg-gray-50 rounded-b-xl max-h-[75vh] overflow-y-auto">
+<div className="p-6 space-y-8 bg-gray-50 dark:bg-neutral-900 rounded-b-xl max-h-[75vh] overflow-y-auto">
 
 
   {/* === VISIBILIDADE DE MENUS === */}
-  <section className="bg-white rounded-xl shadow-sm border border-gray-300 p-5">
+  <section className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-300 dark:border-neutral-700 p-5">
     <div className="flex items-center gap-2 mb-4">
-      <div className="w-8 h-8 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center">
+      <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400 rounded-lg flex items-center justify-center">
         🧭
       </div>
-      <h3 className="text-base font-semibold text-gray-900">Visibilidade de Menus</h3>
+      <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">Visibilidade de Menus</h3>
     </div>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {[
@@ -897,14 +1030,14 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
         ['can_view_menu_prospect', 'Envios em Massa'],
         ['can_view_menu_settings', 'Configurações'],
       ].map(([key, label]) => (
-        <label key={key} className="flex items-center gap-2 text-sm text-gray-700">
+        <label key={key} className="flex items-center gap-2 text-sm text-gray-700 dark:text-neutral-300">
           <input
             type="checkbox"
             checked={(userPermissions as any)?.[key] || false}
             onChange={(e) =>
               handlePermissionChange(key as keyof UserPermissions, e.target.checked)
             }
-            className="accent-purple-600 w-4 h-4"
+            className="accent-purple-600 dark:accent-purple-500 w-4 h-4"
           />
           {label}
         </label>
@@ -913,12 +1046,12 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
   </section>
 
   {/* === PERMISSÕES DE EDIÇÃO === */}
-  <section className="bg-white rounded-xl shadow-sm border border-gray-300 p-5">
+  <section className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-300 dark:border-neutral-700 p-5">
     <div className="flex items-center gap-2 mb-4">
-      <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center">
+      <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center">
         ✏️
       </div>
-      <h3 className="text-base font-semibold text-gray-900">Permissões de Edição</h3>
+      <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">Permissões de Edição</h3>
     </div>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {[
@@ -929,14 +1062,14 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
         ['can_edit_connection', 'Editar Conexão'],
         ['can_edit_settings', 'Editar Configurações'],
       ].map(([key, label]) => (
-        <label key={key} className="flex items-center gap-2 text-sm text-gray-700">
+        <label key={key} className="flex items-center gap-2 text-sm text-gray-700 dark:text-neutral-300">
           <input
             type="checkbox"
             checked={(userPermissions as any)?.[key] || false}
             onChange={(e) =>
               handlePermissionChange(key as keyof UserPermissions, e.target.checked)
             }
-            className="accent-emerald-600 w-4 h-4"
+            className="accent-emerald-600 dark:accent-emerald-500 w-4 h-4"
           />
           {label}
         </label>
@@ -945,31 +1078,31 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
   </section>
 
   {/* === VISIBILIDADE DE LEADS === */}
-  <section className="bg-white rounded-xl shadow-sm border border-gray-300 p-5">
+  <section className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-300 dark:border-neutral-700 p-5">
   <div className="flex items-center gap-2 mb-4">
-    <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center">
+    <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-400 rounded-lg flex items-center justify-center">
       👥
     </div>
-    <h3 className="text-base font-semibold text-gray-900">Visibilidade de Leads</h3>
+    <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">Visibilidade de Leads</h3>
   </div>
 
   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-    <label className="flex items-center gap-2 text-sm text-gray-700">
+    <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-neutral-300">
       <input
         type="radio"
         name="leadVisibility"
-        className="accent-amber-600 w-4 h-4"
+        className="accent-amber-600 dark:accent-amber-500 w-4 h-4"
         checked={leadVisibility === 'all'}
         onChange={() => setLeadVisibility('all')}
       />
       Ver Todos os Leads
     </label>
 
-    <label className="flex items-center gap-2 text-sm text-gray-700">
+    <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-neutral-300">
       <input
         type="radio"
         name="leadVisibility"
-        className="accent-amber-600 w-4 h-4"
+        className="accent-amber-600 dark:accent-amber-500 w-4 h-4"
         checked={leadVisibility === 'assigned'}
         onChange={() => setLeadVisibility('assigned')}
       />
@@ -980,7 +1113,7 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
 
 
   {/* === BOTÕES === */}
-  <div className="flex justify-end gap-3 pt-4 border-t border-gray-300">
+  <div className="flex justify-end gap-3 pt-4 border-t border-gray-300 dark:border-neutral-700">
     <button
       type="button"
       onClick={() => {
@@ -988,14 +1121,14 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
         setSelectedUser(null);
         setUserPermissions(null);
       }}
-      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md"
     >
       Cancelar
     </button>
     <button
       onClick={handleSavePermissions}
       disabled={savingPermissions}
-      className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
+      className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 rounded-md disabled:opacity-50"
     >
       {savingPermissions ? (
         <>

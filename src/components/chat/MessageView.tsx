@@ -90,6 +90,23 @@ export function MessageView({ selectedChat, onBack, whatsappType }: MessageViewP
   (whatsappType ?? (selectedChat as any)?.whatsappType) === 'WHATSAPP-BUSINESS'
 );
 
+  const [isDarkMode, setIsDarkMode] = useState(() =>
+    document.documentElement.classList.contains('dark')
+  );
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   const [transferSet, setTransferSet] = useState<Set<string>>(() => {
   if (typeof window === 'undefined') return new Set<string>();
   try {
@@ -1105,9 +1122,18 @@ useEffect(() => {
       console.log("[MessageView] Nova mensagem recebida — recarregando");
       handleReloadMessages();
 
-      // Scroll automático ao final após receber nova mensagem
+      // Scroll automático ao final após receber nova mensagem, apenas se já estiver perto do final
       setTimeout(() => {
-        scrollToBottom();
+        const container = scrollAreaRef.current;
+        if (container) {
+          const { scrollTop, scrollHeight, clientHeight } = container;
+          const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
+
+          // Só rola se estiver nos últimos 150px
+          if (distanceFromBottom < 150) {
+            scrollToBottom();
+          }
+        }
       }, 100);
     };
 
@@ -1122,12 +1148,19 @@ useEffect(() => {
   useEffect(() => {
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
+      const container = scrollAreaRef.current;
 
-      // Se a última mensagem é do próprio usuário, faz scroll automático
-      if (lastMessage?.key?.fromMe) {
-        setTimeout(() => {
-          scrollToBottom();
-        }, 100);
+      // Se a última mensagem é do próprio usuário, faz scroll automático apenas se já estiver perto do final
+      if (lastMessage?.key?.fromMe && container) {
+        const { scrollTop, scrollHeight, clientHeight } = container;
+        const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
+
+        // Só rola se estiver nos últimos 150px
+        if (distanceFromBottom < 150) {
+          setTimeout(() => {
+            scrollToBottom();
+          }, 100);
+        }
       }
     }
   }, [messages]);
@@ -1757,9 +1790,18 @@ if (isBusiness && newMessage && newMessage.key && !newMessage.key.fromMe) {
 }
 
 
-  // Rola para baixo após um pequeno delay
+  // Rola para baixo após um pequeno delay, apenas se já estiver perto do final
   setTimeout(() => {
-    scrollToBottom();
+    const container = scrollAreaRef.current;
+    if (container) {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
+
+      // Só rola se estiver nos últimos 150px
+      if (distanceFromBottom < 150) {
+        scrollToBottom();
+      }
+    }
   }, 100);
 
   // Notificar listas de conversa em outras abas somente se a mensagem veio de outro contato
@@ -2155,14 +2197,14 @@ function OfficialBinaryMedia({
 
   if (loading) {
     return (
-      <div className="w-40 h-40 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
-        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+      <div className="w-40 h-40 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse flex items-center justify-center transition-colors duration-200">
+        <Loader2 className="w-5 h-5 animate-spin text-gray-400 dark:text-gray-500" />
       </div>
     );
   }
 
   if (!url) {
-    return <div className="text-xs text-red-500">Não foi possível carregar a mídia.</div>;
+    return <div className="text-xs text-red-500 dark:text-red-400">Não foi possível carregar a mídia.</div>;
   }
 
   switch (kind) {
@@ -2198,8 +2240,8 @@ function OfficialBinaryMedia({
             <FileText className="w-5 h-5 text-emerald-600" />
             <span className="text-sm font-medium">Documento</span>
           </div>
-          <div className="p-3 bg-gray-50 rounded-lg border border-gray-300 flex justify-center">
-            <FileText className="w-12 h-12 text-gray-400" />
+          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 flex justify-center transition-colors duration-200">
+            <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500" />
           </div>
           <a
             href={url}
@@ -2275,14 +2317,14 @@ function EvoBinaryMedia({
 
   if (loading) {
     return (
-      <div className="w-40 h-40 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">
-        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+      <div className="w-40 h-40 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse flex items-center justify-center transition-colors duration-200">
+        <Loader2 className="w-5 h-5 animate-spin text-gray-400 dark:text-gray-500" />
       </div>
     );
   }
 
   if (!url) {
-    return <div className="text-xs text-red-500">Não foi possível carregar a mídia.</div>;
+    return <div className="text-xs text-red-500 dark:text-red-400">Não foi possível carregar a mídia.</div>;
   }
 
   switch (kind) {
@@ -2323,8 +2365,8 @@ function EvoBinaryMedia({
             <FileText className="w-5 h-5 text-emerald-600" />
             <span className="text-sm font-medium">Documento</span>
           </div>
-          <div className="p-3 bg-gray-50 rounded-lg border border-gray-300 flex justify-center">
-            <FileText className="w-12 h-12 text-gray-400" />
+          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 flex justify-center transition-colors duration-200">
+            <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500" />
           </div>
           <a
             href={url}
@@ -2417,7 +2459,7 @@ const AlbumCarousel = ({ items, type }: { items: Message[]; type: string }) => {
 
     if (!url) {
       return (
-        <div className="h-32 w-full bg-gray-100 rounded-lg animate-pulse" />
+        <div className="h-32 w-full bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse transition-colors duration-200" />
       );
     }
 
@@ -2501,11 +2543,18 @@ const AlbumCarousel = ({ items, type }: { items: Message[]; type: string }) => {
     if (!container) return;
 
     if (prevScrollHeightRef.current !== null) {
+      // Quando carregamos mensagens antigas (scroll para cima), mantemos a posição
       const diff = container.scrollHeight - prevScrollHeightRef.current;
       container.scrollTop = diff;
       prevScrollHeightRef.current = null;
     } else {
-      scrollToBottom(false);
+      // Só faz scroll automático se o usuário já estiver perto do final (últimos 150px)
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
+
+      if (distanceFromBottom < 150) {
+        scrollToBottom(false);
+      }
     }
   }, [messages]);
 
@@ -2700,10 +2749,10 @@ const renderTemplate = (templateName: string): JSX.Element => {
           
           {/* Informações do template */}
           <div className="flex-1">
-            <div className="font-semibold text-gray-800 text-sm">
+            <div className="font-semibold text-gray-800 dark:text-gray-200 text-sm">
               {templateName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
             </div>
-            <div className="text-xs text-gray-600 mt-1">
+            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
               Template enviado via WhatsApp Business
             </div>
           </div>
@@ -2735,7 +2784,7 @@ const renderMessageContent = (message: Message) => {
         const el = document.getElementById(`msg-${quotedId}`);
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
       }}
-      className="text-xs border-l-4 border-emerald-400 bg-emerald-50 text-emerald-700 px-3 py-1 rounded mb-2 cursor-pointer hover:bg-emerald-100"
+      className="text-xs border-l-4 border-emerald-400 dark:border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded mb-2 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors duration-200"
     >
       {isAudioQuoted
         ? "Resposta a um áudio"
@@ -2789,15 +2838,15 @@ case "templateButtonReplyMessage":
             <div className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center">
               <span className="text-white text-xs font-bold">{reply.selectedIndex + 1}</span>
             </div>
-            <span className="text-sm font-medium text-gray-700">Opção selecionada:</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Opção selecionada:</span>
           </div>
           
-          <div className="bg-white rounded-lg p-3 border border-indigo-100">
-            <div className="text-sm font-semibold text-gray-800">
+          <div className="bg-white dark:bg-gray-700 rounded-lg p-3 border border-indigo-100 dark:border-indigo-800 transition-colors duration-200">
+            <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
               "{reply.selectedDisplayText}"
             </div>
             {reply.selectedId !== reply.selectedDisplayText && (
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 ID: {reply.selectedId}
               </div>
             )}
@@ -2825,27 +2874,27 @@ case "templateMessage":
       content = (
         <div className="space-y-2">
           {/* Indicador de que é um template */}
-          <div className="flex items-center space-x-2 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded-lg border border-gray-300">
+          <div className="flex items-center space-x-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <span className="font-medium">Template WhatsApp</span>
-            <span className="text-xs bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded-full">
+            <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded-full transition-colors duration-200">
               ID: {templateData.templateId}
             </span>
           </div>
           
           {/* Container do template */}
-          <div className="bg-white border border-gray-300 rounded-xl shadow-sm overflow-hidden max-w-sm">
+          <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm overflow-hidden max-w-sm transition-colors duration-200">
             {/* Header do template */}
-            <div className="bg-gradient-to-r from-gray-500 to-gray-600 text-white text-xs px-3 py-2">
+            <div className="bg-gradient-to-r from-gray-500 to-gray-600 dark:from-gray-600 dark:to-gray-700 text-white text-xs px-3 py-2">
               Template do WhatsApp Business
             </div>
-            
+
             {/* Título do template (se houver) */}
             {template.hydratedTitleText && template.hydratedTitleText.trim() !== "" && (
-              <div className="px-3 py-2 border-b border-gray-300">
-                <div className="font-semibold text-gray-800 text-sm">
+              <div className="px-3 py-2 border-b border-gray-300 dark:border-gray-600">
+                <div className="font-semibold text-gray-800 dark:text-gray-200 text-sm">
                   {template.hydratedTitleText}
                 </div>
               </div>
@@ -2854,7 +2903,7 @@ case "templateMessage":
             {/* Conteúdo do template */}
             {template.hydratedContentText && (
               <div className="px-3 py-3">
-                <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+                <div className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
                   {template.hydratedContentText}
                 </div>
               </div>
@@ -2862,24 +2911,24 @@ case "templateMessage":
             
             {/* Botões do template */}
             {template.hydratedButtons && template.hydratedButtons.length > 0 && (
-              <div className="border-t border-gray-300">
+              <div className="border-t border-gray-300 dark:border-gray-600">
                 {template.hydratedButtons.map((btn, idx) => (
                   <div
                     key={idx}
-                    className="border-b border-gray-300 last:border-b-0"
+                    className="border-b border-gray-300 dark:border-gray-600 last:border-b-0"
                   >
                     {btn.quickReplyButton && (
-                      <div className="text-center py-3 px-3 text-sm text-gray-600 font-medium hover:bg-gray-50 transition-colors cursor-pointer">
+                      <div className="text-center py-3 px-3 text-sm text-gray-600 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer">
                         {btn.quickReplyButton.displayText}
                       </div>
                     )}
                     {btn.urlButton && (
-                      <div className="text-center py-3 px-3 text-sm text-blue-600 font-medium hover:bg-blue-50 transition-colors cursor-pointer">
+                      <div className="text-center py-3 px-3 text-sm text-blue-600 dark:text-blue-400 font-medium hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors cursor-pointer">
                         🔗 {btn.urlButton.displayText}
                       </div>
                     )}
                     {btn.callButton && (
-                      <div className="text-center py-3 px-3 text-sm text-gray-600 font-medium hover:bg-gray-50 transition-colors cursor-pointer">
+                      <div className="text-center py-3 px-3 text-sm text-gray-600 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer">
                         📞 {btn.callButton.displayText}
                       </div>
                     )}
@@ -2899,36 +2948,36 @@ case "templateMessage":
       content = (
         <div className="space-y-2">
           {/* Indicador de que é um template interativo */}
-          <div className="flex items-center space-x-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-200">
+          <div className="flex items-center space-x-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-lg border border-blue-200 dark:border-blue-800 transition-colors duration-200">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             <span className="font-medium">Template Interativo</span>
-            <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
+            <span className="text-xs bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded-full transition-colors duration-200">
               ID: {templateData.templateId}
             </span>
           </div>
           
           {/* Container do template */}
-          <div className="bg-white border border-gray-300 rounded-xl shadow-sm overflow-hidden max-w-sm">
+          <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm overflow-hidden max-w-sm transition-colors duration-200">
             {/* Header do template */}
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-xs px-3 py-2">
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 text-white text-xs px-3 py-2">
               Template Interativo WhatsApp
             </div>
-            
+
             {/* Título do header (se houver) */}
             {template.header?.title && template.header.title.trim() !== "" && (
-              <div className="px-3 py-2 border-b border-gray-300">
-                <div className="font-semibold text-gray-800 text-sm">
+              <div className="px-3 py-2 border-b border-gray-300 dark:border-gray-600">
+                <div className="font-semibold text-gray-800 dark:text-gray-200 text-sm">
                   {template.header.title}
                 </div>
               </div>
             )}
-            
+
             {/* Conteúdo do body */}
             {template.body?.text && (
               <div className="px-3 py-3">
-                <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+                <div className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
                   {template.body.text}
                 </div>
               </div>
@@ -2936,7 +2985,7 @@ case "templateMessage":
             
             {/* Botões interativos */}
             {buttons.length > 0 && (
-              <div className="border-t border-gray-300">
+              <div className="border-t border-gray-300 dark:border-gray-600">
                 {buttons.map((btn, idx) => {
                   let buttonParams = {};
                   try {
@@ -2944,24 +2993,24 @@ case "templateMessage":
                   } catch (e) {
                     console.error('Erro ao fazer parse dos parâmetros do botão:', e);
                   }
-                  
+
                   return (
                     <div
                       key={idx}
-                      className="border-b border-gray-300 last:border-b-0"
+                      className="border-b border-gray-300 dark:border-gray-600 last:border-b-0"
                     >
                       {btn.name === 'quick_reply' && (
-                        <div className="text-center py-3 px-3 text-sm text-gray-600 font-medium hover:bg-gray-50 transition-colors cursor-pointer">
+                        <div className="text-center py-3 px-3 text-sm text-gray-600 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer">
                           {buttonParams.display_text || 'Resposta Rápida'}
                         </div>
                       )}
                       {btn.name === 'cta_url' && (
-                        <div className="text-center py-3 px-3 text-sm text-blue-600 font-medium hover:bg-blue-50 transition-colors cursor-pointer">
+                        <div className="text-center py-3 px-3 text-sm text-blue-600 dark:text-blue-400 font-medium hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors cursor-pointer">
                           🔗 {buttonParams.display_text || 'Link'}
                         </div>
                       )}
                       {btn.name === 'cta_call' && (
-                        <div className="text-center py-3 px-3 text-sm text-gray-600 font-medium hover:bg-gray-50 transition-colors cursor-pointer">
+                        <div className="text-center py-3 px-3 text-sm text-gray-600 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer">
                           📞 {buttonParams.display_text || 'Ligar'}
                         </div>
                       )}
@@ -2976,13 +3025,13 @@ case "templateMessage":
     } else {
       // Fallback para templates sem estrutura reconhecida
       content = (
-        <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-300">
-          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
+          <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           <div>
-            <span className="text-sm font-medium text-gray-700">Template WhatsApp</span>
-            <div className="text-xs text-gray-500">ID: {templateData.templateId}</div>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Template WhatsApp</span>
+            <div className="text-xs text-gray-500 dark:text-gray-400">ID: {templateData.templateId}</div>
           </div>
         </div>
       );
@@ -2990,11 +3039,11 @@ case "templateMessage":
   } else {
     // Se não tem templateMessage, mostrar fallback
     content = (
-      <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-300">
-        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
+        <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
-        <span className="text-sm font-medium text-gray-700">Template Message</span>
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Template Message</span>
       </div>
     );
   }
@@ -3052,9 +3101,9 @@ case "imageMessage": {
   // Fallback se nenhuma condição foi atendida
   console.warn('⚠️ ImageMessage sem URL válida:', message);
   content = (
-    <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-300">
-      <FileText className="w-5 h-5 text-gray-500" />
-      <span className="text-sm text-gray-600">Imagem (carregando...)</span>
+    <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
+      <FileText className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+      <span className="text-sm text-gray-600 dark:text-gray-400">Imagem (carregando...)</span>
     </div>
   );
   break;
@@ -3109,9 +3158,9 @@ case "videoMessage": {
   // Fallback
   console.warn('⚠️ VideoMessage sem URL válida:', message);
   content = (
-    <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-300">
-      <FileText className="w-5 h-5 text-gray-500" />
-      <span className="text-sm text-gray-600">Vídeo (carregando...)</span>
+    <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
+      <FileText className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+      <span className="text-sm text-gray-600 dark:text-gray-400">Vídeo (carregando...)</span>
     </div>
   );
   break;
@@ -3157,9 +3206,9 @@ case "audioMessage": {
   // Fallback
   console.warn('⚠️ AudioMessage sem URL válida:', message);
   content = (
-    <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-300">
-      <FileText className="w-5 h-5 text-gray-500" />
-      <span className="text-sm text-gray-600">Áudio (carregando...)</span>
+    <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
+      <FileText className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+      <span className="text-sm text-gray-600 dark:text-gray-400">Áudio (carregando...)</span>
     </div>
   );
   break;
@@ -3200,15 +3249,15 @@ case "documentMessage": {
     content = (
       <div className="space-y-2">
         <div className="flex items-center space-x-2">
-          <FileText className="w-5 h-5 text-emerald-600" />
+          <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           <span className="text-sm font-medium">Documento</span>
         </div>
-        <div className="p-3 bg-gray-50 rounded-lg border border-gray-300 flex justify-center">
-          <FileText className="w-12 h-12 text-gray-400" />
+        <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 flex justify-center transition-colors duration-200">
+          <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500" />
         </div>
         <button
           onClick={() => window.open(directUrl, "_blank", "noopener,noreferrer")}
-          className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm text-center"
+          className="w-full px-4 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors text-sm text-center"
         >
           Baixar arquivo
         </button>
@@ -3239,7 +3288,7 @@ case "stickerMessage": {
     content = (
       <div className="space-y-2">
         {/* Indicador de que é uma resposta a botão */}
-        <div className="flex items-center space-x-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-200">
+        <div className="flex items-center space-x-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-lg border border-blue-200 dark:border-blue-800 transition-colors duration-200">
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.122 2.122" />
           </svg>
@@ -3258,11 +3307,11 @@ case "stickerMessage": {
   } else {
     // Fallback caso não tenha conversation
     content = (
-      <div className="flex items-center space-x-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
-        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="flex items-center space-x-2 p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800 transition-colors duration-200">
+        <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.122 2.122" />
         </svg>
-        <span className="text-sm font-medium text-blue-700">Resposta de botão</span>
+        <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Resposta de botão</span>
       </div>
     );
   }
@@ -3280,7 +3329,7 @@ case "stickerMessage": {
     default:
       console.log('Tipo de mensagem não suportado:', message.messageType, message);
       content = (
-        <div className="text-sm text-gray-500 italic">
+        <div className="text-sm text-gray-500 dark:text-gray-400 italic">
           Tipo de mensagem não suportado ({message.messageType || 'desconhecido'})
         </div>
       );
@@ -3296,16 +3345,16 @@ case "stickerMessage": {
 
   if (loading) {
     return (
-      <div className="h-full flex flex-col bg-gradient-to-br from-emerald-50 to-gray-50">
-        <div className="flex items-center p-6 bg-white/80 backdrop-blur-sm border-b border-emerald-100">
+      <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-200">
+        <div className="flex items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
           <button
             onClick={onBack}
-            className="p-2 rounded-xl hover:bg-emerald-100 transition mr-3 md:hidden"
+            className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition mr-3 md:hidden"
           >
-            <ArrowLeft className="w-5 h-5 text-emerald-600" />
+            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
           </button>
-          <div className="h-12 w-12 bg-emerald-200 rounded-2xl mr-4 animate-pulse" />
-          <div className="h-6 bg-emerald-200 rounded-lg flex-1 animate-pulse" />
+          <div className="h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded-2xl mr-4 animate-pulse" />
+          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-lg flex-1 animate-pulse" />
         </div>
 
         <div className="flex-1 p-6 space-y-4">
@@ -3317,7 +3366,7 @@ case "stickerMessage": {
               }`}
             >
               <div
-                className={`h-16 bg-emerald-200 rounded-2xl animate-pulse ${
+                className={`h-16 bg-gray-200 dark:bg-gray-700 rounded-2xl animate-pulse ${
                   i % 2 === 0 ? "w-2/3" : "w-1/2"
                 }`}
               />
@@ -3339,9 +3388,17 @@ case "stickerMessage": {
 return (
   <div className="h-full flex relative" data-message-view="true">
     <div
-      className={`flex-1 flex flex-col min-h-0 bg-gradient-to-br from-gray-50 via-white to-gray-100 transition-all duration-300 ${
+      className={`flex-1 flex flex-col min-h-0 transition-all duration-300 ${
         sidebarOpen || searchOpen ? 'mr-[420px]' : 'mr-0'
       }`}
+      style={{
+        backgroundImage: isDarkMode
+          ? 'url(/src/imgs/guimoo/tema-escuro-chat.png)'
+          : 'linear-gradient(to bottom right, rgb(249 250 251), rgb(255 255 255), rgb(243 244 246))',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
       onDragOver={(e) => {
         e.preventDefault();
         setDragActive(true);
@@ -3369,14 +3426,14 @@ return (
       }}
     >
 {/* Header Premium */}
-<div className="fixed md:relative top-[131px] md:top-0 left-0 right-0 md:left-auto md:right-auto z-10 md:z-20 flex items-center justify-between px-3 md:px-4 py-2.5 md:py-2 bg-white/95 backdrop-blur-lg border-b border-gray-200 shadow-sm">
+<div className="fixed md:relative top-[131px] md:top-0 left-0 right-0 md:left-auto md:right-auto z-10 md:z-20 flex items-center justify-between px-3 md:px-4 py-2.5 md:py-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
   <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0">
     <button
       onClick={onBack}
-      className="p-1.5 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-all duration-200 md:hidden group touch-manipulation flex-shrink-0"
+      className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-all duration-200 md:hidden group touch-manipulation flex-shrink-0"
       aria-label="Voltar"
     >
-      <ArrowLeft className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
+      <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-white" />
     </button>
 
     {/* Clickable area - Avatar + Contact Info */}
@@ -3394,24 +3451,24 @@ return (
           <img
             src={selectedChat.profilePicUrl}
             alt={displayName}
-            className="h-10 w-10 md:h-10 md:w-10 rounded-full object-cover ring-1 ring-gray-200"
+            className="h-10 w-10 md:h-10 md:w-10 rounded-full object-cover ring-1 ring-gray-200 dark:ring-gray-600"
           />
         ) : (
-          <div className="h-10 w-10 md:h-10 md:w-10 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold text-sm ring-1 ring-gray-200">
+          <div className="h-10 w-10 md:h-10 md:w-10 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold text-sm ring-1 ring-gray-200 dark:ring-gray-600">
             {getInitials(displayName)}
           </div>
         )}
-        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 md:w-3 md:h-3 bg-emerald-400 border-2 border-white rounded-full"></div>
+        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 md:w-3 md:h-3 bg-emerald-400 border-2 border-white dark:border-gray-800 rounded-full"></div>
       </div>
 
       <div className="flex-1 text-left min-w-0">
-        <h3 className="font-semibold text-[15px] md:text-[15px] text-gray-900 leading-tight flex items-center truncate">
+        <h3 className="font-semibold text-[15px] md:text-[15px] text-gray-900 dark:text-white leading-tight flex items-center truncate">
           {displayName}
         </h3>
 
         <div className="flex items-center gap-1 md:gap-1.5">
-          <Phone className="w-3 h-3 md:w-3 md:h-3 text-slate-400 flex-shrink-0" />
-          <span className="text-[11px] md:text-[11px] text-slate-500 truncate">
+          <Phone className="w-3 h-3 md:w-3 md:h-3 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+          <span className="text-[11px] md:text-[11px] text-slate-500 dark:text-slate-400 truncate">
             {formatPhoneNumber(selectedChat.remoteJid)}
           </span>
         </div>
@@ -3421,11 +3478,11 @@ return (
     {/* Reload Button */}
     <button
       onClick={handleReloadMessages}
-      className="p-2 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all duration-200 touch-manipulation flex-shrink-0"
+      className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-all duration-200 touch-manipulation flex-shrink-0"
       title="Recarregar mensagens"
       aria-label="Recarregar mensagens"
     >
-      <RefreshCw className="w-4 h-4 md:w-3.5 md:h-3.5 text-gray-600" />
+      <RefreshCw className="w-4 h-4 md:w-3.5 md:h-3.5 text-gray-600 dark:text-gray-300" />
     </button>
   </div>
 
@@ -3463,10 +3520,10 @@ return (
         setSearchOpen(!searchOpen);
         if (!searchOpen) setSidebarOpen(false);
       }}
-      className="p-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200 group"
+      className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group"
       title="Buscar mensagens"
     >
-      <Search className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
+      <Search className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-white" />
     </button>
 
   </div>
@@ -3475,9 +3532,8 @@ return (
     {/* Messages Area */}
     <div
       ref={scrollAreaRef}
-      className="flex-1 overflow-y-auto px-3 md:px-8 py-3 pt-[56px] md:pt-3 min-h-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent bg-[#efeae2]"
+      className="flex-1 overflow-y-auto px-3 md:px-8 py-3 pt-[56px] md:pt-3 min-h-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent bg-[url('/src/imgs/guimoo/tema-claro-chat.png')] dark:bg-[url('/src/imgs/guimoo/tema-escuro-chat.png')] bg-cover bg-center bg-fixed bg-no-repeat"
       style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 800 800'%3E%3Cg fill='none' stroke='%23d9d5cd' stroke-width='1'%3E%3Cpath d='M769 229L1037 260.9M927 880L731 737 520 660 309 538 40 599 295 764 126.5 879.5 40 599-197 493 102 382-31 229 126.5 79.5-69-63'/%3E%3Cpath d='M-31 229L237 261 390 382 603 493 308.5 537.5 101.5 381.5M370 905L295 764'/%3E%3Cpath d='M520 660L578 842 731 737 840 599 603 493 520 660 295 764 309 538 390 382 539 269 769 229 577.5 41.5 370 105 295 -36 126.5 79.5 237 261 102 382 40 599 -69 737 127 880'/%3E%3Cpath d='M520-140L578.5 42.5 731-63M603 493L539 269 237 261 370 105M902 382L539 269M390 382L102 382'/%3E%3Cpath d='M-222 42L126.5 79.5 370 105 539 269 577.5 41.5 927 80 769 229 902 382 603 493 731 737M295-36L577.5 41.5M578 842L295 764M40-201L127 80M102 382L-261 269'/%3E%3C/g%3E%3Cg fill='%23d1ccc3'%3E%3Ccircle cx='769' cy='229' r='5'/%3E%3Ccircle cx='539' cy='269' r='5'/%3E%3Ccircle cx='603' cy='493' r='5'/%3E%3Ccircle cx='731' cy='737' r='5'/%3E%3Ccircle cx='520' cy='660' r='5'/%3E%3Ccircle cx='309' cy='538' r='5'/%3E%3Ccircle cx='295' cy='764' r='5'/%3E%3Ccircle cx='40' cy='599' r='5'/%3E%3Ccircle cx='102' cy='382' r='5'/%3E%3Ccircle cx='127' cy='80' r='5'/%3E%3Ccircle cx='370' cy='105' r='5'/%3E%3Ccircle cx='578' cy='42' r='5'/%3E%3Ccircle cx='237' cy='261' r='5'/%3E%3Ccircle cx='390' cy='382' r='5'/%3E%3C/g%3E%3C/svg%3E")`,
         WebkitOverflowScrolling: 'touch'
       }}
       onScroll={handleScroll}
@@ -3485,16 +3541,16 @@ return (
       <div className="space-y-1.5 max-w-5xl mx-auto pb-[80px] md:pb-2">
         {loadingMore && (
           <div className="flex justify-center py-6">
-            <div className="flex items-center space-x-3 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm">
-              <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-              <span className="text-sm text-gray-600 font-medium">Carregando mensagens...</span>
+            <div className="flex items-center space-x-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm transition-colors duration-200">
+              <div className="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 border-t-blue-500 rounded-full animate-spin"></div>
+              <span className="text-sm text-gray-600 dark:text-gray-300 font-medium">Carregando mensagens...</span>
             </div>
           </div>
         )}
 
         {!hasMore && !loadingMore && messages.length > 0 && (
           <div className="flex justify-center py-4">
-            <span className="text-xs text-gray-500">Não existem mais mensagens anteriores.</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">Não existem mais mensagens anteriores.</span>
           </div>
         )}
 
@@ -3539,7 +3595,7 @@ return (
               <div key={message.id}>
                 {showDateSeparator && (
                   <div className="flex justify-center my-8">
-                    <div className="px-4 py-2 text-xs font-medium text-gray-500 bg-white/70 backdrop-blur-sm rounded-full shadow-sm border border-gray-300/50">
+                    <div className="px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-full shadow-sm border border-gray-300/50 dark:border-gray-600/50 transition-colors duration-200">
                       {messageDateLabel}
                     </div>
                   </div>
@@ -3547,7 +3603,7 @@ return (
 
                 {showUnreadMarker && (
                   <div id="unread-marker" className="flex items-center justify-center my-4">
-                    <div className="bg-gray-500 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg flex items-center space-x-2">
+                    <div className="bg-gray-500 dark:bg-gray-600 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg flex items-center space-x-2 transition-colors duration-200">
                       <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                       <span>Mensagens não visualizadas</span>
                     </div>
@@ -3570,40 +3626,40 @@ return (
                     <button
                       className={`
                         opacity-0 group-hover:opacity-100 transition-opacity duration-200
-                        p-1.5 rounded-full hover:bg-gray-200/80
+                        p-1.5 rounded-full hover:bg-gray-200/80 dark:hover:bg-gray-700/80
                         ${isFromMe ? 'order-2 ml-1' : 'order-1 mr-1'}
                       `}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <ChevronDown className="w-4 h-4 text-gray-600" />
+                      <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-300" />
                     </button>
                   </Popover.Trigger>
 
                   <Popover.Portal>
                     <Popover.Content
-                      className="z-50 bg-white shadow-2xl rounded-md overflow-hidden min-w-[200px] animate-in fade-in-0 zoom-in-95"
+                      className="z-50 bg-white dark:bg-gray-800 shadow-2xl rounded-md overflow-hidden min-w-[200px] animate-in fade-in-0 zoom-in-95 transition-colors duration-200"
                       sideOffset={5}
                       align={isFromMe ? "end" : "start"}
                     >
                       <div className="py-2">
                         {/* Responder */}
                         <button
-                          className="w-full px-4 py-2 hover:bg-gray-100 text-gray-700 flex items-center space-x-3 transition-colors text-[14.2px]"
+                          className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center space-x-3 transition-colors text-[14.2px]"
                           onClick={() => {
                             setReplyToMessage(message);
                           }}
                         >
-                          <Reply className="w-[18px] h-[18px] text-gray-600" />
+                          <Reply className="w-[18px] h-[18px] text-gray-600 dark:text-gray-400" />
                           <span>Responder</span>
                         </button>
 
                         {/* Baixar (apenas para mídias) */}
                         {isMediaMessage(message) && (
                           <button
-                            className="w-full px-4 py-2 hover:bg-gray-100 text-gray-700 flex items-center space-x-3 transition-colors text-[14.2px]"
+                            className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center space-x-3 transition-colors text-[14.2px]"
                             onClick={() => handleDownloadMedia(message)}
                           >
-                            <Download className="w-[18px] h-[18px] text-gray-600" />
+                            <Download className="w-[18px] h-[18px] text-gray-600 dark:text-gray-400" />
                             <span>Baixar</span>
                           </button>
                         )}
@@ -3614,18 +3670,18 @@ return (
 
                 <div
                   className={`
-                    max-w-[85%] md:max-w-[65%] rounded-lg shadow-sm transition-all duration-100
+                    max-w-[85%] md:max-w-[65%] rounded-lg shadow-md transition-all duration-200
                     ${isFromMe ? 'order-1' : 'order-2'}
                     ${
                       isFromMe
-                        ? "bg-[#d9fdd3] text-gray-900 mr-1 md:mr-2"
-                        : "bg-white text-gray-900 ml-1 md:ml-2"
+                        ? "bg-[#dcf8c6] dark:bg-[#005c4b] text-[#111b21] dark:text-gray-100 mr-1 md:mr-2"
+                        : "bg-white dark:bg-[#202c33] text-[#111b21] dark:text-gray-100 ml-1 md:ml-2 border border-gray-200/50 dark:border-transparent"
                     }
                   `}
                 >
                   <div className="px-3 py-2 md:px-2 md:py-1.5">
                     {message.isEncaminhada && (
-                      <div className="text-xs mb-1.5 flex items-center space-x-1 text-gray-500">
+                      <div className="text-xs mb-1.5 flex items-center space-x-1 text-gray-500 dark:text-gray-400">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                         </svg>
@@ -3633,7 +3689,7 @@ return (
                       </div>
                     )}
 
-                    <div className="text-[15px] md:text-[14.2px] leading-[20px] md:leading-[19px] text-gray-900 break-words">
+                    <div className="text-[15px] md:text-[14.2px] leading-[20px] md:leading-[19px] text-[#111b21] dark:text-gray-100 break-words">
                       {album ? (
                         <AlbumCarousel items={album} type={type!} />
                       ) : (
@@ -3644,21 +3700,21 @@ return (
                     {/* Hora e status na mesma linha, ao final da mensagem */}
                     <div className="flex items-center justify-end gap-1 mt-1 float-right ml-2">
                       {message.wasEdited && (
-                        <span className="text-[11px] text-gray-500 italic">editado</span>
+                        <span className="text-[11px] text-gray-600 dark:text-gray-400 italic">editado</span>
                       )}
-                      <span className="text-[11px] text-gray-500">
+                      <span className="text-[11px] text-gray-600 dark:text-gray-400">
                         {formatMessageTime(message.messageTimestamp)}
                       </span>
                       {isFromMe && whatsappType !== 'WHATSAPP-BUSINESS' && (
                         <>
                           {message.status === 'pending' && (
-                            <Loader2 className="w-3.5 h-3.5 text-gray-500 animate-spin" />
+                            <Loader2 className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 animate-spin" />
                           )}
                           {message.status === 'error' && (
                             <AlertCircle className="w-3.5 h-3.5 text-red-500" />
                           )}
                           {(!message.status || message.status === 'sent') && (
-                            <CheckCheck className="w-4 h-4 text-gray-500" />
+                            <CheckCheck className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                           )}
                         </>
                       )}
@@ -3696,7 +3752,7 @@ return (
 {showDeals && (
   <div
     id="deals-popup"
-    className="fixed bg-white border border-gray-300 shadow-2xl rounded-2xl w-96 max-h-[500px] overflow-hidden z-[9999] animate-in slide-in-from-top-2"
+    className="fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-2xl rounded-2xl w-96 max-h-[500px] overflow-hidden z-[9999] animate-in slide-in-from-top-2 transition-colors duration-200"
     style={{ 
       boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
       top: dealsButtonRef.current ? 
@@ -3714,21 +3770,21 @@ return (
     }}
   >
     {/* Header */}
-    <div className="bg-gradient-to-r from-gray-50 to-indigo-50 px-6 py-4 border-b border-gray-300/50">
+    <div className="bg-gradient-to-r from-gray-50 to-indigo-50 dark:from-gray-700 dark:to-indigo-900/50 px-6 py-4 border-b border-gray-300/50 dark:border-gray-600/50 transition-colors duration-200">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center transition-colors duration-200">
+            <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
-          <h4 className="font-semibold text-gray-800">Negociações</h4>
+          <h4 className="font-semibold text-gray-800 dark:text-gray-200">Negociações</h4>
         </div>
         <button
           onClick={() => setShowDeals(false)}
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
         >
-          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -3744,8 +3800,8 @@ return (
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <h5 className="font-semibold text-gray-800 mb-2">Nenhuma negociação encontrada</h5>
-          <p className="text-sm text-gray-500 mb-6 max-w-sm mx-auto leading-relaxed">
+          <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Nenhuma negociação encontrada</h5>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto leading-relaxed">
             Este contato ainda não possui negociações ativas. Crie a primeira negociação para começar o acompanhamento.
           </p>
           
@@ -3772,17 +3828,17 @@ return (
                     setShowDeals(false);
                     setSelectedDealId(deal.Id);
                   }}
-                  className="cursor-pointer p-4 border border-gray-300 rounded-xl hover:bg-gradient-to-r hover:from-gray-50 hover:to-indigo-50 hover:border-blue-200 transition-all duration-200 group"
+                  className="cursor-pointer p-4 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gradient-to-r hover:from-gray-50 hover:to-indigo-50 dark:hover:from-gray-700 dark:hover:to-indigo-900/50 hover:border-blue-200 dark:hover:border-blue-700 transition-all duration-200 group"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h6 className="font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">
+                      <h6 className="font-semibold text-gray-800 dark:text-gray-200 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
                         {deal.titulo}
                       </h6>
-                      <div className="text-xs text-gray-500 mt-1 flex items-center space-x-2">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center space-x-2">
                         <span>{funil?.nome}</span>
                         <span>→</span>
-                        <span className="px-2 py-1 bg-gray-100 rounded-full">{estagio?.nome}</span>
+                        <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full transition-colors duration-200">{estagio?.nome}</span>
                       </div>
                     </div>
                     <div className="text-right">
@@ -3796,7 +3852,7 @@ return (
             })}
           </div>
           
-          <div className="border-t border-gray-300 pt-4">
+          <div className="border-t border-gray-300 dark:border-gray-600 pt-4">
             <button
               onClick={createNewDeal}
               className="w-full px-4 py-3 bg-gradient-to-r from-gray-500 to-indigo-600 text-white rounded-xl hover:from-gray-600 hover:to-indigo-700 transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center justify-center space-x-2"
@@ -3821,15 +3877,15 @@ return (
 
     {/* Drag & Drop Overlay */}
     {dragActive && (
-      <div className="absolute inset-0 bg-gray-500/10 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div className="bg-white/95 backdrop-blur-lg border-2 border-dashed border-blue-400 rounded-3xl p-12 text-center shadow-2xl">
-          <div className="w-20 h-20 bg-gradient-to-br from-gray-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+      <div className="absolute inset-0 bg-gray-500/10 dark:bg-gray-900/30 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border-2 border-dashed border-blue-400 dark:border-blue-500 rounded-3xl p-12 text-center shadow-2xl transition-colors duration-200">
+          <div className="w-20 h-20 bg-gradient-to-br from-gray-500 to-indigo-600 dark:from-gray-600 dark:to-indigo-700 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
             <Paperclip className="w-10 h-10 text-white" />
           </div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">
             Solte o arquivo aqui
           </h3>
-          <p className="text-gray-600">Para enviar na conversa</p>
+          <p className="text-gray-600 dark:text-gray-300">Para enviar na conversa</p>
         </div>
       </div>
     )}
@@ -3838,11 +3894,11 @@ return (
     {/* Edit Modal */}
     {editModal.open && (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95">
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-gray-300">
-            <h2 className="text-xl font-bold text-gray-800 flex items-center space-x-3">
-              <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 transition-colors duration-200">
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 px-6 py-4 border-b border-gray-300 dark:border-gray-600">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center space-x-3">
+              <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900/50 rounded-lg flex items-center justify-center transition-colors duration-200">
+                <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </div>
@@ -3851,7 +3907,7 @@ return (
           </div>
           <div className="p-6 space-y-4">
             <textarea
-              className="w-full border border-gray-300 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent resize-none transition-colors duration-200"
               rows={4}
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
@@ -3859,13 +3915,13 @@ return (
             />
             <div className="flex justify-end space-x-3">
               <button
-                className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-medium transition-colors"
+                className="px-6 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 font-medium transition-colors"
                 onClick={() => setEditModal({ open: false, message: null })}
               >
                 Cancelar
               </button>
               <button
-                className="px-6 py-2.5 bg-gradient-to-r from-gray-500 to-indigo-600 text-white rounded-xl hover:from-gray-600 hover:to-indigo-700 font-medium transition-all duration-200 shadow-sm hover:shadow-md"
+                className="px-6 py-2.5 bg-gradient-to-r from-gray-500 to-indigo-600 dark:from-gray-600 dark:to-indigo-700 text-white rounded-xl hover:from-gray-600 hover:to-indigo-700 dark:hover:from-gray-700 dark:hover:to-indigo-800 font-medium transition-all duration-200 shadow-sm hover:shadow-md"
                 onClick={handleEditConfirm}
               >
                 Salvar alterações
@@ -3879,27 +3935,27 @@ return (
     {/* Contact Modal */}
     {contactModalOpen && contactData && (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-300 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-800 flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                <User className="w-4 h-4 text-gray-600" />
+        <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transition-colors duration-200">
+          <div className="px-6 py-4 border-b border-gray-300 dark:border-gray-600 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center transition-colors duration-200">
+                <User className="w-4 h-4 text-gray-600 dark:text-gray-300" />
               </div>
               <span>Contato</span>
             </h2>
             <button
               onClick={() => setContactModalOpen(false)}
-              className="p-1 rounded-lg hover:bg-gray-100"
+              className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
-              <X className="w-4 h-4 text-gray-600" />
+              <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
             </button>
           </div>
           <div className="p-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Nome</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome</label>
               <input
                 type="text"
-                className="mt-1 w-full border border-gray-300 rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="mt-1 w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 transition-colors duration-200"
                 value={contactForm.nome}
                 onChange={(e) =>
                   setContactForm({ ...contactForm, nome: e.target.value })
@@ -3907,10 +3963,10 @@ return (
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
               <input
                 type="email"
-                className="mt-1 w-full border border-gray-300 rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="mt-1 w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 transition-colors duration-200"
                 value={contactForm.email}
                 onChange={(e) =>
                   setContactForm({ ...contactForm, email: e.target.value })
@@ -3918,26 +3974,26 @@ return (
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Telefone</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Telefone</label>
               <input
                 type="text"
-                className="mt-1 w-full border border-gray-300 rounded-xl p-2 bg-gray-100"
+                className="mt-1 w-full border border-gray-300 dark:border-gray-600 rounded-xl p-2 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-300 transition-colors duration-200"
                 value={contactForm.telefone}
                 disabled
               />
             </div>
           </div>
-          <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3 border-t border-gray-300">
+          <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 flex justify-end space-x-3 border-t border-gray-300 dark:border-gray-600 transition-colors duration-200">
             <button
               onClick={() => setContactModalOpen(false)}
-              className="px-4 py-2 rounded-xl text-sm text-gray-700 hover:bg-gray-100"
+              className="px-4 py-2 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={handleSaveContact}
               disabled={savingContact}
-              className="px-4 py-2 rounded-xl text-sm text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
+              className="px-4 py-2 rounded-xl text-sm text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800 disabled:opacity-50 transition-colors"
             >
               {savingContact ? 'Salvando...' : 'Salvar'}
             </button>
@@ -3947,7 +4003,7 @@ return (
     )}
 
       {/* Message Input / Templates */}
-      <div className="fixed md:relative bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto z-20 px-2 md:px-4 py-2 border-t bg-white">
+      <div className="fixed md:relative bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto z-20 px-2 md:px-4 py-2 border-t bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 transition-colors duration-200">
         {(!isBusiness || isSessionActive) ? (
           <MessageInput
             remoteJid={selectedChat.remoteJid}
@@ -4016,12 +4072,12 @@ return (
           />
         ) : (
           <div className="flex flex-col items-center gap-2 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Sessão inativa. Selecione um template para enviar ao usuário.
             </p>
             <button
               onClick={() => setTemplateModalOpen(true)}
-              className="px-4 py-2 rounded-xl text-sm text-white bg-emerald-600 hover:bg-emerald-700"
+              className="px-4 py-2 rounded-xl text-sm text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800 transition-colors"
             >
               Selecionar template
             </button>
@@ -4067,7 +4123,7 @@ return (
           <a
             href={preview.url}
             download
-            className="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+            className="inline-flex items-center px-4 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-800 transition-colors"
           >
             <Download className="w-4 h-4 mr-2" /> Baixar
           </a>
@@ -4146,10 +4202,10 @@ export default function ModernChatSystem() {
               <div className="w-24 h-24 bg-gradient-to-r from-emerald-400 to-gray-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
                 <MessageCircle className="w-12 h-12 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
                 Bem-vindo ao Chat
               </h2>
-              <p className="text-emerald-600">
+              <p className="text-emerald-600 dark:text-emerald-400">
                 Selecione uma conversa para começar
               </p>
             </div>

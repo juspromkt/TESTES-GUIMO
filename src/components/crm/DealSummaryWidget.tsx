@@ -190,39 +190,39 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
   };
 
   return (
-    <div className="rounded-xl border border-gray-300 bg-white">
+    <div className="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 transition-colors duration-200">
       {/* Header - sempre visível */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <Bot className="w-4 h-4 text-violet-500" />
-          <h3 className="text-sm font-semibold text-gray-700">Resumo do atendimento</h3>
+          <Bot className="w-4 h-4 text-violet-500 dark:text-violet-400" />
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Resumo do atendimento</h3>
         </div>
         {isCollapsed ? (
-          <ChevronDown className="w-4 h-4 text-gray-600" />
+          <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
         ) : (
-          <ChevronUp className="w-4 h-4 text-gray-600" />
+          <ChevronUp className="w-4 h-4 text-gray-600 dark:text-gray-400" />
         )}
       </button>
 
       {/* Conteúdo - colapsável */}
       {!isCollapsed && (
         <div className="px-4 pb-4 space-y-3">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Pode levar cerca de 1 minuto para gerar um resumo.
           </p>
 
           {loading ? (
             <div className="flex items-center justify-center py-6">
-              <Loader2 className="w-5 h-5 animate-spin text-violet-600" />
+              <Loader2 className="w-5 h-5 animate-spin text-violet-600 dark:text-violet-400" />
             </div>
           ) : summary ? (
             <div className="space-y-3">
               {/* Texto do resumo */}
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 max-h-[200px] overflow-y-auto">
-                <pre className="whitespace-pre-wrap text-xs text-gray-700 font-sans">
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600 max-h-[200px] overflow-y-auto transition-colors duration-200">
+                <pre className="whitespace-pre-wrap text-xs text-gray-700 dark:text-gray-200 font-sans">
                   {summary}
                 </pre>
               </div>
@@ -231,11 +231,11 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
               <div className="flex flex-col gap-2">
                 <button
                   onClick={handleCopy}
-                  className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+                  className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-100 text-sm font-medium rounded-lg transition-colors"
                 >
                   {copied ? (
                     <>
-                      <Check className="w-4 h-4 text-green-600" />
+                      <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
                       <span>Copiado!</span>
                     </>
                   ) : (
@@ -249,7 +249,7 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
                 <div className="flex gap-2">
                   <button
                     onClick={handleDownloadTXT}
-                    className="flex items-center justify-center gap-2 flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                    className="flex items-center justify-center gap-2 flex-1 px-3 py-2 bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
                   >
                     <FileText className="w-4 h-4" />
                     <span>TXT</span>
@@ -257,7 +257,7 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
 
                   <button
                     onClick={handleDownloadPDF}
-                    className="flex items-center justify-center gap-2 flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
+                    className="flex items-center justify-center gap-2 flex-1 px-3 py-2 bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors"
                   >
                     <Download className="w-4 h-4" />
                     <span>PDF</span>
@@ -268,7 +268,7 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
                 <button
                   onClick={handleCreateSummary}
                   disabled={creating}
-                  className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-violet-600 dark:bg-violet-700 hover:bg-violet-700 dark:hover:bg-violet-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {creating ? (
                     <>
@@ -287,16 +287,16 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
           ) : (
             <div className="space-y-3">
               {error && (
-                <div className="flex items-center gap-2 p-2 bg-red-50 rounded-lg">
-                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
-                  <p className="text-xs text-red-700">{error}</p>
+                <div className="flex items-center gap-2 p-2 bg-red-50 dark:bg-red-900/30 rounded-lg transition-colors duration-200">
+                  <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
+                  <p className="text-xs text-red-700 dark:text-red-300">{error}</p>
                 </div>
               )}
 
               <button
                 onClick={handleCreateSummary}
                 disabled={creating}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-violet-600 dark:bg-violet-700 hover:bg-violet-700 dark:hover:bg-violet-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {creating ? (
                   <>
@@ -311,7 +311,7 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
                 )}
               </button>
 
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                 Nenhum resumo disponível
               </p>
             </div>

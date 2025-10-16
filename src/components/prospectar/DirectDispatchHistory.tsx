@@ -177,7 +177,7 @@ setDispatches(
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400" />
       </div>
     );
   }
@@ -185,12 +185,12 @@ setDispatches(
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">Envio de mensagens em massa</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Envio de mensagens em massa</h2>
         {canEditProspect && (
 
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg px-4 py-2 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
         >
           <Plus className="w-5 h-5" />
           Novo Disparo
@@ -199,18 +199,18 @@ setDispatches(
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-md">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="bg-gray-50 border border-gray-300 text-gray-600 px-4 py-3 rounded-md">
+        <div className="bg-gray-50 dark:bg-gray-900/20 border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 px-4 py-3 rounded-md">
           {success}
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow-sm p-4">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-neutral-700">
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <input
@@ -218,62 +218,62 @@ setDispatches(
               placeholder="Pesquisar por nome, público ou cidade..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
             />
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm overflow-hidden border border-gray-200 dark:border-neutral-700">
         {filteredDispatches.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="text-gray-500">Nenhum disparo direto encontrado.</p>
+            <p className="text-gray-500 dark:text-neutral-400">Nenhum disparo direto encontrado.</p>
           </div>
         ) : (
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 dark:bg-neutral-900">
               <tr>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('nome')}
                 >
                   Nome <SortIcon column="nome" />
                 </th>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('publico')}
                 >
                   Público <SortIcon column="publico" />
                 </th>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('cidade')}
                 >
                   Cidade <SortIcon column="cidade" />
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                   Ações
                 </th>
               </tr>
             </thead>
 {paginatedDispatches.length > 0 && (
-  <tbody className="bg-white divide-y divide-gray-200">
+  <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
     {paginatedDispatches.map((dispatch) => (
-      <tr key={dispatch.Id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+      <tr key={dispatch.Id} className="hover:bg-gray-50 dark:hover:bg-neutral-700">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-neutral-100">
                     {dispatch.nome || '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-neutral-100">
                     {dispatch.publico || '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-neutral-100">
                     {dispatch.cidade || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => navigate(`/prospectar/dd/${dispatch.Id}`)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
                       >
                         Consultar
                       </button>
@@ -285,7 +285,7 @@ setDispatches(
                           setSelectedDispatch(dispatch);
                           setIsDeleteModalOpen(true);
                         }}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
@@ -311,23 +311,23 @@ setDispatches(
       {/* Create Modal */}
       {isCreateModalOpen && createPortal(
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
+          className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]"
           onClick={() => {
             setIsCreateModalOpen(false);
             setFormData({ nome: '', publico: '', cidade: '' });
           }}
         >
           <div
-            className="bg-white rounded-lg shadow-xl w-full max-w-lg"
+            className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-lg border border-gray-200 dark:border-neutral-700"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-4">
                 Novo Disparo Direto
               </h3>
               <form onSubmit={handleCreateDispatch} className="space-y-4">
                 <div>
-                  <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="nome" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                     Nome do Disparo
                   </label>
                   <input
@@ -335,12 +335,12 @@ setDispatches(
                     id="nome"
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="publico" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="publico" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                     Público
                   </label>
                   <input
@@ -348,12 +348,12 @@ setDispatches(
                     id="publico"
                     value={formData.publico}
                     onChange={(e) => setFormData({ ...formData, publico: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="cidade" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="cidade" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                     Cidade
                   </label>
                   <input
@@ -361,7 +361,7 @@ setDispatches(
                     id="cidade"
                     value={formData.cidade}
                     onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                     required
                   />
                 </div>
@@ -373,13 +373,13 @@ setDispatches(
                       setIsCreateModalOpen(false);
                       setFormData({ nome: '', publico: '', cidade: '' });
                     }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 rounded-md"
                   >
                     Criar Disparo
                   </button>
@@ -394,26 +394,26 @@ setDispatches(
       {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && createPortal(
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
+          className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]"
           onClick={() => {
             setIsDeleteModalOpen(false);
             setSelectedDispatch(null);
           }}
         >
           <div
-            className="bg-white rounded-lg shadow-xl w-full max-w-md"
+            className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-md border border-gray-200 dark:border-neutral-700"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-red-600" />
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
                     Tem certeza que deseja excluir?
                   </h3>
-                  <p className="text-gray-500 mt-1">
+                  <p className="text-gray-500 dark:text-neutral-400 mt-1">
                     Esta ação não pode ser desfeita.
                   </p>
                 </div>
@@ -425,14 +425,14 @@ setDispatches(
                     setIsDeleteModalOpen(false);
                     setSelectedDispatch(null);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md disabled:opacity-50"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-800 rounded-md disabled:opacity-50"
                 >
                   {deleting ? (
                     <>

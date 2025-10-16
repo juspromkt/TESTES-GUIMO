@@ -312,14 +312,14 @@ const handleConnect = async (e: React.FormEvent) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-500 dark:text-emerald-400" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full text-red-600">
+      <div className="flex items-center justify-center h-full text-red-600 dark:text-red-400">
         <AlertCircle className="w-8 h-8 mr-2" />
         <span>{error}</span>
       </div>
@@ -329,33 +329,33 @@ const handleConnect = async (e: React.FormEvent) => {
   return (
     <div>
       {connection ? (
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-neutral-700">
           {/* Connection Header */}
-          <div className="p-6 border-b border-gray-300">
+          <div className="p-6 border-b border-gray-300 dark:border-neutral-700">
             <div className="flex items-center gap-6">
               <div className="relative">
                 {connection.profilePicUrl ? (
                   <img
                     src={connection.profilePicUrl}
                     alt={connection.name}
-                    className="w-20 h-20 rounded-full object-cover ring-4 ring-emerald-50"
+                    className="w-20 h-20 rounded-full object-cover ring-4 ring-emerald-50 dark:ring-emerald-900"
                   />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center ring-4 ring-emerald-50">
-                    <User className="w-8 h-8 text-emerald-500" />
+                  <div className="w-20 h-20 rounded-full bg-emerald-50 dark:bg-emerald-900 flex items-center justify-center ring-4 ring-emerald-50 dark:ring-emerald-900">
+                    <User className="w-8 h-8 text-emerald-500 dark:text-emerald-400" />
                   </div>
                 )}
-                <div className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${
-                  connection.connectionStatus === 'open' ? 'bg-emerald-500' : 
+                <div className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white dark:border-neutral-800 ${
+                  connection.connectionStatus === 'open' ? 'bg-emerald-500' :
                   connection.connectionStatus === 'connecting' ? 'bg-yellow-500' : 'bg-red-500'
                 }`} />
               </div>
-              
+
               <div className="flex-1">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 flex items-center gap-2">
                   {connection.name}
                 </h2>
-                <p className="text-gray-500 mt-1 flex items-center gap-2">
+                <p className="text-gray-500 dark:text-neutral-400 mt-1 flex items-center gap-2">
                   {connection.ownerJid
                     ? formatPhoneNumber(connection.ownerJid)
                     : 'Número não validado'}
@@ -365,7 +365,7 @@ const handleConnect = async (e: React.FormEvent) => {
                         setError('');
                         setIsValidateModalOpen(true);
                       }}
-                      className="px-2 py-1 text-xs font-medium text-white bg-emerald-500 rounded-lg hover:bg-emerald-600"
+                      className="px-2 py-1 text-xs font-medium text-white bg-emerald-500 dark:bg-emerald-600 rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-700"
                     >
                       Validar Conexão
                     </button>
@@ -387,11 +387,11 @@ const handleConnect = async (e: React.FormEvent) => {
 
           {/* Connection Actions */}
           {canEditConnection && (
-            <div className="p-6 bg-gray-50 flex flex-col gap-3">
+            <div className="p-6 bg-gray-50 dark:bg-neutral-900 flex flex-col gap-3">
               {connection.tipo === 'EVO' && connection.connectionStatus !== 'open' && (
                 <button
                   onClick={handleGenerateQRCode}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-500 dark:bg-emerald-600 text-white rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-700 transition-colors"
                 >
                   <QrCode className="w-5 h-5" />
                   Gerar QR Code
@@ -399,7 +399,7 @@ const handleConnect = async (e: React.FormEvent) => {
               )}
               <button
                 onClick={() => setIsDeleteModalOpen(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-800 transition-colors"
               >
                 <X className="w-5 h-5" />
                 Excluir Conexão
@@ -409,12 +409,12 @@ const handleConnect = async (e: React.FormEvent) => {
 
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-md p-8 text-center">
-          <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <LinkIcon className="w-10 h-10 text-emerald-500" />
+        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-md p-8 text-center border border-gray-200 dark:border-neutral-700">
+          <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-900 rounded-full flex items-center justify-center mx-auto mb-6">
+            <LinkIcon className="w-10 h-10 text-emerald-500 dark:text-emerald-400" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Nenhuma conexão ativa</h2>
-          <p className="text-gray-500 mb-6">Conecte seu WhatsApp para começar a usar o sistema</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 mb-2">Nenhuma conexão ativa</h2>
+          <p className="text-gray-500 dark:text-neutral-400 mb-6">Conecte seu WhatsApp para começar a usar o sistema</p>
           {canEditConnection && (
             <div className="flex flex-col items-center gap-3">
               <button
@@ -422,7 +422,7 @@ const handleConnect = async (e: React.FormEvent) => {
                   setError('');
                   setIsConnectModalOpen(true);
                 }}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 dark:bg-emerald-600 text-white rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-700 transition-colors"
               >
                 <QrCode className="w-5 h-5" />
                 Conectar WhatsApp
@@ -440,7 +440,7 @@ const handleConnect = async (e: React.FormEvent) => {
       >
         <div className="p-6 space-y-4">
           <div>
-            <label htmlFor="instanceName" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="instanceName" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
               Nome da Instância
             </label>
             <input
@@ -448,28 +448,28 @@ const handleConnect = async (e: React.FormEvent) => {
               id="instanceName"
               value={instanceName}
               onChange={(e) => setInstanceName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
               placeholder="Ex: WhatsApp Principal"
               required
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-600">{error}</p>
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           )}
 
           <div className="flex justify-end gap-3">
             <button
               type="button"
               onClick={() => setIsConnectModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg"
             >
               Cancelar
             </button>
 <button
   onClick={handleConnect}
   disabled={connecting || !/^[A-Za-zÀ-ÿ\s]+$/.test(instanceName.trim())}
-  className="px-4 py-2 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg disabled:opacity-50"
+  className="px-4 py-2 text-sm font-medium text-white bg-emerald-500 dark:bg-emerald-600 hover:bg-emerald-600 dark:hover:bg-emerald-700 rounded-lg disabled:opacity-50"
 >
   {connecting ? 'Conectando...' : 'Conectar'}
 </button>
@@ -486,7 +486,7 @@ const handleConnect = async (e: React.FormEvent) => {
       >
         <div className="p-6 space-y-4">
           <div>
-            <label htmlFor="officialName" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="officialName" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
               Nome
             </label>
             <input
@@ -494,13 +494,13 @@ const handleConnect = async (e: React.FormEvent) => {
               id="officialName"
               value={officialName}
               onChange={(e) => setOfficialName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
               placeholder="Ex: LucasApiOficial"
               required
             />
           </div>
           <div>
-            <label htmlFor="officialNumber" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="officialNumber" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
               Number
             </label>
             <input
@@ -508,13 +508,13 @@ const handleConnect = async (e: React.FormEvent) => {
               id="officialNumber"
               value={officialNumber}
               onChange={(e) => setOfficialNumber(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
               placeholder="668169203055880"
               required
             />
           </div>
           <div>
-            <label htmlFor="officialBusinessId" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="officialBusinessId" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
               BusinessId
             </label>
             <input
@@ -522,13 +522,13 @@ const handleConnect = async (e: React.FormEvent) => {
               id="officialBusinessId"
               value={officialBusinessId}
               onChange={(e) => setOfficialBusinessId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
               placeholder="735895655965278"
               required
             />
           </div>
           <div>
-            <label htmlFor="officialToken" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="officialToken" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
               Token
             </label>
             <input
@@ -536,26 +536,26 @@ const handleConnect = async (e: React.FormEvent) => {
               id="officialToken"
               value={officialToken}
               onChange={(e) => setOfficialToken(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
               placeholder="EAAe4NTWmCnEBPI"
               required
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
           <div className="flex justify-end gap-3">
             <button
               type="button"
               onClick={() => setIsOfficialModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg"
             >
               Cancelar
             </button>
             <button
               onClick={handleConnectOfficial}
               disabled={connectingOfficial}
-              className="px-4 py-2 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-white bg-emerald-500 dark:bg-emerald-600 hover:bg-emerald-600 dark:hover:bg-emerald-700 rounded-lg disabled:opacity-50"
             >
               {connectingOfficial ? 'Conectando...' : 'Conectar'}
             </button>
@@ -571,7 +571,7 @@ const handleConnect = async (e: React.FormEvent) => {
       >
         <div className="p-6 space-y-4">
           <div>
-            <label htmlFor="validateNumber" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="validateNumber" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
               Número com DDD
             </label>
             <input
@@ -579,26 +579,26 @@ const handleConnect = async (e: React.FormEvent) => {
               id="validateNumber"
               value={validateNumber}
               onChange={(e) => setValidateNumber(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
               placeholder="62999995555"
               required
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
           <div className="flex justify-end gap-3">
             <button
               type="button"
               onClick={() => setIsValidateModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg"
             >
               Cancelar
             </button>
             <button
               onClick={handleValidateConnection}
               disabled={validating}
-              className="px-4 py-2 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-white bg-emerald-500 dark:bg-emerald-600 hover:bg-emerald-600 dark:hover:bg-emerald-700 rounded-lg disabled:opacity-50"
             >
               {validating ? 'Validando...' : 'Validar'}
             </button>
@@ -614,12 +614,12 @@ const handleConnect = async (e: React.FormEvent) => {
       >
         <div className="p-6">
           <div className="text-center mb-6">
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-neutral-300">
               Abra o WhatsApp no seu celular e escaneie o QR Code abaixo
             </p>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-inner flex items-center justify-center">
-            <QRCodeSVG 
+          <div className="bg-white dark:bg-neutral-700 p-4 rounded-lg shadow-inner flex items-center justify-center">
+            <QRCodeSVG
               value={qrCode}
               size={256}
               level="H"
@@ -637,14 +637,14 @@ const handleConnect = async (e: React.FormEvent) => {
       >
         <div className="p-6">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-red-600" />
+            <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+              <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">
                 Confirmar Exclusão
               </h2>
-              <p className="text-gray-500 mt-1">
+              <p className="text-gray-500 dark:text-neutral-400 mt-1">
                 Tem certeza que deseja excluir esta conexão do WhatsApp?
               </p>
             </div>
@@ -652,13 +652,13 @@ const handleConnect = async (e: React.FormEvent) => {
           <div className="flex justify-end gap-3 mt-6">
             <button
               onClick={() => setIsDeleteModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg"
             >
               Cancelar
             </button>
             <button
               onClick={handleDelete}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg"
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-800 rounded-lg"
             >
               Sim, Excluir
             </button>
@@ -672,14 +672,14 @@ const handleConnect = async (e: React.FormEvent) => {
   title="Atenção"
 >
   <div className="p-6 space-y-4">
-    <p className="text-gray-600">
+    <p className="text-gray-600 dark:text-neutral-300">
       {infoMessage ||
         'Não foi possível processar sua solicitação no momento. Tente novamente em 30 segundos a 1 minuto usando o botão "Gerar QR Code".'}
     </p>
     <div className="flex justify-end">
       <button
         onClick={() => setIsInfoModalOpen(false)}
-        className="px-4 py-2 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg"
+        className="px-4 py-2 text-sm font-medium text-white bg-emerald-500 dark:bg-emerald-600 hover:bg-emerald-600 dark:hover:bg-emerald-700 rounded-lg"
       >
         Entendi
       </button>

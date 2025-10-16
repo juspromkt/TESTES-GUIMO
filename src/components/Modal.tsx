@@ -55,7 +55,7 @@ const Modal = ({
   const modalContent = (
     <>
       {/* Fundo escurecido */}
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]" />
+      <div className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm z-[9998] transition-theme" />
 
       {/* Conteúdo do modal */}
       <div
@@ -66,7 +66,7 @@ const Modal = ({
         }}
       >
         <div
-          className={`bg-white rounded-xl shadow-2xl transform transition-all duration-200 scale-100 ${getMaxWidthClass()} overflow-hidden flex flex-col`}
+          className={`bg-white dark:bg-neutral-800 rounded-xl shadow-2xl transform transition-all duration-200 scale-100 ${getMaxWidthClass()} overflow-hidden flex flex-col transition-theme border border-gray-200 dark:border-neutral-700`}
           style={{
             width:
               typeof width === 'string' && !width.includes('w-')
@@ -88,18 +88,18 @@ const Modal = ({
           onClick={(e) => e.stopPropagation()} // 🔒 impede fechamento ao clicar dentro
         >
           {/* Cabeçalho */}
-          <div className="flex justify-between items-center p-4 border-b border-gray-300 bg-white/95 backdrop-blur-sm">
-            <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
+          <div className="flex justify-between items-center p-4 border-b border-gray-300 dark:border-neutral-700 bg-white/95 dark:bg-neutral-800/95 backdrop-blur-sm transition-theme">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-neutral-100">{title}</h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 transition-colors"
+              className="text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Corpo */}
-          <div className="overflow-y-auto px-6 py-4">{children}</div>
+          <div className="overflow-y-auto px-6 py-4 bg-white dark:bg-neutral-800 transition-theme">{children}</div>
         </div>
       </div>
     </>

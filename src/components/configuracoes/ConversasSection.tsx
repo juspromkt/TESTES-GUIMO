@@ -74,12 +74,12 @@ export default function ConversasSection({ isActive, canEdit }: ConversasSection
 
   return (
     <div className="mt-8">
-      <div className="bg-white rounded-lg shadow-lg p-6 max-w-xl mx-auto">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Conversas</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-xl mx-auto transition-colors duration-200">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Conversas</h2>
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-medium text-gray-700">Assinatura de mensagens</h3>
-            <p className="text-sm text-gray-500">Exibir nome do usuário ao final das mensagens enviadas.</p>
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Assinatura de mensagens</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Exibir nome do usuário ao final das mensagens enviadas.</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
@@ -89,14 +89,14 @@ export default function ConversasSection({ isActive, canEdit }: ConversasSection
               onChange={canEdit ? toggleAssinatura : undefined}
               disabled={!canEdit || loading}
             />
-            <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 ${(!canEdit || loading) ? 'opacity-50' : ''}`}></div>
+            <div className={`w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-gray-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-500 ${(!canEdit || loading) ? 'opacity-50' : ''}`}></div>
           </label>
         </div>
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-        {success && <p className="mt-4 text-sm text-green-600">{success}</p>}
+        {error && <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {success && <p className="mt-4 text-sm text-green-600 dark:text-green-400">{success}</p>}
         {loading && (
           <div className="mt-4 flex justify-center">
-            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+            <Loader2 className="w-5 h-5 animate-spin text-blue-600 dark:text-blue-400" />
           </div>
         )}
       </div>

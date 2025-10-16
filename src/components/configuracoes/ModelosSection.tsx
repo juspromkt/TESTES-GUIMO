@@ -152,7 +152,7 @@ setModelos(sanitized);
   return (
     <div className="mt-8">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">Modelos</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Modelos</h2>
 {canEdit && (
   <button
     onClick={() => {
@@ -160,7 +160,7 @@ setModelos(sanitized);
       setFormData({ nome: '', texto: '' });
       setIsModalOpen(true);
     }}
-    className="flex items-center gap-2 bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors"
+    className="flex items-center gap-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg px-4 py-2 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
   >
     <Plus size={20} />
     Novo Modelo
@@ -169,48 +169,48 @@ setModelos(sanitized);
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-4">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-md mb-4">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-md mb-4">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 px-4 py-3 rounded-md mb-4">
           {success}
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-neutral-700">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+          <thead className="bg-gray-50 dark:bg-neutral-900">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                 Nome
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                 Texto
               </th>
               {canEdit && (
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                 Ações
               </th>
               )}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
             {paginatedModelos.map((modelo) => (
-              <tr key={modelo.id} className="hover:bg-gray-50">
+              <tr key={modelo.id} className="hover:bg-gray-50 dark:hover:bg-neutral-700">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{modelo.nome}</div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{modelo.nome}</div>
                 </td>
 
 <td className="px-6 py-4">
   <div
-    className="text-sm text-gray-500 truncate max-w-md"
+    className="text-sm text-gray-500 dark:text-neutral-400 truncate max-w-md"
     dangerouslySetInnerHTML={{
       __html: (modelo.texto || "")
-        .replace(/{{primeiroNome}}/g, '<span class="text-blue-600 font-semibold">{{primeiroNome}}</span>')
-        .replace(/{{nomeCompleto}}/g, '<span class="text-green-600 font-semibold">{{nomeCompleto}}</span>')
+        .replace(/{{primeiroNome}}/g, '<span class="text-blue-600 dark:text-blue-400 font-semibold">{{primeiroNome}}</span>')
+        .replace(/{{nomeCompleto}}/g, '<span class="text-green-600 dark:text-green-400 font-semibold">{{nomeCompleto}}</span>')
     }}
   />
 </td>
@@ -228,7 +228,7 @@ setModelos(sanitized);
       });
       setIsModalOpen(true);
     }}
-    className="text-blue-600 hover:text-blue-900"
+    className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
   >
     <Pencil className="w-5 h-5" />
   </button>
@@ -240,7 +240,7 @@ setModelos(sanitized);
       setSelectedModelo(modelo);
       setIsDeleteModalOpen(true);
     }}
-    className="text-red-600 hover:text-red-900"
+    className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
   >
     <Trash2 className="w-5 h-5" />
   </button>
@@ -264,7 +264,7 @@ setModelos(sanitized);
       {/* Create/Edit Modal */}
 {canEdit && isModalOpen && createPortal(
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
+          className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]"
           onClick={() => {
             setIsModalOpen(false);
             setSelectedModelo(null);
@@ -272,11 +272,11 @@ setModelos(sanitized);
           }}
         >
           <div
-            className="bg-white rounded-lg shadow-xl w-full max-w-lg"
+            className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-lg border border-gray-200 dark:border-neutral-700"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-6 border-b border-gray-300">
-              <h3 className="text-lg font-semibold text-gray-900">
+            <div className="flex items-center justify-between p-6 border-b border-gray-300 dark:border-neutral-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
                 {selectedModelo ? 'Editar Modelo' : 'Novo Modelo'}
               </h3>
               <button
@@ -285,7 +285,7 @@ setModelos(sanitized);
                   setSelectedModelo(null);
                   setFormData({ nome: '', texto: '' });
                 }}
-                className="text-gray-400 hover:text-gray-500"
+                className="text-gray-400 dark:text-neutral-500 hover:text-gray-500 dark:hover:text-neutral-400"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -294,7 +294,7 @@ setModelos(sanitized);
             <form onSubmit={handleSubmit} className="p-6">
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="nome" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                     Nome do Modelo
                   </label>
                   <input
@@ -302,13 +302,13 @@ setModelos(sanitized);
                     id="nome"
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="texto" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="texto" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                     Texto do Modelo
                   </label>
                   <textarea
@@ -316,14 +316,14 @@ setModelos(sanitized);
                     value={formData.texto}
                     onChange={(e) => setFormData({ ...formData, texto: e.target.value })}
                     rows={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                     required
                   />
-<div className="text-xs text-gray-500 mt-1">
+<div className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
   Você pode usar as variáveis:
-  <span className="text-blue-600 font-semibold"> {'{{primeiroNome}}'} </span>
+  <span className="text-blue-600 dark:text-blue-400 font-semibold"> {'{{primeiroNome}}'} </span>
   e
-  <span className="text-green-600 font-semibold"> {'{{nomeCompleto}}'} </span><br />Clique nos botões abaixo para adicionar
+  <span className="text-green-600 dark:text-green-400 font-semibold"> {'{{nomeCompleto}}'} </span><br />Clique nos botões abaixo para adicionar
 </div>
   <div className="flex gap-2 mt-2">
     <button
@@ -331,7 +331,7 @@ setModelos(sanitized);
       onClick={() =>
         setFormData({ ...formData, texto: formData.texto + ' {{primeiroNome}}' })
       }
-      className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+      className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
     >
       Primeiro Nome
     </button>
@@ -340,7 +340,7 @@ setModelos(sanitized);
       onClick={() =>
         setFormData({ ...formData, texto: formData.texto + ' {{nomeCompleto}}' })
       }
-      className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200"
+      className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-800"
     >
       Nome Completo
     </button>
@@ -357,14 +357,14 @@ setModelos(sanitized);
                       setSelectedModelo(null);
                       setFormData({ nome: '', texto: '' });
                     }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 rounded-md disabled:opacity-50"
                   >
                     {submitting ? (
                       <>
@@ -389,26 +389,26 @@ setModelos(sanitized);
       {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && selectedModelo && createPortal(
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
+          className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]"
           onClick={() => {
             setIsDeleteModalOpen(false);
             setSelectedModelo(null);
           }}
         >
           <div
-            className="bg-white rounded-lg shadow-xl w-full max-w-md"
+            className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-md border border-gray-200 dark:border-neutral-700"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-red-600" />
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
                     Confirmar Exclusão
                   </h3>
-                  <p className="text-gray-500 mt-1">
+                  <p className="text-gray-500 dark:text-neutral-400 mt-1">
                     Tem certeza que deseja excluir o modelo "{selectedModelo.nome}"?
                   </p>
                 </div>
@@ -420,14 +420,14 @@ setModelos(sanitized);
                     setIsDeleteModalOpen(false);
                     setSelectedModelo(null);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleDelete}
                   disabled={submitting}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md disabled:opacity-50"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-800 rounded-md disabled:opacity-50"
                 >
                   {submitting ? (
                     <>

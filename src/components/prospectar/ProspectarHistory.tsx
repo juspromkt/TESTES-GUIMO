@@ -107,32 +107,32 @@ export default function ProspectarHistory({ refreshTrigger = 0 }: ProspectarHist
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-3000"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-neutral-100"></div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-      <div className="p-6 border-b border-gray-300">
+    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm overflow-hidden border border-gray-200 dark:border-neutral-700">
+      <div className="p-6 border-b border-gray-300 dark:border-neutral-700">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">Histórico de Prospecções</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Histórico de Prospecções</h2>
           <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-gray-500" />
-            <span className="text-sm text-gray-500">Filtros</span>
+            <Filter className="w-5 h-5 text-gray-500 dark:text-neutral-400" />
+            <span className="text-sm text-gray-500 dark:text-neutral-400">Filtros</span>
           </div>
         </div>
 
         {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
               Segmento
             </label>
             <select
               value={filterValues.segmento}
               onChange={(e) => setFilterValues({ ...filterValues, segmento: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-3000"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:border-gray-900 dark:focus:border-neutral-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
             >
               <option value="">Todos</option>
               {uniqueSegmentos.map((segmento) => (
@@ -142,13 +142,13 @@ export default function ProspectarHistory({ refreshTrigger = 0 }: ProspectarHist
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
               Cidade
             </label>
             <select
               value={filterValues.cidade}
               onChange={(e) => setFilterValues({ ...filterValues, cidade: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-3000"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:border-gray-900 dark:focus:border-neutral-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
             >
               <option value="">Todas</option>
               {uniqueCidades.map((cidade) => (
@@ -158,13 +158,13 @@ export default function ProspectarHistory({ refreshTrigger = 0 }: ProspectarHist
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
               Status
             </label>
             <select
               value={filterValues.status}
               onChange={(e) => setFilterValues({ ...filterValues, status: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-3000"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:border-gray-900 dark:focus:border-neutral-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
             >
               <option value="">Todos</option>
               <option value="pending">Pendente</option>
@@ -177,48 +177,48 @@ export default function ProspectarHistory({ refreshTrigger = 0 }: ProspectarHist
 
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 dark:bg-neutral-900">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">
                 Segmento
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">
                 Cidade
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">
                 Filtros
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">
                 Data
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">
                 Leads
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">
                 Status
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">
                 Ações
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
   {paginatedHistorico.length > 0 && Object.keys(paginatedHistorico[0]).length > 0 ? (
     paginatedHistorico.map((item) => (
-      <tr key={item.Id} className="hover:bg-gray-50">
-        <td className="px-4 py-3 text-sm text-gray-900">
+      <tr key={item.Id} className="hover:bg-gray-50 dark:hover:bg-neutral-700">
+        <td className="px-4 py-3 text-sm text-gray-900 dark:text-neutral-100">
           {item.segmento}
         </td>
-        <td className="px-4 py-3 text-sm text-gray-900">
+        <td className="px-4 py-3 text-sm text-gray-900 dark:text-neutral-100">
           {item.cidade}
         </td>
-        <td className="px-4 py-3 text-sm text-gray-900">
+        <td className="px-4 py-3 text-sm text-gray-900 dark:text-neutral-100">
           {item.filtros || '-'}
         </td>
-        <td className="px-4 py-3 text-sm text-gray-900">
+        <td className="px-4 py-3 text-sm text-gray-900 dark:text-neutral-100">
           {formatDate(item.data)}
         </td>
-        <td className="px-4 py-3 text-sm text-gray-900">
+        <td className="px-4 py-3 text-sm text-gray-900 dark:text-neutral-100">
           {item.leads_encontrados}
         </td>
         <td className="px-4 py-3">
@@ -231,7 +231,7 @@ export default function ProspectarHistory({ refreshTrigger = 0 }: ProspectarHist
         <td className="px-4 py-3 text-sm">
           <button
             onClick={() => navigate(`/prospectar/${item.Id}`)}
-            className="text-gray-600 hover:text-gray-800 font-medium"
+            className="text-gray-600 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-200 font-medium"
           >
             Consultar
           </button>
@@ -240,7 +240,7 @@ export default function ProspectarHistory({ refreshTrigger = 0 }: ProspectarHist
     ))
   ) : (
     <tr>
-      <td colSpan={7} className="px-4 py-3 text-sm text-gray-500 text-center">
+      <td colSpan={7} className="px-4 py-3 text-sm text-gray-500 dark:text-neutral-400 text-center">
         Nenhum histórico encontrado
       </td>
     </tr>

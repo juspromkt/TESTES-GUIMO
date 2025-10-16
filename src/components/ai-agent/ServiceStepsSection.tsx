@@ -337,17 +337,17 @@ export default function ServiceStepsSection({
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-8">
+    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-md p-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-            <ListOrdered className="w-6 h-6 text-orange-600" />
+          <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
+            <ListOrdered className="w-6 h-6 text-orange-600 dark:text-orange-400" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">
               Etapas de Atendimento
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">
               Configure o fluxo de atendimento do agente
             </p>
           </div>
@@ -355,7 +355,7 @@ export default function ServiceStepsSection({
         {canEdit && (
           <button
             onClick={handleAddStep}
-            className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors font-medium"
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/50 transition-colors font-medium"
           >
             <Plus className="w-4 h-4" />
             Adicionar Etapa
@@ -385,27 +385,27 @@ export default function ServiceStepsSection({
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            className="bg-orange-50/50 rounded-lg p-6 no-scroll-anchor"
+                            className="bg-orange-50/50 dark:bg-orange-900/10 rounded-lg p-6 no-scroll-anchor border border-transparent dark:border-neutral-700"
                           >
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div className="flex items-center gap-2">
                               <div
                                 {...provided.dragHandleProps}
-                                className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+                                className="cursor-grab active:cursor-grabbing text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-400"
                                 title="Arraste para reordenar"
                               >
                                 <GripVertical className="w-5 h-5" />
                               </div>
-                              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-semibold">
+                              <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center text-orange-600 dark:text-orange-400 font-semibold">
                                 {step.ordem}
                               </div>
                               <div className="min-w-0">
-                                <p className="text-sm font-medium text-gray-700">
+                                <p className="text-sm font-medium text-gray-700 dark:text-neutral-300">
                                   Etapa #{step.ordem}
                                 </p>
                                 {isCollapsed && (
                                   <p
-                                    className="text-sm font-semibold text-gray-900 truncate"
+                                    className="text-sm font-semibold text-gray-900 dark:text-neutral-100 truncate"
                                     title={step.nome || "Sem nome"}
                                   >
                                     {step.nome || "Sem nome"}
@@ -418,7 +418,7 @@ export default function ServiceStepsSection({
                                 type="button"
                                 onClick={() => toggleStepCollapse(index)}
                                 aria-expanded={!isCollapsed}
-                                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-orange-600 bg-orange-100 rounded-lg hover:bg-orange-200 transition-colors"
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
                               >
                                 {isCollapsed ? (
                                   <>
@@ -436,7 +436,7 @@ export default function ServiceStepsSection({
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveStep(step.ordem)}
-                                  className="text-red-500 hover:text-red-700 p-1"
+                                  className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-1"
                                 >
                                   <Trash2 className="w-5 h-5" />
                                 </button>
@@ -447,7 +447,7 @@ export default function ServiceStepsSection({
                           {!isCollapsed && (
                             <div className="mt-4 space-y-4">
                               <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
                               Nome da Etapa
                             </label>
                             <input
@@ -461,13 +461,13 @@ export default function ServiceStepsSection({
                                 )
                               }
                               placeholder="Ex: Apresentação Inicial"
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                              className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-orange-500 dark:focus:border-orange-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
                               disabled={!canEdit}
                             />
                           </div>
 
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
                               Descrição da Etapa
                             </label>
                             {canEdit && (
@@ -493,7 +493,7 @@ export default function ServiceStepsSection({
                                   disabled={
                                     isUploading && activeStep === step.ordem
                                   }
-                                  className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50 mb-2"
+                                  className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 text-gray-700 dark:text-neutral-300 rounded-lg transition-colors disabled:opacity-50 mb-2"
                                 >
                                   <Upload className="w-4 h-4" />
                                   Adicionar Mídia - Suporta imagens, vídeos, áudios e PDFs (máx. 63MB)
@@ -525,12 +525,27 @@ export default function ServiceStepsSection({
                                   formats={formats}
                                   readOnly={!canEdit}
                                   placeholder="Descreva esta etapa de atendimento..."
-                                  className="bg-white rounded-lg"
+                                  className="bg-white dark:bg-neutral-700 rounded-lg
+                                    [&_.ql-editor]:text-gray-900 [&_.ql-editor]:dark:text-neutral-100
+                                    [&_.ql-editor]:min-h-[120px]
+                                    [&_.ql-toolbar]:dark:bg-neutral-800
+                                    [&_.ql-toolbar]:dark:border-neutral-600
+                                    [&_.ql-container]:dark:border-neutral-600
+                                    [&_.ql-container]:dark:bg-neutral-700
+                                    [&_.ql-stroke]:dark:stroke-neutral-300
+                                    [&_.ql-fill]:dark:fill-neutral-300
+                                    [&_.ql-picker-label]:dark:text-neutral-300
+                                    [&_.ql-picker-options]:dark:bg-neutral-700
+                                    [&_.ql-picker-item]:dark:text-neutral-300
+                                    [&_.ql-picker-item:hover]:dark:bg-neutral-600
+                                    [&_button:hover]:dark:bg-neutral-600
+                                    [&_button.ql-active]:dark:bg-orange-900/30
+                                    [&_.ql-editor.ql-blank::before]:dark:text-neutral-500"
                                 />
                               )}
                               {isUploading && activeStep === step.ordem && (
-                                <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                                  <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+                                <div className="absolute inset-0 bg-white/80 dark:bg-neutral-800/80 flex items-center justify-center">
+                                  <Loader2 className="w-6 h-6 animate-spin text-orange-500 dark:text-orange-400" />
                                 </div>
                               )}
                             </div>
@@ -560,10 +575,10 @@ export default function ServiceStepsSection({
                                       }}
                                       className="sr-only peer"
                                     />
-                                    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-orange-500 transition-colors"></div>
+                                    <div className="w-11 h-6 bg-gray-300 dark:bg-neutral-600 rounded-full peer peer-checked:bg-orange-500 dark:peer-checked:bg-orange-600 transition-colors"></div>
                                     <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></div>
                                   </div>
-                                  <span className="text-sm text-gray-700">
+                                  <span className="text-sm text-gray-700 dark:text-neutral-300">
                                     Transferir o atendimento para um usuário (use junto com "Desativar a IA nessa etapa")
                                   </span>
                                 </label>
@@ -571,15 +586,15 @@ export default function ServiceStepsSection({
                             )}
 
                           {step.atribuir_lead && canEdit && (
-                            <div className="bg-white border border-orange-200 rounded-lg p-4 mt-4">
-                              <h3 className="text-sm font-semibold text-gray-800 mb-2">
+                            <div className="bg-white dark:bg-neutral-700/50 border border-orange-200 dark:border-orange-800/50 rounded-lg p-4 mt-4">
+                              <h3 className="text-sm font-semibold text-gray-800 dark:text-neutral-200 mb-2">
                                 Lista de usuários que participam do rodízio de leads
                               </h3>
 
                               {isLoadingAtrib ? (
                                 <div className="flex items-center justify-center py-4">
-                                  <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
-                                  <span className="ml-2 text-sm text-gray-600">
+                                  <Loader2 className="w-4 h-4 animate-spin text-orange-500 dark:text-orange-400" />
+                                  <span className="ml-2 text-sm text-gray-600 dark:text-neutral-400">
                                     Carregando usuários...
                                   </span>
                                 </div>
@@ -594,9 +609,9 @@ export default function ServiceStepsSection({
                                       return (
                                         <li
                                           key={atr.id_usuario}
-                                          className="flex justify-between items-center border p-2 rounded"
+                                          className="flex justify-between items-center border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 p-2 rounded"
                                         >
-                                          <span className="text-sm">
+                                          <span className="text-sm text-gray-900 dark:text-neutral-100">
                                             {user?.nome ||
                                               `Usuário ${atr.id_usuario}`}
                                           </span>
@@ -621,7 +636,7 @@ export default function ServiceStepsSection({
                                                   setAtribuicoes(updated);
                                                 }}
                                               />
-                                              <div className="w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-orange-500 transition-colors"></div>
+                                              <div className="w-11 h-6 bg-gray-300 dark:bg-neutral-600 rounded-full peer-checked:bg-orange-500 dark:peer-checked:bg-orange-600 transition-colors"></div>
                                               <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></div>
                                             </div>
                                           </label>
@@ -630,7 +645,7 @@ export default function ServiceStepsSection({
                                     })}
                                   </ul>
 ) : (
-  <div className="text-sm text-gray-500 mb-4">
+  <div className="text-sm text-gray-500 dark:text-neutral-400 mb-4">
     Nenhum usuário adicionado à atribuição automática.
   </div>
 )}
@@ -651,7 +666,7 @@ export default function ServiceStepsSection({
       ]);
     }
   }}
-  className="w-full text-sm border rounded p-2 mb-3"
+  className="w-full text-sm border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded p-2 mb-3"
 >
   <option value="">Adicionar usuário à atribuição</option>
   {usuariosAtivos.map((user) => (
@@ -665,7 +680,7 @@ export default function ServiceStepsSection({
                                   <button
                                     onClick={saveAtribuicoes}
                                     disabled={isSavingAtrib}
-                                    className="text-sm px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition disabled:opacity-50"
+                                    className="text-sm px-4 py-2 bg-orange-600 dark:bg-orange-700 text-white rounded hover:bg-orange-700 dark:hover:bg-orange-600 transition disabled:opacity-50"
                                   >
                                     {isSavingAtrib
                                       ? "Salvando..."
@@ -693,10 +708,10 @@ export default function ServiceStepsSection({
                                     }
                                     className="sr-only peer"
                                   />
-                                  <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-orange-500 transition-colors"></div>
+                                  <div className="w-11 h-6 bg-gray-300 dark:bg-neutral-600 rounded-full peer peer-checked:bg-orange-500 dark:peer-checked:bg-orange-600 transition-colors"></div>
                                   <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></div>
                                 </div>
-                                <span className="text-sm text-gray-700">Desativar a IA nessa etapa</span>
+                                <span className="text-sm text-gray-700 dark:text-neutral-300">Desativar a IA nessa etapa</span>
                               </label>
                             </div>
                           )}
@@ -706,7 +721,7 @@ export default function ServiceStepsSection({
                               <button
                                 onClick={handleSaveWithModal}
                                 disabled={savingSteps}
-                                className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 font-medium"
+                                className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-600 dark:bg-orange-700 text-white rounded-lg hover:bg-orange-700 dark:hover:bg-orange-600 transition-colors disabled:opacity-50 font-medium"
                               >
                                 {savingSteps ? (
                                   <>
@@ -736,9 +751,9 @@ export default function ServiceStepsSection({
           </Droppable>
         </DragDropContext>
         {serviceSteps.length === 0 && (
-          <div className="text-center py-12 bg-orange-50/50 rounded-lg">
-            <ListOrdered className="w-12 h-12 text-orange-300 mx-auto mb-4" />
-            <p className="text-gray-500">
+          <div className="text-center py-12 bg-orange-50/50 dark:bg-orange-900/10 rounded-lg border border-transparent dark:border-neutral-700">
+            <ListOrdered className="w-12 h-12 text-orange-300 dark:text-orange-700 mx-auto mb-4" />
+            <p className="text-gray-500 dark:text-neutral-400">
               Nenhuma etapa cadastrada. Adicione etapas para treinar o agente.
             </p>
           </div>
@@ -748,7 +763,7 @@ export default function ServiceStepsSection({
           <div className="flex justify-end pt-6">
             <button
               onClick={handleAddStep}
-              className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+              className="flex items-center gap-2 px-6 py-3 bg-orange-600 dark:bg-orange-700 text-white rounded-lg hover:bg-orange-700 dark:hover:bg-orange-600 transition-colors font-medium"
             >
               <Plus className="w-5 h-5" />
               <span>Adicionar Etapa</span>
@@ -763,11 +778,11 @@ export default function ServiceStepsSection({
         >
           {modalLoading ? (
             <div className="flex items-center justify-center gap-2 py-4">
-              <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
-              <p className="text-sm text-gray-600">Processando etapas...</p>
+              <Loader2 className="w-5 h-5 animate-spin text-orange-500 dark:text-orange-400" />
+              <p className="text-sm text-gray-600 dark:text-neutral-400">Processando etapas...</p>
             </div>
           ) : (
-            <p className="text-gray-700">Etapas salvas com sucesso!</p>
+            <p className="text-gray-700 dark:text-neutral-300">Etapas salvas com sucesso!</p>
           )}
         </Modal>
       </div>

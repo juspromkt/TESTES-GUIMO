@@ -266,29 +266,29 @@ const handleDragEnd = () => {
 
   const mainModal = createPortal(
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
+      className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col"
+        className="bg-white dark:bg-neutral-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col border border-gray-200 dark:border-neutral-700"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex-shrink-0 flex items-center justify-between p-5 border-b border-gray-200 bg-gray-50">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="flex-shrink-0 flex items-center justify-between p-5 border-b border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">
             {selectedFunil?.nome}
           </h2>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsDeleteModalOpen(true)}
-              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-colors"
               title="Excluir Funil"
             >
               <Trash2 className="w-5 h-5" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -296,13 +296,13 @@ const handleDragEnd = () => {
         </div>
 
         {/* Funil Padrão Toggle */}
-        <div className="flex-shrink-0 p-4 bg-blue-50 border-b border-blue-100">
+        <div className="flex-shrink-0 p-4 bg-blue-50 dark:bg-blue-950 border-b border-blue-100 dark:border-blue-900">
           <div className="flex items-center gap-3">
             <button
               onClick={handleToggleDefaultFunnel}
               disabled={updatingDefault}
               className={`relative w-11 h-6 flex items-center rounded-full transition-all duration-300 shadow-sm
-                ${isDefaultFunnel ? 'bg-blue-600' : 'bg-gray-300'}
+                ${isDefaultFunnel ? 'bg-blue-600 dark:bg-blue-700' : 'bg-gray-300 dark:bg-neutral-600'}
                 ${updatingDefault ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               <div
@@ -310,7 +310,7 @@ const handleDragEnd = () => {
                   ${isDefaultFunnel ? 'translate-x-5' : ''}`}
               ></div>
             </button>
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-gray-700 dark:text-neutral-300">
               {updatingDefault ? (
                 <span className="flex items-center gap-1">
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -318,7 +318,7 @@ const handleDragEnd = () => {
                 </span>
               ) : (
                 <>
-                  <strong className="text-gray-900">Funil Padrão</strong> — Novos leads serão adicionados automaticamente a este funil
+                  <strong className="text-gray-900 dark:text-neutral-100">Funil Padrão</strong> — Novos leads serão adicionados automaticamente a este funil
                 </>
               )}
             </span>
@@ -326,23 +326,23 @@ const handleDragEnd = () => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-5">
+        <div className="flex-1 overflow-y-auto p-5 bg-white dark:bg-neutral-800">
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
               <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-600" />
-                <p className="text-sm text-red-800">{error}</p>
+                <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
               </div>
             </div>
           )}
 
           {/* Stages */}
           <div className="mb-6">
-            <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Status do Lead</h4>
-            
+            <h4 className="text-sm font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wide mb-3">Status do Lead</h4>
+
             {stages.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+              <div className="text-center py-8 text-gray-500 dark:text-neutral-400 bg-gray-50 dark:bg-neutral-900 rounded-lg border-2 border-dashed border-gray-200 dark:border-neutral-700">
                 <p className="text-sm">Nenhum status configurado</p>
               </div>
             ) : (
@@ -357,11 +357,11 @@ const handleDragEnd = () => {
                     onDrop={(e) => handleDrop(e, index)}
                     onDragEnd={handleDragEnd}
                     className={`
-                      border rounded-lg p-3 cursor-move transition-all
+                      border-2 rounded-lg p-3 cursor-move transition-all bg-white dark:bg-neutral-800
                       ${draggedIndex === index ? 'opacity-50' : ''}
-                      ${dragOverIndex === index && draggedIndex !== index ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}
+                      ${dragOverIndex === index && draggedIndex !== index ? 'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-950' : 'hover:bg-gray-50 dark:hover:bg-neutral-700'}
                     `}
-                    style={{ backgroundColor: stage.cor || '#ffffff' }}
+                    style={{ borderColor: stage.cor || '#e5e7eb' }}
                   >
                     {editingStage?.Id === stage.Id ? (
                       <div className="space-y-3">
@@ -369,13 +369,13 @@ const handleDragEnd = () => {
                           type="text"
                           value={editingStage.nome}
                           onChange={(e) => setEditingStage({ ...editingStage, nome: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                           placeholder="Nome do status"
                           autoFocus
                         />
 
                         <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-2">Selecione uma cor</label>
+                          <label className="block text-xs font-medium text-gray-700 dark:text-neutral-300 mb-2">Selecione uma cor</label>
                           <div className="flex flex-wrap gap-2">
                             {PRESET_COLORS.map((color, idx) => (
                               <button
@@ -392,8 +392,8 @@ const handleDragEnd = () => {
                                 }}
                                 className={`w-10 h-10 rounded-lg border-2 transition-all ${
                                   editingStage.cor === color.bg
-                                    ? 'border-gray-900 ring-2 ring-gray-300'
-                                    : 'border-gray-200 hover:border-gray-400'
+                                    ? 'border-gray-900 dark:border-neutral-100 ring-2 ring-gray-300 dark:ring-neutral-500'
+                                    : 'border-gray-200 dark:border-neutral-600 hover:border-gray-400 dark:hover:border-neutral-400'
                                 }`}
                                 style={{ backgroundColor: color.bg }}
                                 title={color.name}
@@ -406,14 +406,14 @@ const handleDragEnd = () => {
                           <button
                             onClick={handleUpdateStage}
                             disabled={saving}
-                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-lg disabled:opacity-50 transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-700 dark:hover:bg-emerald-600 text-white text-sm rounded-lg disabled:opacity-50 transition-colors"
                           >
                             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                             Salvar
                           </button>
                           <button
                             onClick={() => setEditingStage(null)}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 text-gray-700 dark:text-neutral-300 text-sm rounded-lg transition-colors"
                           >
                             <X className="w-4 h-4" />
                             Cancelar
@@ -423,16 +423,17 @@ const handleDragEnd = () => {
                     ) : (
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <GripVertical className="w-4 h-4 text-gray-400" />
+                          <GripVertical className="w-4 h-4 text-gray-500 dark:text-neutral-400" />
                           <div className="flex items-center gap-2">
-                            <span className="w-7 h-7 bg-white bg-opacity-50 text-xs font-semibold rounded-full flex items-center justify-center border border-gray-200"
-                              style={{ color: stage.cor_texto_principal || '#000000' }}>
+                            <span
+                              className="w-7 h-7 text-xs font-semibold rounded-full flex items-center justify-center"
+                              style={{
+                                backgroundColor: stage.cor || '#6b7280',
+                                color: stage.cor_texto_principal || '#ffffff'
+                              }}>
                               {stage.ordem}
                             </span>
-                            <h5
-                              className="font-medium text-sm"
-                              style={{ color: stage.cor_texto_principal || '#000000' }}
-                            >
+                            <h5 className="font-medium text-sm text-gray-900 dark:text-neutral-100">
                               {stage.nome}
                             </h5>
                           </div>
@@ -446,14 +447,14 @@ const handleDragEnd = () => {
                               const colorIdx = PRESET_COLORS.findIndex(c => c.bg === stage.cor);
                               setEditingColorIndex(colorIdx >= 0 ? colorIdx : 0);
                             }}
-                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-white hover:bg-opacity-50 rounded-md transition-colors"
+                            className="p-1.5 text-gray-600 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-md transition-colors"
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteStage(stage.Id)}
                             disabled={saving}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-white hover:bg-opacity-50 rounded-md disabled:opacity-50 transition-colors"
+                            className="p-1.5 text-gray-600 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-md disabled:opacity-50 transition-colors"
                           >
                             {saving ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
@@ -471,22 +472,22 @@ const handleDragEnd = () => {
           </div>
 
           {/* Add New Stage */}
-          <div className="border-t pt-5">
-            <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Adicionar Novo Status do Lead</h4>
+          <div className="border-t border-gray-200 dark:border-neutral-700 pt-5">
+            <h4 className="text-sm font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wide mb-3">Adicionar Novo Status do Lead</h4>
 
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg p-4">
               <div className="space-y-3">
                 <input
                   type="text"
                   value={newStageName}
                   onChange={(e) => setNewStageName(e.target.value)}
                   placeholder="Nome do novo status"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
                   onKeyPress={(e) => e.key === 'Enter' && handleAddStage()}
                 />
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-2">Selecione uma cor</label>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-neutral-300 mb-2">Selecione uma cor</label>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {PRESET_COLORS.map((color, idx) => (
                       <button
@@ -495,8 +496,8 @@ const handleDragEnd = () => {
                         onClick={() => setSelectedColorIndex(idx)}
                         className={`w-10 h-10 rounded-lg border-2 transition-all ${
                           selectedColorIndex === idx
-                            ? 'border-gray-900 ring-2 ring-gray-300'
-                            : 'border-gray-200 hover:border-gray-400'
+                            ? 'border-gray-900 dark:border-neutral-100 ring-2 ring-gray-300 dark:ring-neutral-500'
+                            : 'border-gray-200 dark:border-neutral-600 hover:border-gray-400 dark:hover:border-neutral-400'
                         }`}
                         style={{ backgroundColor: color.bg }}
                         title={color.name}
@@ -508,7 +509,7 @@ const handleDragEnd = () => {
                 <button
                   onClick={handleAddStage}
                   disabled={!newStageName.trim() || saving}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {saving ? (
                     <>
@@ -534,26 +535,26 @@ const handleDragEnd = () => {
   // Delete confirmation modal
   const deleteModal = isDeleteModalOpen && createPortal(
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[10000]"
+      className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[10000]"
       onClick={() => setIsDeleteModalOpen(false)}
     >
       <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-md"
+        className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-md border border-gray-200 dark:border-neutral-700"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">
           <div className="flex items-start gap-4 mb-4">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <AlertCircle className="w-6 h-6 text-red-600" />
+            <div className="w-12 h-12 bg-red-100 dark:bg-red-950 rounded-full flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-2">
                 Confirmar Exclusão
               </h3>
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-gray-600 dark:text-neutral-400 mb-2">
                 Tem certeza que deseja excluir este funil? Esta ação não pode ser desfeita.
               </p>
-              <p className="text-xs text-red-600">
+              <p className="text-xs text-red-600 dark:text-red-400">
                 Todos os status e leads associados serão removidos permanentemente.
               </p>
             </div>
@@ -562,14 +563,14 @@ const handleDragEnd = () => {
           <div className="flex justify-end gap-3">
             <button
               onClick={() => setIsDeleteModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={handleDeleteFunil}
               disabled={deleting}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-600 rounded-lg disabled:opacity-50 transition-colors"
             >
               {deleting ? (
                 <>

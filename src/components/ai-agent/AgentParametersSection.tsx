@@ -105,27 +105,27 @@ if (Array.isArray(data) && data.length > 0) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-500 dark:text-emerald-400" />
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-8">
+    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-md p-8">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-          <Settings className="w-6 h-6 text-emerald-600" />
+        <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+          <Settings className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
         </div>
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Parâmetros do Agente</h2>
-          <p className="text-sm text-gray-500 mt-1">Configure os parâmetros de comportamento do agente</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Parâmetros do Agente</h2>
+          <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">Configure os parâmetros de comportamento do agente</p>
         </div>
       </div>
 
-      <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-        <h3 className="font-medium text-blue-800 mb-2">O que são os Parâmetros do Agente?</h3>
-        <p className="text-blue-700 text-sm mb-2">
-          Estes parâmetros controlam aspectos técnicos do comportamento do agente durante as conversas, 
+      <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 dark:border-blue-700 p-4 mb-6">
+        <h3 className="font-medium text-blue-800 dark:text-blue-400 mb-2">O que são os Parâmetros do Agente?</h3>
+        <p className="text-blue-700 dark:text-blue-300 text-sm mb-2">
+          Estes parâmetros controlam aspectos técnicos do comportamento do agente durante as conversas,
           otimizando a experiência do usuário e evitando problemas comuns.
         </p>
       </div>
@@ -133,8 +133,8 @@ if (Array.isArray(data) && data.length > 0) {
       <div className="space-y-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <Clock className="w-5 h-5 text-gray-500" />
-            <label className="block text-sm font-medium text-gray-700">
+            <Clock className="w-5 h-5 text-gray-500 dark:text-neutral-400" />
+            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">
               Tempo de Delay (segundos)
             </label>
           </div>
@@ -143,19 +143,19 @@ if (Array.isArray(data) && data.length > 0) {
   value={parameters.debounce_time}
   onChange={(e) => handleInputChange('debounce_time', e.target.value)}
   disabled={!canEdit} // ✅ novo
-  className="w-full px-4 py-3 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+  className="w-full px-4 py-3 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400"
 />
 
-          <p className="mt-2 text-sm text-gray-500">
-            Tempo que a IA aguarda antes de processar mensagens consecutivas. Isso evita que múltiplas 
+          <p className="mt-2 text-sm text-gray-500 dark:text-neutral-400">
+            Tempo que a IA aguarda antes de processar mensagens consecutivas. Isso evita que múltiplas
             mensagens enviadas rapidamente criem várias filas de resposta simultâneas. Recomendado: 15-30 segundos. (quando um lead mandar uma mensagem, ela vai aguardar X segundos antes de responder - Deixe 20)
           </p>
         </div>
 
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <Clock className="w-5 h-5 text-gray-500" />
-            <label className="block text-sm font-medium text-gray-700">
+            <Clock className="w-5 h-5 text-gray-500 dark:text-neutral-400" />
+            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">
               Tempo de Inatividade após Intervenção (minutos)
             </label>
           </div>
@@ -164,24 +164,24 @@ if (Array.isArray(data) && data.length > 0) {
   value={parameters.tempo_inatividade}
   onChange={(e) => handleInputChange('tempo_inatividade', e.target.value)}
   disabled={!canEdit} // ✅ novo
-  className="w-full px-4 py-3 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+  className="w-full px-4 py-3 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400"
 />
 
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-gray-500 dark:text-neutral-400">
             Quando um humano intervém na conversa da IA, o agente ficará inativo por este período.
             Isso evita que a IA e o atendente humano respondam simultaneamente. Recomendado: 9999999999 minutos.
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2">
+          <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg flex items-center gap-2">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {success && (
-          <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg">
+          <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 px-4 py-3 rounded-lg">
             {success}
           </div>
         )}
@@ -191,7 +191,7 @@ if (Array.isArray(data) && data.length > 0) {
     <button
       onClick={handleSave}
       disabled={saving}
-      className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 font-medium"
+      className="flex items-center gap-2 px-6 py-3 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors disabled:opacity-50 font-medium"
     >
       {saving ? (
         <>

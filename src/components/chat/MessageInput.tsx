@@ -281,10 +281,10 @@ reader.readAsDataURL(audioBlob);
     textareaRef.current?.focus();
   };
  return (
-    <div className="bg-[#f0f2f5] border-t border-gray-200 relative z-[9998]" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
+    <div className="bg-[#f0f2f5] dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 relative z-[9998] transition-colors duration-200" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
       {/* Preview de arquivo selecionado */}
       {pendingFile && (
-        <div className="px-3 md:px-4 py-3 bg-white border-b border-gray-200">
+        <div className="px-3 md:px-4 py-3 bg-white dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 transition-colors duration-200">
           <div className="flex items-center space-x-3">
             {pendingFile.mediatype === 'image' && (
               <img
@@ -294,17 +294,17 @@ reader.readAsDataURL(audioBlob);
               />
             )}
             {pendingFile.mediatype !== 'image' && (
-              <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                <FileText className="w-8 h-8 text-gray-400" />
+              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-colors duration-200">
+                <FileText className="w-8 h-8 text-gray-400 dark:text-gray-300" />
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-700 truncate">{pendingFile.file.name}</p>
-              <p className="text-xs text-gray-500">{(pendingFile.file.size / 1024).toFixed(1)} KB</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{pendingFile.file.name}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{(pendingFile.file.size / 1024).toFixed(1)} KB</p>
             </div>
             <button
               onClick={() => setPendingFile(null)}
-              className="text-gray-400 hover:text-gray-600 p-1"
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1"
             >
               ✕
             </button>
@@ -314,12 +314,12 @@ reader.readAsDataURL(audioBlob);
 
       {/* Preview de áudio gravado */}
       {audioPreview && (
-        <div className="px-4 py-3 bg-white border-b border-gray-200">
+        <div className="px-4 py-3 bg-white dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 transition-colors duration-200">
           <div className="flex items-center space-x-3">
             <audio controls src={audioPreview.url} className="flex-1" />
             <button
               onClick={() => setAudioPreview(null)}
-              className="text-gray-400 hover:text-gray-600 p-1"
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1"
             >
               ✕
             </button>
@@ -329,17 +329,17 @@ reader.readAsDataURL(audioBlob);
 
       {/* Responder a mensagem */}
       {replyTo && (
-        <div className="px-4 py-2 bg-[#d1f4cc] border-b border-gray-200">
+        <div className="px-4 py-2 bg-[#d1f4cc] dark:bg-emerald-900/40 border-b border-gray-200 dark:border-gray-600 transition-colors duration-200">
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-[#00a884]">Respondendo</p>
-              <p className="text-sm text-gray-700 truncate">
+              <p className="text-xs font-medium text-[#00a884] dark:text-emerald-400">Respondendo</p>
+              <p className="text-sm text-gray-700 dark:text-gray-200 truncate">
                 {replyTo.message.conversation?.slice(0, 50)}...
               </p>
             </div>
             <button
               onClick={() => onClearReply?.()}
-              className="text-gray-500 hover:text-gray-700 ml-2 p-1"
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 ml-2 p-1"
             >
               ✕
             </button>
@@ -364,7 +364,7 @@ reader.readAsDataURL(audioBlob);
             <Popover.Trigger asChild>
               <button
                 type="button"
-                className="p-1.5 md:p-2 text-[#54656f] hover:text-[#00a884] active:text-[#008f6f] transition-colors rounded-full hover:bg-[#f0f2f5] active:bg-[#e1e3e5] touch-manipulation"
+                className="p-1.5 md:p-2 text-[#54656f] dark:text-gray-400 hover:text-[#00a884] dark:hover:text-emerald-400 active:text-[#008f6f] transition-colors rounded-full hover:bg-[#f0f2f5] dark:hover:bg-gray-700 active:bg-[#e1e3e5] dark:active:bg-gray-600 touch-manipulation"
                 title="Emoji"
                 aria-label="Selecionar emoji"
               >
@@ -374,7 +374,7 @@ reader.readAsDataURL(audioBlob);
 
             <Popover.Portal>
               <Popover.Content
-                className="z-50 bg-white shadow-2xl rounded-lg overflow-hidden w-[300px] md:w-[350px] animate-in fade-in-0 zoom-in-95"
+                className="z-50 bg-white dark:bg-gray-800 shadow-2xl rounded-lg overflow-hidden w-[300px] md:w-[350px] animate-in fade-in-0 zoom-in-95 transition-colors duration-200"
                 sideOffset={8}
                 align="start"
               >
@@ -384,7 +384,7 @@ reader.readAsDataURL(audioBlob);
                       <button
                         key={index}
                         onClick={() => handleEmojiSelect(emoji)}
-                        className="text-xl md:text-2xl hover:bg-gray-100 active:bg-gray-200 rounded p-1.5 md:p-2 transition-colors touch-manipulation"
+                        className="text-xl md:text-2xl hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 rounded p-1.5 md:p-2 transition-colors touch-manipulation"
                         type="button"
                       >
                         {emoji}
@@ -400,7 +400,7 @@ reader.readAsDataURL(audioBlob);
           <button
             type="button"
             onClick={() => (fileInputRef || internalRef).current?.click()}
-            className="p-1.5 md:p-2 text-[#54656f] hover:text-[#00a884] active:text-[#008f6f] transition-colors rounded-full hover:bg-[#f0f2f5] active:bg-[#e1e3e5] touch-manipulation"
+            className="p-1.5 md:p-2 text-[#54656f] dark:text-gray-400 hover:text-[#00a884] dark:hover:text-emerald-400 active:text-[#008f6f] transition-colors rounded-full hover:bg-[#f0f2f5] dark:hover:bg-gray-700 active:bg-[#e1e3e5] dark:active:bg-gray-600 touch-manipulation"
             title="Anexar arquivo"
             aria-label="Anexar arquivo"
           >
@@ -412,7 +412,7 @@ reader.readAsDataURL(audioBlob);
             <button
               type="button"
               onClick={onTemplateClick}
-              className="p-1.5 md:p-2 text-[#54656f] hover:text-[#00a884] active:text-[#008f6f] transition-colors rounded-full hover:bg-[#f0f2f5] active:bg-[#e1e3e5] touch-manipulation"
+              className="p-1.5 md:p-2 text-[#54656f] dark:text-gray-400 hover:text-[#00a884] dark:hover:text-emerald-400 active:text-[#008f6f] transition-colors rounded-full hover:bg-[#f0f2f5] dark:hover:bg-gray-700 active:bg-[#e1e3e5] dark:active:bg-gray-600 touch-manipulation"
               title="Template"
               aria-label="Selecionar template"
             >
@@ -423,14 +423,14 @@ reader.readAsDataURL(audioBlob);
 
         {/* Campo de input */}
         {recording ? (
-          <div className="flex-1 flex items-center justify-center bg-white rounded-lg py-2.5 px-4">
+          <div className="flex-1 flex items-center justify-center bg-white dark:bg-gray-700 rounded-lg py-2.5 px-4 transition-colors duration-200">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-              <span className="text-sm text-gray-600">Gravando áudio...</span>
+              <span className="text-sm text-gray-600 dark:text-gray-300">Gravando áudio...</span>
             </div>
           </div>
         ) : (
-          <div className="flex-1 bg-white rounded-lg">
+          <div className="flex-1 bg-white dark:bg-gray-700 rounded-lg transition-colors duration-200">
             <textarea
               ref={textareaRef}
               value={message}
@@ -438,7 +438,7 @@ reader.readAsDataURL(audioBlob);
               onKeyPress={handleKeyPress}
               placeholder="Digite uma mensagem"
               rows={1}
-              className="w-full resize-none rounded-lg bg-transparent px-3 py-2.5 text-base md:text-[15px] text-[#111b21] placeholder:text-[#667781] focus:outline-none max-h-[100px] overflow-y-auto touch-manipulation"
+              className="w-full resize-none rounded-lg bg-transparent px-3 py-2.5 text-base md:text-[15px] text-[#111b21] dark:text-gray-100 placeholder:text-[#667781] dark:placeholder:text-gray-400 focus:outline-none max-h-[100px] overflow-y-auto touch-manipulation"
               style={{
                 minHeight: '44px',
                 maxHeight: '100px',
@@ -453,7 +453,7 @@ reader.readAsDataURL(audioBlob);
           <button
             type="button"
             onClick={handleSendMessage}
-            className="p-2 md:p-2.5 text-white bg-[#00a884] hover:bg-[#008f6f] active:bg-[#007a65] transition-colors rounded-full flex-shrink-0 touch-manipulation active:scale-95"
+            className="p-2 md:p-2.5 text-white bg-[#00a884] dark:bg-emerald-600 hover:bg-[#008f6f] dark:hover:bg-emerald-700 active:bg-[#007a65] dark:active:bg-emerald-800 transition-colors rounded-full flex-shrink-0 touch-manipulation active:scale-95"
             title="Enviar"
             aria-label="Enviar mensagem"
           >
@@ -466,7 +466,7 @@ reader.readAsDataURL(audioBlob);
             className={`p-2 md:p-2.5 transition-colors rounded-full flex-shrink-0 touch-manipulation active:scale-95 ${
               recording
                 ? 'text-white bg-red-500 hover:bg-red-600 active:bg-red-700'
-                : 'text-[#54656f] hover:text-[#00a884] active:text-[#008f6f] hover:bg-[#f0f2f5] active:bg-[#e1e3e5]'
+                : 'text-[#54656f] dark:text-gray-400 hover:text-[#00a884] dark:hover:text-emerald-400 active:text-[#008f6f] hover:bg-[#f0f2f5] dark:hover:bg-gray-700 active:bg-[#e1e3e5] dark:active:bg-gray-600'
             }`}
             title={recording ? "Parar gravação" : "Gravar áudio"}
             aria-label={recording ? "Parar gravação" : "Gravar áudio"}
