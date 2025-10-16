@@ -527,7 +527,7 @@ const fetchHistory = async (isRefreshing = false) => {
       {/* AI Prompt Generator */}
 
       {/* Configurações de Follow-up */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
+      <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm p-6 transition-theme">
         {loadingConfig ? (
           <div className="flex items-center justify-center h-32">
             <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
@@ -535,7 +535,7 @@ const fetchHistory = async (isRefreshing = false) => {
         ) : (
           <>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">Configurações de Follow-up</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Configurações de Follow-up</h2>
                         {canViewAgent && (
 
               <label className="relative inline-flex items-center cursor-pointer">
@@ -546,8 +546,8 @@ const fetchHistory = async (isRefreshing = false) => {
                   onChange={handleToggleStatus}
                   disabled={togglingStatus}
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                <span className="ml-3 text-sm font-medium text-gray-700">
+                <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                <span className="ml-3 text-sm font-medium text-gray-700 dark:text-neutral-200">
                   {togglingStatus ? 'Alternando...' : config.isAtivo ? 'Ativado' : 'Desativado'}
                 </span>
               </label>
@@ -556,7 +556,7 @@ const fetchHistory = async (isRefreshing = false) => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">
                   Quantidade de Follow-ups
                 </label>
                 <input
@@ -566,18 +566,18 @@ const fetchHistory = async (isRefreshing = false) => {
                   disable={!canViewAgent}
                   value={config.quantidade}
                   onChange={(e) => setConfig({ ...config, quantidade: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">
                   Tempo entre Mensagens
                 </label>
                 <select
                   value={config.tempo_entre_mensagens}
                   onChange={(e) => setConfig({ ...config, tempo_entre_mensagens: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                 >
                   {timeOptions.map(option => (
                     <option key={option.value} value={option.value}>
@@ -589,7 +589,7 @@ const fetchHistory = async (isRefreshing = false) => {
             </div>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">
                 Prompt de Follow-up (explique quando e como o follow-up deve ser enviado)
               </label>
 {canViewAgent && (
@@ -607,7 +607,7 @@ const fetchHistory = async (isRefreshing = false) => {
                 type="button"
                 onClick={() => document.getElementById('followup-file-upload')?.click()}
                 disabled={isUploading}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg mb-2"
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg mb-2 text-gray-700 dark:text-neutral-200"
               >
                 <Upload className="w-4 h-4" />
                 {isUploading ? 'Carregando...' : 'Adicionar Mídia'}
@@ -625,10 +625,10 @@ onChange={canViewAgent ? (content) => setConfig({ ...config, prompt: content }) 
                   formats={formats}
                   readOnly={!canViewAgent }
                   placeholder="Digite o prompt para follow-up..."
-                  className="bg-white rounded-lg"
+                  className="bg-white dark:bg-neutral-700 rounded-lg"
                 />
                 {isUploading && (
-                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-white/80 dark:bg-neutral-800/80 flex items-center justify-center">
                     <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
                   </div>
                 )}
@@ -636,13 +636,13 @@ onChange={canViewAgent ? (content) => setConfig({ ...config, prompt: content }) 
             </div>
 
             {error && (
-              <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+              <div className="mb-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded-lg">
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="mb-4 bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg">
+              <div className="mb-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-300 px-4 py-3 rounded-lg">
                 {success}
               </div>
             )}
@@ -672,24 +672,24 @@ onChange={canViewAgent ? (content) => setConfig({ ...config, prompt: content }) 
         )}
       </div>
 
-      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl shadow-md p-8 mb-8 border border-indigo-100">
+      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl shadow-md p-8 mb-8 border border-indigo-100 dark:border-indigo-900 transition-theme">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-indigo-600" />
+          <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+            <Sparkles className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Gerar Prompt de Follow-up com IA</h2>
-            <p className="text-sm text-gray-500 mt-1">Crie um prompt de follow-up personalizado com ajuda da IA</p>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Gerar Prompt de Follow-up com IA</h2>
+            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">Crie um prompt de follow-up personalizado com ajuda da IA</p>
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 mb-6 border border-indigo-100">
-          <h3 className="text-lg font-medium text-indigo-800 mb-3">Como funciona?</h3>
-          <p className="text-gray-700 mb-4">
+        <div className="bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm rounded-lg p-6 mb-6 border border-indigo-100 dark:border-indigo-900">
+          <h3 className="text-lg font-medium text-indigo-800 dark:text-indigo-400 mb-3">Como funciona?</h3>
+          <p className="text-gray-700 dark:text-neutral-300 mb-4">
             A IA analisará seu agente atual e gerará um prompt de follow-up personalizado com base nas suas instruções.
             Descreva como você quer que o follow-up funcione, incluindo tom, frequência e objetivos.
           </p>
-          <div className="bg-amber-50 border-l-4 border-amber-500 p-4 text-amber-700">
+          <div className="bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 dark:border-amber-700 p-4 text-amber-700 dark:text-amber-400">
             <p className="font-medium">Dicas para obter melhores resultados:</p>
             <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
               <li>Especifique o tom desejado (formal, amigável, direto)</li>
@@ -702,21 +702,21 @@ onChange={canViewAgent ? (content) => setConfig({ ...config, prompt: content }) 
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">
               Instruções para o prompt de follow-up
             </label>
             <textarea
               value={promptInstructions}
               onChange={(e) => setPromptInstructions(e.target.value)}
               rows={4}
-              className="w-full px-4 py-3 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-4 py-3 text-gray-900 dark:text-neutral-100 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-neutral-700"
               placeholder="Ex: Quero um follow-up amigável mas persistente, com foco em agendar uma reunião. Deve incluir perguntas sobre o interesse do cliente e oferecer um desconto especial no terceiro contato..."
               disabled={!canViewAgent}
             />
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2">
+            <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded-lg flex items-center gap-2">
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span>{error}</span>
             </div>
@@ -747,15 +747,15 @@ onChange={canViewAgent ? (content) => setConfig({ ...config, prompt: content }) 
       </div>
 
       {/* Histórico de Follow-up */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-gray-300">
+      <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm overflow-hidden transition-theme">
+        <div className="p-6 border-b border-gray-300 dark:border-neutral-700">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Histórico de Follow-up</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Histórico de Follow-up</h2>
                         {canViewAgent && (
             <button
               onClick={() => fetchHistory(true)}
               disabled={refreshing}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+              className="p-2 text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-full transition-colors disabled:opacity-50"
               title="Atualizar histórico"
             >
               <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
@@ -766,35 +766,35 @@ onChange={canViewAgent ? (content) => setConfig({ ...config, prompt: content }) 
 
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 dark:bg-neutral-900">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                   Data
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                   Número
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                   Funil
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
                   Estágio
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
               {paginatedHistory.map((item) => (
-                <tr key={item.Id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <tr key={item.Id} className="hover:bg-gray-50 dark:hover:bg-neutral-700">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-neutral-100">
                     {formatDateTime(item.data)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-neutral-100">
                     {formatPhoneNumber(item.numero)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-neutral-100">
                     {item.funil}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-neutral-100">
                     {item.estagio}
                   </td>
                 </tr>
@@ -820,14 +820,14 @@ onChange={canViewAgent ? (content) => setConfig({ ...config, prompt: content }) 
         maxWidth="4xl"
       >
         <div className="p-6 space-y-6">
-          <div className="bg-gray-50 p-6 rounded-lg border border-gray-300 max-h-[400px] overflow-y-auto">
-            <pre className="whitespace-pre-wrap text-gray-800 text-sm font-mono">{generatedPrompt}</pre>
+          <div className="bg-gray-50 dark:bg-neutral-900 p-6 rounded-lg border border-gray-300 dark:border-neutral-700 max-h-[400px] overflow-y-auto">
+            <pre className="whitespace-pre-wrap text-gray-800 dark:text-neutral-200 text-sm font-mono">{generatedPrompt}</pre>
           </div>
 
           <div className="flex justify-end gap-3">
             <button
               onClick={() => setIsPromptModalOpen(false)}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="px-4 py-2 text-gray-700 dark:text-neutral-200 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
             >
               Fechar
             </button>
@@ -849,14 +849,14 @@ onChange={canViewAgent ? (content) => setConfig({ ...config, prompt: content }) 
       >
         <div className="p-6 space-y-4">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-amber-600" />
+            <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900 rounded-full flex items-center justify-center">
+              <AlertCircle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
                 Tem certeza que deseja aplicar este prompt?
               </h3>
-              <p className="text-gray-500 mt-1">
+              <p className="text-gray-500 dark:text-neutral-400 mt-1">
                 Esta ação substituirá o prompt de follow-up atual. A alteração é irreversível.
               </p>
             </div>
@@ -865,7 +865,7 @@ onChange={canViewAgent ? (content) => setConfig({ ...config, prompt: content }) 
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={() => setIsConfirmModalOpen(false)}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="px-4 py-2 text-gray-700 dark:text-neutral-200 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
             >
               Cancelar
             </button>

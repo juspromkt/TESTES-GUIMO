@@ -409,7 +409,7 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
-        <span className="ml-2 text-gray-600">Carregando movimentações...</span>
+        <span className="ml-2 text-gray-600 dark:text-neutral-300">Carregando movimentações...</span>
       </div>
     );
   }
@@ -428,22 +428,22 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
       `}</style>
 
       <div className="space-y-6">
-        <div className="bg-white rounded-xl shadow-md p-8">
+        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-md p-8 transition-theme">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                <ListOrdered className="w-6 h-6 text-orange-600" />
+              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center">
+                <ListOrdered className="w-6 h-6 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Movimentação Automática</h2>
-                <p className="text-sm text-gray-500 mt-1">Configure a movimentação automática entre etapas e status do lead</p>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Movimentação Automática</h2>
+                <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">Configure a movimentação automática entre etapas e status do lead</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowInfoModal(true)}
-                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-lg transition-colors"
                 title="Informações"
               >
                 <Info className="w-5 h-5" />
@@ -452,7 +452,7 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
                 <>
                   <button
                     onClick={() => setIsResetModalOpen(true)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-colors"
                     title="Resetar configurações"
                   >
                     <Trash2 className="w-5 h-5" />
@@ -465,8 +465,8 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
                       onChange={handleToggleStatus}
                       disabled={togglingStatus}
                     />
-                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
-                    <span className="ml-3 text-sm font-medium text-gray-700">
+                    <div className="w-11 h-6 bg-gray-300 dark:bg-neutral-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                    <span className="ml-3 text-sm font-medium text-gray-700 dark:text-neutral-200">
                       {togglingStatus ? 'Alternando...' : isActive ? 'Ativado' : 'Desativado'}
                     </span>
                   </label>
@@ -476,19 +476,19 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4">
+            <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded-lg mb-4">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg mb-4">
+            <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-300 px-4 py-3 rounded-lg mb-4">
               {success}
             </div>
           )}
 
           {funnels.length === 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg mb-6">
+            <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300 px-4 py-3 rounded-lg mb-6">
               Nenhum funil cadastrado. Cadastre um funil nas configurações de CRM para utilizar a movimentação automática.
             </div>
           )}
@@ -498,16 +498,16 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
             {movements.map((movement, index) => (
               <div
                 key={movement.ordem}
-                className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-4 hover:bg-gray-100 transition-colors animate-fadeIn"
+                className="flex items-center justify-between bg-gray-50 dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors animate-fadeIn"
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
                 <div className="flex items-center gap-4 flex-1">
-                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold">
+                  <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center text-orange-600 dark:text-orange-400 font-bold">
                     {movement.ordem}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-gray-900">Movimentação #{movement.ordem}</p>
+                      <p className="font-medium text-gray-900 dark:text-neutral-100">Movimentação #{movement.ordem}</p>
                       {movement.tags && movement.tags.length > 0 && (
                         <div className="flex gap-1">
                           {movement.tags.map(tag => (
@@ -522,18 +522,18 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-600 dark:text-neutral-300">
                       <strong>Etapa:</strong> {getStepName(movement.id_etapa)} → <strong>Status:</strong> {getStageName(movement.id_funil, movement.id_estagio)}
                     </p>
                     {movement.descricao && (
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-1">{movement.descricao}</p>
+                      <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1 line-clamp-1">{movement.descricao}</p>
                     )}
                   </div>
                 </div>
                 {canViewAgent && (
                   <button
                     onClick={() => handleOpenConfig(movement)}
-                    className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+                    className="p-2 text-gray-600 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-500 rounded-lg transition-colors"
                     title="Configurar movimentação"
                   >
                     <Settings className="w-5 h-5" />
@@ -545,15 +545,15 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
 
           {/* AI Generator */}
           {canViewAgent && (
-            <div className="mt-6 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-100">
+            <div className="mt-6 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl p-6 border border-amber-100 dark:border-amber-900 transition-theme">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-amber-600" />
+                  <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Gerar Descrições com IA</h3>
-                    <p className="text-sm text-gray-600">Crie descrições claras automaticamente</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-neutral-100">Gerar Descrições com IA</h3>
+                    <p className="text-sm text-gray-600 dark:text-neutral-300">Crie descrições claras automaticamente</p>
                   </div>
                 </div>
                 <button
@@ -575,7 +575,7 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
                 </button>
               </div>
               {generationError && (
-                <div className="mt-3 text-sm text-red-600">{generationError}</div>
+                <div className="mt-3 text-sm text-red-600 dark:text-red-400">{generationError}</div>
               )}
             </div>
           )}
@@ -607,14 +607,14 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
 
       {/* Modal: Configurar Movimentação */}
       {showConfigModal && selectedMovement && createPortal(
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black/70 flex items-center justify-center p-4 transition-theme" style={{ zIndex: 9999 }}
              onClick={() => setShowConfigModal(false)}>
-          <div className="bg-white rounded-xl max-w-2xl w-full shadow-2xl flex flex-col" style={{ maxHeight: '90vh' }}
+          <div className="bg-white dark:bg-neutral-800 rounded-xl max-w-2xl w-full shadow-2xl flex flex-col transition-theme" style={{ maxHeight: '90vh' }}
                onClick={(e) => e.stopPropagation()}>
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900">Configurar Movimentação #{selectedMovement.ordem}</h3>
-              <button onClick={() => setShowConfigModal(false)} className="text-gray-400 hover:text-gray-600">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-neutral-700">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100">Configurar Movimentação #{selectedMovement.ordem}</h3>
+              <button onClick={() => setShowConfigModal(false)} className="text-gray-400 dark:text-neutral-400 hover:text-gray-600 dark:hover:text-neutral-200">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -623,14 +623,14 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Etapa de Atendimento */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">
                   Etapa de Atendimento
-                  <span className="ml-1 text-xs text-gray-500">(Quando o agente chegar nesta etapa...)</span>
+                  <span className="ml-1 text-xs text-gray-500 dark:text-neutral-400">(Quando o agente chegar nesta etapa...)</span>
                 </label>
                 <select
                   value={selectedMovement.id_etapa || ''}
                   onChange={(e) => handleUpdateMovement(selectedMovement.ordem, 'id_etapa', e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                 >
                   <option value="">Selecione uma etapa</option>
                   {serviceSteps.map((step) => (
@@ -643,13 +643,13 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
 
               {/* Funil */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">
                   Funil
                 </label>
                 <select
                   value={selectedMovement.id_funil || ''}
                   onChange={(e) => handleUpdateMovement(selectedMovement.ordem, 'id_funil', e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                 >
                   <option value="">Selecione um funil</option>
                   {funnels.map((funnel) => (
@@ -662,15 +662,15 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
 
               {/* Status do Lead */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">
                   Status do Lead
-                  <span className="ml-1 text-xs text-gray-500">(O lead será movido para este status)</span>
+                  <span className="ml-1 text-xs text-gray-500 dark:text-neutral-400">(O lead será movido para este status)</span>
                 </label>
                 <select
                   disabled={!selectedMovement.id_funil}
                   value={selectedMovement.id_estagio || ''}
                   onChange={(e) => handleUpdateMovement(selectedMovement.ordem, 'id_estagio', e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:opacity-50"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:opacity-50 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                 >
                   <option value="">Selecione um status</option>
                   {funnels.find(f => f.id === selectedMovement.id_funil)?.estagios?.map((stage) => (
@@ -683,14 +683,14 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
 
               {/* Descrição */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">
                   Descrição
-                  <span className="ml-1 text-xs text-gray-500">(Opcional)</span>
+                  <span className="ml-1 text-xs text-gray-500 dark:text-neutral-400">(Opcional)</span>
                 </label>
                 <textarea
                   value={selectedMovement.descricao || ''}
                   onChange={(e) => handleUpdateMovement(selectedMovement.ordem, 'descricao', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-vertical"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-vertical bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                   rows={4}
                   placeholder="Descreva a situação para o lead ser movido para essa etapa..."
                 />
@@ -698,14 +698,14 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
 
               {/* Etiquetas */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Etiquetas</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">Etiquetas</label>
                 {editingTagsId === selectedMovement.Id ? (
                   <div className="space-y-3">
                     <div className="flex gap-2">
                       <select
                         value={selectedTagId || ''}
                         onChange={e => setSelectedTagId(e.target.value ? parseInt(e.target.value) : null)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                       >
                         <option value="">Selecione uma etiqueta</option>
                         {availableTags.map(tag => (
@@ -737,12 +737,12 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
                         </span>
                       ))}
                       {(!selectedMovement.tags || selectedMovement.tags.length === 0) && (
-                        <span className="text-sm text-gray-500">Nenhuma etiqueta adicionada</span>
+                        <span className="text-sm text-gray-500 dark:text-neutral-400">Nenhuma etiqueta adicionada</span>
                       )}
                     </div>
                     <button
                       onClick={() => { setEditingTagsId(null); setSelectedTagId(null); }}
-                      className="mt-2 text-sm text-gray-600 hover:text-gray-800 underline"
+                      className="mt-2 text-sm text-gray-600 dark:text-neutral-300 hover:text-gray-800 dark:hover:text-neutral-100 underline"
                     >
                       Concluir edição de etiquetas
                     </button>
@@ -759,11 +759,11 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
                       </span>
                     ))}
                     {(!selectedMovement.tags || selectedMovement.tags.length === 0) && (
-                      <span className="text-sm text-gray-500">Sem etiquetas</span>
+                      <span className="text-sm text-gray-500 dark:text-neutral-400">Sem etiquetas</span>
                     )}
                     <button
                       onClick={() => { setEditingTagsId(selectedMovement.Id); setSelectedTagId(null); }}
-                      className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                      className="p-2 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950 rounded-lg transition-colors"
                       title="Editar etiquetas"
                     >
                       <Pencil className="w-4 h-4" />
@@ -774,10 +774,10 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end gap-2 p-6 border-t border-gray-200">
+            <div className="flex justify-end gap-2 p-6 border-t border-gray-200 dark:border-neutral-700">
               <button
                 onClick={() => setShowConfigModal(false)}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                className="px-6 py-2 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-200 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors font-medium"
               >
                 Fechar
               </button>
@@ -789,21 +789,21 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
 
       {/* Modal: Reset Confirmation */}
       {isResetModalOpen && createPortal(
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 10000 }}
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black/70 flex items-center justify-center p-4 transition-theme" style={{ zIndex: 10000 }}
              onClick={() => setIsResetModalOpen(false)}>
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white dark:bg-neutral-800 rounded-xl max-w-md w-full p-6 shadow-2xl transition-theme" onClick={(e) => e.stopPropagation()}>
             <div className="text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="w-8 h-8 text-red-600" />
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Resetar Configurações</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100 mb-2">Resetar Configurações</h3>
+              <p className="text-gray-600 dark:text-neutral-300 mb-6">
                 Tem certeza que deseja resetar todas as configurações? Esta ação não pode ser desfeita.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setIsResetModalOpen(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-200 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
                 >
                   Cancelar
                 </button>
@@ -830,53 +830,53 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
 
       {/* Modal: Info */}
       {showInfoModal && createPortal(
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black/70 flex items-center justify-center p-4 transition-theme" style={{ zIndex: 9999 }}
              onClick={() => setShowInfoModal(false)}>
-          <div className="bg-white rounded-xl max-w-3xl w-full shadow-2xl" style={{ maxHeight: '90vh', overflow: 'auto' }}
+          <div className="bg-white dark:bg-neutral-800 rounded-xl max-w-3xl w-full shadow-2xl transition-theme" style={{ maxHeight: '90vh', overflow: 'auto' }}
                onClick={(e) => e.stopPropagation()}>
             <div className="p-6 space-y-6">
-              <div className="flex items-center justify-between border-b pb-4">
-                <h2 className="text-2xl font-bold text-gray-900">Como Funciona a Movimentação Automática</h2>
-                <button onClick={() => setShowInfoModal(false)} className="text-gray-400 hover:text-gray-600">
+              <div className="flex items-center justify-between border-b border-gray-200 dark:border-neutral-700 pb-4">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">Como Funciona a Movimentação Automática</h2>
+                <button onClick={() => setShowInfoModal(false)} className="text-gray-400 dark:text-neutral-400 hover:text-gray-600 dark:hover:text-neutral-200">
                   <X className="w-6 h-6" />
                 </button>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Visão Geral</h3>
-                <p className="text-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Visão Geral</h3>
+                <p className="text-gray-700 dark:text-neutral-300">
                   A Movimentação Automática conecta seu Agente de IA com o CRM, permitindo que leads sejam movidos automaticamente entre os status do funil de vendas com base nas etapas de atendimento do agente.
                 </p>
 
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <p className="text-blue-800 font-medium mb-2">Exemplo prático:</p>
-                  <p className="text-blue-700">
+                <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-900">
+                  <p className="text-blue-800 dark:text-blue-300 font-medium mb-2">Exemplo prático:</p>
+                  <p className="text-blue-700 dark:text-blue-400">
                     Quando um lead agenda uma reunião com o agente (Etapa "Agendamento"), ele é automaticamente movido para o status "Reunião Agendada" no seu funil de CRM.
                   </p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Como Configurar</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Como Configurar</h3>
 
                 <div className="space-y-3">
                   <div>
-                    <h4 className="font-medium text-gray-800 mb-1">1. Etapa de Atendimento</h4>
-                    <p className="text-gray-700 text-sm">
+                    <h4 className="font-medium text-gray-800 dark:text-neutral-200 mb-1">1. Etapa de Atendimento</h4>
+                    <p className="text-gray-700 dark:text-neutral-300 text-sm">
                       Selecione a etapa do agente que acionará a movimentação automática quando o lead atingi-la durante a conversa.
                     </p>
                   </div>
 
                   <div>
-                    <h4 className="font-medium text-gray-800 mb-1">2. Funil e Status do Lead</h4>
-                    <p className="text-gray-700 text-sm">
+                    <h4 className="font-medium text-gray-800 dark:text-neutral-200 mb-1">2. Funil e Status do Lead</h4>
+                    <p className="text-gray-700 dark:text-neutral-300 text-sm">
                       Escolha o funil e o status para onde o lead será movido automaticamente.
                     </p>
                   </div>
 
                   <div>
-                    <h4 className="font-medium text-gray-800 mb-1">3. Descrição (Opcional)</h4>
-                    <p className="text-gray-700 text-sm">
+                    <h4 className="font-medium text-gray-800 dark:text-neutral-200 mb-1">3. Descrição (Opcional)</h4>
+                    <p className="text-gray-700 dark:text-neutral-300 text-sm">
                       Documente quando e por que esta movimentação deve ocorrer.
                     </p>
                   </div>
@@ -884,8 +884,8 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-gray-900">Dicas Importantes</h3>
-                <ul className="list-disc list-inside space-y-2 text-gray-700 text-sm">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Dicas Importantes</h3>
+                <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-neutral-300 text-sm">
                   <li>Configure movimentações apenas para etapas significativas do processo</li>
                   <li>Certifique-se de que as etapas estão alinhadas com os status do funil</li>
                   <li>Ative a funcionalidade usando o toggle após configurar</li>
@@ -893,7 +893,7 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
                 </ul>
               </div>
 
-              <div className="flex justify-end pt-4 border-t">
+              <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-neutral-700">
                 <button
                   onClick={() => setShowInfoModal(false)}
                   className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
@@ -909,40 +909,40 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
 
       {/* Modal: Generated Descriptions */}
       {isDescriptionsModalOpen && createPortal(
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black/70 flex items-center justify-center p-4 transition-theme" style={{ zIndex: 9999 }}
              onClick={() => setIsDescriptionsModalOpen(false)}>
-          <div className="bg-white rounded-xl max-w-3xl w-full shadow-2xl" style={{ maxHeight: '90vh', overflow: 'auto' }}
+          <div className="bg-white dark:bg-neutral-800 rounded-xl max-w-3xl w-full shadow-2xl transition-theme" style={{ maxHeight: '90vh', overflow: 'auto' }}
                onClick={(e) => e.stopPropagation()}>
             <div className="p-6 space-y-6">
-              <div className="flex items-center justify-between border-b pb-4">
-                <h2 className="text-xl font-bold text-gray-900">Descrições Geradas com IA</h2>
-                <button onClick={() => setIsDescriptionsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+              <div className="flex items-center justify-between border-b border-gray-200 dark:border-neutral-700 pb-4">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-neutral-100">Descrições Geradas com IA</h2>
+                <button onClick={() => setIsDescriptionsModalOpen(false)} className="text-gray-400 dark:text-neutral-400 hover:text-gray-600 dark:hover:text-neutral-200">
                   <X className="w-6 h-6" />
                 </button>
               </div>
 
-              <p className="text-gray-700">
+              <p className="text-gray-700 dark:text-neutral-300">
                 A IA analisou suas etapas de atendimento e gerou as seguintes descrições:
               </p>
 
               <div className="space-y-3 max-h-[400px] overflow-y-auto">
                 {generatedDescriptions.map((desc) => (
-                  <div key={desc.ordem} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <div key={desc.ordem} className="bg-gray-50 dark:bg-neutral-700 p-4 rounded-lg border border-gray-200 dark:border-neutral-600">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold text-sm">
+                      <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center text-orange-600 dark:text-orange-400 font-bold text-sm">
                         {desc.ordem}
                       </div>
-                      <h4 className="font-medium text-gray-900">Movimentação #{desc.ordem}</h4>
+                      <h4 className="font-medium text-gray-900 dark:text-neutral-100">Movimentação #{desc.ordem}</h4>
                     </div>
-                    <p className="text-gray-700 text-sm whitespace-pre-wrap">{desc.descricao}</p>
+                    <p className="text-gray-700 dark:text-neutral-300 text-sm whitespace-pre-wrap">{desc.descricao}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t">
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-neutral-700">
                 <button
                   onClick={() => setIsDescriptionsModalOpen(false)}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-6 py-2 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-200 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
                 >
                   Fechar
                 </button>
@@ -961,21 +961,21 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
 
       {/* Modal: Confirm Apply */}
       {isConfirmModalOpen && createPortal(
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 10000 }}
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black/70 flex items-center justify-center p-4 transition-theme" style={{ zIndex: 10000 }}
              onClick={() => setIsConfirmModalOpen(false)}>
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white dark:bg-neutral-800 rounded-xl max-w-md w-full p-6 shadow-2xl transition-theme" onClick={(e) => e.stopPropagation()}>
             <div className="text-center">
-              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-8 h-8 text-amber-600" />
+              <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="w-8 h-8 text-amber-600 dark:text-amber-400" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Confirmar Aplicação</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100 mb-2">Confirmar Aplicação</h3>
+              <p className="text-gray-600 dark:text-neutral-300 mb-6">
                 As descrições geradas substituirão as descrições atuais. Esta ação é irreversível.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setIsConfirmModalOpen(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-200 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
                 >
                   Cancelar
                 </button>

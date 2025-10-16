@@ -491,9 +491,9 @@ const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
 
   return (
     <div className="flex flex-col h-full">
-      <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+      <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-md p-6 mb-6 transition-theme">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Teste do Agente</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Teste do Agente</h2>
           <button
             onClick={handleReset}
             disabled={isResetting}
@@ -514,14 +514,14 @@ const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg flex items-center gap-2">
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 rounded-lg flex items-center gap-2">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {success && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-600 rounded-lg flex items-center gap-2">
+          <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-300 rounded-lg flex items-center gap-2">
             <Check className="w-5 h-5 flex-shrink-0" />
             <span>{success}</span>
           </div>
@@ -529,12 +529,12 @@ const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
 
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex-1 flex flex-col">
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-gray-500 dark:text-neutral-400 mb-4">
               Use esta interface para testar seu agente de IA. Envie mensagens de texto, imagens ou áudios e veja como o agente responde.
             </p>
-            <div className="bg-gray-100 p-4 rounded-lg mb-4">
-              <h3 className="font-medium text-gray-700 mb-2">Instruções:</h3>
-              <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+            <div className="bg-gray-100 dark:bg-neutral-700 p-4 rounded-lg mb-4">
+              <h3 className="font-medium text-gray-700 dark:text-neutral-200 mb-2">Instruções:</h3>
+              <ul className="list-disc list-inside text-sm text-gray-600 dark:text-neutral-300 space-y-1">
                 <li>Digite uma mensagem e pressione Enter ou clique no botão de enviar</li>
                 <li>Use o botão de imagem para enviar uma imagem</li>
                 <li>Use o botão de microfone para gravar e enviar um áudio</li>
@@ -543,7 +543,7 @@ const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
             </div>
           </div>
 
-          <div className="w-full md:w-[380px] bg-gray-100 rounded-2xl overflow-hidden shadow-md border border-gray-300 flex flex-col" style={{ height: "600px" }}>
+          <div className="w-full md:w-[380px] bg-gray-100 dark:bg-neutral-900 rounded-2xl overflow-hidden shadow-md border border-gray-300 dark:border-neutral-700 flex flex-col transition-theme" style={{ height: "600px" }}>
             {/* WhatsApp-like header */}
             <div className="bg-emerald-600 text-white p-3 flex items-center">
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
@@ -556,15 +556,15 @@ const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
             </div>
 
             {/* Chat messages */}
-<div 
-  className="flex-1 bg-[#e5ddd5] bg-opacity-30 p-3 overflow-y-auto flex flex-col gap-3" 
-  style={{ 
+<div
+  className="flex-1 bg-[#e5ddd5] dark:bg-neutral-950 bg-opacity-30 p-3 overflow-y-auto flex flex-col gap-3 transition-theme"
+  style={{
     backgroundImage: "url('https://web.whatsapp.com/img/bg-chat-tile-light_a4be512e7195b6b733d9110b408f075d.png')",
     height: "calc(600px - 132px)"
   }}
 >
   {messages.length === 0 ? (
-    <div className="flex-1 flex flex-col items-center justify-center text-gray-500 text-sm">
+    <div className="flex-1 flex flex-col items-center justify-center text-gray-500 dark:text-neutral-400 text-sm">
       <p>Nenhuma mensagem ainda.</p>
       <p>Comece a conversar com o agente!</p>
     </div>
@@ -577,8 +577,8 @@ const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         <div
           className={`max-w-[80%] rounded-lg p-2 ${
             message.isUser
-              ? 'bg-emerald-100 text-gray-800'
-              : 'bg-white text-gray-800'
+              ? 'bg-emerald-100 dark:bg-emerald-900 text-gray-800 dark:text-neutral-100'
+              : 'bg-white dark:bg-neutral-800 text-gray-800 dark:text-neutral-100'
           }`}
         >
           {message.type === 'image' && message.media && (
@@ -598,42 +598,42 @@ const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
   className="text-sm whitespace-pre-wrap"
   dangerouslySetInnerHTML={{ __html: formatMessageText(message.text) }}
 />
-          <p className="text-right text-xs text-gray-500 mt-1">
+          <p className="text-right text-xs text-gray-500 dark:text-neutral-400 mt-1">
             {formatTimestamp(message.timestamp)}
           </p>
         </div>
       </div>
     ))
   )}
-  
+
   {/* Indicador de "digitando" */}
   {isTyping && (
     <div className="flex justify-start">
-      <div className="bg-white text-gray-800 rounded-lg p-2 max-w-[80%]">
+      <div className="bg-white dark:bg-neutral-800 text-gray-800 dark:text-neutral-100 rounded-lg p-2 max-w-[80%]">
         <div className="flex items-center gap-1">
           <div className="flex gap-1">
-            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <div className="w-2 h-2 bg-gray-400 dark:bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-2 h-2 bg-gray-400 dark:bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-2 h-2 bg-gray-400 dark:bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
           </div>
-          <span className="text-xs text-gray-500 ml-2">digitando...</span>
+          <span className="text-xs text-gray-500 dark:text-neutral-400 ml-2">digitando...</span>
         </div>
       </div>
     </div>
   )}
-  
+
   <div ref={messagesEndRef} />
 </div>
 
             {/* Input area */}
-            <div className="bg-gray-100 p-3 border-t border-gray-300">
+            <div className="bg-gray-100 dark:bg-neutral-800 p-3 border-t border-gray-300 dark:border-neutral-700 transition-theme">
               {isRecording ? (
-                <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2">
+                <div className="flex items-center gap-2 bg-white dark:bg-neutral-700 rounded-full px-4 py-2">
                   <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-gray-700 flex-1">Gravando... {formatRecordingTime(recordingTime)}</span>
+                  <span className="text-gray-700 dark:text-neutral-200 flex-1">Gravando... {formatRecordingTime(recordingTime)}</span>
                   <button
                     onClick={stopRecording}
-                    className="text-red-500 hover:text-red-700"
+                    className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                   >
                     <StopCircle className="w-6 h-6" />
                   </button>
@@ -650,7 +650,7 @@ const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading || isLoading}
-                    className="text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                    className="text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 disabled:opacity-50"
                   >
                     <ImageIcon className="w-6 h-6" />
                   </button>
@@ -660,7 +660,7 @@ const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
                       onChange={(e) => setInputMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Digite uma mensagem"
-                      className="w-full px-4 py-2 bg-white border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none"
+                      className="w-full px-4 py-2 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400"
                       rows={1}
                       disabled={isLoading || isUploading}
                     />
@@ -669,7 +669,7 @@ const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
                     <button
                       onClick={handleSendMessage}
                       disabled={isLoading || isUploading}
-                      className="bg-emerald-500 text-white rounded-full p-2 hover:bg-emerald-600 disabled:opacity-50"
+                      className="bg-emerald-500 text-white rounded-full p-2 hover:bg-emerald-600 disabled:opacity-50 transition-colors"
                     >
                       {isLoading ? (
                         <Loader2 className="w-6 h-6 animate-spin" />
@@ -681,7 +681,7 @@ const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
                     <button
                       onClick={startRecording}
                       disabled={isLoading || isUploading}
-                      className="text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                      className="text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 disabled:opacity-50"
                     >
                       <Mic className="w-6 h-6" />
                     </button>

@@ -180,6 +180,35 @@ body {
   background-color: #1f2937;
 }
 
+/* Ícones da toolbar no dark mode */
+.dark .ql-toolbar .ql-stroke {
+  stroke: #d1d5db !important;
+}
+
+.dark .ql-toolbar .ql-fill {
+  fill: #d1d5db !important;
+}
+
+.dark .ql-toolbar .ql-picker-label {
+  color: #d1d5db !important;
+}
+
+.dark .ql-toolbar button:hover .ql-stroke {
+  stroke: #f3f4f6 !important;
+}
+
+.dark .ql-toolbar button:hover .ql-fill {
+  fill: #f3f4f6 !important;
+}
+
+.dark .ql-toolbar button.ql-active .ql-stroke {
+  stroke: #60a5fa !important;
+}
+
+.dark .ql-toolbar button.ql-active .ql-fill {
+  fill: #60a5fa !important;
+}
+
 .ql-container {
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
@@ -190,6 +219,10 @@ body {
   border-color: #374151;
   background-color: #1f2937;
   color: #f3f4f6;
+}
+
+.dark .ql-editor.ql-blank::before {
+  color: #6b7280 !important;
 }
 
 /* === Media Containers === */
