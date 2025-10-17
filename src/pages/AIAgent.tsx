@@ -19,7 +19,6 @@ import RulesSection from '../components/ai-agent/RulesSection';
 import ServiceStepsSection from '../components/ai-agent/ServiceStepsSection';
 import FAQSection from '../components/ai-agent/FAQSection';
 import AgentFunctionsSection from '../components/ai-agent/AgentFunctionsSection';
-import SchedulingSection from '../components/ai-agent/SchedulingSection';
 import OperatingHoursSection from '../components/ai-agent/OperatingHoursSection';
 import DefaultModelsSection from '../components/ai-agent/DefaultModelsSection';
 import TriggerSection from '../components/ai-agent/TriggerSection';
@@ -50,20 +49,6 @@ interface FAQ {
   resposta: string;
 }
 
-interface Scheduling {
-  isAtivo: boolean;
-  id_agenda: string;
-  nome: string;
-  descricao: string;
-  prompt_consulta_horarios: string;
-  prompt_marcar_horario: string;
-  duracao_horario: string | null;
-  limite_agendamento_horario: number | null;
-  agenda_padrao: 'GOOGLE_MEET' | 'AGENDA_INTERNA' | 'SISTEMA_EXTERNO';
-  url_consulta_externa: string | null;
-  url_marcacao_externa: string | null;
-}
-
 type MainSection = 'config' | 'follow' | 'movement' | 'test';
 type ConfigSub =
   | 'personalidade'
@@ -71,7 +56,6 @@ type ConfigSub =
   | 'etapas'
   | 'faq'
   | 'notificacoes'
-  | 'agendamento'
   | 'horarios'
   | 'modelos'
   | 'gatilhos'
@@ -100,19 +84,6 @@ const AIAgent = () => {
   });
   const [serviceSteps, setServiceSteps] = useState<ServiceStep[]>([]);
   const [faqs, setFaqs] = useState<FAQ[]>([]);
-  const [scheduling, setScheduling] = useState<Scheduling>({
-    isAtivo: false,
-    id_agenda: '',
-    nome: '',
-    descricao: '',
-    prompt_consulta_horarios: '',
-    prompt_marcar_horario: '',
-    duracao_horario: null,
-    limite_agendamento_horario: 1,
-    agenda_padrao: 'GOOGLE_MEET',
-    url_consulta_externa: null,
-    url_marcacao_externa: null,
-  });
 
   // Estados de loading para salvar
   const [savingPersonality, setSavingPersonality] = useState(false);
@@ -138,11 +109,18 @@ const AIAgent = () => {
       // 🔹 Personalidade
       const personalityResponse = await fetch(
         'https://n8n.lumendigital.com.br/webhook/prospecta/agente/personalidade/get',
-        { headers: { token } }
+        {
+          headers: { token },
+          cache: 'no-cache' // Força buscar dados frescos, sem cache
+        }
       );
       const personalityData = await personalityResponse.json();
-      if (Array.isArray(personalityData) && personalityData.length > 0)
+      if (Array.isArray(personalityData) && personalityData.length > 0) {
         setPersonality(personalityData[0]);
+      } else {
+        // Se não houver dados, mantém o estado inicial
+        console.warn('Nenhuma personalidade encontrada no servidor');
+      }
 
       // 🔹 Etapas
       const stepsResponse = await fetch(
@@ -160,16 +138,6 @@ const AIAgent = () => {
       const faqData = await faqResponse.json();
       if (Array.isArray(faqData)) setFaqs(faqData);
 
-      // 🔹 Agendamento
-      const schedResponse = await fetch(
-        'https://n8n.lumendigital.com.br/webhook/prospecta/agente/agendamento/get',
-        { headers: { token } }
-      );
-      const schedText = await schedResponse.text();
-      const schedData = schedText ? JSON.parse(schedText) : [];
-      if (Array.isArray(schedData) && schedData.length > 0)
-        setScheduling(schedData[0]);
-
     } catch (err) {
       console.error('Erro ao carregar dados do agente:', err);
     } finally {
@@ -177,30 +145,54 @@ const AIAgent = () => {
     }
   };
 
-  // Handler para salvar personalidade
-  const handleSavePersonality = async () => {
-    setSavingPersonality(true);
-    try {
-      const response = await fetch(
-        'https://n8n.lumendigital.com.br/webhook/prospecta/agente/personalidade/create',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            token,
-          },
-          body: JSON.stringify([personality]),
-        }
-      );
+const handleSavePersonality = async () => {
+  setSavingPersonality(true);
 
-      if (!response.ok) throw new Error('Erro ao salvar personalidade');
-    } catch (err) {
-      console.error('Erro ao salvar personalidade:', err);
-      throw err;
-    } finally {
-      setSavingPersonality(false);
+  try {
+    // Verifica se já existe personalidade
+    const existingRes = await fetch(
+      'https://n8n.lumendigital.com.br/webhook/prospecta/agente/personalidade/get',
+      { headers: { token, cache: 'no-cache' } }
+    );
+
+    let existingPersonality = null;
+    if (existingRes.ok) {
+      const data = await existingRes.json();
+      if (Array.isArray(data) && data.length > 0) {
+        existingPersonality = data[0];
+      }
     }
-  };
+
+    // Define URL e método corretos
+    const url = existingPersonality
+      ? 'https://n8n.lumendigital.com.br/webhook/prospecta/agente/personalidade/update'
+      : 'https://n8n.lumendigital.com.br/webhook/prospecta/agente/personalidade/create';
+
+    const method = existingPersonality ? 'PUT' : 'POST';
+
+    // Envia os dados corretamente (NÃO como array)
+    const response = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json', token },
+      body: JSON.stringify({
+        ...(existingPersonality ? { id: existingPersonality.id } : {}),
+        ...personality,
+      }),
+    });
+
+    if (!response.ok) throw new Error('Erro ao salvar personalidade');
+
+    // Recarrega dados do servidor
+    await fetchInitialData();
+  } catch (error) {
+    console.error('Erro ao salvar personalidade:', error);
+  } finally {
+    // Garante que o loading pare SEMPRE
+    setSavingPersonality(false);
+  }
+};
+
+
 
   // Handlers para etapas de atendimento
   const handleAddStep = () => {
@@ -316,7 +308,6 @@ const AIAgent = () => {
       etapas: 'Etapas de Atendimento',
       faq: 'Perguntas Frequentes',
       notificacoes: 'Notificações no WhatsApp',
-      agendamento: 'Configurações de Agendamento',
       horarios: 'Horário de Funcionamento',
       modelos: 'Modelo de Agente',
       gatilhos: 'Gatilhos',
@@ -498,7 +489,6 @@ const AIAgent = () => {
                 ['etapas', 'Etapas de Atendimento'],
                 ['faq', 'Perguntas Frequentes'],
                 ['notificacoes', 'Notificações no WhatsApp'],
-                ['agendamento', 'Configurações de Agendamento'],
                 ['horarios', 'Horário de Funcionamento'],
                 ['modelos', 'Modelo de Agente'],
                 ['gatilhos', 'Gatilhos'],
@@ -616,14 +606,6 @@ const AIAgent = () => {
             )}
             {subSection === 'notificacoes' && (
               <AgentFunctionsSection token={token} canEdit={canEdit} />
-            )}
-            {subSection === 'agendamento' && (
-              <SchedulingSection
-                token={token}
-                scheduling={scheduling}
-                setScheduling={setScheduling}
-                canEdit={canEdit}
-              />
             )}
             {subSection === 'horarios' && (
               <OperatingHoursSection token={token} canEdit={canEdit} />

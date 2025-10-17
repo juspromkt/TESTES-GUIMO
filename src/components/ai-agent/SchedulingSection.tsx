@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Save } from "lucide-react";
 import Modal from "../Modal";
 import { Loader2 } from "lucide-react";
@@ -13,7 +13,7 @@ interface Scheduling {
   prompt_marcar_horario: string;
   duracao_horario: string | null;
   limite_agendamento_horario: number | null;
-  agenda_padrao: 'GOOGLE_MEET' | 'AGENDA_INTERNA';
+  agenda_padrao: 'GOOGLE_MEET' | 'AGENDA_INTERNA' | 'SISTEMA_EXTERNO';
   url_consulta_externa: string | null;
   url_marcacao_externa: string | null;
 }
@@ -34,6 +34,31 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
   const [modalOpen, setModalOpen] = React.useState(false);
   const [modalLoading, setModalLoading] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
+
+  // 🔹 Carregar dados da API quando o componente é montado
+  useEffect(() => {
+    const fetchScheduling = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(
+          'https://n8n.lumendigital.com.br/webhook/prospecta/agente/agendamento/get',
+          { headers: { token } }
+        );
+        const text = await response.text();
+        const data = text ? JSON.parse(text) : [];
+        if (Array.isArray(data) && data.length > 0) {
+          setScheduling(data[0]);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar configurações de agendamento:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchScheduling();
+  }, [token, setScheduling]);
 
   const handleSaveWithModal = async () => {
     try {
@@ -89,6 +114,16 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
     { value: "90", label: "1 hora e 30 minutos" },
     { value: "120", label: "2 horas" },
   ];
+
+  if (loading) {
+    return (
+      <section className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-gray-300 dark:border-neutral-700 p-6">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-neutral-500" />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <>
@@ -272,9 +307,7 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
           <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
             Limite de agendamentos por horário
           </label>
-          <input
-            type="number"
-            min={1}
+          <select
             disabled={!canEdit}
             value={scheduling.limite_agendamento_horario ?? ''}
             onChange={(e) =>
@@ -285,9 +318,15 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
                   : null,
               })
             }
-            className="w-full rounded-md border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500 dark:focus:ring-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
-            placeholder="Quantos agendamentos podem ocorrer no mesmo horário?"
-          />
+            className="w-full rounded-md border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 shadow-sm focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500 dark:focus:ring-emerald-400"
+          >
+            <option value="">Selecione o limite</option>
+            <option value="1">1 agendamento</option>
+            <option value="2">2 agendamentos</option>
+            <option value="3">3 agendamentos</option>
+            <option value="4">4 agendamentos</option>
+            <option value="5">5 agendamentos</option>
+          </select>
           <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
             Define a quantidade máxima de reuniões simultâneas para um mesmo horário.
           </p>
