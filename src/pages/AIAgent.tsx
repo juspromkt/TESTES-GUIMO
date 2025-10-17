@@ -488,13 +488,24 @@ const handleSavePersonality = async () => {
                     setSubSection(key as ConfigSub);
                     setIsMobileSidebarOpen(false); // Fecha o drawer no mobile
                   }}
-                  className={`w-full text-left px-3 py-1.5 text-sm rounded-lg touch-manipulation ${
-                    mainSection === 'config' && subSection === key
+                  className={`w-full text-left px-3 py-1.5 text-sm rounded-lg touch-manipulation relative ${
+                    key === 'modelos'
+                      ? mainSection === 'config' && subSection === key
+                        ? 'bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/40 dark:to-blue-900/40 text-purple-700 dark:text-purple-300 font-semibold shadow-sm'
+                        : 'bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 hover:from-purple-100 hover:to-blue-100 dark:hover:from-purple-900/30 dark:hover:to-blue-900/30 text-purple-700 dark:text-purple-300 font-medium'
+                      : mainSection === 'config' && subSection === key
                       ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 font-medium'
                       : 'hover:bg-gray-50 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-300'
                   }`}
                 >
-                  {label}
+                  <div className="flex items-center justify-between">
+                    <span>{label}</span>
+                    {key === 'modelos' && (
+                      <span className="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold text-white bg-gradient-to-r from-purple-600 to-blue-600 rounded-full shadow-sm">
+                        ✨
+                      </span>
+                    )}
+                  </div>
                 </button>
               ))}
             </div>

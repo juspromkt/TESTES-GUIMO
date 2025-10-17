@@ -903,6 +903,7 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
                     onClick={() => {
                       setIsModelDetailsModalOpen(false);
                       setSelectedModel('');
+                      setIsModelsModalOpen(true);
                     }}
                     className="w-full sm:w-auto order-2 sm:order-1 px-6 py-3 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-xl transition-colors"
                   >
