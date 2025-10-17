@@ -94,6 +94,8 @@ export function MessageView({ selectedChat, onBack, whatsappType }: MessageViewP
     document.documentElement.classList.contains('dark')
   );
 
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+
   useEffect(() => {
     const observer = new MutationObserver(() => {
       setIsDarkMode(document.documentElement.classList.contains('dark'));
@@ -2627,7 +2629,11 @@ useMessageEvents(handleNewMessage);
 
 const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
   const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
-  
+
+  // Controla visibilidade do botão "scroll to bottom"
+  const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
+  setShowScrollToBottom(distanceFromBottom > 300); // Mostra se estiver mais de 300px do final
+
   if (scrollHeight - (scrollTop + clientHeight) < 100 && unreadCount > 0 && !hasMarkedAsRead) {
     markAsRead();
   }
@@ -3757,6 +3763,19 @@ return (
         <div ref={messagesEndRef} />
       </div>
     </div>
+
+    {/* Scroll to Bottom Button */}
+    {showScrollToBottom && (
+      <button
+        onClick={() => scrollToBottom(true)}
+        className={`fixed bottom-24 z-40 bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 ${
+          sidebarOpen || searchOpen ? 'right-[440px]' : 'right-6 md:right-8'
+        }`}
+        title="Rolar para o final"
+      >
+        <ChevronDown className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+      </button>
+    )}
 
 {/* Deals Popup */}
 {showDeals && (
