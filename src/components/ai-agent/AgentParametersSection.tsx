@@ -15,8 +15,8 @@ interface AgentParametersSectionProps {
 
 export default function AgentParametersSection({ token, canEdit }: AgentParametersSectionProps) {
   const [parameters, setParameters] = useState<AgentParameters>({
-    debounce_time: 10,
-    tempo_inatividade: 30,
+    debounce_time: 20,
+    tempo_inatividade: 9999999999,
     criar_deal_por_sessao: false
   });
   const [loading, setLoading] = useState(true);
@@ -41,8 +41,8 @@ export default function AgentParametersSection({ token, canEdit }: AgentParamete
 const data = await response.json();
 if (Array.isArray(data) && data.length > 0) {
   setParameters({
-    debounce_time: data[0].debounce_time ?? 5,
-    tempo_inatividade: data[0].tempo_inatividade ?? 30,
+    debounce_time: data[0].debounce_time ?? 20,
+    tempo_inatividade: data[0].tempo_inatividade ?? 9999999999,
     criar_deal_por_sessao: data[0].criar_deal_por_sessao ?? false
   });
 }
@@ -84,20 +84,13 @@ if (Array.isArray(data) && data.length > 0) {
     }
   };
 
-  const handleInputChange = (field: keyof AgentParameters, value: string) => {
-    // Ensure only integers are accepted
-    const intValue = parseInt(value.replace(/\D/g, ''));
-    
+  const handleSelectChange = (field: keyof AgentParameters, value: string) => {
+    const intValue = parseInt(value);
+
     if (!isNaN(intValue)) {
       setParameters(prev => ({
         ...prev,
         [field]: intValue
-      }));
-    } else if (value === '') {
-      // Allow empty field for better UX
-      setParameters(prev => ({
-        ...prev,
-        [field]: ''
       }));
     }
   };
@@ -138,17 +131,23 @@ if (Array.isArray(data) && data.length > 0) {
               Tempo de Delay (segundos)
             </label>
           </div>
-<input
-  type="text"
-  value={parameters.debounce_time}
-  onChange={(e) => handleInputChange('debounce_time', e.target.value)}
-  disabled={!canEdit} // ✅ novo
-  className="w-full px-4 py-3 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400"
-/>
-
+          <select
+            value={parameters.debounce_time}
+            onChange={(e) => handleSelectChange('debounce_time', e.target.value)}
+            disabled={!canEdit}
+            className="w-full px-4 py-3 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 cursor-pointer"
+          >
+            <option value={5}>5 segundos</option>
+            <option value={10}>10 segundos</option>
+            <option value={15}>15 segundos</option>
+            <option value={20}>20 segundos (recomendado)</option>
+            <option value={25}>25 segundos</option>
+            <option value={30}>30 segundos</option>
+            <option value={40}>40 segundos</option>
+          </select>
           <p className="mt-2 text-sm text-gray-500 dark:text-neutral-400">
             Tempo que a IA aguarda antes de processar mensagens consecutivas. Isso evita que múltiplas
-            mensagens enviadas rapidamente criem várias filas de resposta simultâneas. Recomendado: 15-30 segundos. (quando um lead mandar uma mensagem, ela vai aguardar X segundos antes de responder - Deixe 20)
+            mensagens enviadas rapidamente criem várias filas de resposta simultâneas. Recomendado: 20 segundos. (quando um lead mandar uma mensagem, ela vai aguardar X segundos antes de responder)
           </p>
         </div>
 
@@ -159,17 +158,21 @@ if (Array.isArray(data) && data.length > 0) {
               Tempo de Inatividade após Intervenção (minutos)
             </label>
           </div>
-<input
-  type="text"
-  value={parameters.tempo_inatividade}
-  onChange={(e) => handleInputChange('tempo_inatividade', e.target.value)}
-  disabled={!canEdit} // ✅ novo
-  className="w-full px-4 py-3 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400"
-/>
-
+          <select
+            value={parameters.tempo_inatividade}
+            onChange={(e) => handleSelectChange('tempo_inatividade', e.target.value)}
+            disabled={!canEdit}
+            className="w-full px-4 py-3 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 cursor-pointer"
+          >
+            <option value={9999999999}>Nunca reativar (padrão)</option>
+            <option value={10}>10 minutos</option>
+            <option value={30}>30 minutos</option>
+            <option value={60}>60 minutos</option>
+            <option value={90}>90 minutos</option>
+          </select>
           <p className="mt-2 text-sm text-gray-500 dark:text-neutral-400">
             Quando um humano intervém na conversa da IA, o agente ficará inativo por este período.
-            Isso evita que a IA e o atendente humano respondam simultaneamente. Recomendado: 9999999999 minutos.
+            Isso evita que a IA e o atendente humano respondam simultaneamente. Recomendado: Nunca reativar.
           </p>
         </div>
 
