@@ -3,7 +3,6 @@ import PersonalitySection from './PersonalitySection';
 import RulesSection from './RulesSection';
 import ServiceStepsSection from './ServiceStepsSection';
 import FAQSection from './FAQSection';
-import SchedulingSection from './SchedulingSection';
 import TriggerSection from './TriggerSection';
 import DefaultModelsSection from './DefaultModelsSection';
 import AgentParametersSection from './AgentParametersSection';
@@ -53,7 +52,6 @@ type ConfigSubTab =
   | 'rules'
   | 'steps'
   | 'faq'
-  | 'scheduling'
   | 'default-models'
   | 'trigger'
   | 'audio'
@@ -92,7 +90,6 @@ export default function AgentConfigTab({
     { id: 'steps', label: 'Etapas de Atendimento (3)' },
     { id: 'faq', label: 'Perguntas Frequentes (4)' },
     { id: 'functions', label: 'Notificações no Whatsapp' },
-    { id: 'scheduling', label: 'Configurações de Agendamento' },
     { id: 'default-models', label: 'Modelos de Agentes' },
     { id: 'trigger', label: 'Gatilho de Acionamento' },
     { id: 'audio', label: 'Configurações de Áudio' },
@@ -163,16 +160,6 @@ export default function AgentConfigTab({
           faqs={faqs}
           setFaqs={setFaqs}
           savingFAQs={savingFAQs}
-          token={token}
-          canEdit={canEditAgent}
-        />
-      )}
-
-      {activeSubTab === 'scheduling' && (
-        <SchedulingSection
-          scheduling={scheduling}
-          setScheduling={setScheduling}
-          savingScheduling={savingScheduling}
           token={token}
           canEdit={canEditAgent}
         />
