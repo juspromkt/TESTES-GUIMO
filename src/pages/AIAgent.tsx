@@ -90,6 +90,10 @@ const AIAgent = () => {
   const [savingSteps, setSavingSteps] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Estados para mensagens de feedback
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
   useEffect(() => {
     fetchInitialData();
   }, []);
@@ -146,51 +150,33 @@ const AIAgent = () => {
   };
 
 const handleSavePersonality = async () => {
-  setSavingPersonality(true);
+    setSavingPersonality(true);
+    setError('');
+    setSuccess('');
 
-  try {
-    // Verifica se já existe personalidade
-    const existingRes = await fetch(
-      'https://n8n.lumendigital.com.br/webhook/prospecta/agente/personalidade/get',
-      { headers: { token, cache: 'no-cache' } }
-    );
+    try {
+      const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/agente/personalidade/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          token
+        },
+        body: JSON.stringify(personality)
+      });
 
-    let existingPersonality = null;
-    if (existingRes.ok) {
-      const data = await existingRes.json();
-      if (Array.isArray(data) && data.length > 0) {
-        existingPersonality = data[0];
+      if (!response.ok) {
+        throw new Error('Erro ao salvar personalidade do agente');
       }
+
+      setSuccess('Personalidade do agente salva com sucesso!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('Erro ao salvar personalidade:', err);
+      setError('Erro ao salvar personalidade do agente');
+    } finally {
+      setSavingPersonality(false);
     }
-
-    // Define URL e método corretos
-    const url = existingPersonality
-      ? 'https://n8n.lumendigital.com.br/webhook/prospecta/agente/personalidade/update'
-      : 'https://n8n.lumendigital.com.br/webhook/prospecta/agente/personalidade/create';
-
-    const method = existingPersonality ? 'PUT' : 'POST';
-
-    // Envia os dados corretamente (NÃO como array)
-    const response = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json', token },
-      body: JSON.stringify({
-        ...(existingPersonality ? { id: existingPersonality.id } : {}),
-        ...personality,
-      }),
-    });
-
-    if (!response.ok) throw new Error('Erro ao salvar personalidade');
-
-    // Recarrega dados do servidor
-    await fetchInitialData();
-  } catch (error) {
-    console.error('Erro ao salvar personalidade:', error);
-  } finally {
-    // Garante que o loading pare SEMPRE
-    setSavingPersonality(false);
-  }
-};
+  };
 
 
 

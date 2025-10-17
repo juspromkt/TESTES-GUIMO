@@ -28,6 +28,12 @@ interface FAQ {
   resposta: string;
 }
 
+interface MediaItem {
+  url: string;
+  type: string;
+  name?: string;
+}
+
 interface FAQSectionProps {
   faqs: FAQ[];
   setFaqs: React.Dispatch<React.SetStateAction<FAQ[]>>;
@@ -48,10 +54,45 @@ export default function FAQSection({
   const [saving, setSaving] = useState<number | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [faqToDelete, setFaqToDelete] = useState<number | null>(null);
   const [isQuillReady, setIsQuillReady] = useState(false);
   const [collapsedFaqs, setCollapsedFaqs] = useState<boolean[]>(() =>
     faqs.map(() => true)
   );
+
+  const MAX_CHARS = 5000;
+
+  // Função para remover tags HTML e contar caracteres
+  const getTextLength = (html: string) => {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent?.length || 0;
+  };
+
+  // Contabilizar caracteres de todas as perguntas juntas
+  const totalCharCount = faqs.reduce((total, faq) => {
+    const perguntaLength = faq.pergunta.length;
+    const respostaLength = getTextLength(faq.resposta);
+    return total + perguntaLength + respostaLength;
+  }, 0);
+
+  const charPercentage = (totalCharCount / MAX_CHARS) * 100;
+
+  // Determina a cor baseada na porcentagem
+  const getProgressColor = () => {
+    if (charPercentage < 50) return 'bg-emerald-500 dark:bg-emerald-600';
+    if (charPercentage < 75) return 'bg-yellow-500 dark:bg-yellow-600';
+    if (charPercentage < 90) return 'bg-orange-500 dark:bg-orange-600';
+    return 'bg-red-500 dark:bg-red-600';
+  };
+
+  const getTextColor = () => {
+    if (charPercentage < 50) return 'text-emerald-600 dark:text-emerald-400';
+    if (charPercentage < 75) return 'text-yellow-600 dark:text-yellow-400';
+    if (charPercentage < 90) return 'text-orange-600 dark:text-orange-400';
+    return 'text-red-600 dark:text-red-400';
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -145,6 +186,27 @@ export default function FAQSection({
       ...prev,
       { ordem: prev.length + 1, pergunta: "", resposta: "" },
     ]);
+  };
+
+  const handleDeleteClick = (ordem: number) => {
+    setFaqToDelete(ordem);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (faqToDelete !== null) {
+      const updated = faqs
+        .filter((f) => f.ordem !== faqToDelete)
+        .map((f, i) => ({ ...f, ordem: i + 1 }));
+      setFaqs(updated);
+      setDeleteModalOpen(false);
+      setFaqToDelete(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModalOpen(false);
+    setFaqToDelete(null);
   };
 
   const handleRemoveFAQ = (ordem: number) => {
@@ -305,6 +367,41 @@ export default function FAQSection({
         )}
       </div>
 
+      {/* Contador de caracteres total */}
+      {faqs.length > 0 && (
+        <div className="mb-6 space-y-2">
+          <div className="flex justify-between items-center">
+            <span className={`text-sm font-medium ${getTextColor()}`}>
+              Total de caracteres: {totalCharCount}/{MAX_CHARS}
+            </span>
+            <span className={`text-xs ${getTextColor()}`}>
+              ({charPercentage.toFixed(0)}%)
+            </span>
+          </div>
+          <div className="w-full h-2 bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+            <div
+              className={`h-full ${getProgressColor()} transition-all duration-300 ease-out`}
+              style={{ width: `${Math.min(charPercentage, 100)}%` }}
+            />
+          </div>
+
+          {/* Alerta quando exceder o limite */}
+          {totalCharCount > MAX_CHARS && (
+            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-800/50 rounded-lg flex items-start gap-2">
+              <span className="text-amber-600 dark:text-amber-400 text-lg">⚠️</span>
+              <div>
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                  Limite recomendado excedido
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                  Seu agente pode se perder pelo volume de caracteres. Recomendamos manter até {MAX_CHARS} caracteres no total de todas as perguntas.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="faq">
           {(provided) => (
@@ -353,7 +450,7 @@ export default function FAQSection({
                             {canEdit && (
                               <button
                                 type="button"
-                                onClick={() => handleRemoveFAQ(faq.ordem)}
+                                onClick={() => handleDeleteClick(faq.ordem)}
                                 className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                                 title="Excluir pergunta"
                               >
@@ -532,6 +629,35 @@ export default function FAQSection({
         ) : (
           <p className="text-gray-700 dark:text-neutral-300">Alterações salvas com sucesso!</p>
         )}
+      </Modal>
+
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={cancelDelete}
+        title="Confirmar Exclusão"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-700 dark:text-neutral-300">
+            Tem certeza que deseja excluir a Pergunta #{faqToDelete}?
+          </p>
+          <p className="text-sm text-gray-500 dark:text-neutral-400">
+            Esta ação não pode ser desfeita.
+          </p>
+          <div className="flex justify-end gap-3 mt-6">
+            <button
+              onClick={cancelDelete}
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-lg hover:bg-gray-200 dark:hover:bg-neutral-600 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={confirmDelete}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-500 rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
+            >
+              Excluir
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

@@ -21,6 +21,33 @@ export default function RulesSection({ token, canEdit }: { token: string; canEdi
 const [modalOpen, setModalOpen] = useState(false);
 const [modalLoading, setModalLoading] = useState(false);
 
+  const MAX_CHARS = 5000;
+
+  // Função para remover tags HTML e contar caracteres
+  const getTextLength = (html: string) => {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent?.length || 0;
+  };
+
+  const charCount = getTextLength(rules);
+  const charPercentage = (charCount / MAX_CHARS) * 100;
+
+  // Determina a cor baseada na porcentagem
+  const getProgressColor = () => {
+    if (charPercentage < 50) return 'bg-emerald-500 dark:bg-emerald-600';
+    if (charPercentage < 75) return 'bg-yellow-500 dark:bg-yellow-600';
+    if (charPercentage < 90) return 'bg-orange-500 dark:bg-orange-600';
+    return 'bg-red-500 dark:bg-red-600';
+  };
+
+  const getTextColor = () => {
+    if (charPercentage < 50) return 'text-emerald-600 dark:text-emerald-400';
+    if (charPercentage < 75) return 'text-yellow-600 dark:text-yellow-400';
+    if (charPercentage < 90) return 'text-orange-600 dark:text-orange-400';
+    return 'text-red-600 dark:text-red-400';
+  };
+
   useEffect(() => {
     fetchRules();
     registerMediaBlot();
@@ -225,12 +252,48 @@ async function handleSaveRules() {
           </button>
           )}
 
+          {/* Contador de caracteres */}
+          <div className="mt-4 space-y-2">
+            <div className="flex justify-between items-center">
+              <span className={`text-sm font-medium ${getTextColor()}`}>
+                {charCount}/{MAX_CHARS}
+              </span>
+              <span className={`text-xs ${getTextColor()}`}>
+                ({charPercentage.toFixed(0)}%)
+              </span>
+            </div>
+            <div className="w-full h-2 bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+              <div
+                className={`h-full ${getProgressColor()} transition-all duration-300 ease-out`}
+                style={{ width: `${Math.min(charPercentage, 100)}%` }}
+              />
+            </div>
+
+            {/* Alerta quando exceder o limite */}
+            {charCount > MAX_CHARS && (
+              <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-800/50 rounded-lg flex items-start gap-2">
+                <span className="text-amber-600 dark:text-amber-400 text-lg">⚠️</span>
+                <div>
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                    Limite recomendado excedido
+                  </p>
+                  <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                    Seu agente pode se perder pelo volume de caracteres. Recomendamos manter até {MAX_CHARS} caracteres.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="relative mt-4">
             <ReactQuill
               ref={quillRef}
               theme="snow"
               value={rules}
-              onChange={canEdit ? setRules : () => {}}
+              onChange={(content) => {
+                if (!canEdit) return;
+                setRules(content);
+              }}
               modules={modules}
               formats={formats}
               placeholder="Defina as regras gerais que o agente deve seguir..."

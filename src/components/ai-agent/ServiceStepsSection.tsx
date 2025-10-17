@@ -71,6 +71,8 @@ export default function ServiceStepsSection({
   const [isQuillReady, setIsQuillReady] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [stepToDelete, setStepToDelete] = useState<number | null>(null);
   const [atribuirStepIndex, setAtribuirStepIndex] = useState<number | null>(
     null
   );
@@ -81,6 +83,39 @@ export default function ServiceStepsSection({
   const [collapsedSteps, setCollapsedSteps] = useState<boolean[]>(() =>
     serviceSteps.map(() => true)
   );
+
+  const MAX_CHARS = 5000;
+
+  // Função para remover tags HTML e contar caracteres
+  const getTextLength = (html: string) => {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent?.length || 0;
+  };
+
+  // Contabilizar caracteres de todas as etapas juntas
+  const totalCharCount = serviceSteps.reduce((total, step) => {
+    const nomeLength = step.nome.length;
+    const descricaoLength = getTextLength(step.descricao);
+    return total + nomeLength + descricaoLength;
+  }, 0);
+
+  const charPercentage = (totalCharCount / MAX_CHARS) * 100;
+
+  // Determina a cor baseada na porcentagem
+  const getProgressColor = () => {
+    if (charPercentage < 50) return 'bg-emerald-500 dark:bg-emerald-600';
+    if (charPercentage < 75) return 'bg-yellow-500 dark:bg-yellow-600';
+    if (charPercentage < 90) return 'bg-orange-500 dark:bg-orange-600';
+    return 'bg-red-500 dark:bg-red-600';
+  };
+
+  const getTextColor = () => {
+    if (charPercentage < 50) return 'text-emerald-600 dark:text-emerald-400';
+    if (charPercentage < 75) return 'text-yellow-600 dark:text-yellow-400';
+    if (charPercentage < 90) return 'text-orange-600 dark:text-orange-400';
+    return 'text-red-600 dark:text-red-400';
+  };
 
   const fetchAtribuicoes = async () => {
     setIsLoadingAtrib(true);
@@ -148,6 +183,24 @@ export default function ServiceStepsSection({
       console.error("Erro ao salvar etapas:", err);
       setModalLoading(false);
     }
+  };
+
+  const handleDeleteClick = (ordem: number) => {
+    setStepToDelete(ordem);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (stepToDelete !== null) {
+      handleRemoveStep(stepToDelete);
+      setDeleteModalOpen(false);
+      setStepToDelete(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModalOpen(false);
+    setStepToDelete(null);
   };
 
   const handleDragEnd = (result: DropResult) => {
@@ -363,6 +416,41 @@ export default function ServiceStepsSection({
         )}
       </div>
 
+      {/* Contador de caracteres total */}
+      {serviceSteps.length > 0 && (
+        <div className="mb-6 space-y-2">
+          <div className="flex justify-between items-center">
+            <span className={`text-sm font-medium ${getTextColor()}`}>
+              Total de caracteres: {totalCharCount}/{MAX_CHARS}
+            </span>
+            <span className={`text-xs ${getTextColor()}`}>
+              ({charPercentage.toFixed(0)}%)
+            </span>
+          </div>
+          <div className="w-full h-2 bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+            <div
+              className={`h-full ${getProgressColor()} transition-all duration-300 ease-out`}
+              style={{ width: `${Math.min(charPercentage, 100)}%` }}
+            />
+          </div>
+
+          {/* Alerta quando exceder o limite */}
+          {totalCharCount > MAX_CHARS && (
+            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-800/50 rounded-lg flex items-start gap-2">
+              <span className="text-amber-600 dark:text-amber-400 text-lg">⚠️</span>
+              <div>
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                  Limite recomendado excedido
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                  Seu agente pode se perder pelo volume de caracteres. Recomendamos manter até {MAX_CHARS} caracteres no total de todas as etapas.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="space-y-6 no-scroll-anchor">
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="steps">
@@ -435,7 +523,7 @@ export default function ServiceStepsSection({
                               {canEdit && !isCollapsed && (
                                 <button
                                   type="button"
-                                  onClick={() => handleRemoveStep(step.ordem)}
+                                  onClick={() => handleDeleteClick(step.ordem)}
                                   className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-1"
                                 >
                                   <Trash2 className="w-5 h-5" />
@@ -784,6 +872,35 @@ export default function ServiceStepsSection({
           ) : (
             <p className="text-gray-700 dark:text-neutral-300">Etapas salvas com sucesso!</p>
           )}
+        </Modal>
+
+        <Modal
+          isOpen={deleteModalOpen}
+          onClose={cancelDelete}
+          title="Confirmar Exclusão"
+        >
+          <div className="space-y-4">
+            <p className="text-gray-700 dark:text-neutral-300">
+              Tem certeza que deseja excluir a Etapa #{stepToDelete}?
+            </p>
+            <p className="text-sm text-gray-500 dark:text-neutral-400">
+              Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={cancelDelete}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-lg hover:bg-gray-200 dark:hover:bg-neutral-600 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-500 rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
         </Modal>
       </div>
     </div>
