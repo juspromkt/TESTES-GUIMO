@@ -1144,6 +1144,16 @@ useEffect(() => {
     };
   }, [handleReloadMessages]);
 
+  // ✅ Scroll automático para o final quando a conversa é aberta pela primeira vez
+  useEffect(() => {
+    if (messages.length > 0 && firstPageLoadedRef.current && !loading) {
+      // Aguarda um momento para garantir que o DOM foi atualizado
+      setTimeout(() => {
+        scrollToBottom(false); // false = scroll instantâneo, sem animação
+      }, 100);
+    }
+  }, [selectedChat?.id, messages.length, loading]); // Roda quando muda de conversa ou carrega mensagens
+
   // ✅ NOVO: Scroll automático ao final quando novas mensagens chegam
   useEffect(() => {
     if (messages.length > 0) {
