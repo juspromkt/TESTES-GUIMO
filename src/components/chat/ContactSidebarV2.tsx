@@ -14,12 +14,14 @@ import {
   X,
   PlayCircle,
   Check,
+  Trash2,
 } from "lucide-react";
 import type { Chat } from "./utils/api";
 import { apiClient, clearApiCache, getCacheKey } from "./utils/api";
 import type { Tag } from "../../types/tag";
 import DealSummaryWidget from "../crm/DealSummaryWidget";
 import { useChat } from "../../context/ChatContext";
+import { toast } from "sonner";
 
 interface ContactSidebarV2Props {
   isOpen: boolean;
@@ -60,6 +62,19 @@ interface Funil {
   }>;
 }
 
+// 🔧 Helpers reutilizáveis
+const normalize = (data: any) => {
+  if (!data) return null;
+  if (Array.isArray(data)) return data[0] || null;
+  if (typeof data === 'object' && Object.keys(data).length > 0) return data;
+  return null;
+};
+
+const triggerGlobalRefresh = () => {
+  window.dispatchEvent(new Event("sessions_updated"));
+  window.dispatchEvent(new Event("contactUpdated"));
+};
+
 export default function ContactSidebarV2({
   isOpen,
   onToggle,
@@ -82,15 +97,24 @@ export default function ContactSidebarV2({
   const [editingName, setEditingName] = useState(false);
   const [savingName, setSavingName] = useState(false);
   const [editedName, setEditedName] = useState("");
+  const [deletingSession, setDeletingSession] = useState(false);
+
+  // Estados para cooldown de ativação da IA
+  const [activationCooldown, setActivationCooldown] = useState(false);
+  const [showActivationMessage, setShowActivationMessage] = useState(false);
+
+  // Estados para informações de sessão
+  const [sessionInfo, setSessionInfo] = useState<any | null>(null);
+  const [interventionInfo, setInterventionInfo] = useState<any | null>(null);
 
   const user = localStorage.getItem("user");
   const token = user ? JSON.parse(user).token : null;
+  const selectedChatDigits = selectedChat?.remoteJid.replace(/\D/g, "");
 
   // Load contact data
   const loadContactData = async () => {
     if (!selectedChat || !token) return;
 
-    // Só mostra loading na primeira carga
     if (initialLoad) {
       setLoading(true);
     }
@@ -98,14 +122,11 @@ export default function ContactSidebarV2({
     try {
       const digits = selectedChat.remoteJid.replace(/\D/g, "");
 
-      // ⚡ Faz todas as requisições em PARALELO para carregar mais rápido
       const [contactRes, dealRes] = await Promise.all([
-        // Contact info
         fetch(
           `https://n8n.lumendigital.com.br/webhook/prospecta/contato/getByRemoteJid?remoteJid=${digits}`,
           { headers: { token } }
         ),
-        // Deal data
         fetch(
           `https://n8n.lumendigital.com.br/webhook/prospecta/chat/findDealsByContact`,
           {
@@ -116,27 +137,23 @@ export default function ContactSidebarV2({
         ),
       ]);
 
-      // Process contact data
       if (contactRes.ok) {
         const contactText = await contactRes.text();
         if (contactText) {
           const contact = JSON.parse(contactText);
-          const contactResult = Array.isArray(contact) ? contact[0] : contact;
+          const contactResult = normalize(contact);
           setContactData(contactResult);
           setEditedName(contactResult?.nome || "");
         }
       }
 
-      // Process deal data
       if (dealRes.ok) {
         const dealText = await dealRes.text();
         if (dealText) {
           const deals = JSON.parse(dealText);
           if (Array.isArray(deals) && deals.length > 0) {
             const basicDeal = deals[0];
-            console.log("[ContactSidebarV2] Deal básico recebido:", basicDeal);
 
-            // Busca dados completos do deal incluindo id_usuario
             try {
               const fullDealRes = await fetch(
                 `https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/getById?id=${basicDeal.Id}`,
@@ -145,11 +162,9 @@ export default function ContactSidebarV2({
 
               if (fullDealRes.ok) {
                 const fullDealData = await fullDealRes.json();
-                const fullDeal = Array.isArray(fullDealData) ? fullDealData[0] : fullDealData;
-                console.log("[ContactSidebarV2] Deal completo recebido:", fullDeal);
+                const fullDeal = normalize(fullDealData);
                 setDealData(fullDeal);
               } else {
-                console.warn("[ContactSidebarV2] Falha ao buscar deal completo, usando dados básicos");
                 setDealData(basicDeal);
               }
             } catch (error) {
@@ -199,22 +214,23 @@ export default function ContactSidebarV2({
     }
   };
 
-  // Load AI intervention info (usando apiClient - mesma lógica do MessageView)
-  const loadInterventionInfo = async () => {
+  // 🔄 Load session info unificado (sessão, intervenção, exclusão permanente, transferência)
+  const loadSessionInfo = async () => {
     if (!selectedChat || !token) return;
 
     try {
       const digits = selectedChat.remoteJid.replace(/\D/g, "");
-      console.log('[ContactSidebarV2] 🔍 Carregando status da IA para:', digits);
 
-      // Limpa cache antes de buscar (garante dados frescos)
+      // Limpa cache antes de buscar
       clearApiCache([
+        getCacheKey('findSessionByRemoteJid', token, { remoteJid: digits }),
         getCacheKey('findInterventionByRemoteJid', token, { remoteJid: digits }),
         getCacheKey('findPermanentExclusionByRemoteJid', token, { remoteJid: digits }),
       ]);
 
-      // Usa apiClient (mesma lógica do MessageView)
-      const [interventionData, permanentData, transferRes] = await Promise.all([
+      // Busca em paralelo
+      const [sessionData, interventionData, permanentData, transferRes] = await Promise.all([
+        apiClient.findSessionByRemoteJid(token, digits).catch(() => null),
         apiClient.findInterventionByRemoteJid(token, digits).catch(() => null),
         apiClient.findPermanentExclusionByRemoteJid(token, digits).catch(() => null),
         fetch(`https://n8n.lumendigital.com.br/webhook/prospecta/chat/transfer/get`, {
@@ -222,34 +238,22 @@ export default function ContactSidebarV2({
         }).catch(() => null),
       ]);
 
-      console.log('[ContactSidebarV2] 📥 Dados recebidos:', {
-        intervention: interventionData,
-        permanent: permanentData
-      });
+      // Normaliza dados
+      const session = normalize(sessionData);
+      const intervention = normalize(interventionData);
+      const permanent = normalize(permanentData);
 
-      // Normaliza dados (aceita objeto ou primeiro item de array)
-      const normalizeObj = (data: any) => {
-        if (!data) return null;
-        if (Array.isArray(data)) return data[0] || null;
-        if (typeof data === 'object' && Object.keys(data).length > 0) return data;
-        return null;
-      };
+      setSessionInfo(session);
+      setInterventionInfo(intervention);
 
-      const intervention = normalizeObj(interventionData);
-      const permanent = normalizeObj(permanentData);
-
+      // Atualiza status da IA
       const hasIntervention = !!intervention && Object.keys(intervention).length > 0;
       const hasPermanent = !!permanent && Object.keys(permanent).length > 0;
 
-      console.log('[ContactSidebarV2] ✅ Status detectado:', { hasIntervention, hasPermanent });
-
-      const finalStatus = {
-        intervention: hasIntervention && !hasPermanent, // Se tem permanente, ignora temporária
+      setAiStatus({
+        intervention: hasIntervention && !hasPermanent,
         permanentExclusion: hasPermanent,
-      };
-
-      console.log('[ContactSidebarV2] 🎯 Status final da IA:', finalStatus);
-      setAiStatus(finalStatus);
+      });
 
       // Processar transferência
       if (transferRes && transferRes.ok) {
@@ -262,27 +266,25 @@ export default function ContactSidebarV2({
         setIsTransferChat(hasTransfer);
       }
     } catch (error) {
-      console.error("[ContactSidebarV2] ❌ Erro ao carregar status da IA:", error);
+      console.error("[ContactSidebarV2] Erro ao carregar informações de sessão:", error);
     }
   };
 
   useEffect(() => {
     if (isOpen) {
       loadContactData();
-      loadInterventionInfo();
+      loadSessionInfo();
     }
   }, [selectedChat, token, isOpen]);
 
-  // 🔄 Listener para recarregar status quando houver mudanças de outros componentes
+  // Listener para recarregar status quando houver mudanças
   useEffect(() => {
     const handleSessionUpdate = () => {
-      console.log('[ContactSidebarV2] 🔄 Evento sessions_updated detectado, recarregando...');
-      loadInterventionInfo();
+      loadSessionInfo();
     };
 
     const handleContactUpdate = () => {
-      console.log('[ContactSidebarV2] 🔄 Evento contactUpdated detectado, recarregando...');
-      loadInterventionInfo();
+      loadSessionInfo();
     };
 
     window.addEventListener('sessions_updated', handleSessionUpdate);
@@ -300,22 +302,31 @@ export default function ContactSidebarV2({
     }
   }, [dealData?.Id, availableTags]);
 
-  // Handlers (sincronizados com MessageView)
-  const handleActivateAI = async () => {
+  // ▶️ Ativar IA
+  const handleStartAgent = async () => {
     if (!selectedChat || !token) return;
-    console.log('[ContactSidebarV2] 🟢 Iniciando ativação da IA');
+
+    // Bloqueia cliques repetidos
+    if (activationCooldown) return;
+    setActivationCooldown(true);
+    setShowActivationMessage(true);
+
+    // Oculta mensagem após 10 segundos
+    setTimeout(() => setShowActivationMessage(false), 10000);
+
+    // Libera o botão novamente após 1 minuto
+    setTimeout(() => setActivationCooldown(false), 60000);
+
     setUpdatingAI(true);
 
-    // ✨ Atualização otimista - Muda estado imediatamente
+    // Atualização otimista
     setAiStatus({
       intervention: false,
       permanentExclusion: false,
     });
-    console.log('[ContactSidebarV2] ⚡ Estado otimista aplicado: IA ativa');
 
     try {
-      // Ativa o agente (mesma API do MessageView)
-      const response = await fetch(
+      await fetch(
         `https://n8n.lumendigital.com.br/webhook/prospecta/conversa/agente/ativar`,
         {
           method: "POST",
@@ -327,174 +338,151 @@ export default function ContactSidebarV2({
         }
       );
 
-      console.log('[ContactSidebarV2] 📡 Resposta ativação:', response.status, response.ok);
-
-      // Aguarda 2 segundos (mesmo comportamento do MessageView)
       await new Promise(resolve => setTimeout(resolve, 2000));
+      await loadSessionInfo();
 
-      // Recarrega status real da API
-      await loadInterventionInfo();
-
-      // 🔔 Atualiza o contexto global - IA ativa
       updateChatLocal(selectedChat.remoteJid, { iaActive: true });
 
       const { updateChatIAStatus } = await import('../../utils/chatUpdateEvents');
-      console.log('[ContactSidebarV2] 🔔 Disparando evento de ativação da IA:', selectedChat.remoteJid);
       updateChatIAStatus(selectedChat.remoteJid, true);
 
-      // ✅ FORÇA ATUALIZAÇÃO GLOBAL IMEDIATA
-      window.dispatchEvent(new Event("sessions_updated"));
-      window.dispatchEvent(new Event("contactUpdated"));
+      triggerGlobalRefresh();
 
-      // ✅ ATUALIZAÇÃO OTIMISTA LOCAL PARA REFLEXO INSTANTÂNEO
-      setAiStatus({ intervention: false, permanentExclusion: false });
       updateChatLocal(selectedChat.remoteJid, {
         iaActive: true,
         intervention: false,
         permanentExclusion: false,
       } as any);
 
-      console.log('[ContactSidebarV2] ✅ IA ativada com sucesso e visuais atualizados.');
+      toast.success('IA ativada com sucesso');
     } catch (error) {
-      console.error("[ContactSidebarV2] ❌ Erro ao ativar IA:", error);
-      // Reverte estado otimista em caso de erro
-      await loadInterventionInfo();
+      console.error("[ContactSidebarV2] Erro ao ativar IA:", error);
+      toast.error('Erro ao ativar IA');
+      await loadSessionInfo();
     } finally {
       setUpdatingAI(false);
     }
   };
 
+  // ⏸️ Pausar IA (criar intervenção temporária)
   const handlePauseAI = async () => {
-    if (!selectedChat || !token) return;
-    console.log('[ContactSidebarV2] 🟡 Iniciando pausa da IA');
+    if (!selectedChat || !token || !selectedChatDigits) return;
     setUpdatingAI(true);
 
-    // ✨ Atualização otimista - Muda estado imediatamente
+    // Atualização otimista
     setAiStatus({
       intervention: true,
       permanentExclusion: false,
     });
-    console.log('[ContactSidebarV2] ⚡ Estado otimista aplicado: intervention=true');
 
     try {
-      const digits = selectedChat.remoteJid.replace(/\D/g, "");
+      await apiClient.createIntervention(token, selectedChatDigits);
 
-      // Cria intervenção temporária (mesma API do MessageView)
-      const response = await fetch(
-        `https://n8n.lumendigital.com.br/webhook/prospecta/whatsapp/exclusao/create`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", token },
-          body: JSON.stringify({ remoteJid: digits }),
-        }
-      );
-
-      console.log('[ContactSidebarV2] 📡 Resposta pausa:', response.status, response.ok);
-
-      if (!response.ok) {
-        throw new Error(`API retornou status ${response.status}`);
-      }
-
-      // ⏱️ Aguarda 1 segundo para o banco processar antes de recarregar
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // 🔔 Atualiza o contexto global - IA pausada
       updateChatLocal(selectedChat.remoteJid, { iaActive: false });
 
       const { updateChatIAStatus } = await import('../../utils/chatUpdateEvents');
-      console.log('[ContactSidebarV2] 🔔 Disparando evento de pausa da IA:', selectedChat.remoteJid);
       updateChatIAStatus(selectedChat.remoteJid, false);
 
-      // ✅ FORÇA ATUALIZAÇÃO GLOBAL IMEDIATA
-      window.dispatchEvent(new Event("sessions_updated"));
-      window.dispatchEvent(new Event("contactUpdated"));
+      triggerGlobalRefresh();
 
-      // Recarrega status real da API (pode corrigir se algo estiver diferente)
-      await loadInterventionInfo();
+      await loadSessionInfo();
 
-      console.log('[ContactSidebarV2] ✅ IA pausada com sucesso e visuais atualizados.');
+      toast.success('IA pausada temporariamente');
     } catch (error) {
-      console.error("[ContactSidebarV2] ❌ Erro ao pausar IA:", error);
-      // Reverte estado otimista em caso de erro
-      await loadInterventionInfo();
+      console.error("[ContactSidebarV2] Erro ao pausar IA:", error);
+      toast.error('Erro ao pausar IA');
+      await loadSessionInfo();
     } finally {
       setUpdatingAI(false);
     }
   };
 
+  // 🚫 Desativar IA permanentemente
   const handleDisableAI = async () => {
-    if (!selectedChat || !token) return;
-    console.log('[ContactSidebarV2] 🔴 Iniciando desativação da IA');
+    if (!selectedChat || !token || !selectedChatDigits) return;
     setUpdatingAI(true);
 
-    // ✨ Atualização otimista - Muda estado imediatamente
+    // Atualização otimista
     setAiStatus({
       intervention: false,
       permanentExclusion: true,
     });
-    console.log('[ContactSidebarV2] ⚡ Estado otimista aplicado: permanentExclusion=true');
 
     try {
-      const digits = selectedChat.remoteJid.replace(/\D/g, "");
+      await apiClient.createPermanentExclusion(token, selectedChatDigits);
 
-      // Cria exclusão permanente (mesma API do MessageView)
-      const response = await fetch(
-        `https://n8n.lumendigital.com.br/webhook/prospecta/whatsapp/exclusao/permanente/create`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", token },
-          body: JSON.stringify({ remoteJid: digits }),
-        }
-      );
-
-      console.log('[ContactSidebarV2] 📡 Resposta desativação:', response.status, response.ok);
-
-      if (!response.ok) {
-        throw new Error(`API retornou status ${response.status}`);
-      }
-
-      // ⏱️ Aguarda 1 segundo para o banco processar antes de recarregar
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // 🔔 Atualiza o contexto global - IA desativada
       updateChatLocal(selectedChat.remoteJid, { iaActive: false });
 
       const { updateChatIAStatus } = await import('../../utils/chatUpdateEvents');
-      console.log('[ContactSidebarV2] 🔔 Disparando evento de desativação da IA:', selectedChat.remoteJid);
       updateChatIAStatus(selectedChat.remoteJid, false);
 
-      // Recarrega status real da API (pode corrigir se algo estiver diferente)
-      await loadInterventionInfo();
+      await loadSessionInfo();
 
-      console.log('[ContactSidebarV2] ✅ IA desativada com sucesso');
+      toast.success('IA desativada permanentemente');
     } catch (error) {
-      console.error("[ContactSidebarV2] ❌ Erro ao desativar IA:", error);
-      // Reverte estado otimista em caso de erro
-      await loadInterventionInfo();
+      console.error("[ContactSidebarV2] Erro ao desativar IA:", error);
+      toast.error('Erro ao desativar IA');
+      await loadSessionInfo();
     } finally {
       setUpdatingAI(false);
     }
   };
 
-  const handleRemovePermanentExclusion = async () => {
-    if (!selectedChat || !token) return;
+  // ❌ Reativar IA (remover intervenção temporária)
+  const handleDeleteIntervention = async () => {
+    if (!token || !interventionInfo || !selectedChatDigits) return;
     setUpdatingAI(true);
     try {
-      const digits = selectedChat.remoteJid.replace(/\D/g, "");
-      await fetch(
-        `https://n8n.lumendigital.com.br/webhook/prospecta/whatsapp/exclusao/permanente/delete/id?remoteJid=${digits}`,
-        { method: "DELETE", headers: { token } }
-      );
-
-      await loadInterventionInfo();
-      window.dispatchEvent(new Event("contactUpdated"));
-    } catch (error) {
-      console.error("Erro ao remover exclusão permanente:", error);
+      await apiClient.deleteIntervention(token, selectedChatDigits);
+      toast.success('Intervenção removida - IA reativada');
+      await loadSessionInfo();
+      triggerGlobalRefresh();
+    } catch (err) {
+      console.error('Erro ao remover intervenção:', err);
+      toast.error('Erro ao remover intervenção');
     } finally {
       setUpdatingAI(false);
     }
   };
 
+  // ❌ Remover exclusão permanente
+  const handleRemovePermanentExclusion = async () => {
+    if (!selectedChat || !token || !selectedChatDigits) return;
+    setUpdatingAI(true);
+    try {
+      await apiClient.deletePermanentExclusion(token, selectedChatDigits);
+      toast.success('Exclusão permanente removida');
+      await loadSessionInfo();
+      triggerGlobalRefresh();
+    } catch (error) {
+      console.error("Erro ao remover exclusão permanente:", error);
+      toast.error('Erro ao remover exclusão permanente');
+    } finally {
+      setUpdatingAI(false);
+    }
+  };
+
+  // 🗑️ Excluir sessão
+  const handleDeleteSession = async () => {
+    if (!token || !sessionInfo || !selectedChatDigits) return;
+    setDeletingSession(true);
+    try {
+      await apiClient.deleteSession(token, selectedChatDigits);
+      toast.success('Sessão excluída');
+      await loadSessionInfo();
+    } catch (err) {
+      console.error('Erro ao excluir sessão:', err);
+      toast.error('Erro ao excluir sessão');
+    } finally {
+      setDeletingSession(false);
+    }
+  };
+
+  // 🔄 Remover transferência
   const handleRemoveTransfer = async () => {
     if (!selectedChat || !token) return;
     setUpdatingAI(true);
@@ -509,84 +497,81 @@ export default function ContactSidebarV2({
         }
       );
 
-      window.dispatchEvent(new Event("contactUpdated"));
+      triggerGlobalRefresh();
+      toast.success('Transferência cancelada');
     } catch (error) {
       console.error("Erro ao remover transferência:", error);
+      toast.error('Erro ao remover transferência');
     } finally {
       setUpdatingAI(false);
     }
   };
 
-const handleUpdateName = async () => {
-  if (!contactData || !token || !editedName.trim()) return;
-  setSavingName(true);
-  try {
-    const body = {
-      id: contactData.Id,
-      nome: editedName.trim(),
-      Email: contactData.Email,
-      telefone: contactData.telefone,
-    };
+  // ✏️ Atualizar nome do contato
+  const handleUpdateName = async () => {
+    if (!contactData || !token || !editedName.trim()) return;
+    setSavingName(true);
+    try {
+      const body = {
+        id: contactData.Id,
+        nome: editedName.trim(),
+        Email: contactData.Email,
+        telefone: contactData.telefone,
+      };
 
-    const response = await fetch(
-      "https://n8n.lumendigital.com.br/webhook/prospecta/contato/update",
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          token,
-        },
-        body: JSON.stringify(body),
-      }
-    );
-
-    if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
-
-    console.log("[ContactSidebarV2] Nome atualizado com sucesso");
-
-    // Busca dados completos atualizados do contato
-    if (contactData.Id) {
-      try {
-        const digits = selectedChat!.remoteJid.replace(/\D/g, "");
-        const fullContactRes = await fetch(
-          `https://n8n.lumendigital.com.br/webhook/prospecta/contato/getByRemoteJid?remoteJid=${digits}`,
-          { headers: { token } }
-        );
-
-        if (fullContactRes.ok) {
-          const fullContactText = await fullContactRes.text();
-          if (fullContactText) {
-            const fullContact = JSON.parse(fullContactText);
-            const fullContactResult = Array.isArray(fullContact) ? fullContact[0] : fullContact;
-            console.log("[ContactSidebarV2] Contato completo recarregado:", fullContactResult);
-            setContactData(fullContactResult);
-            setEditedName(fullContactResult?.nome || "");
-          }
+      const response = await fetch(
+        "https://n8n.lumendigital.com.br/webhook/prospecta/contato/update",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            token,
+          },
+          body: JSON.stringify(body),
         }
-      } catch (error) {
-        console.error("[ContactSidebarV2] Erro ao recarregar contato completo:", error);
+      );
+
+      if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
+
+      if (contactData.Id) {
+        try {
+          const digits = selectedChat!.remoteJid.replace(/\D/g, "");
+          const fullContactRes = await fetch(
+            `https://n8n.lumendigital.com.br/webhook/prospecta/contato/getByRemoteJid?remoteJid=${digits}`,
+            { headers: { token } }
+          );
+
+          if (fullContactRes.ok) {
+            const fullContactText = await fullContactRes.text();
+            if (fullContactText) {
+              const fullContact = JSON.parse(fullContactText);
+              const fullContactResult = normalize(fullContact);
+              setContactData(fullContactResult);
+              setEditedName(fullContactResult?.nome || "");
+            }
+          }
+        } catch (error) {
+          console.error("[ContactSidebarV2] Erro ao recarregar contato completo:", error);
+        }
       }
+
+      if (selectedChat?.remoteJid) {
+        updateChatLocal(selectedChat.remoteJid, { pushName: editedName.trim() });
+
+        const { updateChatName } = await import('../../utils/chatUpdateEvents');
+        updateChatName(selectedChat.remoteJid, editedName.trim());
+      }
+
+      setEditingName(false);
+      toast.success('Nome atualizado');
+    } catch (error) {
+      console.error("Erro ao atualizar nome do contato:", error);
+      toast.error('Erro ao atualizar nome');
+      setEditedName(contactData?.nome || "");
+    } finally {
+      setSavingName(false);
     }
-
-    // 🔔 Atualiza o contexto global com o novo nome
-    if (selectedChat?.remoteJid) {
-      updateChatLocal(selectedChat.remoteJid, { pushName: editedName.trim() });
-
-      const { updateChatName } = await import('../../utils/chatUpdateEvents');
-      updateChatName(selectedChat.remoteJid, editedName.trim());
-    }
-
-    setEditingName(false);
-  } catch (error) {
-    console.error("Erro ao atualizar nome do contato:", error);
-    setEditedName(contactData?.nome || "");
-  } finally {
-    setSavingName(false);
-  }
-};
-
-  
-
+  };
 
   const handleUpdateResponsavel = async (id_usuario: number) => {
     if (!dealData || !token) return;
@@ -603,31 +588,26 @@ const handleUpdateName = async () => {
 
       setDealData((prev) => (prev ? { ...prev, id_usuario } : null));
 
-      // 🔔 Atualiza o contexto global
       if (selectedChat?.remoteJid) {
-        // Busca o nome do usuário selecionado
         const selectedUser = users.find(u => u.Id === id_usuario);
         const responsavelNome = selectedUser?.nome || '';
 
-        // ✅ Atualização otimista local (visualmente instantâneo)
         updateChatLocal(selectedChat.remoteJid, {
           responsibleId: id_usuario,
           responsavelNome: responsavelNome,
         } as any);
 
         const { updateChatResponsible } = await import('../../utils/chatUpdateEvents');
-        console.log('🔔 Disparando evento de atualização de responsável:', selectedChat.remoteJid, id_usuario);
         updateChatResponsible(selectedChat.remoteJid, id_usuario);
 
-        // ✅ Dispara eventos globais para forçar atualização da ChatList
         window.dispatchEvent(new Event("responsavel_updated"));
-        window.dispatchEvent(new Event("sessions_updated"));
-        window.dispatchEvent(new Event("contactUpdated"));
-
-        console.log("[ContactSidebarV2] ✅ Responsável atualizado e ChatList sincronizada");
+        triggerGlobalRefresh();
       }
+
+      toast.success('Responsável atualizado');
     } catch (error) {
       console.error("Erro ao atualizar responsável:", error);
+      toast.error('Erro ao atualizar responsável');
     }
   };
 
@@ -650,16 +630,17 @@ const handleUpdateName = async () => {
 
       setDealData((prev) => (prev ? { ...prev, id_funil, id_estagio } : null));
 
-      // 🔔 Atualiza o contexto global
       if (selectedChat?.remoteJid) {
         updateChatLocal(selectedChat.remoteJid, { chatStageId: String(id_estagio) } as any);
 
         const { updateChatStage } = await import('../../utils/chatUpdateEvents');
-        console.log('🔔 Disparando evento de atualização de estágio:', selectedChat.remoteJid, id_estagio);
         updateChatStage(selectedChat.remoteJid, String(id_estagio));
       }
+
+      toast.success('Etapa atualizada');
     } catch (error) {
       console.error("Erro ao atualizar etapa:", error);
+      toast.error('Erro ao atualizar etapa');
     }
   };
 
@@ -678,17 +659,18 @@ const handleUpdateName = async () => {
 
       await loadDealTags();
 
-      // 🔔 Atualiza o contexto global
       if (selectedChat?.remoteJid) {
         const updatedTagIds = [...dealTags.map(t => t.Id), tagId];
         updateChatLocal(selectedChat.remoteJid, { tagIds: updatedTagIds } as any);
 
         const { updateChatTags } = await import('../../utils/chatUpdateEvents');
-        console.log('🔔 Disparando evento de atualização de tags:', selectedChat.remoteJid, updatedTagIds);
         updateChatTags(selectedChat.remoteJid, updatedTagIds);
       }
+
+      toast.success('Etiqueta adicionada');
     } catch (error) {
       console.error("Erro ao adicionar etiqueta:", error);
+      toast.error('Erro ao adicionar etiqueta');
     }
   };
 
@@ -707,17 +689,18 @@ const handleUpdateName = async () => {
 
       await loadDealTags();
 
-      // 🔔 Atualiza o contexto global
       if (selectedChat?.remoteJid) {
         const updatedTagIds = dealTags.map(t => t.Id).filter(id => id !== tagId);
         updateChatLocal(selectedChat.remoteJid, { tagIds: updatedTagIds } as any);
 
         const { updateChatTags } = await import('../../utils/chatUpdateEvents');
-        console.log('🔔 Disparando evento de remoção de tag:', selectedChat.remoteJid, updatedTagIds);
         updateChatTags(selectedChat.remoteJid, updatedTagIds);
       }
+
+      toast.success('Etiqueta removida');
     } catch (error) {
       console.error("Erro ao remover etiqueta:", error);
+      toast.error('Erro ao remover etiqueta');
     }
   };
 
@@ -747,12 +730,27 @@ const handleUpdateName = async () => {
           Informações do Contato
         </h2>
 
-        <button
-          onClick={onToggle}
-          className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
-        >
-          <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400 transition-colors duration-200" />
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Botão Excluir Sessão */}
+          {sessionInfo && (
+            <button
+              onClick={handleDeleteSession}
+              disabled={deletingSession}
+              className="flex items-center gap-1 px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50"
+              title="Excluir sessão"
+            >
+              {deletingSession ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+              <span>Excluir Sessão</span>
+            </button>
+          )}
+
+          <button
+            onClick={onToggle}
+            className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+          >
+            <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400 transition-colors duration-200" />
+          </button>
+        </div>
       </div>
 
       {/* Conteúdo principal */}
@@ -808,7 +806,10 @@ const handleUpdateName = async () => {
                       </button>
                     </div>
                   ) : (
-                    <h3 className="font-semibold text-gray-900 dark:text-white transition-colors duration-200">
+                    <h3
+                      className="font-semibold text-gray-900 dark:text-white transition-colors duration-200 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400"
+                      onClick={() => setEditingName(true)}
+                    >
                       {contactData?.nome || selectedChat.pushName}
                     </h3>
                   )}
@@ -865,6 +866,18 @@ const handleUpdateName = async () => {
                     <span className="text-xs text-yellow-700 dark:text-yellow-400 font-medium transition-colors duration-200">
                       IA pausada (intervenção)
                     </span>
+                    <button
+                      onClick={handleDeleteIntervention}
+                      disabled={updatingAI}
+                      className="p-1 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 rounded transition-colors duration-200 disabled:opacity-50"
+                      title="Reativar IA"
+                    >
+                      {updatingAI ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <X className="w-3 h-3" />
+                      )}
+                    </button>
                   </div>
                 ) : (
                   <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg transition-colors duration-200">
@@ -896,12 +909,24 @@ const handleUpdateName = async () => {
 
                 <div className="grid grid-cols-3 gap-2">
                   <button
-                    onClick={handleActivateAI}
-                    disabled={updatingAI || (!aiStatus.intervention && !aiStatus.permanentExclusion)}
-                    className="flex flex-col items-center justify-center p-2 rounded-lg border border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                    title="Ativar IA"
+                    onClick={handleStartAgent}
+                    disabled={
+                      updatingAI ||
+                      aiStatus.intervention ||
+                      aiStatus.permanentExclusion ||
+                      activationCooldown
+                    }
+                    className={`flex flex-col items-center justify-center p-2 rounded-lg border border-green-300 dark:border-green-700
+                      bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40
+                      transition-colors duration-200 disabled:cursor-not-allowed
+                      ${activationCooldown ? 'opacity-50 cursor-not-allowed' : 'disabled:opacity-50'}`}
+                    title={activationCooldown ? "Aguarde antes de reativar" : "Ativar IA"}
                   >
-                    <PlayCircle className="w-4 h-4 text-green-600 dark:text-green-400 mb-1 transition-colors duration-200" />
+                    {updatingAI && (!aiStatus.intervention && !aiStatus.permanentExclusion) ? (
+                      <Loader2 className="w-4 h-4 text-green-600 dark:text-green-400 mb-1 animate-spin transition-colors duration-200" />
+                    ) : (
+                      <PlayCircle className="w-4 h-4 text-green-600 dark:text-green-400 mb-1 transition-colors duration-200" />
+                    )}
                     <span className="text-[10px] text-green-700 dark:text-green-400 font-medium transition-colors duration-200">Ativar</span>
                   </button>
 
@@ -911,7 +936,11 @@ const handleUpdateName = async () => {
                     className="flex flex-col items-center justify-center p-2 rounded-lg border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                     title="Pausar IA temporariamente"
                   >
-                    <Pause className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mb-1 transition-colors duration-200" />
+                    {updatingAI && !aiStatus.intervention && !aiStatus.permanentExclusion ? (
+                      <Loader2 className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mb-1 animate-spin transition-colors duration-200" />
+                    ) : (
+                      <Pause className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mb-1 transition-colors duration-200" />
+                    )}
                     <span className="text-[10px] text-yellow-700 dark:text-yellow-400 font-medium transition-colors duration-200">Pausar</span>
                   </button>
 
@@ -921,10 +950,21 @@ const handleUpdateName = async () => {
                     className="flex flex-col items-center justify-center p-2 rounded-lg border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                     title="Desativar IA permanentemente"
                   >
-                    <BanIcon className="w-4 h-4 text-red-600 dark:text-red-400 mb-1 transition-colors duration-200" />
+                    {updatingAI && !aiStatus.permanentExclusion ? (
+                      <Loader2 className="w-4 h-4 text-red-600 dark:text-red-400 mb-1 animate-spin transition-colors duration-200" />
+                    ) : (
+                      <BanIcon className="w-4 h-4 text-red-600 dark:text-red-400 mb-1 transition-colors duration-200" />
+                    )}
                     <span className="text-[10px] text-red-700 dark:text-red-400 font-medium transition-colors duration-200">Desativar</span>
                   </button>
                 </div>
+
+                {/* Mensagem informativa de ativação */}
+                {showActivationMessage && (
+                  <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400 animate-fadeIn">
+                    ✅ Requisição enviada. Aguarde até 1 minuto para a IA iniciar o atendimento com o cliente.
+                  </p>
+                )}
               </div>
             </div>
 

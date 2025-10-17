@@ -731,3 +731,27 @@ button:hover,
   width: 100%;
   transition: width 0.1s ease;
 }
+
+/* ========== ANIMAÇÃO DE FADE IN/OUT PARA MENSAGEM DE ATIVAÇÃO DA IA ========== */
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeInOut 10s ease-in-out forwards;
+}
