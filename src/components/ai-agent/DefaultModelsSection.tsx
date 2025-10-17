@@ -758,93 +758,178 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
             setIsModelDetailsModalOpen(false);
             setSelectedModel('');
           }}
-          title={selectedModel ? agentModels[selectedModel]?.name : ''}
-          maxWidth="3xl"
+          title=""
+          maxWidth="4xl"
         >
           {selectedModel && (
-            <div className="p-6">
-              <p className="text-gray-600 dark:text-neutral-400 mb-6">
-                {modelDescriptions[selectedModel]}
-              </p>
-
-              {modelDetails[selectedModel] && (
-                <div className="space-y-6">
-                  {/* Etapas do Atendimento */}
-                  <div>
-                    <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-4">
-                      <span className="text-2xl">⚙️</span>
-                      Etapas do Atendimento
-                    </h3>
-                    <div className="space-y-3">
-                      {modelDetails[selectedModel].steps.map((step, index) => (
-                        <div
-                          key={index}
-                          className="flex gap-3 p-3 bg-gray-50 dark:bg-neutral-700/50 rounded-lg"
-                        >
-                          <div className="flex-shrink-0 w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-xs font-semibold text-blue-600 dark:text-blue-400">
-                            {index + 1}
-                          </div>
-                          <p className="text-sm text-gray-700 dark:text-neutral-300 leading-relaxed">
-                            {step}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* O que o Agente Faz */}
-                  <div>
-                    <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-4">
-                      <span className="text-2xl">🧭</span>
-                      O que o Agente Faz
-                    </h3>
-                    <div className="space-y-2">
-                      {modelDetails[selectedModel].features.map((feature, index) => (
-                        <div
-                          key={index}
-                          className="flex gap-3 items-start"
-                        >
-                          <div className="flex-shrink-0 w-5 h-5 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mt-0.5">
-                            <Check className="w-3 h-3 text-green-600 dark:text-green-400" />
-                          </div>
-                          <p className="text-sm text-gray-700 dark:text-neutral-300 leading-relaxed">
-                            {feature}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+            <div className="relative">
+              {/* Header com gradiente e ícone */}
+              <div className={`bg-gradient-to-br ${
+                selectedModel === 'bpc' ? 'from-blue-500 to-blue-600' :
+                selectedModel === 'trabalhista' ? 'from-red-500 to-red-600' :
+                selectedModel === 'auxilio' ? 'from-yellow-500 to-yellow-600' :
+                selectedModel === 'bancario' ? 'from-orange-500 to-orange-600' :
+                selectedModel === 'descontoIndevido' ? 'from-purple-500 to-purple-600' :
+                selectedModel === 'invalidez' ? 'from-pink-500 to-pink-600' :
+                selectedModel === 'maternidade' ? 'from-rose-500 to-rose-600' :
+                selectedModel === 'bancarioProdutorRural' ? 'from-amber-500 to-amber-600' :
+                selectedModel === 'pensaoDivorcio' ? 'from-emerald-500 to-emerald-600' :
+                selectedModel === 'pensaoMorte' ? 'from-teal-500 to-teal-600' :
+                'from-blue-500 to-purple-600'
+              } px-8 py-10 -mt-6 -mx-6 rounded-t-2xl mb-0 relative overflow-hidden`}>
+                {/* Padrão decorativo de fundo */}
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl"></div>
+                  <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full mix-blend-overlay filter blur-2xl"></div>
                 </div>
-              )}
 
-              {!modelDetails[selectedModel] && (
-                <div className="text-center py-8">
-                  <p className="text-gray-500 dark:text-neutral-400">
-                    Este modelo está configurado e pronto para uso.
+                <div className="relative z-10 text-center">
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-3xl mb-5 shadow-2xl">
+                    <Book className="w-10 h-10 text-white" />
+                  </div>
+                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 leading-tight">
+                    {agentModels[selectedModel]?.name}
+                  </h2>
+                  <p className="text-white/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+                    {modelDescriptions[selectedModel]}
                   </p>
                 </div>
-              )}
+              </div>
 
-              {/* Botões */}
-              <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-neutral-700">
-                <button
-                  onClick={() => {
-                    setIsModelDetailsModalOpen(false);
-                    setSelectedModel('');
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
-                >
-                  Voltar
-                </button>
-                {canEdit && (
-                  <button
-                    onClick={handleConfirmModel}
-                    className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 rounded-lg transition-colors"
-                  >
-                    <Check className="w-4 h-4" />
-                    Aplicar este Modelo
-                  </button>
+              {/* Conteúdo do modal */}
+              <div className="px-8 py-8">
+                {modelDetails[selectedModel] && (
+                  <div className="space-y-8">
+                    {/* Etapas do Atendimento */}
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/30">
+                      <div className="flex items-center gap-3 mb-5">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                          <span className="text-2xl">⚙️</span>
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                            Etapas do Atendimento
+                          </h3>
+                          <p className="text-sm text-gray-600 dark:text-neutral-400">
+                            Fluxo completo de interação com o cliente
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        {modelDetails[selectedModel].steps.map((step, index) => {
+                          const stepName = step.split(':')[0];
+                          const stepDescription = step.split(':')[1];
+
+                          return (
+                            <div
+                              key={index}
+                              className="group bg-white dark:bg-neutral-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 dark:border-neutral-700"
+                            >
+                              <div className="flex gap-4">
+                                <div className="flex-shrink-0">
+                                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-sm font-bold text-white shadow-md group-hover:scale-110 transition-transform">
+                                    {index + 1}
+                                  </div>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">
+                                    {stepName}
+                                  </h4>
+                                  <p className="text-sm text-gray-600 dark:text-neutral-400 leading-relaxed">
+                                    {stepDescription}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* O que o Agente Faz */}
+                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-6 border border-emerald-100 dark:border-emerald-800/30">
+                      <div className="flex items-center gap-3 mb-5">
+                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
+                          <span className="text-2xl">🧭</span>
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                            O que o Agente Faz
+                          </h3>
+                          <p className="text-sm text-gray-600 dark:text-neutral-400">
+                            Principais funcionalidades e capacidades
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {modelDetails[selectedModel].features.map((feature, index) => (
+                          <div
+                            key={index}
+                            className="group bg-white dark:bg-neutral-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 dark:border-neutral-700"
+                          >
+                            <div className="flex gap-3 items-start">
+                              <div className="flex-shrink-0 mt-0.5">
+                                <div className="w-6 h-6 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                                  <Check className="w-4 h-4 text-white" />
+                                </div>
+                              </div>
+                              <p className="text-sm text-gray-700 dark:text-neutral-300 leading-relaxed flex-1">
+                                {feature}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 )}
+
+                {!modelDetails[selectedModel] && (
+                  <div className="text-center py-12">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-neutral-700 rounded-2xl mb-4">
+                      <Book className="w-8 h-8 text-gray-400 dark:text-neutral-500" />
+                    </div>
+                    <p className="text-gray-500 dark:text-neutral-400 text-lg">
+                      Este modelo está configurado e pronto para uso.
+                    </p>
+                  </div>
+                )}
+
+                {/* Botões de ação */}
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 pt-6 border-t border-gray-200 dark:border-neutral-700">
+                  <button
+                    onClick={() => {
+                      setIsModelDetailsModalOpen(false);
+                      setSelectedModel('');
+                    }}
+                    className="w-full sm:w-auto order-2 sm:order-1 px-6 py-3 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-xl transition-colors"
+                  >
+                    ← Voltar aos Modelos
+                  </button>
+                  {canEdit && (
+                    <button
+                      onClick={handleConfirmModel}
+                      className={`w-full sm:w-auto order-1 sm:order-2 flex items-center justify-center gap-2 px-8 py-3 text-sm font-semibold text-white rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 bg-gradient-to-r ${
+                        selectedModel === 'bpc' ? 'from-blue-500 to-blue-600' :
+                        selectedModel === 'trabalhista' ? 'from-red-500 to-red-600' :
+                        selectedModel === 'auxilio' ? 'from-yellow-500 to-yellow-600' :
+                        selectedModel === 'bancario' ? 'from-orange-500 to-orange-600' :
+                        selectedModel === 'descontoIndevido' ? 'from-purple-500 to-purple-600' :
+                        selectedModel === 'invalidez' ? 'from-pink-500 to-pink-600' :
+                        selectedModel === 'maternidade' ? 'from-rose-500 to-rose-600' :
+                        selectedModel === 'bancarioProdutorRural' ? 'from-amber-500 to-amber-600' :
+                        selectedModel === 'pensaoDivorcio' ? 'from-emerald-500 to-emerald-600' :
+                        selectedModel === 'pensaoMorte' ? 'from-teal-500 to-teal-600' :
+                        'from-blue-600 to-purple-600'
+                      }`}
+                    >
+                      <Check className="w-5 h-5" />
+                      Aplicar este Modelo
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -857,84 +942,178 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
             setConfirmText('');
             setError('');
           }}
-          title="Confirmar Aplicação do Modelo"
+          title=""
+          maxWidth="2xl"
         >
-          <div className="p-6 space-y-4">
-            {selectedModel && (
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg mb-4">
-                <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">
-                  Modelo Selecionado:
-                </h4>
-                <p className="text-sm text-blue-700 dark:text-blue-400">
-                  {agentModels[selectedModel]?.name}
-                </p>
-                <p className="text-xs text-blue-600 dark:text-blue-500 mt-2">
-                  {modelDescriptions[selectedModel]}
-                </p>
+          <div className="relative">
+            {/* Header com gradiente de alerta */}
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 dark:from-amber-600 dark:to-orange-600 px-8 py-8 -mt-6 -mx-6 rounded-t-2xl mb-6 relative overflow-hidden">
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-white rounded-full mix-blend-overlay filter blur-3xl"></div>
               </div>
-            )}
 
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
-                <AlertCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
-                  Atenção!
-                </h3>
-                <p className="text-gray-500 dark:text-neutral-400 mt-1">
-                  Esta ação irá substituir todas as configurações atuais do seu agente.
-                  Digite o texto abaixo para confirmar:
+              <div className="relative z-10 text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl mb-4">
+                  <AlertCircle className="w-8 h-8 text-white" />
+                </div>
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                  Confirmar Aplicação do Modelo
+                </h2>
+                <p className="text-white/90 text-sm">
+                  Esta ação irá substituir todas as configurações atuais do seu agente
                 </p>
               </div>
             </div>
 
-            <div className="bg-gray-100 dark:bg-neutral-700 p-3 rounded-lg">
-              <code className="text-sm text-gray-900 dark:text-neutral-100">{CONFIRMATION_TEXT}</code>
-            </div>
+            {/* Conteúdo */}
+            <div className="px-8 pb-8">
+              {selectedModel && (
+                <div className={`relative rounded-2xl p-6 mb-6 overflow-hidden border-2 bg-gradient-to-br ${
+                  selectedModel === 'bpc' ? 'from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 border-blue-200 dark:border-blue-700' :
+                  selectedModel === 'trabalhista' ? 'from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 border-red-200 dark:border-red-700' :
+                  selectedModel === 'auxilio' ? 'from-yellow-50 to-yellow-100 dark:from-yellow-900/30 dark:to-yellow-800/30 border-yellow-200 dark:border-yellow-700' :
+                  selectedModel === 'bancario' ? 'from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 border-orange-200 dark:border-orange-700' :
+                  selectedModel === 'descontoIndevido' ? 'from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 border-purple-200 dark:border-purple-700' :
+                  selectedModel === 'invalidez' ? 'from-pink-50 to-pink-100 dark:from-pink-900/30 dark:to-pink-800/30 border-pink-200 dark:border-pink-700' :
+                  selectedModel === 'maternidade' ? 'from-rose-50 to-rose-100 dark:from-rose-900/30 dark:to-rose-800/30 border-rose-200 dark:border-rose-700' :
+                  selectedModel === 'bancarioProdutorRural' ? 'from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/30 border-amber-200 dark:border-amber-700' :
+                  selectedModel === 'pensaoDivorcio' ? 'from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/30 border-emerald-200 dark:border-emerald-700' :
+                  selectedModel === 'pensaoMorte' ? 'from-teal-50 to-teal-100 dark:from-teal-900/30 dark:to-teal-800/30 border-teal-200 dark:border-teal-700' :
+                  'from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 border-blue-200 dark:border-blue-700'
+                }`}>
+                  <div className="flex items-start gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg bg-gradient-to-br ${
+                      selectedModel === 'bpc' ? 'from-blue-500 to-blue-600' :
+                      selectedModel === 'trabalhista' ? 'from-red-500 to-red-600' :
+                      selectedModel === 'auxilio' ? 'from-yellow-500 to-yellow-600' :
+                      selectedModel === 'bancario' ? 'from-orange-500 to-orange-600' :
+                      selectedModel === 'descontoIndevido' ? 'from-purple-500 to-purple-600' :
+                      selectedModel === 'invalidez' ? 'from-pink-500 to-pink-600' :
+                      selectedModel === 'maternidade' ? 'from-rose-500 to-rose-600' :
+                      selectedModel === 'bancarioProdutorRural' ? 'from-amber-500 to-amber-600' :
+                      selectedModel === 'pensaoDivorcio' ? 'from-emerald-500 to-emerald-600' :
+                      selectedModel === 'pensaoMorte' ? 'from-teal-500 to-teal-600' :
+                      'from-blue-500 to-blue-600'
+                    }`}>
+                      <Book className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-gray-600 dark:text-neutral-400 uppercase tracking-wide mb-1">
+                        Modelo Selecionado
+                      </p>
+                      <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-2">
+                        {agentModels[selectedModel]?.name}
+                      </h4>
+                      <p className="text-sm text-gray-700 dark:text-neutral-300 leading-relaxed">
+                        {modelDescriptions[selectedModel]}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-            <input
-              type="text"
-              value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
-              placeholder="Digite o texto de confirmação"
-              className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
-            />
+              {/* Seção de confirmação */}
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-neutral-800 dark:to-neutral-700 rounded-2xl p-6 mb-6 border border-gray-200 dark:border-neutral-600">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <AlertCircle className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">
+                      Confirmação Necessária
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-neutral-400 leading-relaxed">
+                      Para prosseguir, digite exatamente o texto abaixo no campo de confirmação:
+                    </p>
+                  </div>
+                </div>
 
-            {error && (
-              <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
+                <div className="bg-white dark:bg-neutral-900 rounded-xl p-4 mb-4 border-2 border-dashed border-gray-300 dark:border-neutral-600">
+                  <code className="text-sm font-mono text-gray-900 dark:text-neutral-100 break-all">
+                    {CONFIRMATION_TEXT}
+                  </code>
+                </div>
 
-            <div className="flex justify-end gap-3 pt-4">
-              <button
-                onClick={() => {
-                  setIsConfirmModalOpen(false);
-                  setConfirmText('');
-                  setError('');
-                }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleApplyModel}
-                disabled={confirmText !== CONFIRMATION_TEXT || loading}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 rounded-md disabled:opacity-50"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Aplicando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4" />
-                    <span>Aplicar Modelo</span>
-                  </>
+                <input
+                  type="text"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="Digite o texto de confirmação aqui..."
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 rounded-xl focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 focus:border-amber-500 dark:focus:border-amber-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500 transition-all text-sm"
+                  autoFocus
+                />
+
+                {/* Indicador de progresso */}
+                {confirmText && (
+                  <div className="mt-3">
+                    <div className="flex items-center gap-2 text-xs">
+                      {confirmText === CONFIRMATION_TEXT ? (
+                        <>
+                          <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                            <Check className="w-3 h-3 text-white" />
+                          </div>
+                          <span className="text-green-600 dark:text-green-400 font-semibold">
+                            Texto confirmado corretamente!
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-4 h-4 border-2 border-gray-400 dark:border-neutral-500 rounded-full"></div>
+                          <span className="text-gray-600 dark:text-neutral-400">
+                            O texto não corresponde. Verifique e tente novamente.
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 )}
-              </button>
+              </div>
+
+              {error && (
+                <div className="bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/30 dark:to-rose-900/30 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 mb-6">
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+                    <p className="text-sm text-red-700 dark:text-red-300 font-medium">
+                      {error}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Botões de ação */}
+              <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-6 border-t border-gray-200 dark:border-neutral-700">
+                <button
+                  onClick={() => {
+                    setIsConfirmModalOpen(false);
+                    setConfirmText('');
+                    setError('');
+                  }}
+                  className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-600 rounded-xl transition-all border border-gray-300 dark:border-neutral-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleApplyModel}
+                  disabled={confirmText !== CONFIRMATION_TEXT || loading}
+                  className={`flex items-center justify-center gap-2 px-8 py-3 text-sm font-semibold text-white rounded-xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                    confirmText === CONFIRMATION_TEXT && !loading
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:shadow-xl hover:scale-105'
+                      : 'bg-gray-400 dark:bg-neutral-600'
+                  }`}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Aplicando Modelo...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-5 h-5" />
+                      <span>Aplicar Modelo</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </Modal>
