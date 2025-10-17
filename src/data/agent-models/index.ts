@@ -5,6 +5,9 @@ import bancario from './bancario.json';
 import invalidez from './invalidez.json';
 import maternidade from './maternidade.json';
 import descontoIndevido from './descontoIndevido.json';
+import bancarioProdutorRural from './Bancário - Produtor Rural.json';
+import pensaoDivorcio from './Pensão e Divórcio.json';
+import pensaoMorte from './Pensão por Morte.json';
 
 export const agentModels = {
   'bpc': {
@@ -41,5 +44,20 @@ export const agentModels = {
     name: 'Salário Maternidade',
     description: '',
     data: maternidade
+  },
+  'bancarioProdutorRural': {
+    name: 'Bancário - Produtor Rural',
+    description: '',
+    data: bancarioProdutorRural
+  },
+  'pensaoDivorcio': {
+    name: 'Pensão e Divórcio',
+    description: '',
+    data: pensaoDivorcio
+  },
+  'pensaoMorte': {
+    name: 'Pensão por Morte',
+    description: '',
+    data: pensaoMorte
   }
 };

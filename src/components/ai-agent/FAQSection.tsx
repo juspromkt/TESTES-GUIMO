@@ -61,7 +61,7 @@ export default function FAQSection({
     faqs.map(() => true)
   );
 
-  const MAX_CHARS = 5000;
+  const MAX_CHARS = 2000;
 
   // Função para remover tags HTML e contar caracteres
   const getTextLength = (html: string) => {

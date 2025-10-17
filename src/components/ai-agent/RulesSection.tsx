@@ -21,7 +21,7 @@ export default function RulesSection({ token, canEdit }: { token: string; canEdi
 const [modalOpen, setModalOpen] = useState(false);
 const [modalLoading, setModalLoading] = useState(false);
 
-  const MAX_CHARS = 5000;
+  const MAX_CHARS = 2000;
 
   // Função para remover tags HTML e contar caracteres
   const getTextLength = (html: string) => {

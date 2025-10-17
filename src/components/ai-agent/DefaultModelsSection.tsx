@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Book, AlertCircle, Check, Loader2, Download, Upload } from 'lucide-react';
+import { Book, AlertCircle, Check, Loader2, Download, Upload, Plus } from 'lucide-react';
 import { agentModels } from '../../data/agent-models';
 import Modal from '../Modal';
 import AIPromptGenerator from './AIPromptGenerator';
@@ -12,6 +12,7 @@ interface DefaultModelsSectionProps {
 
 export default function DefaultModelsSection({ token, onSuccess, canEdit }: DefaultModelsSectionProps) {
   const [selectedModel, setSelectedModel] = useState<string>('');
+  const [isModelsModalOpen, setIsModelsModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,8 +24,222 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
   const [importedModel, setImportedModel] = useState('');
   const [importLoading, setImportLoading] = useState(false);
   const [importError, setImportError] = useState('');
+  const [isAIPromptModalOpen, setIsAIPromptModalOpen] = useState(false);
 
   const CONFIRMATION_TEXT = "Eu confirmo que desejo aplicar este modelo";
+
+  const [isModelDetailsModalOpen, setIsModelDetailsModalOpen] = useState(false);
+
+  const handleSelectModel = (modelKey: string) => {
+    setSelectedModel(modelKey);
+    setIsModelsModalOpen(false);
+    setIsModelDetailsModalOpen(true);
+  };
+
+  const handleConfirmModel = () => {
+    setIsModelDetailsModalOpen(false);
+    setIsConfirmModalOpen(true);
+    setConfirmText('');
+    setError('');
+  };
+
+  // Descrições dos modelos
+  const modelDescriptions: Record<string, string> = {
+    bpc: "Agente especializado em Benefício de Prestação Continuada (BPC/LOAS), auxiliando na identificação de critérios e documentação necessária.",
+    trabalhista: "Focado em ações trabalhistas para reclamantes, cobrindo direitos trabalhistas, rescisões e verbas.",
+    auxilio: "Especialista em auxílio-acidente, orientando sobre direitos e processos de solicitação.",
+    bancario: "Voltado para casos de superendividamento bancário, revisão de contratos e negociação de dívidas.",
+    descontoIndevido: "Especialista em descontos indevidos em consignados, RMC e RCC, auxiliando na identificação e recuperação de valores.",
+    invalidez: "Focado em revisão de aposentadoria por invalidez, análise de benefícios e possibilidades de revisão.",
+    maternidade: "Especialista em salário-maternidade, orientando sobre direitos, prazos e documentação.",
+    bancarioProdutorRural: "Voltado para produtores rurais com questões bancárias, financiamentos e renegociações.",
+    pensaoDivorcio: "Focado em pensão alimentícia e divórcio, auxiliando em questões de partilha e direitos.",
+    pensaoMorte: "Especialista em pensão por morte, orientando sobre requisitos, documentação e processos."
+  };
+
+  // Detalhes completos dos modelos com etapas e funcionalidades
+  const modelDetails: Record<string, { steps: string[], features: string[] }> = {
+    pensaoMorte: {
+      steps: [
+        "Recepção: acolhe o cliente e coleta informações iniciais sobre o caso de pensão por morte.",
+        "Qualificação: identifica se o benefício foi indeferido, ainda não solicitado ou está demorando demais para análise.",
+        "Análise de Viabilidade: confirma causa da morte, vínculo familiar, filhos, bens e certidão de óbito.",
+        "Contrato: explica o contrato de êxito (3 primeiros benefícios + 30% do retroativo) quando não há bens.",
+        "Agendamento: marca reunião com o advogado após assinatura ou confirmação de bens.",
+        "Confirmação: envia detalhes e orientações sobre a reunião por vídeo (Google Meet)."
+      ],
+      features: [
+        "Acolhe leads com pensão indeferida, não solicitada ou em análise no INSS.",
+        "Identifica automaticamente quem tem direito ao benefício.",
+        "Reúne informações familiares e patrimoniais do falecido.",
+        "Envia o contrato via Zapsign e valida assinatura.",
+        "Agenda reunião com o advogado previdenciário.",
+        "Mantém tom empático, natural e profissional."
+      ]
+    },
+    bpc: {
+      steps: [
+        "Recepção: recebe o cliente e entende se o pedido do BPC foi negado ou ainda não feito.",
+        "Qualificação: confirma se o beneficiário é idoso ou pessoa com deficiência.",
+        "Análise de Viabilidade: verifica renda familiar, composição, CadÚnico e indeferimento do INSS.",
+        "Contrato: explica que o escritório atua por êxito e detalha os percentuais.",
+        "Agendamento: confirma assinatura do contrato e agenda reunião.",
+        "Confirmação: envia data, horário e orientações da reunião online."
+      ],
+      features: [
+        "Analisa casos de BPC negado ou pendente.",
+        "Verifica critérios de renda e composição familiar.",
+        "Filtra leads que se enquadram nas exigências legais.",
+        "Envia contrato para assinatura digital.",
+        "Agenda reunião com o advogado previdenciário.",
+        "Garante atendimento humano e esclarecedor."
+      ]
+    },
+    auxilio: {
+      steps: [
+        "Recepção: acolhe o cliente e identifica se o auxílio foi negado ou ainda não solicitado.",
+        "Qualificação: verifica se há incapacidade comprovada ou em análise médica.",
+        "Análise de Viabilidade: confirma histórico de contribuições e tipo de doença.",
+        "Contrato: explica os honorários de êxito e autoriza representação.",
+        "Agendamento: coleta e-mail, envia contrato e marca reunião.",
+        "Confirmação: confirma data e orienta sobre a reunião virtual."
+      ],
+      features: [
+        "Atende clientes com auxílio-doença negado ou pendente.",
+        "Faz triagem jurídica para verificar viabilidade do pedido judicial.",
+        "Coleta dados médicos e de contribuição.",
+        "Envia contrato para assinatura digital.",
+        "Agenda reunião com advogado especialista.",
+        "Mantém comunicação empática e objetiva."
+      ]
+    },
+    invalidez: {
+      steps: [
+        "Recepção: acolhe o cliente e identifica se o benefício de invalidez foi negado.",
+        "Qualificação: confirma tipo de incapacidade e status do INSS.",
+        "Análise de Viabilidade: avalia tempo de contribuição e documentos médicos.",
+        "Contrato: apresenta o modelo de êxito e envia o link de assinatura.",
+        "Agendamento: agenda reunião com advogado após assinatura.",
+        "Confirmação: valida horário e orienta sobre o link da reunião."
+      ],
+      features: [
+        "Avalia casos de aposentadoria ou benefício por invalidez indeferido.",
+        "Verifica se há incapacidade permanente e direito ao benefício.",
+        "Coleta dados de saúde e contribuição.",
+        "Explica o contrato de êxito e coleta assinatura digital.",
+        "Agenda reunião com advogado especializado.",
+        "Acompanha o cliente de forma humanizada até a reunião."
+      ]
+    },
+    maternidade: {
+      steps: [
+        "Recepção: acolhe a cliente e explica o benefício de salário maternidade.",
+        "Qualificação: confirma se é gestante, mãe recente ou adoção/guarda judicial.",
+        "Análise de Viabilidade: verifica vínculo com INSS, contribuições e idade da criança.",
+        "Contrato: apresenta condições do contrato de êxito e envia link de assinatura.",
+        "Agendamento: confirma e-mail e agenda reunião com o advogado.",
+        "Confirmação: envia detalhes e horários da reunião virtual."
+      ],
+      features: [
+        "Identifica quem tem direito ao salário maternidade.",
+        "Verifica contribuições e situação previdenciária da mãe.",
+        "Filtra casos elegíveis e encaminha para o jurídico.",
+        "Envia contrato e valida assinatura digital.",
+        "Agenda reunião com advogado previdenciário.",
+        "Garante acolhimento e agilidade na condução do caso."
+      ]
+    },
+    descontoIndevido: {
+      steps: [
+        "Recepção: acolhe o cliente e identifica o tipo de desconto indevido.",
+        "Qualificação: verifica se há descontos em benefício, conta ou cartão.",
+        "Análise de Viabilidade: confirma valores, tempo e tipo de contrato.",
+        "Contrato: apresenta o modelo de êxito e coleta assinatura.",
+        "Agendamento: confirma assinatura e agenda reunião jurídica.",
+        "Confirmação: orienta sobre reunião online e próximos passos."
+      ],
+      features: [
+        "Atende vítimas de descontos indevidos em benefícios ou contas.",
+        "Identifica origem e responsáveis pelo desconto.",
+        "Explica os direitos e coleta informações do caso.",
+        "Envia contrato via Zapsign e agenda reunião.",
+        "Mantém linguagem simples, profissional e acolhedora.",
+        "Direciona o caso ao advogado para análise detalhada."
+      ]
+    },
+    trabalhista: {
+      steps: [
+        "Recepção: acolhe o cliente e entende o problema com a empresa.",
+        "Qualificação: confirma se há interesse em processo judicial.",
+        "Análise de Viabilidade: faz perguntas sobre vínculo, pagamentos, função e jornada.",
+        "Contrato: apresenta o contrato de êxito (30%) e envia o link para assinatura.",
+        "Agendamento: agenda reunião após assinatura do contrato.",
+        "Confirmação: envia confirmação e orientações sobre a reunião."
+      ],
+      features: [
+        "Recebe leads com problemas trabalhistas e verifica irregularidades.",
+        "Confirma se há rescisão indireta ou direitos violados.",
+        "Explica a forma de atuação e percentual de êxito.",
+        "Envia contrato via Zapsign e tutorial de assinatura.",
+        "Agenda reunião com advogado trabalhista.",
+        "Conduz o processo com empatia e clareza."
+      ]
+    },
+    pensaoDivorcio: {
+      steps: [
+        "Recepção: identifica se o caso é de divórcio, união estável ou pensão.",
+        "Qualificação: confirma interesse em análise de viabilidade.",
+        "Análise de Viabilidade: faz perguntas sobre casamento, filhos e bens.",
+        "Contrato: explica honorários e condições de atendimento.",
+        "Agendamento: marca reunião gratuita com o advogado.",
+        "Confirmação: envia data, horário e link da reunião."
+      ],
+      features: [
+        "Atende clientes com demandas de divórcio, pensão ou alimentos.",
+        "Coleta informações básicas sobre relação conjugal e filhos.",
+        "Filtra se o caso é consensual ou litigioso.",
+        "Explica valores e condições do escritório.",
+        "Agenda reunião com advogado de família.",
+        "Mantém atendimento cordial e profissional."
+      ]
+    },
+    bancario: {
+      steps: [
+        "Recepção: acolhe o cliente e entende o problema bancário.",
+        "Qualificação: confirma se há contrato, empréstimo ou cobrança indevida.",
+        "Análise de Viabilidade: verifica documentos e histórico do banco.",
+        "Contrato: explica a política de êxito e envia link para assinatura.",
+        "Agendamento: confirma assinatura e agenda reunião.",
+        "Confirmação: orienta sobre a reunião virtual com o advogado."
+      ],
+      features: [
+        "Identifica e analisa contratos bancários irregulares.",
+        "Verifica cobranças, empréstimos ou consignados não autorizados.",
+        "Garante triagem completa antes do contato jurídico.",
+        "Envia contrato via Zapsign e tutorial de assinatura.",
+        "Agenda reunião com advogado bancário.",
+        "Atende de forma simples, direta e empática."
+      ]
+    },
+    bancarioProdutorRural: {
+      steps: [
+        "Recepção: acolhe o cliente e identifica o tipo de contrato rural.",
+        "Qualificação: confirma se é produtor rural e qual a instituição financeira.",
+        "Análise de Viabilidade: verifica valores, prazos e irregularidades no contrato.",
+        "Contrato: apresenta condições de êxito e envia link de assinatura.",
+        "Agendamento: agenda reunião após confirmação da assinatura.",
+        "Confirmação: envia detalhes da reunião com advogado."
+      ],
+      features: [
+        "Analisa contratos de crédito agrícola e financiamentos rurais.",
+        "Identifica juros abusivos ou cláusulas ilegais.",
+        "Filtra leads aptos a ação judicial.",
+        "Envia contrato via Zapsign e agenda reunião.",
+        "Encaminha o caso ao advogado bancário especialista.",
+        "Mantém comunicação profissional e técnica, sem jargões."
+      ]
+    }
+  };
 
   // Fetch current model data for export
   const fetchCurrentModel = async () => {
@@ -316,81 +531,324 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
 
   return (
     <>
-      <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-md p-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-            <Book className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+      <div className="space-y-8">
+        {/* Hero Section */}
+        <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-neutral-800 dark:via-neutral-800 dark:to-neutral-800 rounded-2xl p-8 md:p-12 relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-10 dark:opacity-5">
+            <div className="absolute top-0 left-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
+            <div className="absolute bottom-0 left-1/2 w-64 h-64 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
           </div>
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Modelos</h2>
-            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">Selecione um modelo pré-configurado para seu agente</p>
-          </div>
-        </div>
 
-        <div className="flex gap-4">
-          <select
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
-            disabled={!canEdit}
-          >
-            <option value="">Selecione um modelo...</option>
-            {Object.entries(agentModels).map(([key, model]) => (
-              <option key={key} value={key}>
-                {model.name}
-              </option>
-            ))}
-          </select>
-          {canEdit && (
-            <button
-              onClick={() => {
-                if (selectedModel) {
-                  setIsConfirmModalOpen(true);
-                  setConfirmText('');
-                  setError('');
-                }
-              }}
-              disabled={!selectedModel || !canEdit}
-              className="px-6 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Aplicar Modelo
-            </button>
-          )}
+          <div className="relative z-10">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-white dark:bg-neutral-700 rounded-2xl shadow-lg mb-4">
+                <Book className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+                Configure seu Agente de IA
+              </h2>
+              <p className="text-lg text-gray-600 dark:text-neutral-300 max-w-2xl mx-auto">
+                Escolha um modelo pré-configurado ou crie um agente personalizado do zero
+              </p>
+            </div>
+
+            {/* Action Cards */}
+            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              {canEdit && (
+                <>
+                  {/* Card 1 - Escolher Área */}
+                  <button
+                    onClick={() => setIsModelsModalOpen(true)}
+                    className="group relative bg-white dark:bg-neutral-700 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 text-left overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 rounded-full -mr-16 -mt-16"></div>
+
+                    <div className="relative">
+                      <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl mb-4 group-hover:scale-110 transition-transform">
+                        <Book className="w-7 h-7 text-white" />
+                      </div>
+
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                        Escolher Área da IA
+                      </h3>
+                      <p className="text-gray-600 dark:text-neutral-300 text-sm mb-4">
+                        Selecione entre 10 modelos especializados prontos para uso
+                      </p>
+
+                      <div className="flex items-center text-blue-600 dark:text-blue-400 font-medium text-sm group-hover:gap-2 transition-all">
+                        <span>Ver modelos</span>
+                        <span className="group-hover:translate-x-1 transition-transform">→</span>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Card 2 - Criar do Zero */}
+                  <button
+                    onClick={() => setIsAIPromptModalOpen(true)}
+                    className="group relative bg-white dark:bg-neutral-700 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 text-left overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-full -mr-16 -mt-16"></div>
+
+                    <div className="relative">
+                      <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl mb-4 group-hover:scale-110 transition-transform">
+                        <Plus className="w-7 h-7 text-white" />
+                      </div>
+
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                        Criar Agente do Zero
+                      </h3>
+                      <p className="text-gray-600 dark:text-neutral-300 text-sm mb-4">
+                        Use IA para criar um agente personalizado do zero
+                      </p>
+
+                      <div className="flex items-center text-emerald-600 dark:text-emerald-400 font-medium text-sm group-hover:gap-2 transition-all">
+                        <span>Começar agora</span>
+                        <span className="group-hover:translate-x-1 transition-transform">→</span>
+                      </div>
+                    </div>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
         {success && (
-          <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 rounded-lg text-sm">
-            {success}
+          <div className="p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 rounded-xl text-sm flex items-center gap-2">
+            <Check className="w-5 h-5" />
+            <span>{success}</span>
           </div>
         )}
 
-        <div className="mt-8 border-t border-gray-300 dark:border-neutral-700 pt-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-4">Exportar/Importar Modelo</h3>
+        {/* Exportar/Importar Section */}
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-neutral-700">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-gray-100 dark:bg-neutral-700 rounded-lg flex items-center justify-center">
+              <Download className="w-5 h-5 text-gray-600 dark:text-neutral-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Exportar/Importar Modelo</h3>
+              <p className="text-sm text-gray-500 dark:text-neutral-400">Gerencie seus modelos personalizados</p>
+            </div>
+          </div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-3">
             <button
               onClick={fetchCurrentModel}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 rounded-lg hover:bg-gray-200 dark:hover:bg-neutral-600 transition-colors"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-neutral-200 rounded-lg hover:bg-gray-200 dark:hover:bg-neutral-600 transition-colors font-medium text-sm disabled:opacity-50"
             >
               {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <Download className="w-5 h-5" />
+                <Download className="w-4 h-4" />
               )}
               <span>Exportar Modelo Atual</span>
             </button>
             {canEdit && (
               <button
                 onClick={() => setIsImportModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-neutral-700 text-gray-800 dark:text-neutral-200 rounded-lg hover:bg-gray-200 dark:hover:bg-neutral-600 transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-neutral-200 rounded-lg hover:bg-gray-200 dark:hover:bg-neutral-600 transition-colors font-medium text-sm"
               >
-                <Upload className="w-5 h-5" />
+                <Upload className="w-4 h-4" />
                 <span>Importar Modelo</span>
               </button>
             )}
           </div>
         </div>
+
+        {/* Modal de Seleção de Modelos com Cards */}
+        <Modal
+          isOpen={isModelsModalOpen}
+          onClose={() => setIsModelsModalOpen(false)}
+          title=""
+          maxWidth="6xl"
+        >
+          <div className="relative">
+            {/* Header do Modal */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 px-8 py-10 -mt-6 -mx-6 rounded-t-2xl mb-8">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                  <Book className="w-8 h-8 text-white" />
+                </div>
+              </div>
+              <h2 className="text-3xl font-bold text-white text-center mb-2">
+                Escolha a Área do seu Agente
+              </h2>
+              <p className="text-blue-100 dark:text-purple-100 text-center max-w-2xl mx-auto">
+                Selecione uma especialização para configurar automaticamente seu agente com as melhores práticas
+              </p>
+            </div>
+
+            {/* Grid de Cards */}
+            <div className="px-8 pb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-h-[550px] overflow-y-auto pr-2 custom-scrollbar">
+                {Object.entries(agentModels).map(([key, model]) => {
+                  const colors = {
+                    bpc: 'from-blue-500 to-blue-600',
+                    trabalhista: 'from-red-500 to-red-600',
+                    auxilio: 'from-yellow-500 to-yellow-600',
+                    bancario: 'from-orange-500 to-orange-600',
+                    descontoIndevido: 'from-purple-500 to-purple-600',
+                    invalidez: 'from-pink-500 to-pink-600',
+                    maternidade: 'from-rose-500 to-rose-600',
+                    bancarioProdutorRural: 'from-amber-500 to-amber-600',
+                    pensaoDivorcio: 'from-emerald-500 to-emerald-600',
+                    pensaoMorte: 'from-teal-500 to-teal-600'
+                  };
+
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => handleSelectModel(key)}
+                      className="group relative bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 text-left overflow-hidden"
+                    >
+                      {/* Decorative gradient bar */}
+                      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${colors[key] || 'from-blue-500 to-purple-500'}`}></div>
+
+                      {/* Icon and Badge */}
+                      <div className="flex items-start gap-4 mb-4">
+                        <div className={`w-12 h-12 bg-gradient-to-br ${colors[key] || 'from-blue-500 to-purple-500'} rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform`}>
+                          <Book className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-gray-900 dark:text-white text-base mb-1 line-clamp-2 leading-tight">
+                            {model.name}
+                          </h3>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-sm text-gray-600 dark:text-neutral-400 line-clamp-3 mb-4 leading-relaxed">
+                        {modelDescriptions[key] || 'Modelo pré-configurado para otimizar o atendimento.'}
+                      </p>
+
+                      {/* Arrow indicator */}
+                      <div className="flex items-center text-blue-600 dark:text-blue-400 text-sm font-semibold group-hover:gap-2 transition-all">
+                        <span>Ver detalhes</span>
+                        <span className="group-hover:translate-x-1 transition-transform">→</span>
+                      </div>
+
+                      {/* Hover background effect */}
+                      <div className={`absolute inset-0 bg-gradient-to-br ${colors[key] || 'from-blue-500 to-purple-500'} opacity-0 group-hover:opacity-5 transition-opacity rounded-2xl`}></div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Footer Button */}
+              <div className="mt-8 pt-6 border-t border-gray-200 dark:border-neutral-700">
+                <button
+                  onClick={() => setIsModelsModalOpen(false)}
+                  className="w-full px-6 py-3 text-base font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Modal de Detalhes do Modelo */}
+        <Modal
+          isOpen={isModelDetailsModalOpen}
+          onClose={() => {
+            setIsModelDetailsModalOpen(false);
+            setSelectedModel('');
+          }}
+          title={selectedModel ? agentModels[selectedModel]?.name : ''}
+          maxWidth="3xl"
+        >
+          {selectedModel && (
+            <div className="p-6">
+              <p className="text-gray-600 dark:text-neutral-400 mb-6">
+                {modelDescriptions[selectedModel]}
+              </p>
+
+              {modelDetails[selectedModel] && (
+                <div className="space-y-6">
+                  {/* Etapas do Atendimento */}
+                  <div>
+                    <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-4">
+                      <span className="text-2xl">⚙️</span>
+                      Etapas do Atendimento
+                    </h3>
+                    <div className="space-y-3">
+                      {modelDetails[selectedModel].steps.map((step, index) => (
+                        <div
+                          key={index}
+                          className="flex gap-3 p-3 bg-gray-50 dark:bg-neutral-700/50 rounded-lg"
+                        >
+                          <div className="flex-shrink-0 w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-xs font-semibold text-blue-600 dark:text-blue-400">
+                            {index + 1}
+                          </div>
+                          <p className="text-sm text-gray-700 dark:text-neutral-300 leading-relaxed">
+                            {step}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* O que o Agente Faz */}
+                  <div>
+                    <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-4">
+                      <span className="text-2xl">🧭</span>
+                      O que o Agente Faz
+                    </h3>
+                    <div className="space-y-2">
+                      {modelDetails[selectedModel].features.map((feature, index) => (
+                        <div
+                          key={index}
+                          className="flex gap-3 items-start"
+                        >
+                          <div className="flex-shrink-0 w-5 h-5 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mt-0.5">
+                            <Check className="w-3 h-3 text-green-600 dark:text-green-400" />
+                          </div>
+                          <p className="text-sm text-gray-700 dark:text-neutral-300 leading-relaxed">
+                            {feature}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!modelDetails[selectedModel] && (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 dark:text-neutral-400">
+                    Este modelo está configurado e pronto para uso.
+                  </p>
+                </div>
+              )}
+
+              {/* Botões */}
+              <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-neutral-700">
+                <button
+                  onClick={() => {
+                    setIsModelDetailsModalOpen(false);
+                    setSelectedModel('');
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
+                >
+                  Voltar
+                </button>
+                {canEdit && (
+                  <button
+                    onClick={handleConfirmModel}
+                    className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 rounded-lg transition-colors"
+                  >
+                    <Check className="w-4 h-4" />
+                    Aplicar este Modelo
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </Modal>
 
         <Modal
           isOpen={isConfirmModalOpen}
@@ -402,6 +860,20 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
           title="Confirmar Aplicação do Modelo"
         >
           <div className="p-6 space-y-4">
+            {selectedModel && (
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg mb-4">
+                <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">
+                  Modelo Selecionado:
+                </h4>
+                <p className="text-sm text-blue-700 dark:text-blue-400">
+                  {agentModels[selectedModel]?.name}
+                </p>
+                <p className="text-xs text-blue-600 dark:text-blue-500 mt-2">
+                  {modelDescriptions[selectedModel]}
+                </p>
+              </div>
+            )}
+
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
                 <AlertCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
@@ -560,14 +1032,26 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
             </div>
           </div>
         </Modal>
-      </div>
 
-            {/* AI Prompt Generator */}
-      <AIPromptGenerator 
-        token={token} 
-        onApplyModel={handleApplyGeneratedModel}
-        canEdit={canEdit}
-      />
+        {/* Modal de Criar Agente do Zero com IA */}
+        <Modal
+          isOpen={isAIPromptModalOpen}
+          onClose={() => setIsAIPromptModalOpen(false)}
+          title="Criar Agente do Zero com IA"
+          maxWidth="4xl"
+        >
+          <div className="p-6">
+            <AIPromptGenerator
+              token={token}
+              onApplyModel={(model) => {
+                handleApplyGeneratedModel(model);
+                setIsAIPromptModalOpen(false);
+              }}
+              canEdit={canEdit}
+            />
+          </div>
+        </Modal>
+      </div>
     </>
   );
 }
