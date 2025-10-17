@@ -14,7 +14,6 @@ import {
   X,
   PlayCircle,
   Check,
-  Trash2,
 } from "lucide-react";
 import type { Chat } from "./utils/api";
 import { apiClient, clearApiCache, getCacheKey } from "./utils/api";
@@ -97,7 +96,6 @@ export default function ContactSidebarV2({
   const [editingName, setEditingName] = useState(false);
   const [savingName, setSavingName] = useState(false);
   const [editedName, setEditedName] = useState("");
-  const [deletingSession, setDeletingSession] = useState(false);
 
   // Estados para cooldown de ativação da IA
   const [activationCooldown, setActivationCooldown] = useState(false);
@@ -466,22 +464,6 @@ export default function ContactSidebarV2({
     }
   };
 
-  // 🗑️ Excluir sessão
-  const handleDeleteSession = async () => {
-    if (!token || !sessionInfo || !selectedChatDigits) return;
-    setDeletingSession(true);
-    try {
-      await apiClient.deleteSession(token, selectedChatDigits);
-      toast.success('Sessão excluída');
-      await loadSessionInfo();
-    } catch (err) {
-      console.error('Erro ao excluir sessão:', err);
-      toast.error('Erro ao excluir sessão');
-    } finally {
-      setDeletingSession(false);
-    }
-  };
-
   // 🔄 Remover transferência
   const handleRemoveTransfer = async () => {
     if (!selectedChat || !token) return;
@@ -730,27 +712,12 @@ export default function ContactSidebarV2({
           Informações do Contato
         </h2>
 
-        <div className="flex items-center gap-2">
-          {/* Botão Excluir Sessão */}
-          {sessionInfo && (
-            <button
-              onClick={handleDeleteSession}
-              disabled={deletingSession}
-              className="flex items-center gap-1 px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50"
-              title="Excluir sessão"
-            >
-              {deletingSession ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-              <span>Excluir Sessão</span>
-            </button>
-          )}
-
-          <button
-            onClick={onToggle}
-            className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
-          >
-            <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400 transition-colors duration-200" />
-          </button>
-        </div>
+        <button
+          onClick={onToggle}
+          className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+        >
+          <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400 transition-colors duration-200" />
+        </button>
       </div>
 
       {/* Conteúdo principal */}
