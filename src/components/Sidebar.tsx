@@ -23,7 +23,13 @@ import {
   BookOpen,
   Menu,
   X,
-  Handshake
+  Handshake,
+  Eye,
+  EyeOff,
+  Star,
+  Clock,
+  ArrowUpDown,
+  AlertCircle
 } from 'lucide-react';
 import { DomainConfig } from '../utils/DomainConfig';
 import Modal from './Modal';
@@ -42,6 +48,14 @@ interface LinkedAccount {
   id_usuario?: number;
   nome_usuario?: string;
   usuario_ativo?: boolean;
+  id_cliente_atual?: number;
+  cliente_id?: number;
+  company_id?: number;
+  id_usuario_atual?: number;
+  usuario_id?: number;
+  user_id?: number;
+  isFavorite?: boolean;
+  lastAccessed?: string;
 }
 
 interface MenuItemProps {
@@ -119,6 +133,9 @@ const Sidebar = () => {
     newPassword: '',
     confirmPassword: '',
   });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -128,9 +145,12 @@ const Sidebar = () => {
   const [linkedAccountsLoading, setLinkedAccountsLoading] = useState(false);
   const [linkedAccountsError, setLinkedAccountsError] = useState('');
   const [workspaceSwitchError, setWorkspaceSwitchError] = useState('');
+  const [selectedWorkspaceIndex, setSelectedWorkspaceIndex] = useState(0);
+  const [workspaceFavorites, setWorkspaceFavorites] = useState<Set<string>>(new Set());
   const [switchingAccountKey, setSwitchingAccountKey] = useState<string | null>(null);
   const [isLinkedAccountsOpen, setIsLinkedAccountsOpen] = useState(false);
   const [linkedAccountsSearch, setLinkedAccountsSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   const linkedAccountsRef = useRef<HTMLDivElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
@@ -141,7 +161,7 @@ const Sidebar = () => {
   const currentPath = window.location.pathname;
   
   const storedUserRaw = localStorage.getItem('user');
-  type StoredUser = LoginResponse & { id_cliente?: number };
+  type StoredUser = LoginResponse & { id_cliente?: number; nome_cliente?: string };
   let storedUser: StoredUser | null = null;
 
   try {
@@ -154,10 +174,6 @@ const Sidebar = () => {
   const userName = storedUser?.nome_usuario ?? 'Usuário';
   const currentUserId = storedUser?.id_usuario;
   const currentClientId = storedUser?.id_cliente;
-
-  const currentWorkspaceName =
-  storedUser?.nome_cliente ??
-  'Desconhecido';
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -200,24 +216,107 @@ const Sidebar = () => {
     }
   };
 
-  const filteredLinkedAccounts = useMemo(() => {
-    const term = linkedAccountsSearch.trim().toLowerCase();
+  // Função para gerar chave única do workspace
+  const getWorkspaceKey = (account: LinkedAccount): string => {
+    const clientId = account.id_cliente ?? account.id_cliente_atual ?? account.cliente_id ?? account.company_id;
+    const userId = account.id_usuario ?? account.id_usuario_atual ?? account.usuario_id ?? account.user_id;
+    return `${clientId}-${userId}`;
+  };
 
-    if (!term) {
-      return linkedAccounts;
+  // Função para toggle de favorito
+  const toggleFavorite = (account: LinkedAccount, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const key = getWorkspaceKey(account);
+    setWorkspaceFavorites(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(key)) {
+        newSet.delete(key);
+      } else {
+        newSet.add(key);
+      }
+      return newSet;
+    });
+  };
+
+  // Buscar o nome do workspace atual
+  const currentWorkspaceName = useMemo(() => {
+    // Se tiver nome_cliente no localStorage, usa ele
+    if (storedUser?.nome_cliente) {
+      return storedUser.nome_cliente;
     }
 
-    return linkedAccounts.filter((account) => {
-      const searchTargets = [
-        account.nome_cliente ?? '',
-        account.nome_usuario ?? '',
-        account.id_cliente !== undefined ? String(account.id_cliente) : '',
-        account.id_usuario !== undefined ? String(account.id_usuario) : '',
-      ];
+    // Se tiver ambos IDs, tenta encontrar nos linkedAccounts
+    if (currentClientId && currentUserId) {
+      const currentAccount = linkedAccounts.find(account => {
+        const key = getWorkspaceKey(account);
+        return key === `${currentClientId}-${currentUserId}`;
+      });
 
-      return searchTargets.some((target) => target.toLowerCase().includes(term));
+      if (currentAccount?.nome_cliente) {
+        return currentAccount.nome_cliente;
+      }
+    }
+
+    // Se só tiver currentUserId (sem currentClientId), busca pelo id_usuario
+    if (currentUserId && linkedAccounts.length > 0) {
+      const accountByUserId = linkedAccounts.find(account =>
+        account.id_usuario === currentUserId ||
+        account.id_usuario_atual === currentUserId ||
+        account.usuario_id === currentUserId ||
+        account.user_id === currentUserId
+      );
+
+      if (accountByUserId?.nome_cliente) {
+        return accountByUserId.nome_cliente;
+      }
+    }
+
+    // Último recurso: mostra o nome do usuário logado
+    return userName;
+  }, [linkedAccounts, currentClientId, currentUserId, storedUser, userName]);
+
+  const filteredLinkedAccounts = useMemo(() => {
+    const term = debouncedSearch.trim().toLowerCase();
+
+    // Filtrar por busca
+    let filtered = linkedAccounts;
+    if (term) {
+      filtered = linkedAccounts.filter((account) => {
+        const searchTargets = [
+          account.nome_cliente ?? '',
+          account.nome_usuario ?? '',
+          account.id_cliente !== undefined ? String(account.id_cliente) : '',
+          account.id_usuario !== undefined ? String(account.id_usuario) : '',
+        ];
+        return searchTargets.some((target) => target.toLowerCase().includes(term));
+      });
+    }
+
+    // Ordenar: atual no topo, depois ativos, depois inativos (ordem alfabética)
+    return filtered.sort((a, b) => {
+      const aKey = getWorkspaceKey(a);
+      const bKey = getWorkspaceKey(b);
+      const currentKey = `${currentClientId}-${currentUserId}`;
+
+      const aIsCurrent = aKey === currentKey;
+      const bIsCurrent = bKey === currentKey;
+      const aIsActive = a.cliente_ativo && a.usuario_ativo;
+      const bIsActive = b.cliente_ativo && b.usuario_ativo;
+
+      // 1. Workspace atual sempre primeiro
+      if (aIsCurrent) return -1;
+      if (bIsCurrent) return 1;
+
+      // 2. Contas ativas antes das inativas
+      if (aIsActive && !bIsActive) return -1;
+      if (!aIsActive && bIsActive) return 1;
+
+      // 3. Por fim, alfabética
+      const aName = a.nome_cliente ?? '';
+      const bName = b.nome_cliente ?? '';
+      return aName.localeCompare(bName);
     });
-  }, [linkedAccounts, linkedAccountsSearch]);
+  }, [linkedAccounts, debouncedSearch, currentClientId, currentUserId]);
 
   const linkedAccountsPanelPositionClasses = useMemo(() => {
     if (isMobile) {
@@ -343,6 +442,36 @@ const Sidebar = () => {
       controller.abort();
     };
   }, [token]);
+
+  // Carregar favoritos do localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('workspace_favorites');
+      if (stored) {
+        setWorkspaceFavorites(new Set(JSON.parse(stored)));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar favoritos:', error);
+    }
+  }, []);
+
+  // Salvar favoritos no localStorage quando mudar
+  useEffect(() => {
+    try {
+      localStorage.setItem('workspace_favorites', JSON.stringify(Array.from(workspaceFavorites)));
+    } catch (error) {
+      console.error('Erro ao salvar favoritos:', error);
+    }
+  }, [workspaceFavorites]);
+
+  // Debounce para busca de workspaces
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(linkedAccountsSearch);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [linkedAccountsSearch]);
 
   // Update favicon and title
   useEffect(() => {
@@ -1064,40 +1193,56 @@ const Sidebar = () => {
 </button>
 
 
-            {isExpanded && (
-              <div className="relative">
-                <button
-                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                  className={`group w-full flex items-center gap-3 p-3 rounded-xl ${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} transition-all duration-300 hover:shadow-lg relative overflow-hidden`}
-                >
-                  {/* Background gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/5 dark:from-white/2 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative">
+              {/* Botão do Perfil - Sempre visível */}
+              <button
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                className={`group w-full flex items-center ${isExpanded ? 'gap-3 p-3' : 'justify-center p-2.5'} rounded-xl ${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} hover:shadow-md transition-all duration-300 relative overflow-hidden`}
+                title={!isExpanded ? userName : undefined}
+              >
+                {/* Background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-r from-white/5 dark:from-white/2 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-                  <div className={`relative z-10 w-10 h-10 rounded-xl ${domainConfig.getProfileBg()} flex items-center justify-center text-sm font-bold text-gray-700 dark:text-neutral-100 shadow-lg transition-transform duration-300`}>
-                    {initials}
-                  </div>
-                  <div className="relative z-10 flex-1 text-left">
-                    <p className="text-sm font-semibold truncate">{userName}</p>
-                    <p className="text-xs opacity-70">Minha conta</p>
-                  </div>
-                  <ChevronDown className={`relative z-10 w-5 h-5 transition-all duration-300 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {isProfileMenuOpen && (
-                  <div className={`mt-3 p-2 ${domainConfig.getActiveBg()} rounded-xl backdrop-blur-sm border border-white/10 dark:border-neutral-700 shadow-xl space-y-2`}>
-                    <button
-                      onClick={() => setIsPasswordModalOpen(true)}
-                      className={`group w-full flex items-center gap-3 px-3 py-2 text-sm ${domainConfig.getActiveColor()} ${domainConfig.getHoverBg()} rounded-lg transition-all duration-300`}
-                    >
-                      <div className="p-1.5 rounded-lg bg-white/10 dark:bg-white/5 group-hover:bg-white/20 dark:group-hover:bg-white/10 transition-colors duration-300">
-                        <Key className="w-4 h-4" />
-                      </div>
-                      <span className="font-medium">Trocar senha</span>
-                    </button>
-                  </div>
+                <div className={`relative z-10 ${isExpanded ? 'w-10 h-10' : 'w-9 h-9'} rounded-xl ${domainConfig.getProfileBg()} flex items-center justify-center text-sm font-bold text-gray-700 dark:text-neutral-100 shadow-lg flex-shrink-0`}>
+                  {initials}
+                </div>
+                {isExpanded && (
+                  <>
+                    <div className="relative z-10 flex-1 text-left min-w-0">
+                      <p className="text-sm font-semibold truncate">{userName}</p>
+                      <p className="text-xs opacity-70">Minha conta</p>
+                    </div>
+                    <ChevronDown className={`relative z-10 w-4 h-4 transition-transform duration-200 flex-shrink-0 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+                  </>
                 )}
-              </div>
-            )}
+              </button>
+
+              {/* Dropdown Menu */}
+              {isProfileMenuOpen && (
+                <div className={`absolute ${isExpanded ? 'bottom-full left-0 right-0 mb-2' : 'bottom-0 left-full ml-2'} bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-gray-200 dark:border-neutral-700 overflow-hidden z-50 ${!isExpanded ? 'w-48' : ''}`}>
+                  <button
+                    onClick={() => {
+                      setIsPasswordModalOpen(true);
+                      setIsProfileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                  >
+                    <Key className="w-4 h-4" />
+                    <span className="text-sm font-medium">Trocar senha</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsProfileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-t border-gray-200 dark:border-neutral-700"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="text-sm font-medium">Sair</span>
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Botão de toggle de tema */}
             <button
@@ -1114,25 +1259,6 @@ const Sidebar = () => {
                 <div className="relative z-10 flex items-center gap-2 ml-2 overflow-hidden">
                   <span className="text-sm font-semibold tracking-wide whitespace-nowrap">
                     Tema
-                  </span>
-                </div>
-              )}
-            </button>
-
-            <button
-              onClick={handleLogout}
-              className={`group relative flex items-center h-[44px] px-1 py-2.5 mx-1 my-1 w-[calc(100%-8px)] rounded-lg ${
-                isExpanded ? 'justify-start' : 'justify-center'
-              } text-gray-700 dark:text-neutral-300 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 hover:shadow-md`}
-              title={!isExpanded ? 'Sair' : undefined}
-            >
-              <div className="relative z-10 p-1.5 rounded-lg bg-white/10 dark:bg-white/5 group-hover:bg-red-500/20 dark:group-hover:bg-red-500/30 flex-shrink-0">
-                <LogOut className="w-5 h-5 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors duration-300" />
-              </div>
-              {isExpanded && (
-                <div className="relative z-10 flex items-center gap-2 ml-2 overflow-hidden">
-                  <span className="text-sm font-semibold tracking-wide whitespace-nowrap">
-                    Sair
                   </span>
                 </div>
               )}
@@ -1166,48 +1292,75 @@ const Sidebar = () => {
               <label htmlFor="currentPassword" className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2">
                 Senha Atual
               </label>
-              <input
-                type="password"
-                id="currentPassword"
-                value={passwordForm.currentPassword}
-                onChange={(e) =>
-                  setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
-                }
-                className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 backdrop-blur-sm transition-all duration-200"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showCurrentPassword ? "text" : "password"}
+                  id="currentPassword"
+                  value={passwordForm.currentPassword}
+                  onChange={(e) =>
+                    setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
+                  }
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 backdrop-blur-sm transition-all duration-200"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 transition-colors"
+                >
+                  {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             <div>
               <label htmlFor="newPassword" className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2">
                 Nova Senha
               </label>
-              <input
-                type="password"
-                id="newPassword"
-                value={passwordForm.newPassword}
-                onChange={(e) =>
-                  setPasswordForm({ ...passwordForm, newPassword: e.target.value })
-                }
-                className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 backdrop-blur-sm transition-all duration-200"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  id="newPassword"
+                  value={passwordForm.newPassword}
+                  onChange={(e) =>
+                    setPasswordForm({ ...passwordForm, newPassword: e.target.value })
+                  }
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 backdrop-blur-sm transition-all duration-200"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 transition-colors"
+                >
+                  {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2">
                 Confirme a Nova Senha
               </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                value={passwordForm.confirmPassword}
-                onChange={(e) =>
-                  setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
-                }
-                className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 backdrop-blur-sm transition-all duration-200"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  id="confirmPassword"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) =>
+                    setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
+                  }
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 backdrop-blur-sm transition-all duration-200"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             {error && (
@@ -1268,122 +1421,180 @@ const Sidebar = () => {
       </Modal>
 <Modal
   isOpen={isWorkspaceModalOpen}
-  onClose={() => setIsWorkspaceModalOpen(false)}
-  title="Selecionar Workspace"
+  onClose={() => {
+    setIsWorkspaceModalOpen(false);
+    setSelectedWorkspaceIndex(0);
+    setLinkedAccountsSearch('');
+  }}
+  title="Workspaces"
   maxWidth="lg"
 >
-  <div className="bg-gradient-to-br from-white to-gray-50 dark:from-neutral-800 dark:to-neutral-900 rounded-xl border border-gray-300/50 dark:border-neutral-700 p-6 space-y-6 transition-theme">
-    {/* 🧭 BLOCO SUPERIOR - WORKSPACE ATUAL */}
-    <div className="p-4 bg-emerald-50 dark:bg-emerald-950 border border-emerald-100 dark:border-emerald-900 rounded-xl flex items-start gap-3">
-      <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300">
-        <GitBranch className="w-5 h-5" />
-      </div>
-      <div className="flex flex-col">
-        <span className="text-sm font-medium text-gray-700 dark:text-neutral-300">
-          Você está no workspace:
-        </span>
-        <span className="text-base font-semibold text-emerald-700 dark:text-emerald-400">
-          {storedUser?.nome_cliente ?? 'Desconhecido'}
-        </span>
-        <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
-          Selecione outro workspace abaixo para mudar.
-        </p>
-      </div>
-    </div>
-
-    {/* 🧭 CABEÇALHO */}
-    <div className="flex items-center justify-between border-b border-gray-300 dark:border-neutral-700 pb-3">
-      <h2 className="text-lg font-semibold text-gray-800 dark:text-neutral-100 flex items-center gap-2">
-        <Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-        Workspaces
-      </h2>
-      <span className="text-sm text-gray-400 dark:text-neutral-500">{linkedAccounts.length}</span>
-    </div>
-
-    {/* 🔍 CAMPO DE BUSCA */}
-    <div className="relative">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-neutral-500" />
-      <input
-        type="text"
-        value={linkedAccountsSearch}
-        onChange={(e) => setLinkedAccountsSearch(e.target.value)}
-        placeholder="Buscar workspace..."
-        className="w-full pl-9 pr-3 py-2.5 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-700 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-      />
-    </div>
-
-    {/* 🧾 LISTA DE WORKSPACES */}
-    <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
-      {linkedAccountsLoading ? (
-        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-neutral-400">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          <span>Carregando contas...</span>
+  <div className="bg-white dark:bg-neutral-900 transition-theme">
+    {/* WORKSPACE ATUAL */}
+    <div className="p-4 border-b border-gray-200 dark:border-neutral-800">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-emerald-500 dark:bg-emerald-600">
+          <GitBranch className="w-5 h-5 text-white" />
         </div>
-      ) : linkedAccountsError ? (
-        <p className="text-sm text-rose-500 dark:text-rose-400">{linkedAccountsError}</p>
-      ) : filteredLinkedAccounts.length === 0 ? (
-        <p className="text-sm text-gray-500 dark:text-neutral-400">Nenhuma conta encontrada.</p>
-      ) : (
-        filteredLinkedAccounts.map((account, index) => {
-          // Normaliza IDs
-          const accClientId =
-            account.id_cliente ??
-            account.id_cliente_atual ??
-            account.cliente_id ??
-            account.company_id;
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-gray-500 dark:text-neutral-400">Workspace atual</p>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+            {currentWorkspaceName}
+          </h3>
+        </div>
+      </div>
+    </div>
 
-          const accUserId =
-            account.id_usuario ??
-            account.id_usuario_atual ??
-            account.usuario_id ??
-            account.user_id;
+    <div className="p-4 space-y-4">
+      {/* BUSCA */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-neutral-500" />
+        <input
+          type="text"
+          value={linkedAccountsSearch}
+          onChange={(e) => setLinkedAccountsSearch(e.target.value)}
+          placeholder="Buscar workspace..."
+          className="w-full pl-9 pr-9 py-2 text-sm border border-gray-200 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 transition-colors"
+          autoFocus
+        />
+        {linkedAccountsSearch && (
+          <button
+            onClick={() => setLinkedAccountsSearch('')}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded transition-colors"
+          >
+            <X className="w-3.5 h-3.5 text-gray-400 dark:text-neutral-500" />
+          </button>
+        )}
+      </div>
 
-          const accountKey = `${accClientId ?? 'n'}-${accUserId ?? 'n'}-${index}`;
-          const isCurrent =
-            String(accClientId) === String(currentClientId) &&
-            String(accUserId) === String(currentUserId);
-          const isSwitching = switchingAccountKey === accountKey;
+      {/* LISTA */}
+      <div className="max-h-[420px] overflow-y-auto space-y-1">
+        {linkedAccountsLoading ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-neutral-500 mb-2" />
+            <p className="text-xs text-gray-500 dark:text-neutral-400">Carregando...</p>
+          </div>
+        ) : linkedAccountsError ? (
+          <div className="flex items-center gap-2 p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <AlertCircle className="w-4 h-4" />
+            <span>{linkedAccountsError}</span>
+          </div>
+        ) : filteredLinkedAccounts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <Search className="w-6 h-6 text-gray-300 dark:text-neutral-600 mb-2" />
+            <p className="text-xs text-gray-500 dark:text-neutral-400 mb-2">Nenhum resultado</p>
+            {linkedAccountsSearch && (
+              <button
+                onClick={() => setLinkedAccountsSearch('')}
+                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
+              >
+                Limpar busca
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            {filteredLinkedAccounts.map((account, index) => {
+              const accountKey = getWorkspaceKey(account);
+              const isCurrent = accountKey === `${currentClientId}-${currentUserId}`;
+              const isSwitching = switchingAccountKey === accountKey;
+              const isFavorite = workspaceFavorites.has(accountKey);
+              const isActive = account.cliente_ativo && account.usuario_ativo;
 
-          return (
-            <button
-              key={accountKey}
-              onClick={() => handleWorkspaceSwitch(account, accountKey)}
-              disabled={isSwitching || isCurrent}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium border transition-all duration-200 ${
-                isCurrent
-                  ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 shadow-sm'
-                  : 'bg-white dark:bg-neutral-700 border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-200 hover:bg-emerald-50/70 dark:hover:bg-emerald-950/50 hover:border-emerald-400 dark:hover:border-emerald-700 hover:shadow-sm'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    isCurrent ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300' : 'bg-gray-100 dark:bg-neutral-600 text-gray-500 dark:text-neutral-300'
-                  }`}
-                >
-                  <GitBranch className="w-4 h-4" />
-                </div>
-                <span className="truncate">{account.nome_cliente ?? 'Sem nome'}</span>
-              </div>
+              const getInitials = (name: string) => {
+                const words = name.split(' ').filter(w => w.length > 0);
+                if (words.length === 0) return '?';
+                if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
+                return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+              };
 
-              <div className="flex items-center gap-2">
-                {isSwitching && <Loader2 className="w-4 h-4 animate-spin text-emerald-500 dark:text-emerald-400" />}
-                {isCurrent && (
-                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase bg-emerald-100 dark:bg-emerald-900 px-2 py-1 rounded-lg">
-                    Ativo
-                  </span>
-                )}
-              </div>
-            </button>
-          );
-        })
+              const initials = getInitials(account.nome_cliente ?? 'W');
+              const showSeparator = isCurrent && index < filteredLinkedAccounts.length - 1;
+
+              return (
+                <React.Fragment key={accountKey}>
+                  <button
+                    onClick={() => !isCurrent && !isSwitching && handleWorkspaceSwitch(account, accountKey)}
+                    disabled={isSwitching || isCurrent}
+                    className={`group w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                      isCurrent
+                        ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 cursor-default'
+                        : 'bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700 hover:border-emerald-500 dark:hover:border-emerald-600 hover:bg-gray-50 dark:hover:bg-neutral-750 cursor-pointer'
+                    }`}
+                  >
+                    {/* Avatar */}
+                    <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center font-semibold text-xs ${
+                      isCurrent
+                        ? 'bg-emerald-500 dark:bg-emerald-600 text-white'
+                        : 'bg-gray-200 dark:bg-neutral-700 text-gray-700 dark:text-neutral-300'
+                    }`}>
+                      {initials}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {account.nome_cliente ?? 'Sem nome'}
+                        </h4>
+                        {isCurrent && (
+                          <span className="flex-shrink-0 text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase">
+                            Atual
+                          </span>
+                        )}
+                      </div>
+                      {isActive !== undefined && (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <div className={`h-1.5 w-1.5 rounded-full ${
+                            isActive
+                              ? 'bg-green-500 dark:bg-green-400'
+                              : 'bg-red-500 dark:bg-red-400'
+                          }`}></div>
+                          <span className={`text-[9px] font-medium ${
+                            isActive
+                              ? 'text-green-600 dark:text-green-400'
+                              : 'text-red-600 dark:text-red-400'
+                          }`}>
+                            {isActive ? 'Workspace ativo' : 'Workspace inativo'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Ações */}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {isSwitching && (
+                        <Loader2 className="w-4 h-4 animate-spin text-gray-400 dark:text-neutral-500" />
+                      )}
+                      {!isCurrent && !isSwitching && (
+                        <ChevronDown className="w-4 h-4 text-gray-300 dark:text-neutral-600 -rotate-90" />
+                      )}
+                    </div>
+                  </button>
+
+                  {showSeparator && (
+                    <div className="flex items-center gap-2 py-2 px-1">
+                      <div className="flex-1 h-px bg-gray-200 dark:bg-neutral-700"></div>
+                      <span className="text-[9px] text-gray-400 dark:text-neutral-500 uppercase font-medium">
+                        Outros
+                      </span>
+                      <div className="flex-1 h-px bg-gray-200 dark:bg-neutral-700"></div>
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </>
+        )}
+      </div>
+
+      {workspaceSwitchError && (
+        <div className="flex items-center gap-2 p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <AlertCircle className="w-4 h-4" />
+          <span>{workspaceSwitchError}</span>
+        </div>
       )}
     </div>
-
-    {/* ⚠️ MENSAGEM DE ERRO */}
-    {workspaceSwitchError && (
-      <p className="mt-3 text-sm font-medium text-rose-500 dark:text-rose-400">{workspaceSwitchError}</p>
-    )}
   </div>
 </Modal>
 
