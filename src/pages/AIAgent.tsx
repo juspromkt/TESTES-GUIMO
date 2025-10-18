@@ -61,11 +61,14 @@ type ConfigSub =
   | 'gatilhos'
   | 'audio'
   | 'parametros';
+type FollowUpSub = 'config' | 'history';
 
 const AIAgent = () => {
   const [mainSection, setMainSection] = useState<MainSection>('config');
   const [subSection, setSubSection] = useState<ConfigSub>('personalidade');
+  const [followUpSubSection, setFollowUpSubSection] = useState<FollowUpSub>('config');
   const [configOpen, setConfigOpen] = useState(true);
+  const [followUpOpen, setFollowUpOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const [isEnabled, setIsEnabled] = useState(false);
@@ -284,7 +287,13 @@ const handleSavePersonality = async () => {
 
   // Helper para obter o label da seção atual
   const getCurrentSectionLabel = () => {
-    if (mainSection === 'follow') return 'Follow-up';
+    if (mainSection === 'follow') {
+      const followLabels: Record<FollowUpSub, string> = {
+        config: 'Configurações de Follow-up',
+        history: 'Histórico de Follow-up',
+      };
+      return followLabels[followUpSubSection];
+    }
     if (mainSection === 'movement') return 'Movimentação Automática';
     if (mainSection === 'test') return 'Teste de Agente';
 
@@ -514,19 +523,48 @@ const handleSavePersonality = async () => {
           <div className="my-3 border-t border-gray-300 dark:border-neutral-700"></div>
 
           <button
-            onClick={() => {
-              setMainSection('follow');
-              setIsMobileSidebarOpen(false);
-            }}
-            className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg touch-manipulation ${
+            onClick={() => setFollowUpOpen(!followUpOpen)}
+            className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg ${
               mainSection === 'follow'
                 ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
-                : 'hover:bg-gray-50 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-300'
+                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700'
             }`}
           >
-            <MessageCircle className="w-4 h-4" />
-            Follow-up
+            <span className="flex items-center gap-2">
+              <MessageCircle className="w-4 h-4" />
+              Follow-up
+            </span>
+            <ChevronDown
+              className={`w-4 h-4 transition-transform ${
+                followUpOpen ? 'rotate-180' : ''
+              }`}
+            />
           </button>
+
+          {followUpOpen && (
+            <div className="ml-2 mt-1 space-y-1">
+              {[
+                ['config', 'Configurações de Follow-up'],
+                ['history', 'Histórico de Follow-up'],
+              ].map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => {
+                    setMainSection('follow');
+                    setFollowUpSubSection(key as FollowUpSub);
+                    setIsMobileSidebarOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-1.5 text-sm rounded-lg touch-manipulation ${
+                    mainSection === 'follow' && followUpSubSection === key
+                      ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-medium'
+                      : 'hover:bg-gray-50 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-300'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
 
           <button
             onClick={() => {
@@ -627,7 +665,7 @@ const handleSavePersonality = async () => {
         )}
 
         {mainSection === 'follow' && (
-          <FollowUpTab token={token} canViewAgent={canEdit} />
+          <FollowUpTab token={token} canViewAgent={canEdit} activeSubTab={followUpSubSection} />
         )}
         {mainSection === 'movement' && (
           <AutoMovementTab token={token} canViewAgent={canEdit} />

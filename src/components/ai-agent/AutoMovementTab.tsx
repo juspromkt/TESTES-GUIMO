@@ -427,93 +427,94 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
         }
       `}</style>
 
-      <div className="space-y-6">
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-md p-8 transition-theme">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center">
-                <ListOrdered className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Movimentação Automática</h2>
-                <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">Configure a movimentação automática entre etapas e status do lead</p>
-              </div>
+      <div className="space-y-4">
+        {/* Header Card */}
+        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-4 transition-theme">
+          <div className="flex items-center justify-between">
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-neutral-100">Movimentação Automática</h2>
+              <span className="text-xs text-gray-500 dark:text-neutral-500">
+                {movements.length} {movements.length === 1 ? 'regra' : 'regras'}
+              </span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowInfoModal(true)}
-                className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-lg transition-colors"
+                className="p-1.5 text-gray-500 dark:text-neutral-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
                 title="Informações"
               >
-                <Info className="w-5 h-5" />
+                <Info className="w-3.5 h-3.5" />
               </button>
               {canViewAgent && (
                 <>
                   <button
                     onClick={() => setIsResetModalOpen(true)}
-                    className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-colors"
+                    className="p-1.5 text-gray-500 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
                     title="Resetar configurações"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={isActive}
-                      onChange={handleToggleStatus}
-                      disabled={togglingStatus}
+                  <button
+                    onClick={handleToggleStatus}
+                    disabled={togglingStatus}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 ${
+                      isActive ? 'bg-orange-600 dark:bg-orange-500' : 'bg-gray-300 dark:bg-neutral-600'
+                    } ${togglingStatus ? 'opacity-70 cursor-wait' : 'cursor-pointer'}`}
+                    title={isActive ? 'Desativar movimentação' : 'Ativar movimentação'}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform bg-white rounded-full shadow-sm transition-transform duration-300 ${
+                        isActive ? 'translate-x-6' : 'translate-x-1'
+                      }`}
                     />
-                    <div className="w-11 h-6 bg-gray-300 dark:bg-neutral-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
-                    <span className="ml-3 text-sm font-medium text-gray-700 dark:text-neutral-200">
-                      {togglingStatus ? 'Alternando...' : isActive ? 'Ativado' : 'Desativado'}
-                    </span>
-                  </label>
+                  </button>
                 </>
               )}
             </div>
           </div>
+        </div>
 
-          {error && (
-            <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded-lg mb-4">
-              {error}
-            </div>
-          )}
+        {/* Mensagens de Feedback */}
+        {error && (
+          <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded-xl text-sm">
+            {error}
+          </div>
+        )}
 
-          {success && (
-            <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-300 px-4 py-3 rounded-lg mb-4">
-              {success}
-            </div>
-          )}
+        {success && (
+          <div className="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-300 px-4 py-3 rounded-xl text-sm">
+            {success}
+          </div>
+        )}
 
-          {funnels.length === 0 && (
-            <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300 px-4 py-3 rounded-lg mb-6">
-              Nenhum funil cadastrado. Cadastre um funil nas configurações de CRM para utilizar a movimentação automática.
-            </div>
-          )}
+        {funnels.length === 0 && (
+          <div className="bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 px-4 py-3 rounded-xl text-sm">
+            Nenhum funil cadastrado. Cadastre um funil nas configurações de CRM para utilizar a movimentação automática.
+          </div>
+        )}
 
-          {/* Lista de Movimentações */}
-          <div className="space-y-3">
+        {/* Lista de Movimentações */}
+        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 overflow-hidden transition-theme">
+          <div className="divide-y divide-gray-100 dark:divide-neutral-700/50">
             {movements.map((movement, index) => (
               <div
                 key={movement.ordem}
-                className="flex items-center justify-between bg-gray-50 dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors animate-fadeIn"
+                className="group flex items-center justify-between p-4 hover:bg-gray-50/50 dark:hover:bg-neutral-700/20 transition-colors animate-fadeIn"
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
-                <div className="flex items-center gap-4 flex-1">
-                  <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center text-orange-600 dark:text-orange-400 font-bold">
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="w-8 h-8 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-lg flex items-center justify-center text-orange-600 dark:text-orange-400 font-semibold text-sm">
                     {movement.ordem}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-gray-900 dark:text-neutral-100">Movimentação #{movement.ordem}</p>
+                      <span className="text-xs font-semibold text-gray-900 dark:text-neutral-100">Movimentação #{movement.ordem}</span>
                       {movement.tags && movement.tags.length > 0 && (
                         <div className="flex gap-1">
                           {movement.tags.map(tag => (
                             <span
                               key={tag.Id}
-                              className="px-2 py-0.5 rounded text-xs"
+                              className="px-1.5 py-0.5 rounded text-[10px] font-medium"
                               style={{ backgroundColor: tag.cor, color: tag.cor_texto }}
                             >
                               {tag.nome}
@@ -522,87 +523,87 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-gray-600 dark:text-neutral-300">
-                      <strong>Etapa:</strong> {getStepName(movement.id_etapa)} → <strong>Status:</strong> {getStageName(movement.id_funil, movement.id_estagio)}
+                    <p className="text-xs text-gray-600 dark:text-neutral-400">
+                      <span className="font-medium">Etapa:</span> {getStepName(movement.id_etapa)} → <span className="font-medium">Etapa do Funil:</span> {getStageName(movement.id_funil, movement.id_estagio)}
                     </p>
                     {movement.descricao && (
-                      <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1 line-clamp-1">{movement.descricao}</p>
+                      <p className="text-xs text-gray-500 dark:text-neutral-500 mt-1 line-clamp-1 italic">{movement.descricao}</p>
                     )}
                   </div>
                 </div>
                 {canViewAgent && (
                   <button
                     onClick={() => handleOpenConfig(movement)}
-                    className="p-2 text-gray-600 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-500 rounded-lg transition-colors"
+                    className="p-1.5 text-gray-500 dark:text-neutral-500 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                     title="Configurar movimentação"
                   >
-                    <Settings className="w-5 h-5" />
+                    <Settings className="w-4 h-4" />
                   </button>
                 )}
               </div>
             ))}
           </div>
+        </div>
 
-          {/* AI Generator */}
-          {canViewAgent && (
-            <div className="mt-6 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl p-6 border border-amber-100 dark:border-amber-900 transition-theme">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900 rounded-full flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-neutral-100">Gerar Descrições com IA</h3>
-                    <p className="text-sm text-gray-600 dark:text-neutral-300">Crie descrições claras automaticamente</p>
-                  </div>
+        {/* AI Generator */}
+        {canViewAgent && (
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-xl p-4 border border-amber-200 dark:border-amber-800/50 transition-theme">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                 </div>
-                <button
-                  onClick={handleGenerateDescriptions}
-                  disabled={isGeneratingDescriptions || serviceSteps.length === 0}
-                  className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50"
-                >
-                  {isGeneratingDescriptions ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Gerando...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" />
-                      Gerar
-                    </>
-                  )}
-                </button>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">Gerar Descrições com IA</h3>
+                  <p className="text-xs text-gray-600 dark:text-neutral-400">Crie descrições claras automaticamente</p>
+                </div>
               </div>
-              {generationError && (
-                <div className="mt-3 text-sm text-red-600 dark:text-red-400">{generationError}</div>
-              )}
-            </div>
-          )}
-
-          {/* Salvar */}
-          {canViewAgent && (
-            <div className="flex justify-end mt-6">
               <button
-                onClick={handleSave}
-                disabled={saving || funnels.length === 0}
-                className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 font-medium"
+                onClick={handleGenerateDescriptions}
+                disabled={isGeneratingDescriptions || serviceSteps.length === 0}
+                className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
               >
-                {saving ? (
+                {isGeneratingDescriptions ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Salvando...
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Gerando...
                   </>
                 ) : (
                   <>
-                    <Save className="w-5 h-5" />
-                    Salvar Movimentações
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Gerar
                   </>
                 )}
               </button>
             </div>
-          )}
-        </div>
+            {generationError && (
+              <div className="mt-2 text-xs text-red-600 dark:text-red-400">{generationError}</div>
+            )}
+          </div>
+        )}
+
+        {/* Salvar */}
+        {canViewAgent && (
+          <div className="flex justify-end">
+            <button
+              onClick={handleSave}
+              disabled={saving || funnels.length === 0}
+              className="flex items-center gap-2 px-5 py-2.5 bg-orange-600 text-white text-sm font-medium rounded-xl hover:bg-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Salvar Movimentações
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Modal: Configurar Movimentação */}
@@ -660,11 +661,11 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
                 </select>
               </div>
 
-              {/* Status do Lead */}
+              {/* Etapa do Funil */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">
-                  Status do Lead
-                  <span className="ml-1 text-xs text-gray-500 dark:text-neutral-400">(O lead será movido para este status)</span>
+                  Etapa do Funil
+                  <span className="ml-1 text-xs text-gray-500 dark:text-neutral-400">(O lead será movido para esta etapa)</span>
                 </label>
                 <select
                   disabled={!selectedMovement.id_funil}
@@ -672,7 +673,7 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
                   onChange={(e) => handleUpdateMovement(selectedMovement.ordem, 'id_estagio', e.target.value ? parseInt(e.target.value) : null)}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:opacity-50 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
                 >
-                  <option value="">Selecione um status</option>
+                  <option value="">Selecione uma etapa</option>
                   {funnels.find(f => f.id === selectedMovement.id_funil)?.estagios?.map((stage) => (
                     <option key={stage.Id} value={stage.Id}>
                       {stage.nome}
@@ -868,9 +869,9 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
                   </div>
 
                   <div>
-                    <h4 className="font-medium text-gray-800 dark:text-neutral-200 mb-1">2. Funil e Status do Lead</h4>
+                    <h4 className="font-medium text-gray-800 dark:text-neutral-200 mb-1">2. Funil e Etapa do Funil</h4>
                     <p className="text-gray-700 dark:text-neutral-300 text-sm">
-                      Escolha o funil e o status para onde o lead será movido automaticamente.
+                      Escolha o funil e a etapa para onde o lead será movido automaticamente.
                     </p>
                   </div>
 

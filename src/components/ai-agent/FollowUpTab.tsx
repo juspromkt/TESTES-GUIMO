@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Zap, Plus, Loader2, Pencil, Trash2, AlertCircle, Sparkles, Save, RefreshCw, Upload, Book } from 'lucide-react';
+import { Loader2, Save, RefreshCw, Upload } from 'lucide-react';
 import type { Fonte } from '../../types/fonte';
 import type { Funil } from '../../types/funil';
 import Pagination from '../Pagination';
-import Modal from '../Modal';
 import { registerMediaBlot } from './mediaBlot';
 import 'react-quill/dist/quill.snow.css';
 import ReactQuill from 'react-quill';
@@ -36,12 +35,13 @@ interface FollowUpHistory {
 interface FollowUpTabProps {
   token: string;
   canViewAgent: boolean;
+  activeSubTab: 'config' | 'history';
 }
 
 const CACHE_KEY = 'followup_history';
 const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
 
-export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
+export default function FollowUpTab({ token, canViewAgent, activeSubTab }: FollowUpTabProps) {
   const [config, setConfig] = useState<FollowUpConfig>({
     quantidade: 0,
     tempo_entre_mensagens: '30 minutos',
@@ -59,11 +59,6 @@ export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
   const [funnels, setFunnels] = useState<Funil[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const quillRef = useRef<ReactQuill>(null);
-  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
-  const [generatedPrompt, setGeneratedPrompt] = useState('');
-  const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
-  const [promptInstructions, setPromptInstructions] = useState('');
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -370,95 +365,6 @@ const fetchHistory = async (isRefreshing = false) => {
     }
   };
 
-  const handleGeneratePrompt = async () => {
-    setIsGeneratingPrompt(true);
-    setError('');
-    
-    try {
-      // Fetch current agent configuration
-      const personalityResponse = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/agente/personalidade/get', {
-        headers: { token }
-      });
-      
-      const rulesResponse = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/agente/regras/get', {
-        headers: { token }
-      });
-      
-      const stepsResponse = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/agente/etapas/get', {
-        headers: { token }
-      });
-      
-      const faqResponse = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/agente/faq/get', {
-        headers: { token }
-      });
-      
-      const personalityData = await personalityResponse.json();
-      const rulesData = await rulesResponse.json();
-      const stepsData = await stepsResponse.json();
-      const faqData = await faqResponse.json();
-      
-      // Prepare the agent configuration
-      const agentConfig = {
-        personalidade: Array.isArray(personalityData) && personalityData.length > 0 ? {
-          descricao: personalityData[0].descricao,
-          area: personalityData[0].area
-        } : { descricao: '', area: '' },
-        regras: Array.isArray(rulesData) && rulesData.length > 0 ? {
-          regras: rulesData[0].regras
-        } : { regras: '' },
-        etapas: Array.isArray(stepsData) ? stepsData.map(step => ({
-          ordem: step.ordem,
-          nome: step.nome,
-          descricao: step.descricao
-        })) : [],
-        faq: Array.isArray(faqData) ? faqData.map(item => ({
-          ordem: item.ordem,
-          nome: item.pergunta,
-          descricao: item.resposta
-        })) : []
-      };
-      
-      // Generate follow-up prompt
-      const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/agente/prompt/follow/gerar', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          token
-        },
-        body: JSON.stringify({
-          parametro: agentConfig,
-          descricao: promptInstructions
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Erro ao gerar prompt de follow-up');
-      }
-      
-      const data = await response.json();
-      if (Array.isArray(data) && data.length > 0 && data[0].output) {
-        setGeneratedPrompt(data[0].output);
-        setIsPromptModalOpen(true);
-      } else {
-        throw new Error('Formato de resposta inválido');
-      }
-    } catch (err) {
-      console.error('Erro ao gerar prompt:', err);
-      setError(err instanceof Error ? err.message : 'Erro ao gerar prompt de follow-up');
-    } finally {
-      setIsGeneratingPrompt(false);
-    }
-  };
-
-  const handleApplyGeneratedPrompt = () => {
-    setConfig(prev => ({
-      ...prev,
-      prompt: generatedPrompt
-    }));
-    setIsPromptModalOpen(false);
-    setIsConfirmModalOpen(false);
-    setPromptInstructions('');
-  };
 
  const formatPhoneNumber = (phone: string | undefined) => {
   if (!phone) return 'Não há registros'; // Retorna 'N/A' se o número for undefined, null ou string vazia
@@ -523,282 +429,257 @@ const fetchHistory = async (isRefreshing = false) => {
   }
 
   return (
-    <div className="space-y-8">
-      {/* AI Prompt Generator */}
-
+    <div className="space-y-4">
       {/* Configurações de Follow-up */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm p-6 transition-theme">
+      {activeSubTab === 'config' && (
+      <div className="space-y-4">
         {loadingConfig ? (
           <div className="flex items-center justify-center h-32">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+            <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Configurações de Follow-up</h2>
-                        {canViewAgent && (
-
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="sr-only peer"
-                  checked={config.isAtivo}
-                  onChange={handleToggleStatus}
-                  disabled={togglingStatus}
-                />
-                <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                <span className="ml-3 text-sm font-medium text-gray-700 dark:text-neutral-200">
-                  {togglingStatus ? 'Alternando...' : config.isAtivo ? 'Ativado' : 'Desativado'}
-                </span>
-              </label>
-              )}
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">
-                  Quantidade de Follow-ups
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="5"
-                  disable={!canViewAgent}
-                  value={config.quantidade}
-                  onChange={(e) => setConfig({ ...config, quantidade: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">
-                  Tempo entre Mensagens
-                </label>
-                <select
-                  value={config.tempo_entre_mensagens}
-                  onChange={(e) => setConfig({ ...config, tempo_entre_mensagens: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
-                >
-                  {timeOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+            {/* Header com Toggle */}
+            <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-4 transition-theme">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Status do Follow-up</h2>
+                  <p className="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
+                    {config.isAtivo ? 'Follow-up automático está ativo' : 'Follow-up automático está desativado'}
+                  </p>
+                </div>
+                {canViewAgent && (
+                  <button
+                    onClick={handleToggleStatus}
+                    disabled={togglingStatus}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 ${
+                      config.isAtivo ? 'bg-emerald-600 dark:bg-emerald-500' : 'bg-gray-300 dark:bg-neutral-600'
+                    } ${togglingStatus ? 'opacity-70 cursor-wait' : 'cursor-pointer'}`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform bg-white rounded-full shadow-sm transition-transform duration-300 ${
+                        config.isAtivo ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                )}
               </div>
             </div>
 
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">
-                Prompt de Follow-up (explique quando e como o follow-up deve ser enviado)
-              </label>
-{canViewAgent && (
+            {/* Configurações Básicas */}
+            <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-4 transition-theme">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-neutral-100 mb-3">Configurações Básicas</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1.5">
+                    Quantidade de Follow-ups
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="5"
+                    disabled={!canViewAgent}
+                    value={config.quantidade}
+                    onChange={(e) => setConfig({ ...config, quantidade: parseInt(e.target.value) })}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
+                  />
+                </div>
 
-              <input
-                id="followup-file-upload"
-                type="file"
-                accept="image/*,video/*,audio/*,application/pdf"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-              )}
-              {canViewAgent && (
-              <button
-                type="button"
-                onClick={() => document.getElementById('followup-file-upload')?.click()}
-                disabled={isUploading}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg mb-2 text-gray-700 dark:text-neutral-200"
-              >
-                <Upload className="w-4 h-4" />
-                {isUploading ? 'Carregando...' : 'Adicionar Mídia'}
-              </button>
-              )}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1.5">
+                    Intervalo entre Mensagens
+                  </label>
+                  <select
+                    value={config.tempo_entre_mensagens}
+                    onChange={(e) => setConfig({ ...config, tempo_entre_mensagens: e.target.value })}
+                    disabled={!canViewAgent}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
+                  >
+                    {timeOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
 
+            {/* Prompt de Follow-up */}
+            <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-4 transition-theme">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">Prompt de Follow-up</h3>
+                  <p className="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">Defina quando e como o follow-up deve ser enviado</p>
+                </div>
+                {canViewAgent && (
+                  <>
+                    <input
+                      id="followup-file-upload"
+                      type="file"
+                      accept="image/*,video/*,audio/*,application/pdf"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('followup-file-upload')?.click()}
+                      disabled={isUploading}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg text-gray-700 dark:text-neutral-200 transition-colors"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      {isUploading ? 'Carregando...' : 'Adicionar Mídia'}
+                    </button>
+                  </>
+                )}
+              </div>
 
               <div className="relative">
                 <ReactQuill
                   ref={quillRef}
                   theme="snow"
                   value={config.prompt}
-onChange={canViewAgent ? (content) => setConfig({ ...config, prompt: content }) : undefined}
+                  onChange={canViewAgent ? (content) => setConfig({ ...config, prompt: content }) : undefined}
                   modules={modules}
                   formats={formats}
-                  readOnly={!canViewAgent }
+                  readOnly={!canViewAgent}
                   placeholder="Digite o prompt para follow-up..."
                   className="bg-white dark:bg-neutral-700 rounded-lg"
                 />
                 {isUploading && (
-                  <div className="absolute inset-0 bg-white/80 dark:bg-neutral-800/80 flex items-center justify-center">
-                    <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                  <div className="absolute inset-0 bg-white/80 dark:bg-neutral-800/80 flex items-center justify-center rounded-lg">
+                    <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
                   </div>
                 )}
               </div>
             </div>
 
+            {/* Mensagens de Feedback */}
             {error && (
-              <div className="mb-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded-lg">
+              <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded-xl text-sm">
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="mb-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-300 px-4 py-3 rounded-lg">
+              <div className="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-300 px-4 py-3 rounded-xl text-sm">
                 {success}
               </div>
             )}
 
-            <div className="flex justify-end">
-                          {canViewAgent && (
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Salvando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-5 h-5" />
-                    <span>Salvar Configurações</span>
-                  </>
-                )}
-              </button>
-              )}
-            </div>
+            {/* Botão Salvar */}
+            {canViewAgent && (
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-xl hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Salvando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Salvar Configurações</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
-
-      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl shadow-md p-8 mb-8 border border-indigo-100 dark:border-indigo-900 transition-theme">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Gerar Prompt de Follow-up com IA</h2>
-            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">Crie um prompt de follow-up personalizado com ajuda da IA</p>
-          </div>
-        </div>
-
-        <div className="bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm rounded-lg p-6 mb-6 border border-indigo-100 dark:border-indigo-900">
-          <h3 className="text-lg font-medium text-indigo-800 dark:text-indigo-400 mb-3">Como funciona?</h3>
-          <p className="text-gray-700 dark:text-neutral-300 mb-4">
-            A IA analisará seu agente atual e gerará um prompt de follow-up personalizado com base nas suas instruções.
-            Descreva como você quer que o follow-up funcione, incluindo tom, frequência e objetivos.
-          </p>
-          <div className="bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 dark:border-amber-700 p-4 text-amber-700 dark:text-amber-400">
-            <p className="font-medium">Dicas para obter melhores resultados:</p>
-            <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-              <li>Especifique o tom desejado (formal, amigável, direto)</li>
-              <li>Mencione se deseja incluir gatilhos de urgência ou escassez</li>
-              <li>Indique se há ofertas especiais a serem mencionadas</li>
-              <li>Descreva o objetivo principal do follow-up (agendar, vender, informar)</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-2">
-              Instruções para o prompt de follow-up
-            </label>
-            <textarea
-              value={promptInstructions}
-              onChange={(e) => setPromptInstructions(e.target.value)}
-              rows={4}
-              className="w-full px-4 py-3 text-gray-900 dark:text-neutral-100 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-neutral-700"
-              placeholder="Ex: Quero um follow-up amigável mas persistente, com foco em agendar uma reunião. Deve incluir perguntas sobre o interesse do cliente e oferecer um desconto especial no terceiro contato..."
-              disabled={!canViewAgent}
-            />
-          </div>
-
-          {error && (
-            <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded-lg flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {canViewAgent && (
-            <div className="flex justify-end pt-4">
-              <button
-                onClick={handleGeneratePrompt}
-                disabled={isGeneratingPrompt || !promptInstructions.trim()}
-                className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 font-medium"
-              >
-                {isGeneratingPrompt ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Gerando Prompt...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5" />
-                    <span>Gerar com IA</span>
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      )}
 
       {/* Histórico de Follow-up */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm overflow-hidden transition-theme">
-        <div className="p-6 border-b border-gray-300 dark:border-neutral-700">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Histórico de Follow-up</h2>
-                        {canViewAgent && (
-            <button
-              onClick={() => fetchHistory(true)}
-              disabled={refreshing}
-              className="p-2 text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-full transition-colors disabled:opacity-50"
-              title="Atualizar histórico"
-            >
-              <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
-            </button>
+      {activeSubTab === 'history' && (
+      <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 overflow-hidden transition-theme">
+        {/* Header Minimalista */}
+        <div className="px-5 py-3.5 border-b border-gray-100 dark:border-neutral-700/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-neutral-100">Histórico</h2>
+              <span className="text-xs font-medium text-gray-500 dark:text-neutral-500">
+                {history.length} {history.length === 1 ? 'registro' : 'registros'}
+              </span>
+            </div>
+            {canViewAgent && (
+              <button
+                onClick={() => fetchHistory(true)}
+                disabled={refreshing}
+                className="p-1.5 text-gray-500 dark:text-neutral-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-all disabled:opacity-50"
+                title="Atualizar histórico"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
             )}
           </div>
         </div>
 
+        {/* Tabela Refinada */}
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-neutral-900">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
-                  Data
+            <thead>
+              <tr className="border-b border-gray-100 dark:border-neutral-700/50">
+                <th className="px-5 py-2 text-left text-[10px] font-semibold text-gray-500 dark:text-neutral-500 uppercase tracking-wider">
+                  Data e Hora
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
-                  Número
+                <th className="px-5 py-2 text-left text-[10px] font-semibold text-gray-500 dark:text-neutral-500 uppercase tracking-wider">
+                  Contato
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-5 py-2 text-left text-[10px] font-semibold text-gray-500 dark:text-neutral-500 uppercase tracking-wider">
                   Funil
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
-                  Estágio
+                <th className="px-5 py-2 text-left text-[10px] font-semibold text-gray-500 dark:text-neutral-500 uppercase tracking-wider">
+                  Etapa
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
-              {paginatedHistory.map((item) => (
-                <tr key={item.Id} className="hover:bg-gray-50 dark:hover:bg-neutral-700">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-neutral-100">
-                    {formatDateTime(item.data)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-neutral-100">
-                    {formatPhoneNumber(item.numero)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-neutral-100">
-                    {item.funil}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-neutral-100">
-                    {item.estagio}
+            <tbody className="divide-y divide-gray-50 dark:divide-neutral-700/30">
+              {paginatedHistory.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-5 py-20 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-14 h-14 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-neutral-800 dark:to-neutral-700 rounded-2xl flex items-center justify-center border border-gray-200 dark:border-neutral-600">
+                        <RefreshCw className="w-6 h-6 text-gray-300 dark:text-neutral-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-neutral-100">Nenhum registro</p>
+                        <p className="text-xs text-gray-500 dark:text-neutral-500 mt-1">Os follow-ups enviados aparecerão aqui</p>
+                      </div>
+                    </div>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                paginatedHistory.map((item) => (
+                  <tr
+                    key={item.Id}
+                    className="group hover:bg-gray-50/50 dark:hover:bg-neutral-700/20 transition-colors"
+                  >
+                    <td className="px-5 py-3.5 text-xs text-gray-600 dark:text-neutral-400">
+                      {formatDateTime(item.data)}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span className="text-xs font-semibold text-gray-900 dark:text-neutral-100">
+                        {formatPhoneNumber(item.numero)}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span className="text-xs text-gray-600 dark:text-neutral-400">
+                        {item.funil}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/50">
+                        {item.estagio}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
 
@@ -811,73 +692,7 @@ onChange={canViewAgent ? (content) => setConfig({ ...config, prompt: content }) 
           />
         </div>
       </div>
-
-      {/* Generated Prompt Modal */}
-      <Modal
-        isOpen={isPromptModalOpen}
-        onClose={() => setIsPromptModalOpen(false)}
-        title="Prompt de Follow-up Gerado"
-        maxWidth="4xl"
-      >
-        <div className="p-6 space-y-6">
-          <div className="bg-gray-50 dark:bg-neutral-900 p-6 rounded-lg border border-gray-300 dark:border-neutral-700 max-h-[400px] overflow-y-auto">
-            <pre className="whitespace-pre-wrap text-gray-800 dark:text-neutral-200 text-sm font-mono">{generatedPrompt}</pre>
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => setIsPromptModalOpen(false)}
-              className="px-4 py-2 text-gray-700 dark:text-neutral-200 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
-            >
-              Fechar
-            </button>
-            <button
-              onClick={() => setIsConfirmModalOpen(true)}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              Aplicar este Prompt
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Confirmation Modal */}
-      <Modal
-        isOpen={isConfirmModalOpen}
-        onClose={() => setIsConfirmModalOpen(false)}
-        title="Confirmar Aplicação do Prompt"
-      >
-        <div className="p-6 space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900 rounded-full flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
-                Tem certeza que deseja aplicar este prompt?
-              </h3>
-              <p className="text-gray-500 dark:text-neutral-400 mt-1">
-                Esta ação substituirá o prompt de follow-up atual. A alteração é irreversível.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              onClick={() => setIsConfirmModalOpen(false)}
-              className="px-4 py-2 text-gray-700 dark:text-neutral-200 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleApplyGeneratedPrompt}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              Sim, Aplicar Prompt
-            </button>
-          </div>
-        </div>
-      </Modal>
+      )}
     </div>
   );
 }

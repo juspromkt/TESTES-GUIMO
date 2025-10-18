@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Plus, Pencil, Trash2, Save, X, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Loader2, Check } from 'lucide-react';
 
 interface ScheduleWindowsSectionProps {
   token: string;
@@ -208,112 +208,195 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
   const days: Day[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
   const renderEditRow = () => (
-    <div className="flex items-center gap-2" key="editing-row">
-      <select
-        value={editing?.window.horarioInicio}
-        onChange={(e) =>
-          setEditing((prev) =>
-            prev ? { ...prev, window: { ...prev.window, horarioInicio: e.target.value } } : null
-          )
-        }
-        className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md px-2 py-1"
-      >
-        {timeOptions.map((t) => (
-          <option key={t} value={t}>
-            {t}
-          </option>
-        ))}
-      </select>
-      <span className="text-gray-700 dark:text-neutral-300">-</span>
-      <select
-        value={editing?.window.horarioFinal}
-        onChange={(e) =>
-          setEditing((prev) =>
-            prev ? { ...prev, window: { ...prev.window, horarioFinal: e.target.value } } : null
-          )
-        }
-        className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md px-2 py-1"
-      >
-        {timeOptions.map((t) => (
-          <option key={t} value={t}>
-            {t}
-          </option>
-        ))}
-      </select>
-      <button
-        onClick={handleSave}
-        className="p-1 text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300"
-      >
-        <Save className="w-4 h-4" />
-      </button>
-      <button onClick={cancelEditing} className="p-1 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">
-        <X className="w-4 h-4" />
-      </button>
+    <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1.5 rounded border border-blue-300 dark:border-blue-700" key="editing-row">
+      <div className="flex items-center gap-2">
+        <select
+          value={editing?.window.horarioInicio}
+          onChange={(e) =>
+            setEditing((prev) =>
+              prev ? { ...prev, window: { ...prev.window, horarioInicio: e.target.value } } : null
+            )
+          }
+          className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded px-2 py-1 text-sm"
+        >
+          {timeOptions.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
+        <span className="text-gray-700 dark:text-neutral-300 text-sm">-</span>
+        <select
+          value={editing?.window.horarioFinal}
+          onChange={(e) =>
+            setEditing((prev) =>
+              prev ? { ...prev, window: { ...prev.window, horarioFinal: e.target.value } } : null
+            )
+          }
+          className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded px-2 py-1 text-sm"
+        >
+          {timeOptions.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={handleSave}
+          className="p-1 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded transition-colors"
+          title="Salvar"
+        >
+          <Check className="w-4 h-4" />
+        </button>
+        <button
+          onClick={cancelEditing}
+          className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+          title="Cancelar"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
     </div>
   );
 
   if (loading) {
     return (
-      <section className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-gray-300 dark:border-neutral-700 p-6 mt-6 flex justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-emerald-500 dark:text-emerald-400" />
-      </section>
+      <div className="flex justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin text-blue-600 dark:text-blue-400" />
+      </div>
     );
   }
 
+  const handleReplicateDay = async (sourceDay: Day) => {
+    if (windows[sourceDay].length === 0) {
+      alert('Não há horários neste dia para replicar');
+      return;
+    }
+
+    if (!window.confirm('Isso irá substituir os horários existentes de terça a sexta-feira pelos horários deste dia. Deseja continuar?')) {
+      return;
+    }
+
+    try {
+      const otherDays: Day[] = ['tuesday', 'wednesday', 'thursday', 'friday'];
+
+      // Para cada dia, excluir todos os horários existentes
+      for (const day of otherDays) {
+        const dayWindows = windows[day];
+        for (const window of dayWindows) {
+          if (window.Id) {
+            await fetch(
+              `https://n8n.lumendigital.com.br/webhook/prospecta/agente/agendamento/horario/delete?id=${window.Id}`,
+              {
+                method: 'DELETE',
+                headers: { token },
+              }
+            );
+          }
+        }
+      }
+
+      // Criar os mesmos horários do dia de origem para os outros dias
+      for (const day of otherDays) {
+        for (const sourceDayWindow of windows[sourceDay]) {
+          const body = {
+            dia_semana: day,
+            horarioInicio: sourceDayWindow.horarioInicio,
+            horarioFinal: sourceDayWindow.horarioFinal,
+          };
+
+          await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/agente/agendamento/horario/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              token,
+            },
+            body: JSON.stringify(body),
+          });
+        }
+      }
+
+      await fetchWindows();
+      alert('Horários replicados com sucesso para terça a sexta-feira!');
+    } catch (err) {
+      console.error('Erro ao replicar horários:', err);
+      alert('Erro ao replicar horários');
+    }
+  };
+
   return (
-    <section className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-gray-300 dark:border-neutral-700 p-6 mt-6">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 mb-6">Horários Disponíveis (Funciona na agenda interna e Google Agenda)</h2>
-      {days.map((day) => (
-        <div key={day} className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-medium text-gray-700 dark:text-neutral-300">{dayLabels[day]}</span>
-            {canEdit && (!editing || editing.day !== day) && (
-              <button
-                onClick={() => startEditing(day)}
-                className="flex items-center gap-1 text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
-              >
-                <Plus className="w-4 h-4" /> Adicionar
-              </button>
-            )}
+    <div>
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 mb-2">Horários Disponíveis</h2>
+        <p className="text-sm text-gray-500 dark:text-neutral-400">Funciona na agenda interna e Google Agenda</p>
+      </div>
+
+      <div className="space-y-4">
+        {days.map((day) => (
+          <div key={day} className="bg-gray-50 dark:bg-neutral-900/50 rounded-lg p-4 border border-gray-200 dark:border-neutral-700">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-sm text-gray-900 dark:text-neutral-100">{dayLabels[day]}</span>
+                {canEdit && windows[day].length > 0 && (
+                  <button
+                    onClick={() => handleReplicateDay(day)}
+                    className="text-xs px-2 py-0.5 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors border border-blue-200 dark:border-blue-800"
+                    title="Replicar horários deste dia para terça a sexta-feira"
+                  >
+                    Replicar para todos os dias
+                  </button>
+                )}
+              </div>
+              {canEdit && (!editing || editing.day !== day) && (
+                <button
+                  onClick={() => startEditing(day)}
+                  className="flex items-center gap-1 px-2 py-1 text-xs text-white bg-emerald-600 hover:bg-emerald-700 rounded transition-colors"
+                >
+                  <Plus className="w-3 h-3" /> Adicionar
+                </button>
+              )}
+            </div>
+            <div className="space-y-2">
+              {windows[day].map((w) => (
+                  editing && editing.day === day && editing.window.Id === w.Id ? (
+                    <React.Fragment key={w.Id}>{renderEditRow()}</React.Fragment>
+                  ) : (
+                  <div key={w.Id} className="flex items-center justify-between bg-white dark:bg-neutral-800 px-3 py-2 rounded border border-gray-200 dark:border-neutral-700">
+                    <span className="text-sm font-medium text-gray-900 dark:text-neutral-100">
+                      {w.horarioInicio} - {w.horarioFinal}
+                    </span>
+                    {canEdit && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => startEditing(day, w)}
+                          className="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(w.Id!)}
+                          className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
+              ))}
+                {editing && editing.day === day && !editing.window.Id && renderEditRow()}
+              {windows[day].length === 0 && (!editing || editing.day !== day) && (
+                <p className="text-xs text-gray-500 dark:text-neutral-400 text-center py-2">Nenhum horário cadastrado</p>
+              )}
+              {editing && editing.day === day && error && (
+                <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded">{error}</p>
+              )}
+            </div>
           </div>
-          <div className="space-y-2">
-            {windows[day].map((w) => (
-                editing && editing.day === day && editing.window.Id === w.Id ? (
-                  <React.Fragment key={w.Id}>{renderEditRow()}</React.Fragment>
-                ) : (
-                <div key={w.Id} className="flex items-center gap-2 text-gray-700 dark:text-neutral-300">
-                  <span>
-                    {w.horarioInicio} - {w.horarioFinal}
-                  </span>
-                  {canEdit && (
-                    <>
-                      <button
-                        onClick={() => startEditing(day, w)}
-                        className="p-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(w.Id!)}
-                        className="p-1 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </>
-                  )}
-                </div>
-              )
-            ))}
-              {editing && editing.day === day && !editing.window.Id && renderEditRow()}
-            {windows[day].length === 0 && (!editing || editing.day !== day) && (
-              <p className="text-sm text-gray-500 dark:text-neutral-400">Nenhuma janela cadastrada</p>
-            )}
-            {editing && editing.day === day && error && (
-              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-            )}
-          </div>
-        </div>
-      ))}
-    </section>
+        ))}
+      </div>
+    </div>
   );
 }
