@@ -262,19 +262,19 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
 
 
   return (
-    <div className="space-y-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="space-y-4">
+      <div className="space-y-4">
         {/* Header Section */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-neutral-100">Funis de Vendas</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Funis de Vendas</h2>
             <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">Gerencie os estágios do seu funil de vendas</p>
           </div>
 
           {canEdit && (
             <button
               onClick={handleOpenCreateModal}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm font-medium rounded-lg transition-colors border border-blue-200 dark:border-blue-800"
             >
               <Plus className="w-4 h-4" />
               Novo Funil
@@ -285,7 +285,7 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
 
         {/* Error Alert */}
         {error && (
-          <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
               <span className="text-red-700 dark:text-red-300 text-sm">{error}</span>
@@ -295,7 +295,7 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
 
         {/* Success Alert */}
         {success && (
-          <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
+          <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-3">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
               <span className="text-green-700 dark:text-green-300 text-sm">{success}</span>
@@ -317,26 +317,26 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
             {funis.map((funil) => {
               const isCollapsed = collapsedFunis.has(funil.id);
               return (
-                <div key={funil.id} className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
+                <div key={funil.id} className="bg-gray-50 dark:bg-neutral-900/50 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
                   {/* Funil Header */}
                   <div
-                    className="flex items-center justify-between p-4 bg-gray-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+                    className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
                     onClick={() => toggleFunilCollapse(funil.id)}
                   >
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="p-1 text-gray-400 dark:text-neutral-500">
+                    <div className="flex items-center gap-2.5 flex-1">
+                      <div className="text-gray-400 dark:text-neutral-500">
                         {isCollapsed ? (
-                          <ChevronDown className="w-5 h-5" />
+                          <ChevronDown className="w-4 h-4" />
                         ) : (
-                          <ChevronUp className="w-5 h-5" />
+                          <ChevronUp className="w-4 h-4" />
                         )}
                       </div>
-                      <GitBranch className="w-5 h-5 text-gray-600 dark:text-neutral-400" />
+                      <GitBranch className="w-4 h-4 text-gray-600 dark:text-neutral-400" />
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">{funil.nome}</h3>
+                          <h3 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">{funil.nome}</h3>
                           {funil.isFunilPadrao && (
-                            <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
                               Padrão
                             </span>
                           )}
@@ -352,28 +352,28 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
                           e.stopPropagation();
                           handleEditFunil(funil);
                         }}
-                        className="p-2 text-gray-400 dark:text-neutral-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-lg transition-colors"
+                        className="p-1.5 text-gray-400 dark:text-neutral-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
                         title="Configurar funil"
                       >
-                        <Settings className="w-5 h-5" />
+                        <Settings className="w-4 h-4" />
                       </button>
                     )}
                   </div>
 
                   {/* Pipeline Stages */}
                   {!isCollapsed && (
-                    <div className="p-4 bg-white dark:bg-neutral-800">
+                    <div className="p-3 bg-white dark:bg-neutral-800">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         {funil.estagios?.map((estagio) => (
                           <div
                             key={estagio.Id}
-                            className="rounded-lg p-4 border-2 bg-white dark:bg-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+                            className="rounded-lg p-3 border bg-white dark:bg-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
                             style={{ borderColor: estagio.cor || '#e5e7eb' }}
                           >
                             {/* Stage Header */}
-                            <div className="flex items-center gap-3 mb-3">
+                            <div className="flex items-center gap-2 mb-2">
                               <div
-                                className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold shadow-sm"
+                                className="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center text-sm font-semibold"
                                 style={{
                                   backgroundColor: estagio.cor || '#6b7280',
                                   color: estagio.cor_texto_principal || '#ffffff'
@@ -392,12 +392,12 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
                             </div>
 
                             {/* Follow-up Toggle */}
-                            <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-neutral-900 rounded-lg">
-                              <span className="text-xs font-medium text-gray-700 dark:text-neutral-300">
+                            <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-neutral-900 rounded">
+                              <span className="text-xs text-gray-700 dark:text-neutral-300">
                                 Ativar follow-up para esta etapa?
                               </span>
                               {loadingField?.id === estagio.Id && loadingField?.field === 'isFollowUp' ? (
-                                <Loader2 className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600 dark:text-blue-400" />
                               ) : (
                                 <button
                                   onClick={
@@ -409,13 +409,13 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
                                       : undefined
                                   }
                                   className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                                    estagio.isFollowUp ? 'bg-blue-600 dark:bg-blue-700' : 'bg-gray-300 dark:bg-neutral-600'
+                                    estagio.isFollowUp ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-300 dark:bg-neutral-600'
                                   } ${canEdit ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
                                   disabled={!canEdit}
                                 >
                                   <span
                                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                      estagio.isFollowUp ? 'translate-x-5' : 'translate-x-0.5'
+                                      estagio.isFollowUp ? 'translate-x-4' : 'translate-x-0.5'
                                     }`}
                                   />
                                 </button>

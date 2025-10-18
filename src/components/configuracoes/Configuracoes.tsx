@@ -45,7 +45,7 @@ export default function Configuracoes() {
 
   // Sidebar com ícones coerentes e a nova aba de Conexão
   const sections = [
-    { id: "funis", label: "Status do Lead", icon: GitBranch, show: true },
+    { id: "funis", label: "Funis de Vendas", icon: GitBranch, show: true },
     { id: "fontes", label: "Origem do Lead", icon: Globe2, show: true },
     { id: "campos", label: "Campos Personalizados", icon: ListChecks, show: true },
     { id: "etiquetas", label: "Etiquetas", icon: Tag, show: true },
