@@ -370,6 +370,8 @@ return (
 
       .dark .fc-toolbar-title {
         color: #f5f5f5;
+        font-size: 1.5rem;
+        font-weight: 600;
       }
 
       .dark .fc-list-event:hover td {
@@ -419,45 +421,55 @@ return (
       .dark .fc-list-day-side-text {
         color: #d4d4d4;
       }
-    `}</style>
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-900 p-4 sm:p-6 transition-theme">
-      <div className="max-w-7xl mx-auto space-y-6">
 
-      {/* Calendar Container */}
-      <div className="bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm rounded-2xl border border-white/20 dark:border-neutral-700/50 shadow-xl overflow-hidden transition-theme">
-        <div className="p-6">
-          <FullCalendar
-            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
-            initialView="dayGridMonth"
-            locale={ptBrLocale}
-            headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
-            }}
-            selectable
-            events={events}
-            dateClick={(info) => {
-              const end = addMinutes(info.date, 60);
-              setSelectedStart(formatDateTimeForInput(info.date.toISOString()));
-              setSelectedEnd(formatDateTimeForInput(end.toISOString()));
-              setSelectedDealId(null);
-              setClientName('');
-              setAppointmentName('');
-              setAppointmentDesc('');
-              fetchDeals();
-              setIsCreateModalOpen(true);
-            }}
-            eventClick={(info) => {
-              const calEvent = info.event.extendedProps as { appointment: Appointment };
-              setSummaryAppointment(calEvent.appointment);
-              setIsSummaryModalOpen(true);
-            }}
-            height="70vh"
-            eventClassNames="!bg-gradient-to-r !from-blue-500 !to-indigo-600 !border-blue-400 !text-white !rounded-lg !shadow-md hover:!shadow-lg !transition-all !duration-200"
-          />
-        </div>
-      </div>
+      /* Light mode title */
+      .fc-toolbar-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+
+      /* Better event styling */
+      .fc-event {
+        border-radius: 6px;
+        padding: 2px 4px;
+        font-size: 0.875rem;
+      }
+    `}</style>
+    <div>
+      <FullCalendar
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
+        initialView="dayGridMonth"
+        locale={ptBrLocale}
+        headerToolbar={{
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+        }}
+        selectable
+        events={events}
+        dateClick={(info) => {
+          const end = addMinutes(info.date, 60);
+          setSelectedStart(formatDateTimeForInput(info.date.toISOString()));
+          setSelectedEnd(formatDateTimeForInput(end.toISOString()));
+          setSelectedDealId(null);
+          setClientName('');
+          setAppointmentName('');
+          setAppointmentDesc('');
+          fetchDeals();
+          setIsCreateModalOpen(true);
+        }}
+        eventClick={(info) => {
+          const calEvent = info.event.extendedProps as { appointment: Appointment };
+          setSummaryAppointment(calEvent.appointment);
+          setIsSummaryModalOpen(true);
+        }}
+        height="auto"
+        contentHeight="auto"
+        aspectRatio={1.8}
+        eventClassNames="!bg-blue-600 dark:!bg-blue-500 !border-blue-500 dark:!border-blue-400 !text-white !rounded-md hover:!bg-blue-700 dark:hover:!bg-blue-600 !transition-colors !cursor-pointer"
+      />
+
+    </div>
 
       {/* Create Modal */}
       <Modal
@@ -470,17 +482,17 @@ return (
         maxWidth="lg"
         maxHeight="90vh"
       >
-        <div className="bg-gradient-to-br from-white to-gray-50 dark:from-neutral-800 dark:to-neutral-800 rounded-xl border border-gray-300/50">
-          <form onSubmit={handleCreateAppointment} className="space-y-6 p-6 overflow-y-auto max-h-[70vh]">
+        <div className="rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+          <form onSubmit={handleCreateAppointment} className="space-y-4 p-5 overflow-y-auto max-h-[70vh]">
             {/* Deal Selection */}
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
-                <Handshake className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <div className="space-y-2">
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+                <Handshake className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 Negociação (Opcional)
               </label>
               {loadingDeals ? (
-                <div className="flex items-center justify-center h-12 text-gray-500 dark:text-neutral-400 border border-gray-300 dark:border-neutral-600 rounded-xl bg-white/80 dark:bg-neutral-700/80">
-                  <CalendarIcon className="w-5 h-5 animate-spin mr-2" />
+                <div className="flex items-center justify-center h-12 text-gray-500 dark:text-neutral-400 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm">
+                  <CalendarIcon className="w-4 h-4 animate-spin mr-2" />
                   Carregando...
                 </div>
               ) : (
@@ -490,12 +502,12 @@ return (
                     placeholder="Buscar por nome, telefone ou título..."
                     value={dealsSearchTerm}
                     onChange={(e) => setDealsSearchTerm(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 dark:bg-neutral-700/80 text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400 text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400 text-sm transition-colors"
                   />
                   <select
                     value={selectedDealId || ''}
                     onChange={(e) => setSelectedDealId(e.target.value ? Number(e.target.value) : null)}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 dark:bg-neutral-700/80 backdrop-blur-sm transition-all duration-200 text-gray-900 dark:text-neutral-100"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
                     size={8}
                   >
                     <option value="">Nenhuma negociação</option>
@@ -515,37 +527,37 @@ return (
                   </select>
                 </div>
               )}
-              <p className="text-xs text-gray-500 dark:text-neutral-500">
+              <p className="text-xs text-gray-500 dark:text-neutral-400">
                 Você pode vincular este agendamento a uma negociação existente ou deixar sem vínculo
               </p>
             </div>
 
             {/* Date/Time Inputs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
-                  <Clock className="w-4 h-4 text-green-600 dark:text-green-400" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+                  <Clock className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
                   Data e Hora de Início
                 </label>
                 <input
                   type="datetime-local"
                   value={selectedStart}
                   onChange={(e) => setSelectedStart(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 dark:bg-neutral-700/80 backdrop-blur-sm transition-all duration-200 text-gray-900 dark:text-neutral-100"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
                   required
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
-                  <Clock className="w-4 h-4 text-red-600 dark:text-red-400" />
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+                  <Clock className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
                   Data e Hora de Término
                 </label>
                 <input
                   type="datetime-local"
                   value={selectedEnd}
                   onChange={(e) => setSelectedEnd(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 dark:bg-neutral-700/80 backdrop-blur-sm transition-all duration-200 text-gray-900 dark:text-neutral-100"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
                   min={selectedStart}
                   max={selectedStart ? `${selectedStart.slice(0, 10)}T23:59` : undefined}
                   required
@@ -554,74 +566,74 @@ return (
             </div>
 
             {/* Client Name */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
-                <User className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+                <User className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                 Nome do Cliente
               </label>
               <input
                 type="text"
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 dark:bg-neutral-700/80 backdrop-blur-sm transition-all duration-200 text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400 text-sm transition-colors"
                 placeholder="Digite o nome do cliente"
                 required
               />
             </div>
 
             {/* Appointment Name */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
-                <CalendarIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+                <CalendarIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 Nome do Agendamento
               </label>
               <input
                 type="text"
                 value={appointmentName}
                 onChange={(e) => setAppointmentName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 dark:bg-neutral-700/80 backdrop-blur-sm transition-all duration-200 text-gray-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
               />
             </div>
 
             {/* Appointment Description */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
-                <CalendarIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+                <CalendarIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 Descrição
               </label>
               <textarea
                 value={appointmentDesc}
                 onChange={(e) => setAppointmentDesc(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 dark:bg-neutral-700/80 backdrop-blur-sm transition-all duration-200 text-gray-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
                 rows={3}
               />
             </div>
 
             {/* Error Message */}
             {errorMessage && (
-              <div className="p-4 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 border border-red-200 dark:border-red-800/50 rounded-xl">
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-red-700 font-medium text-sm">{errorMessage}</span>
+                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                  <span className="text-red-700 dark:text-red-300 text-sm">{errorMessage}</span>
                 </div>
               </div>
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pt-6 border-t border-gray-300/50 dark:border-neutral-700">
+            <div className="flex justify-end gap-2 pt-3 border-t border-gray-200 dark:border-neutral-700">
               <button
                 type="button"
                 onClick={() => {
                   setIsCreateModalOpen(false);
                   resetForm();
                 }}
-                className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-xl transition-all duration-200"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
               >
                 <CalendarIcon className="w-4 h-4" />
                 Criar Agendamento
@@ -638,16 +650,16 @@ return (
         title="Detalhes do Agendamento"
       >
         {summaryAppointment && (
-          <div className="bg-gradient-to-br from-white to-gray-50 dark:from-neutral-800 dark:to-neutral-800 rounded-xl border border-gray-300/50">
-            <div className="p-6 space-y-6">
+          <div className="rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+            <div className="p-5 space-y-4">
               {/* Header */}
               <div className="flex items-start justify-between">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 rounded-xl">
-                    <Handshake className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <Handshake className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100 mb-1">
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100 mb-1">
                       {summaryAppointment.nome || summaryAppointment.nomeCliente}
                     </h3>
                     {summaryAppointment.descricao && (
@@ -655,7 +667,7 @@ return (
                         {summaryAppointment.descricao}
                       </p>
                     )}
-                    <span className="text-sm text-gray-500 dark:text-neutral-400 bg-gray-100 dark:bg-neutral-700 px-3 py-1 rounded-full">
+                    <span className="text-xs text-gray-500 dark:text-neutral-400 bg-gray-100 dark:bg-neutral-700 px-2 py-0.5 rounded">
                       ID: {summaryAppointment.Id}
                     </span>
                   </div>
@@ -665,47 +677,45 @@ return (
                     setIsSummaryModalOpen(false);
                     openEditModal(summaryAppointment);
                   }}
-                  className="p-3 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-200"
+                  className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                   title="Editar agendamento"
                 >
-                  <Pencil className="w-5 h-5" />
+                  <Pencil className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Details */}
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl border border-blue-200/50 dark:border-blue-800/50">
-                    <div className="flex items-center gap-3">
-                      <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      <div>
-                        <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">Cliente</p>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-neutral-100">{summaryAppointment.nomeCliente}</p>
-                      </div>
+              <div className="flex gap-2.5">
+                <div className="p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 flex-1">
+                  <div className="flex items-center gap-2">
+                    <User className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    <div>
+                      <p className="text-xs font-medium text-blue-600 dark:text-blue-400">CLIENTE</p>
+                      <p className="text-xs font-medium text-gray-900 dark:text-neutral-100">{summaryAppointment.nomeCliente}</p>
                     </div>
                   </div>
+                </div>
 
-                  <div className="p-4 bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-900/20 dark:to-green-800/20 rounded-xl border border-green-200/50 dark:border-green-800/50">
-                    <div className="flex items-center gap-3">
-                      <CalendarIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
-                      <div>
-                        <p className="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">Data</p>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-neutral-100">
-                          {format(parseISO(summaryAppointment.dataInicio), 'dd/MM/yyyy')}
-                        </p>
-                      </div>
+                <div className="p-2.5 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 flex-1">
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                    <div>
+                      <p className="text-xs font-medium text-green-600 dark:text-green-400">DATA</p>
+                      <p className="text-xs font-medium text-gray-900 dark:text-neutral-100">
+                        {format(parseISO(summaryAppointment.dataInicio), 'dd/MM/yyyy')}
+                      </p>
                     </div>
                   </div>
+                </div>
 
-                  <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl border border-purple-200/50 dark:border-purple-800/50">
-                    <div className="flex items-center gap-3">
-                      <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                      <div>
-                        <p className="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase tracking-wide">Horário</p>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-neutral-100">
-                          {format(parseISO(summaryAppointment.dataInicio), 'HH:mm')} - {format(parseISO(summaryAppointment.dataFinal), 'HH:mm')}
-                        </p>
-                      </div>
+                <div className="p-2.5 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 flex-1">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                    <div>
+                      <p className="text-xs font-medium text-purple-600 dark:text-purple-400">HORÁRIO</p>
+                      <p className="text-xs font-medium text-gray-900 dark:text-neutral-100">
+                        {format(parseISO(summaryAppointment.dataInicio), 'HH:mm')} - {format(parseISO(summaryAppointment.dataFinal), 'HH:mm')}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -713,12 +723,12 @@ return (
 
               {/* Actions */}
               {summaryAppointment.id_negociacao && (
-                <div className="flex justify-end pt-6 border-t border-gray-300/50 dark:border-neutral-700">
+                <div className="flex justify-end pt-3 border-t border-gray-200 dark:border-neutral-700">
                   <button
                     onClick={() => navigate(`/crm/${summaryAppointment.id_negociacao}`)}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                   >
-                    <ExternalLink className="w-4 h-4" />
+                    <ExternalLink className="w-3.5 h-3.5" />
                     <span>Ir para Negociação</span>
                   </button>
                 </div>
@@ -736,17 +746,17 @@ return (
         maxWidth="lg"
         maxHeight="90vh"
       >
-        <div className="bg-gradient-to-br from-white to-gray-50 dark:from-neutral-800 dark:to-neutral-800 rounded-xl border border-gray-300/50">
-          <form onSubmit={handleEditAppointment} className="space-y-6 p-6 overflow-y-auto max-h-[70vh]">
+        <div className="rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+          <form onSubmit={handleEditAppointment} className="space-y-4 p-5 overflow-y-auto max-h-[70vh]">
             {/* Deal Selection */}
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
-                <Handshake className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <div className="space-y-2">
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+                <Handshake className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 Negociação (Opcional)
               </label>
               {loadingDeals ? (
-                <div className="flex items-center justify-center h-12 text-gray-500 dark:text-neutral-400 border border-gray-300 dark:border-neutral-600 rounded-xl bg-white/80 dark:bg-neutral-700/80">
-                  <CalendarIcon className="w-5 h-5 animate-spin mr-2" />
+                <div className="flex items-center justify-center h-12 text-gray-500 dark:text-neutral-400 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700">
+                  <CalendarIcon className="w-4 h-4 animate-spin mr-2" />
                   Carregando...
                 </div>
               ) : (
@@ -756,12 +766,12 @@ return (
                     placeholder="Buscar por nome, telefone ou título..."
                     value={dealsSearchTerm}
                     onChange={(e) => setDealsSearchTerm(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 dark:bg-neutral-700/80 text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400 text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400 text-sm transition-colors"
                   />
                   <select
                     value={selectedDealId || ''}
                     onChange={(e) => setSelectedDealId(e.target.value ? Number(e.target.value) : null)}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 dark:bg-neutral-700/80 backdrop-blur-sm transition-all duration-200 text-gray-900 dark:text-neutral-100"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
                     size={8}
                   >
                     <option value="">Nenhuma negociação</option>
@@ -787,30 +797,30 @@ return (
             </div>
 
             {/* Date/Time Inputs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
-                  <Clock className="w-4 h-4 text-green-600 dark:text-green-400" />
+                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+                  <Clock className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
                   Data e Hora de Início
                 </label>
                 <input
                   type="datetime-local"
                   value={selectedStart}
                   onChange={(e) => setSelectedStart(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 dark:bg-neutral-700/80 backdrop-blur-sm transition-all duration-200 text-gray-900 dark:text-neutral-100"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
-                  <Clock className="w-4 h-4 text-red-600 dark:text-red-400" />
+                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+                  <Clock className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
                   Data e Hora de Término
                 </label>
                 <input
                   type="datetime-local"
                   value={selectedEnd}
                   onChange={(e) => setSelectedEnd(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 dark:bg-neutral-700/80 backdrop-blur-sm transition-all duration-200 text-gray-900 dark:text-neutral-100"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
                   min={selectedStart}
                   max={selectedStart ? `${selectedStart.slice(0, 10)}T23:59` : undefined}
                 />
@@ -819,83 +829,83 @@ return (
 
             {/* Client Name */}
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
-                <User className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+                <User className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                 Nome do Cliente
               </label>
               <input
                 type="text"
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 dark:bg-neutral-700/80 backdrop-blur-sm transition-all duration-200"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
                 placeholder="Digite o nome do cliente"
               />
             </div>
 
             {/* Appointment Name */}
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
-                <CalendarIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+                <CalendarIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 Nome do Agendamento
               </label>
               <input
                 type="text"
                 value={appointmentName}
                 onChange={(e) => setAppointmentName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 dark:bg-neutral-700/80 backdrop-blur-sm transition-all duration-200 text-gray-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
               />
             </div>
 
             {/* Appointment Description */}
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-neutral-200">
-                <CalendarIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+                <CalendarIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 Descrição
               </label>
               <textarea
                 value={appointmentDesc}
                 onChange={(e) => setAppointmentDesc(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 dark:bg-neutral-700/80 backdrop-blur-sm transition-all duration-200 text-gray-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
                 rows={3}
               />
             </div>
 
             {/* Error Message */}
             {errorMessage && (
-              <div className="p-4 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 border border-red-200 dark:border-red-800/50 rounded-xl">
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-red-700 font-medium text-sm">{errorMessage}</span>
+                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                  <span className="text-red-700 dark:text-red-400 font-medium text-sm">{errorMessage}</span>
                 </div>
               </div>
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-between pt-6 border-t border-gray-300/50 dark:border-neutral-700">
+            <div className="flex justify-between pt-3 border-t border-gray-200 dark:border-neutral-700">
               <button
                 type="button"
                 onClick={() => {
                   setIsEditModalOpen(false);
                   setErrorMessage('');
                 }}
-                className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-xl transition-all duration-200"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
               >
                 Cancelar
               </button>
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => {
                     setIsEditModalOpen(false);
                     openDeleteModal(selectedAppointment!);
                   }}
-                  className="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
                 >
                   Excluir
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                 >
                   <Pencil className="w-4 h-4" />
                   Salvar Alterações
@@ -957,8 +967,6 @@ return (
           </div>
         </div>
       </Modal>
-    </div>
-  </div>
   </>
 );
 }
