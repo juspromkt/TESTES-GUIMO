@@ -22,7 +22,8 @@ import {
   Users,
   BookOpen,
   Menu,
-  X
+  X,
+  Handshake
 } from 'lucide-react';
 import { DomainConfig } from '../utils/DomainConfig';
 import Modal from './Modal';
@@ -56,34 +57,37 @@ interface MenuItemProps {
 
 const MenuItem: React.FC<MenuItemProps> = ({ path, text, icon: Icon, isActive, isCollapsed, isMobile, domainConfig, isBeta }) => {
   const navigate = useNavigate();
-  
+
   return (
     <button
       onClick={() => navigate(path)}
-      className={`group relative flex items-center gap-1 px-2 py-0 mx-2 my-0 rounded-lg transition-all duration-200 ${
-        isActive
-          ? `${domainConfig.getActiveBg()} ${domainConfig.getActiveColor()} shadow-lg transform scale-[1.02] before:absolute before:inset-0 before:bg-white/10 before:rounded-xl`
-          : `${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} hover:transform hover:scale-[1.02] hover:shadow-md`
-      } ${isCollapsed || isMobile ? 'justify-center px-3' : ''}`}
+      className={`group relative h-[44px] px-0 py-2.5 mx-0 my-1 w-full rounded-lg ${
+        isActive && !(isCollapsed || isMobile)
+          ? `${domainConfig.getActiveBg()} ${domainConfig.getActiveColor()} shadow-lg before:absolute before:inset-0 before:bg-white/10 before:rounded-xl`
+          : isActive && (isCollapsed || isMobile)
+          ? `${domainConfig.getActiveColor()}`
+          : `${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} hover:shadow-md`
+      }`}
       title={isCollapsed || isMobile ? text : undefined}
     >
-      {/* Glow effect for active item */}
-      {isActive && (
+      {/* Glow effect for active item - apenas quando expandido */}
+      {isActive && !(isCollapsed || isMobile) && (
         <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-xl opacity-50"></div>
       )}
-      
-      {/* Icon container */}
-      <div className={`relative z-10 p-2 rounded-lg transition-all duration-300 ${
-        isActive 
-          ? 'bg-white/20 shadow-md transform rotate-3' 
-          : 'group-hover:bg-white/10 group-hover:scale-110'
+
+      {/* Icon container - sempre visível, posição absoluta fixa */}
+      <div className={`absolute left-[10px] top-1/2 -translate-y-1/2 p-1.5 rounded-lg flex-shrink-0 z-10 ${
+        isActive && !(isCollapsed || isMobile)
+          ? 'bg-white/20 shadow-md transform rotate-3'
+          : 'group-hover:bg-white/10'
       }`}>
-        <Icon className="w-6 h-6 transition-transform duration-300" />
+        <Icon className="w-5 h-5" />
       </div>
-      
-      {!isCollapsed && !isMobile && (
-        <div className="relative z-10 flex items-center gap-2 flex-1">
-          <span className="text-base font-semibold tracking-wide">
+
+      {/* Texto - posição absoluta fixa quando expandido */}
+      {!(isCollapsed || isMobile) && (
+        <div className="absolute left-[52px] top-1/2 -translate-y-1/2 flex items-center gap-2 overflow-hidden z-10 pr-2">
+          <span className="text-sm font-semibold tracking-wide whitespace-nowrap">
             {text}
           </span>
           {isBeta && (
@@ -93,10 +97,10 @@ const MenuItem: React.FC<MenuItemProps> = ({ path, text, icon: Icon, isActive, i
           )}
         </div>
       )}
-      
-      {/* Active indicator */}
+
+      {/* Active indicator - apenas quando expandido */}
       {isActive && !isCollapsed && !isMobile && (
-        <div className="absolute right-2 top-1/2 transform -translate-y-1/2 w-1 h-10 bg-white/50 rounded-full"></div>
+        <div className="absolute right-2 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-white/50 rounded-full"></div>
       )}
     </button>
   );
@@ -566,6 +570,12 @@ const Sidebar = () => {
         path: 'https://tutorial.guimoo.com.br/',
         permission: true,
       },
+      {
+        text: 'Parceiros',
+        icon: Handshake,
+        path: '/parceiros',
+        permission: true,
+      },
     ];
 
 
@@ -690,6 +700,28 @@ const Sidebar = () => {
                         <span className="text-sm font-semibold">Suporte</span>
                       </a>
                     </div>
+                  ) : item.text === 'Parceiros' ? (
+                    <button
+                      key={item.path}
+                      onClick={() => {
+                        navigate(item.path);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 active:scale-[0.98] touch-manipulation ${
+                        currentPath.startsWith(item.path)
+                          ? `${domainConfig.getActiveBg()} ${domainConfig.getActiveColor()} shadow-lg scale-[1.02]`
+                          : `${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} hover:shadow-md active:shadow-lg`
+                      }`}
+                    >
+                      <div className={`p-2 rounded-lg transition-all ${
+                        currentPath.startsWith(item.path)
+                          ? 'bg-white/20'
+                          : 'bg-white/10 group-hover:bg-white/20'
+                      }`}>
+                        <item.icon className="w-6 h-6" />
+                      </div>
+                      <span className="text-sm font-semibold">{item.text}</span>
+                    </button>
                   ) : (
                     <button
                       key={item.path}
@@ -845,39 +877,34 @@ const Sidebar = () => {
       )}
 
 
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar - Container fixo */}
 <div
   ref={sidebarRef}
   id="sidebar-container"
   onMouseEnter={handleMouseEnter}
   onMouseLeave={handleMouseLeave}
-  className={`fixed top-0 left-0 bottom-0 z-[9999] transition-all duration-500 ease-in-out transform ${
-    domainConfig.getSidebarColor()
-  } border-r border-gray-300 dark:border-neutral-700 backdrop-blur-md shadow-xl transition-theme
-  ${isExpanded ? 'w-56' : 'w-16'}
-  ${isMobile ? 'hidden' : ''}
-  `}
-  style={{
-    willChange: 'width, transform',
-  }}
+  className={`fixed top-0 left-0 bottom-0 z-[9999] ${isMobile ? 'hidden' : ''}`}
 >
+        {/* Sidebar interna com largura dinâmica mas posição absoluta para não empurrar */}
+        <div className={`absolute top-0 left-0 bottom-0 ${isExpanded ? 'w-56' : 'w-16'} ${
+          domainConfig.getSidebarColor()
+        } border-r border-gray-300 dark:border-neutral-700 backdrop-blur-md shadow-xl`}>
 
+          {/* Background overlay */}
+          {!isMobile && (
+            <div className="absolute inset-0 bg-gradient-to-b from-white/5 dark:from-black/10 to-white/2 dark:to-transparent backdrop-blur-sm"></div>
+          )}
 
-        {/* Background overlay */}
         {!isMobile && (
-          <div className="absolute inset-0 bg-gradient-to-b from-white/5 dark:from-black/10 to-white/2 dark:to-transparent backdrop-blur-sm"></div>
-        )}
-
-        {!isMobile && (
-          <div className={`relative z-10 flex items-center px-4 pt-3 mb-2 ${isExpanded ? '' : 'justify-center'}`}>
-            <div className="relative group">
+          <div className={`relative z-10 flex items-center px-4 pt-3 mb-2 h-[64px] ${isExpanded ? '' : 'justify-center'}`}>
+            <div className="relative group h-full flex items-center">
               <img
                 src={isExpanded ? (theme === 'dark' ? logos.fullDark : logos.full) : (theme === 'dark' ? logos.reducedDark : logos.reduced)}
                 alt="Logo"
-                className={`transition-all duration-300 ${
+                className={`${
                   isExpanded
-                    ? 'w-[140px] h-[60px] object-contain group-hover:scale-105'
-                    : 'w-12 h-10 object-contain group-hover:scale-110'
+                    ? 'w-[160px] h-[56px] object-contain'
+                    : 'w-12 h-10 object-contain'
                 } filter drop-shadow-lg`}
               />
               {/* Glow effect */}
@@ -890,12 +917,12 @@ const Sidebar = () => {
           className={`relative z-10 flex flex-1 ${
             isMobile
               ? 'flex-row items-center justify-between w-full h-full px-2'
-              : 'flex-col overflow-y-auto px-2 pb-48'
+              : 'flex-col overflow-y-auto px-2'
           }`}
           style={{
             scrollbarWidth: 'thin',
             scrollbarColor: 'rgba(255, 255, 255, 0.3) transparent',
-            maxHeight: isMobile ? 'auto' : 'calc(100vh - 80px - 200px)'
+            maxHeight: isMobile ? 'auto' : 'calc(100vh - 64px - 280px)'
           }}
         >
           {/* Mobile Logo */}
@@ -933,20 +960,16 @@ const Sidebar = () => {
         href="https://tutorial.guimoo.com.br/"
         target="_blank"
         rel="noopener noreferrer"
-        className={`group relative flex items-center gap-3 px-2 py-1.5 mx-2 my-[2px] rounded-lg transition-all duration-200 ${
-          domainConfig.getDefaultColor()
-        } ${domainConfig.getHoverBg()} hover:transform hover:scale-[1.02] hover:shadow-md ${
-          !isExpanded ? 'justify-center px-2' : ''
-        }`}
+        className={`group relative h-[44px] px-0 py-2.5 mx-0 my-1 w-full rounded-lg ${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} hover:shadow-md`}
         title={!isExpanded ? item.text : undefined}
       >
-        <div className="relative z-10 p-2 rounded-lg group-hover:bg-white/10 group-hover:scale-110 transition-all duration-300">
-          <item.icon className="w-6 h-6 transition-transform duration-300" />
+        <div className={`absolute left-[10px] top-1/2 -translate-y-1/2 p-1.5 rounded-lg group-hover:bg-white/10 flex-shrink-0 z-10`}>
+          <item.icon className="w-5 h-5" />
         </div>
 
-        {isExpanded && !isMobile && (
-          <div className="relative z-10 flex items-center gap-2 flex-1">
-            <span className="text-sm font-semibold tracking-wide">
+        {isExpanded && (
+          <div className="absolute left-[52px] top-1/2 -translate-y-1/2 flex items-center gap-2 overflow-hidden z-10 pr-2">
+            <span className="text-sm font-semibold tracking-wide whitespace-nowrap">
               {item.text}
             </span>
           </div>
@@ -958,13 +981,10 @@ const Sidebar = () => {
         href="https://wa.me/553892590370"
         target="_blank"
         rel="noopener noreferrer"
-        className={`group relative flex items-center gap-3 px-2 py-1.5 mx-2 my-[2px] rounded-lg transition-all duration-200
-          text-emerald-700 hover:text-white hover:bg-emerald-500 hover:shadow-md
-          ${!isExpanded ? 'justify-center px-2' : ''}
-        `}
+        className={`group relative h-[44px] px-0 py-2.5 mx-0 my-1 w-full rounded-lg text-emerald-700 hover:text-white hover:bg-emerald-500 hover:shadow-md`}
         title={!isExpanded ? 'Suporte' : undefined}
       >
-        <div className="relative z-10 p-2 rounded-lg bg-emerald-50 group-hover:bg-emerald-600/90 group-hover:text-white transition-all duration-300">
+        <div className={`absolute left-[10px] top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-emerald-50 group-hover:bg-emerald-600/90 group-hover:text-white flex-shrink-0 z-10`}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="currentColor"
@@ -976,15 +996,27 @@ const Sidebar = () => {
           </svg>
         </div>
 
-        
-
-        {isExpanded && !isMobile && (
-          <span className="text-sm font-semibold tracking-wide relative z-10">
-            Suporte
-          </span>
+        {isExpanded && (
+          <div className="absolute left-[52px] top-1/2 -translate-y-1/2 flex items-center gap-2 overflow-hidden z-10 pr-2">
+            <span className="text-sm font-semibold tracking-wide whitespace-nowrap">
+              Suporte
+            </span>
+          </div>
         )}
       </a>
     </>
+  ) : item.text === 'Parceiros' ? (
+    <MenuItem
+      key={item.path}
+      path={item.path}
+      text={item.text}
+      icon={item.icon}
+      isActive={currentPath.startsWith(item.path)}
+      isCollapsed={!isExpanded}
+      isMobile={isMobile}
+      domainConfig={domainConfig}
+      isBeta={item.isBeta}
+    />
   ) : (
     <MenuItem
       key={item.path}
@@ -1009,55 +1041,53 @@ const Sidebar = () => {
         {!isMobile && (
           <div className="absolute bottom-0 left-0 w-full z-20 border-t border-white/10 dark:border-neutral-700 backdrop-blur-sm bg-white/80 dark:bg-neutral-900/90 p-3 shadow-lg">
             {/* Novo botão Workspaces */}
-<div className="relative mb-4">
-  <button
-    onClick={() => setIsWorkspaceModalOpen(true)}
-    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl
-               bg-white/60 dark:bg-neutral-700/60 backdrop-blur-sm border border-gray-300/70 dark:border-neutral-600
-               hover:bg-white dark:hover:bg-neutral-600 hover:shadow-md
-               transition-all duration-300 text-gray-800 dark:text-neutral-100 group"
-  >
-    <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-neutral-600 text-gray-600 dark:text-neutral-200 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900 group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors duration-300">
-      <Users className="w-5 h-5" />
+<button
+  onClick={() => setIsWorkspaceModalOpen(true)}
+  className={`group relative flex items-center h-[44px] px-1 py-2.5 mx-1 my-1 w-[calc(100%-8px)] rounded-lg ${
+    isExpanded ? 'justify-start' : 'justify-center'
+  } bg-white/60 dark:bg-neutral-700/60 backdrop-blur-sm border border-gray-300/70 dark:border-neutral-600 hover:bg-white dark:hover:bg-neutral-600 hover:shadow-md text-gray-800 dark:text-neutral-100`}
+  title={!isExpanded ? 'Workspace' : undefined}
+>
+  <div className="relative z-10 p-1.5 rounded-lg text-gray-600 dark:text-neutral-200 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900 group-hover:text-emerald-600 dark:group-hover:text-emerald-300 flex-shrink-0">
+    <Users className="w-5 h-5" />
+  </div>
+  {isExpanded && (
+    <div className="relative z-10 flex flex-col items-start ml-2 overflow-hidden">
+      <span className="text-xs font-semibold tracking-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400 whitespace-nowrap">
+        Workspace
+      </span>
+      <span className="text-[10px] text-gray-500 dark:text-neutral-400 truncate">
+        {currentWorkspaceName ?? 'Desconhecido'}
+      </span>
     </div>
-    {isExpanded && (
-      <div className="flex flex-col items-start text-left">
-        <span className="text-[13px] font-semibold tracking-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
-          Workspace
-        </span>
-        <span className="text-xs text-gray-500 dark:text-neutral-400 truncate mt-[2px]">
-          {currentWorkspaceName ?? 'Desconhecido'}
-        </span>
-      </div>
-    )}
-  </button>
-</div>
+  )}
+</button>
 
 
             {isExpanded && (
               <div className="relative">
                 <button
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                  className={`group w-full flex items-center gap-3 p-3 rounded-xl ${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} transition-all duration-300 hover:scale-[1.02] hover:shadow-lg relative overflow-hidden`}
+                  className={`group w-full flex items-center gap-3 p-3 rounded-xl ${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} transition-all duration-300 hover:shadow-lg relative overflow-hidden`}
                 >
                   {/* Background gradient */}
                   <div className="absolute inset-0 bg-gradient-to-r from-white/5 dark:from-white/2 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                  <div className={`relative z-10 w-10 h-10 rounded-xl ${domainConfig.getProfileBg()} flex items-center justify-center text-sm font-bold text-gray-700 dark:text-neutral-100 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                  <div className={`relative z-10 w-10 h-10 rounded-xl ${domainConfig.getProfileBg()} flex items-center justify-center text-sm font-bold text-gray-700 dark:text-neutral-100 shadow-lg transition-transform duration-300`}>
                     {initials}
                   </div>
                   <div className="relative z-10 flex-1 text-left">
                     <p className="text-sm font-semibold truncate">{userName}</p>
                     <p className="text-xs opacity-70">Minha conta</p>
                   </div>
-                  <ChevronDown className={`relative z-10 w-5 h-5 transition-all duration-300 ${isProfileMenuOpen ? 'rotate-180' : 'group-hover:scale-110'}`} />
+                  <ChevronDown className={`relative z-10 w-5 h-5 transition-all duration-300 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {isProfileMenuOpen && (
                   <div className={`mt-3 p-2 ${domainConfig.getActiveBg()} rounded-xl backdrop-blur-sm border border-white/10 dark:border-neutral-700 shadow-xl space-y-2`}>
                     <button
                       onClick={() => setIsPasswordModalOpen(true)}
-                      className={`group w-full flex items-center gap-3 px-3 py-2 text-sm ${domainConfig.getActiveColor()} ${domainConfig.getHoverBg()} rounded-lg transition-all duration-300 hover:scale-[1.02]`}
+                      className={`group w-full flex items-center gap-3 px-3 py-2 text-sm ${domainConfig.getActiveColor()} ${domainConfig.getHoverBg()} rounded-lg transition-all duration-300`}
                     >
                       <div className="p-1.5 rounded-lg bg-white/10 dark:bg-white/5 group-hover:bg-white/20 dark:group-hover:bg-white/10 transition-colors duration-300">
                         <Key className="w-4 h-4" />
@@ -1070,30 +1100,46 @@ const Sidebar = () => {
             )}
 
             {/* Botão de toggle de tema */}
-            <div className={`flex items-center ${isExpanded ? 'justify-between' : 'justify-center'} mb-3`}>
+            <button
+              onClick={toggleTheme}
+              className={`group relative flex items-center h-[44px] px-1 py-2.5 mx-1 my-1 w-[calc(100%-8px)] rounded-lg ${
+                isExpanded ? 'justify-start' : 'justify-center'
+              } text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 hover:shadow-md`}
+              title={!isExpanded ? 'Alternar tema' : undefined}
+            >
+              <div className="relative z-10 p-1.5 rounded-lg flex-shrink-0">
+                <ThemeToggleButton />
+              </div>
               {isExpanded && (
-                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Tema</span>
+                <div className="relative z-10 flex items-center gap-2 ml-2 overflow-hidden">
+                  <span className="text-sm font-semibold tracking-wide whitespace-nowrap">
+                    Tema
+                  </span>
+                </div>
               )}
-              <ThemeToggleButton />
-            </div>
+            </button>
 
             <button
               onClick={handleLogout}
-              className={`group w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 ${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} hover:scale-[1.02] hover:shadow-lg relative overflow-hidden ${isExpanded ? '' : 'justify-center px-3'}`}
-              title={isExpanded ? undefined : 'Sair'}
+              className={`group relative flex items-center h-[44px] px-1 py-2.5 mx-1 my-1 w-[calc(100%-8px)] rounded-lg ${
+                isExpanded ? 'justify-start' : 'justify-center'
+              } text-gray-700 dark:text-neutral-300 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 hover:shadow-md`}
+              title={!isExpanded ? 'Sair' : undefined}
             >
-              {/* Background gradient */}
-              <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 dark:from-red-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-              <div className="relative z-10 p-1.5 rounded-lg bg-white/10 dark:bg-white/5 group-hover:bg-red-500/20 dark:group-hover:bg-red-500/30 transition-all duration-300 group-hover:scale-110">
-                <LogOut className="w-5 h-5 group-hover:text-red-300 dark:group-hover:text-red-400 transition-colors duration-300" />
+              <div className="relative z-10 p-1.5 rounded-lg bg-white/10 dark:bg-white/5 group-hover:bg-red-500/20 dark:group-hover:bg-red-500/30 flex-shrink-0">
+                <LogOut className="w-5 h-5 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors duration-300" />
               </div>
               {isExpanded && (
-                <span className="relative z-10 text-sm font-semibold">Sair</span>
+                <div className="relative z-10 flex items-center gap-2 ml-2 overflow-hidden">
+                  <span className="text-sm font-semibold tracking-wide whitespace-nowrap">
+                    Sair
+                  </span>
+                </div>
               )}
             </button>
           </div>
         )}
+        </div>
       </div>
 
       {/* Collapse Toggle Button - Removido pois agora é sempre hover */}
