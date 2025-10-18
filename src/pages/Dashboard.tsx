@@ -733,8 +733,8 @@ export default function Dashboard() {
               </div>
               <h3 className="text-base font-bold text-gray-900 dark:text-neutral-100">Volume de conversas</h3>
             </div>
-            <div className="p-4">
-              <div className="h-56 md:h-64 xl:h-72 2xl:h-80">
+            <div className="p-3 sm:p-4">
+              <div className="h-48 sm:h-56 md:h-64 xl:h-72 2xl:h-80">
                 <Line data={lineData} options={lineOptions} />
               </div>
             </div>
@@ -751,15 +751,15 @@ export default function Dashboard() {
             <h3 className="text-base font-bold text-gray-900 dark:text-neutral-100">Etiquetas</h3>
           </div>
 
-          <div className="p-4 flex-1 flex flex-col items-center justify-center">
+          <div className="p-3 sm:p-4 flex-1 flex flex-col items-center justify-center">
             {tagCounts.length > 0 ? (
-              <div className="flex flex-col items-center gap-4 w-full">
+              <div className="flex flex-col items-center gap-3 sm:gap-4 w-full">
                 {/* Donut Chart */}
-                <div className="relative w-44 h-44 xl:w-52 xl:h-52 2xl:w-60 2xl:h-60">
+                <div className="relative w-40 h-40 sm:w-44 sm:h-44 xl:w-52 xl:h-52 2xl:w-60 2xl:h-60">
                   <Doughnut data={tagsData} options={tagsOptions} />
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <p className="text-xs text-gray-500 dark:text-neutral-400 font-semibold uppercase">Total</p>
-                    <p className="text-2xl xl:text-3xl 2xl:text-4xl font-bold text-gray-800 dark:text-neutral-100">{totalTags.toLocaleString()}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500 dark:text-neutral-400 font-semibold uppercase">Total</p>
+                    <p className="text-xl sm:text-2xl xl:text-3xl 2xl:text-4xl font-bold text-gray-800 dark:text-neutral-100">{totalTags.toLocaleString()}</p>
                   </div>
                 </div>
                 {/* Legenda */}
@@ -816,8 +816,8 @@ export default function Dashboard() {
               onDragEnd={handleDragEnd}
             >
               <div
-                className="p-4 overflow-y-auto"
-                style={{ maxHeight: 'calc(100vh - 300px)', WebkitOverflowScrolling: 'touch' }}
+                className="p-3 sm:p-4 overflow-y-auto"
+                style={{ maxHeight: 'calc(100vh - 250px)', WebkitOverflowScrolling: 'touch' }}
               >
                 <SortableContext
                   items={orderedFunnelStages.map(stage => stage.estagio)}

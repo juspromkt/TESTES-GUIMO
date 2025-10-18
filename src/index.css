@@ -755,3 +755,55 @@ button:hover,
 .animate-fadeIn {
   animation: fadeInOut 10s ease-in-out forwards;
 }
+
+/* ========== DATE PICKER DARK MODE ========== */
+/* Estilização do calendário nativo HTML5 no dark mode */
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+.dark input[type="date"]::-webkit-datetime-edit {
+  color: #f3f4f6;
+}
+
+.dark input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  color: #f3f4f6;
+}
+
+.dark input[type="date"]::-webkit-datetime-edit-text {
+  color: #9ca3af;
+}
+
+.dark input[type="date"]::-webkit-datetime-edit-month-field {
+  color: #f3f4f6;
+}
+
+.dark input[type="date"]::-webkit-datetime-edit-day-field {
+  color: #f3f4f6;
+}
+
+.dark input[type="date"]::-webkit-datetime-edit-year-field {
+  color: #f3f4f6;
+}
+
+/* Popup do calendário no dark mode (Chrome/Edge) */
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  background-color: transparent;
+  color: #f3f4f6;
+}
+
+/* Estilização do dropdown do calendário */
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-clear-button {
+  display: none;
+}
+
+input[type="date"] {
+  position: relative;
+  color-scheme: light;
+}
+
+.dark input[type="date"] {
+  color-scheme: dark;
+}

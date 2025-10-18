@@ -14,6 +14,7 @@ import Conexao from './pages/Conexao';
 import DealDetails from './pages/DealDetails';
 import Appointments from './pages/Appointments';
 import ChatProprio from './pages/ChatProprio';
+import ParceirosSidebar from './components/sidebar/ParceirosSidebar';
 import { fetchUserPermissions } from './utils/permissions';
 import { MessageEventsProvider } from './pages/MessageEventsContext';
 import { NotificationManager } from './components/NotificationManager';
@@ -71,6 +72,7 @@ function App() {
           <Route path="agendamentos" element={<Appointments />} />
           <Route path="configuracoes" element={<Configuracoes />} />
           <Route path="conversas" element={<ChatProprio />} />
+          <Route path="parceiros" element={<ParceirosSidebar />} />
         </Route>
       </Routes>
     </BrowserRouter>

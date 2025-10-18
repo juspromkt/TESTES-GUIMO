@@ -98,10 +98,6 @@ const MainLayout = () => {
 
       {/* 🎨 Estilos extras */}
       <style jsx>{`
-        #sidebar-container {
-          transition: width 0.3s ease-in-out;
-        }
-
         body {
           overflow-x: hidden;
         }
