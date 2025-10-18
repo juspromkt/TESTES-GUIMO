@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Pencil, Trash2, Loader2, ChevronUp, ChevronDown, Search, GitBranch, Download } from 'lucide-react';
 import type { Deal } from '../../types/deal';
 import type { Funil } from '../../types/funil';
 import Modal from '../Modal';
-import InfiniteScroll from 'react-infinite-scroll-component';
 import Papa from 'papaparse';
 
 interface ListViewProps {
@@ -57,9 +56,28 @@ export default function ListView({
   const [filterStageId, setFilterStageId] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [localItemsPerPage, setLocalItemsPerPage] = useState(10);
+  const [showSelectMenu, setShowSelectMenu] = useState(false);
+  const selectMenuRef = useRef<HTMLDivElement>(null);
 
   const user = localStorage.getItem('user');
   const token = user ? JSON.parse(user).token : null;
+
+  // Fechar menu ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (selectMenuRef.current && !selectMenuRef.current.contains(event.target as Node)) {
+        setShowSelectMenu(false);
+      }
+    };
+
+    if (showSelectMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSelectMenu]);
 
   const handleExportCSV = () => {
     const exportData = filteredDeals.map(deal => {
@@ -162,13 +180,21 @@ export default function ListView({
     }
   };
 
-  const handleSelectCurrentPage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const currentPageDeals = paginatedDeals.map(deal => deal.Id);
-    if (e.target.checked) {
-      setSelectedDeals(Array.from(new Set([...selectedDeals, ...currentPageDeals])));
-    } else {
-      setSelectedDeals(prev => prev.filter(id => !currentPageDeals.includes(id)));
-    }
+  const handleSelectCurrentPage = () => {
+    const currentPageDeals = displayedDeals.map(deal => deal.Id);
+    setSelectedDeals(Array.from(new Set([...selectedDeals, ...currentPageDeals])));
+    setShowSelectMenu(false);
+  };
+
+  const handleSelectAllPages = () => {
+    const allDeals = sortedDeals.map(deal => deal.Id);
+    setSelectedDeals(allDeals);
+    setShowSelectMenu(false);
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedDeals([]);
+    setShowSelectMenu(false);
   };
 
   const handleSelectDeal = (dealId: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -251,13 +277,19 @@ export default function ListView({
   const filteredDeals = filterDeals(deals);
   const sortedDeals = sortDeals(filteredDeals);
 
+  // Paginação LOCAL (não afeta quantos deals são buscados da API)
+  const totalPages = Math.ceil(sortedDeals.length / localItemsPerPage);
   const startIndex = (currentPage - 1) * localItemsPerPage;
   const endIndex = startIndex + localItemsPerPage;
-  const paginatedDeals = sortedDeals.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(sortedDeals.length / localItemsPerPage);
+  const displayedDeals = sortedDeals.slice(startIndex, endIndex);
 
-  const areAllCurrentPageDealsSelected = paginatedDeals.length > 0 && 
-    paginatedDeals.every(deal => selectedDeals.includes(deal.Id));
+  const areAllDisplayedDealsSelected = displayedDeals.length > 0 &&
+    displayedDeals.every(deal => selectedDeals.includes(deal.Id));
+
+  // Resetar para página 1 quando mudar o filtro ou localItemsPerPage
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterFunnelId, filterStageId, localItemsPerPage]);
 
   return (
     <>
@@ -281,23 +313,23 @@ export default function ListView({
         }
       `}</style>
 
-      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden w-full transition-theme">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden w-full transition-theme">
       {selectedDeals.length > 0 && canEdit && (
-        <div className="p-4 bg-gray-50 dark:bg-neutral-700 border-b border-gray-300 dark:border-neutral-600 flex items-center justify-between transition-theme">
-          <div className="text-sm text-gray-600 dark:text-neutral-300">
+        <div className="px-4 py-3 bg-gray-50 dark:bg-neutral-700/50 border-b border-gray-200 dark:border-neutral-700 flex items-center justify-between transition-theme">
+          <div className="text-sm text-gray-700 dark:text-neutral-300">
             {selectedDeals.length} negociação(ões) selecionada(s)
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={handleExportCSV}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-200 bg-white dark:bg-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-500 border border-gray-300 dark:border-neutral-500 rounded-md transition-theme"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-700 dark:text-neutral-200 bg-white dark:bg-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-500 border border-gray-300 dark:border-neutral-500 rounded-lg transition-colors"
             >
               <Download className="w-4 h-4" />
               Exportar Selecionados
             </button>
             <button
               onClick={() => setIsBulkMoveModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md transition-theme"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
             >
               <GitBranch className="w-4 h-4" />
               Mover Selecionados
@@ -305,7 +337,7 @@ export default function ListView({
             <button
               onClick={handleBulkDelete}
               disabled={bulkDeleting}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-md disabled:opacity-50 transition-theme"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-50 transition-colors"
             >
               {bulkDeleting ? (
                 <>
@@ -323,58 +355,48 @@ export default function ListView({
         </div>
       )}
 
-      <div className="flex items-center justify-between p-4 border-b border-gray-300 dark:border-neutral-600 transition-theme">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-neutral-700 transition-theme">
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 dark:text-neutral-300">Visualizar itens:</span>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-              className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 p-2 transition-theme"
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-              <option value={150}>150</option>
-              <option value={999}>+150</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 dark:text-neutral-300">Itens por página:</span>
+            <span className="text-xs text-gray-600 dark:text-neutral-400">Itens por página:</span>
             <select
               value={localItemsPerPage}
-              onChange={(e) => {
-                setLocalItemsPerPage(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 p-2 transition-theme"
+              onChange={(e) => setLocalItemsPerPage(Number(e.target.value))}
+              className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-2 py-1.5 transition-colors"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
               <option value={20}>20</option>
+              <option value={25}>25</option>
               <option value={50}>50</option>
             </select>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 dark:text-neutral-300">Página:</span>
-            <select
-              value={currentPage}
-              onChange={(e) => setCurrentPage(Number(e.target.value))}
-              className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 p-2 transition-theme"
-            >
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <option key={page} value={page}>
-                  {page} de {totalPages}
-                </option>
-              ))}
-            </select>
+            <span className="text-xs text-gray-600 dark:text-neutral-400">Página:</span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="px-2 py-1 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors"
+              >
+                ‹
+              </button>
+              <span className="text-xs text-gray-700 dark:text-neutral-300 px-2">
+                {currentPage} de {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="px-2 py-1 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors"
+              >
+                ›
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 dark:text-neutral-300">Funil:</span>
+            <span className="text-xs text-gray-600 dark:text-neutral-400">Funil:</span>
             <select
               value={filterFunnelId || ''}
               onChange={(e) => {
@@ -382,7 +404,7 @@ export default function ListView({
                 setFilterFunnelId(value);
                 setFilterStageId('');
               }}
-              className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 p-2 transition-theme"
+              className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-2 py-1.5 transition-colors"
             >
               <option value="">Todos</option>
               {funil && <option value={funil.id}>{funil.nome}</option>}
@@ -390,11 +412,11 @@ export default function ListView({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 dark:text-neutral-300">Estágio:</span>
+            <span className="text-xs text-gray-600 dark:text-neutral-400">Estágio:</span>
             <select
               value={filterStageId}
               onChange={(e) => setFilterStageId(e.target.value)}
-              className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 p-2 disabled:opacity-50 transition-theme"
+              className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-2 py-1.5 disabled:opacity-50 transition-colors"
               disabled={!filterFunnelId}
             >
               <option value="">Todos</option>
@@ -408,45 +430,72 @@ export default function ListView({
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-5 h-5" />
+          <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-4 h-4" />
           <input
             type="text"
             placeholder="Buscar por título ou contato..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 w-64 transition-theme"
+            className="pl-8 pr-3 py-1.5 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64 transition-colors"
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto w-full" id="deals-table-container">
-        <InfiniteScroll
-          dataLength={deals.length}
-          next={onLoadMore}
-          hasMore={hasMore}
-          loader={
-            <div className="flex justify-center py-4">
-              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-            </div>
-          }
-          scrollableTarget="deals-table-container"
-        >
+      <div className="overflow-x-auto w-full">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700 table-fixed">
-            <thead className="bg-gray-50 dark:bg-neutral-700 transition-theme">
+            <thead className="bg-gray-50 dark:bg-neutral-800/50 transition-theme">
               <tr>
-                <th scope="col" className="w-[48px] p-4">
+                <th scope="col" className="w-[48px] px-3 py-2 relative">
                 {canEdit && (
-                  <input
-                    type="checkbox"
-                    checked={areAllCurrentPageDealsSelected}
-                    onChange={handleSelectCurrentPage}
-                    className="w-5 h-5 rounded border-gray-300 dark:border-neutral-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
-                  />
+                  <div ref={selectMenuRef} className="relative inline-block">
+                    <button
+                      onClick={() => setShowSelectMenu(!showSelectMenu)}
+                      className="w-4 h-4 rounded border-2 border-gray-300 dark:border-neutral-600 flex items-center justify-center hover:border-blue-500 transition-colors"
+                      style={{
+                        backgroundColor: areAllDisplayedDealsSelected ? '#3B82F6' : 'transparent',
+                        borderColor: areAllDisplayedDealsSelected ? '#3B82F6' : undefined
+                      }}
+                    >
+                      {areAllDisplayedDealsSelected && (
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+
+                    {showSelectMenu && (
+                      <div className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-lg z-50 py-1">
+                        <button
+                          onClick={handleSelectCurrentPage}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                        >
+                          Selecionar página atual ({displayedDeals.length})
+                        </button>
+                        <button
+                          onClick={handleSelectAllPages}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                        >
+                          Selecionar todas as páginas ({sortedDeals.length})
+                        </button>
+                        {selectedDeals.length > 0 && (
+                          <>
+                            <div className="border-t border-gray-200 dark:border-neutral-700 my-1"></div>
+                            <button
+                              onClick={handleDeselectAll}
+                              className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                            >
+                              Desmarcar todos
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   )}
                 </th>
                 <th
                   scope="col"
-                  className="w-[300px] px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-300 uppercase tracking-wider cursor-pointer group"
+                  className="w-[300px] px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-neutral-400 uppercase tracking-wide cursor-pointer group"
                   onClick={() => handleSort('titulo')}
                 >
                   <div className="flex items-center gap-1">
@@ -456,7 +505,7 @@ export default function ListView({
                 </th>
                 <th
                   scope="col"
-                  className="w-[200px] px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-300 uppercase tracking-wider cursor-pointer group"
+                  className="w-[200px] px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-neutral-400 uppercase tracking-wide cursor-pointer group"
                   onClick={() => handleSort('contato')}
                 >
                   <div className="flex items-center gap-1">
@@ -466,7 +515,7 @@ export default function ListView({
                 </th>
                 <th
                   scope="col"
-                  className="w-[180px] px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-300 uppercase tracking-wider cursor-pointer group"
+                  className="w-[180px] px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-neutral-400 uppercase tracking-wide cursor-pointer group"
                   onClick={() => handleSort('estagio')}
                 >
                   <div className="flex items-center gap-1">
@@ -476,7 +525,7 @@ export default function ListView({
                 </th>
                 <th
                   scope="col"
-                  className="w-[140px] px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-300 uppercase tracking-wider cursor-pointer group"
+                  className="w-[140px] px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-neutral-400 uppercase tracking-wide cursor-pointer group"
                   onClick={() => handleSort('UpdatedAt')}
                 >
                   <div className="flex items-center gap-1">
@@ -484,65 +533,65 @@ export default function ListView({
                     <SortIcon field="UpdatedAt" />
                   </div>
                 </th>
-                <th scope="col" className="w-[100px] px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-neutral-300 uppercase tracking-wider">
+                <th scope="col" className="w-[100px] px-3 py-2 text-right text-xs font-medium text-gray-600 dark:text-neutral-400 uppercase tracking-wide">
                   Ações
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700 transition-theme">
-              {paginatedDeals.map((deal) => {
+              {displayedDeals.map((deal) => {
                 const stage = funil.estagios?.find(s => parseInt(s.Id) === deal.id_estagio);
                 return (
                   <tr
                     key={deal.Id}
                     onClick={() => onDealClick(deal)}
-                    className="hover:bg-gray-50 dark:hover:bg-neutral-700 cursor-pointer transition-theme"
+                    className="hover:bg-gray-50 dark:hover:bg-neutral-700/50 cursor-pointer transition-colors"
                   >
-                    <td className="w-[48px] p-4" onClick={e => e.stopPropagation()}>
-                                      {canEdit && (
+                    <td className="w-[48px] px-3 py-2.5" onClick={e => e.stopPropagation()}>
+                      {canEdit && (
                       <input
                         type="checkbox"
                         checked={selectedDeals.includes(deal.Id)}
                         onChange={(e) => handleSelectDeal(deal.Id, e)}
-                        className="w-5 h-5 rounded border-gray-300 dark:border-neutral-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
+                        className="w-4 h-4 rounded border-gray-300 dark:border-neutral-600 text-blue-600 focus:ring-blue-500"
                       />
-                                                                )}
+                      )}
                     </td>
-                    <td className="w-[300px] px-4 py-3">
+                    <td className="w-[300px] px-3 py-2.5">
                       <div className="text-sm text-gray-900 dark:text-neutral-100 max-w-[280px] truncate" title={deal.titulo}>
                         {deal.titulo}
                       </div>
                     </td>
-                    <td className="w-[200px] px-4 py-3">
+                    <td className="w-[200px] px-3 py-2.5">
                       <div className="text-sm text-gray-900 dark:text-neutral-100 max-w-[180px] truncate" title={deal.contato?.nome}>
                         {deal.contato?.nome}
                       </div>
                     </td>
-                    <td className="w-[180px] px-4 py-3">
+                    <td className="w-[180px] px-3 py-2.5">
                       <div className="text-sm text-gray-900 dark:text-neutral-100 max-w-[160px] truncate" title={stage?.nome}>
                         {stage?.nome}
                       </div>
                     </td>
-                    <td className="w-[140px] px-4 py-3">
+                    <td className="w-[140px] px-3 py-2.5">
                       <div className="text-sm text-gray-500 dark:text-neutral-400 truncate">
                         {formatDate(deal.UpdatedAt ?? deal.CreatedAt)}
                       </div>
                     </td>
-                    <td className="w-[100px] px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="w-[100px] px-3 py-2.5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             onDealClick(deal);
                           }}
-                          className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 p-1 transition-theme"
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-1 transition-colors"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
-                                        {canEdit && (
+                        {canEdit && (
                         <button
                           onClick={(e) => handleDelete(deal, e)}
-                          className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-1 transition-theme"
+                          className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-1 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -554,7 +603,6 @@ export default function ListView({
               })}
             </tbody>
           </table>
-        </InfiniteScroll>
       </div>
       {canEdit && (
 
@@ -567,16 +615,16 @@ export default function ListView({
         }}
         title="Mover Negociações"
       >
-        <div className="p-6">
+        <div className="p-5">
           <div>
-            <label htmlFor="stage" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+            <label htmlFor="stage" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">
               Selecione o novo estágio
             </label>
             <select
               id="stage"
               value={selectedStageId}
               onChange={(e) => setSelectedStageId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-theme"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               required
             >
               <option value="">Selecione um estágio...</option>
@@ -588,18 +636,18 @@ export default function ListView({
             </select>
           </div>
           {error && (
-            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">
+            <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg text-sm">
+            <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg text-sm">
               {success}
             </div>
           )}
 
-          <div className="flex justify-end gap-3 mt-6">
+          <div className="flex justify-end gap-2 mt-5">
             <button
               type="button"
               onClick={() => {
@@ -607,23 +655,23 @@ export default function ListView({
                 setSelectedStageId('');
                 setError('');
               }}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-200 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md transition-theme"
+              className="px-3 py-1.5 text-sm text-gray-700 dark:text-neutral-200 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={handleBulkMove}
               disabled={!selectedStageId || movingDeals}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md disabled:opacity-50 transition-theme"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 transition-colors"
             >
               {movingDeals ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Movendo...</span>
                 </>
               ) : (
                 <>
-                  <GitBranch className="w-5 h-5" />
+                  <GitBranch className="w-4 h-4" />
                   <span>Mover Negociações</span>
                 </>
               )}

@@ -4,15 +4,13 @@ import { createPortal } from 'react-dom';
 import type { Deal } from '../../types/deal';
 import type { Funil } from '../../types/funil';
 import StageColumn from './StageColumn';
-import { Layers, Settings2, TrendingUp, ChevronDown, Check } from 'lucide-react';
+import { Layers, Settings2, ChevronDown, Check } from 'lucide-react';
 
 interface KanbanBoardProps {
   funil: Funil;
   deals: Deal[];
   formatDate: (date: string) => string;
   onDealClick: (deal: Deal) => void;
-  hasMore: boolean;
-  onLoadMore: () => void;
   itemsPerPage: number;
   onItemsPerPageChange: (value: number) => void;
   canEdit: boolean;
@@ -25,8 +23,6 @@ export default function KanbanBoard({
   deals,
   formatDate,
   onDealClick,
-  hasMore,
-  onLoadMore,
   itemsPerPage,
   onItemsPerPageChange,
   canEdit,
@@ -69,29 +65,23 @@ export default function KanbanBoard({
   };
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col min-w-0 relative bg-gradient-to-br from-gray-50 via-blue-50/20 to-indigo-50/20 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-800 transition-theme">
-      {/* Header Premium com Estatísticas */}
-      <div className="bg-white dark:bg-neutral-800 border-b border-gray-100 dark:border-neutral-700 shadow-sm mb-4 transition-theme">
+    <div className="flex-1 overflow-hidden flex flex-col min-w-0 relative bg-gray-50 dark:bg-neutral-900 transition-theme">
+      {/* Header Minimalista */}
+      <div className="bg-white dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700 mb-4 transition-theme">
         <div className="px-6 py-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* Título e Info */}
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur-lg opacity-30"></div>
-                <div className="relative bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-2xl shadow-lg">
-                  <Layers className="w-6 h-6 text-white" />
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-600 dark:bg-blue-500 p-2 rounded-lg">
+                <Layers className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-neutral-100 dark:via-neutral-200 dark:to-neutral-100 bg-clip-text text-transparent">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">
                   Pipeline de Vendas
                 </h2>
-                <div className="flex items-center gap-3 mt-1">
-                  <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-neutral-400">
-                    <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
-                    <span className="font-semibold text-gray-900 dark:text-neutral-100">{deals.length}</span>
-                    <span>negociações ativas</span>
-                  </div>
+                <div className="flex items-center gap-2 mt-0.5 text-sm text-gray-600 dark:text-neutral-400">
+                  <span className="font-medium text-gray-900 dark:text-neutral-100">{deals.length}</span>
+                  <span>negociações ativas</span>
                 </div>
               </div>
             </div>
@@ -101,11 +91,11 @@ export default function KanbanBoard({
               <button
                 ref={itemsButtonRef}
                 onClick={() => setShowItemsDropdown(!showItemsDropdown)}
-                className="flex items-center gap-2 bg-gradient-to-br from-gray-50 to-white dark:from-neutral-700 dark:to-neutral-800 px-4 py-2.5 rounded-xl border-2 border-gray-200 dark:border-neutral-600 hover:border-gray-300 dark:hover:border-neutral-500 transition-all cursor-pointer"
+                className="flex items-center gap-2 bg-white dark:bg-neutral-800 px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
               >
                 <Settings2 className="w-4 h-4 text-gray-500 dark:text-neutral-400" />
-                <span className="text-sm font-medium text-gray-700 dark:text-neutral-300">Exibir:</span>
-                <span className="text-sm font-bold text-gray-900 dark:text-neutral-100">
+                <span className="text-sm text-gray-700 dark:text-neutral-300">Exibir:</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-neutral-100">
                   {itemOptions.find(opt => opt.value === itemsPerPage)?.label || '50 itens'}
                 </span>
                 <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-neutral-400 transition-transform ${showItemsDropdown ? 'rotate-180' : ''}`} />
@@ -120,14 +110,14 @@ export default function KanbanBoard({
                   />
                   {/* Dropdown */}
                   <div
-                    className="fixed z-[9999] bg-white dark:bg-neutral-800 border-2 border-gray-200 dark:border-neutral-600 rounded-2xl shadow-2xl overflow-hidden"
+                    className="fixed z-[9999] bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-600 rounded-lg shadow-lg overflow-hidden"
                     style={{
                       top: `${dropdownPosition.top}px`,
                       left: `${dropdownPosition.left}px`,
                       minWidth: `${dropdownPosition.width}px`
                     }}
                   >
-                    <div className="p-2 space-y-1">
+                    <div className="p-1">
                       {itemOptions.map((option) => {
                         const isSelected = itemsPerPage === option.value;
                         return (
@@ -138,11 +128,11 @@ export default function KanbanBoard({
                               setShowItemsDropdown(false);
                             }}
                             className={`
-                              px-4 py-2.5 rounded-xl cursor-pointer text-sm font-medium
-                              flex items-center justify-between transition-all
+                              px-3 py-2 rounded-md cursor-pointer text-sm
+                              flex items-center justify-between transition-colors
                               ${isSelected
-                                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 border-2 border-blue-200 dark:border-blue-700'
-                                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 border-2 border-transparent hover:border-gray-200 dark:hover:border-neutral-600'
+                                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700'
                               }
                             `}
                           >
@@ -162,67 +152,67 @@ export default function KanbanBoard({
           </div>
         </div>
 
-        {/* Barra de rolagem superior elegante */}
+        {/* Barra de rolagem superior simples */}
         <div
           id="kanban-scroll-top"
-          className="overflow-x-auto h-3 cursor-ew-resize bg-gradient-to-r from-blue-100/50 via-indigo-100/50 to-purple-100/50 dark:from-neutral-700 dark:via-neutral-600 dark:to-neutral-700 shadow-inner relative transition-theme"
+          className="overflow-x-auto h-2 cursor-ew-resize bg-gray-200 dark:bg-neutral-700 transition-theme"
           onScroll={handleTopScroll}
         >
-          <div className="h-3 relative" style={{ width: '400%' }}>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-indigo-400/20 to-purple-400/20 dark:from-blue-600/20 dark:via-indigo-600/20 dark:to-purple-600/20 rounded-full"></div>
-          </div>
+          <div className="h-2" style={{ width: '400%' }}></div>
         </div>
       </div>
 
-      {/* Área principal do Kanban com melhor gradiente */}
+      {/* Área principal do Kanban */}
       <div
         id="kanban-scroll-main"
         className="flex-1 w-full max-w-full overflow-x-auto pb-6 px-4"
         onScroll={handleScrollSync}
       >
         <div
-          className="
-            inline-flex gap-4 px-2 pb-8
-            min-h-[calc(100vh-240px)]
-            relative overflow-visible z-0
-          "
+          className="inline-flex gap-3 px-2 pb-8 min-h-[calc(100vh-240px)]"
           style={{ transform: 'none' }}
         >
           {/* Colunas do funil */}
           {funil.estagios?.map((estagio, index) => {
-            const premiumColors = [
+            const minimalColors = [
+              {
+                bg: '#F3F4F6',      // Cinza claro
+                border: '#E5E7EB',
+                accent: '#6B7280'
+              },
               {
                 bg: '#EFF6FF',      // Azul claro
                 border: '#DBEAFE',
                 accent: '#3B82F6'
               },
               {
-                bg: '#FEF3C7',      // Amarelo suave
+                bg: '#F0FDF4',      // Verde claro
+                border: '#DCFCE7',
+                accent: '#10B981'
+              },
+              {
+                bg: '#FEF3C7',      // Amarelo claro
                 border: '#FDE68A',
                 accent: '#F59E0B'
               },
               {
-                bg: '#FCE7F3',      // Rosa suave
+                bg: '#FCE7F3',      // Rosa claro
                 border: '#FBCFE8',
                 accent: '#EC4899'
               },
               {
-                bg: '#F3E8FF',      // Roxo suave
-                border: '#E9D5FF',
-                accent: '#A855F7'
-              },
-              {
-                bg: '#DBEAFE',      // Azul médio
-                border: '#BFDBFE',
-                accent: '#2563EB'
-              },
-              {
-                bg: '#D1FAE5',      // Verde suave
-                border: '#A7F3D0',
-                accent: '#10B981'
+                bg: '#F5F3FF',      // Roxo claro
+                border: '#EDE9FE',
+                accent: '#8B5CF6'
               }
             ];
-            const colorScheme = premiumColors[index % premiumColors.length];
+            const colorScheme = minimalColors[index % minimalColors.length];
+
+            // Filtra deals deste estágio e aplica limite de itemsPerPage
+            const stageDeals = deals.filter(
+              (deal) => deal.id_estagio === parseInt(estagio.Id)
+            );
+            const limitedDeals = stageDeals.slice(0, itemsPerPage);
 
             return (
               <StageColumn
@@ -231,13 +221,11 @@ export default function KanbanBoard({
                   ...estagio,
                   cor: colorScheme.bg
                 }}
-                deals={deals.filter(
-                  (deal) => deal.id_estagio === parseInt(estagio.Id)
-                )}
+                deals={limitedDeals}
                 formatDate={formatDate}
                 onDealClick={onDealClick}
-                hasMore={hasMore}
-                onLoadMore={onLoadMore}
+                hasMore={false}
+                onLoadMore={() => {}}
                 canEdit={canEdit}
                 users={users}
                 tagsMap={tagsMap}

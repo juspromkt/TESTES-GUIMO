@@ -11,8 +11,8 @@ export default function EmptyFunnelState() {
           Você ainda não configurou/ativou seu CRM
         </h2>
         <p className="text-gray-600 mb-6">
-          Para começar a gerenciar seus leads, você precisa configurar os Status do Lead primeiro.
-          Vá até Configurações → Status do Lead e configure agora.
+          Para começar a gerenciar seus leads, você precisa configurar os Funis de Vendas primeiro.
+          Vá até Configurações → Funis de Vendas e configure agora.
         </p>
         <Link
           to="/configuracoes"
