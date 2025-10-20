@@ -17,8 +17,9 @@ interface VideoLesson {
 
 // Dados de exemplo - você pode substituir pelos seus vídeos reais
 const videoLessons: VideoLesson[] = [
-  // INICIANTE
-
+// ==========================
+// 🟢 INICIANTE
+// ==========================
 {
   id: 'iniciante-1',
   title: 'Visão geral do sistema',
@@ -124,32 +125,169 @@ const videoLessons: VideoLesson[] = [
   category: 'iniciante'
 },
 
-
-  // INTERMEDIÁRIO
-
+// ==========================
+// 🟡 INTERMEDIÁRIO
+// ==========================
 {
   id: 'intermediario-1',
   title: 'Função #SAIR',
-  description: 'Sempre que você testa a IA pelo mesmo número de WhatsApp, o sistema reaproveita a negociação já criada. Isso pode deixar a IA “confusa” (memória antiga, contexto errado). A solução é simples: antes de cada novo teste, envie #sair do seu celular para o número conectado à IA. Isso zera o histórico e cria uma negociação nova, começando tudo do zero.',
+  description: 'Saiba como utilizar o comando #SAIR para reiniciar uma conversa com a IA e evitar erros de contexto durante os testes.',
   videoUrl: 'https://www.youtube.com/embed/ac5xdr3eRvA',
   thumbnail: capaDefault,
   category: 'intermediario'
 },
-  {
+{
   id: 'intermediario-2',
   title: 'Como criar e usar Modelos na ZapSign',
-  description: 'Neste tutorial completo, você vai aprender como usar a funcionalidade de Modelos na plataforma ZapSign para otimizar o envio e gerenciamento de documentos',
+  description: 'Aprenda como criar modelos na ZapSign e integrar seus documentos de forma rápida e eficiente.',
   videoUrl: 'https://www.youtube.com/embed/yQHe_uflWH4',
   thumbnail: capaDefault,
   category: 'intermediario'
 },
+{
+  id: 'intermediario-4',
+  title: 'Histórico de Follow-up',
+  description: 'Aprenda como visualizar e gerenciar o histórico de follow-up dos seus contatos e negociações.',
+  videoUrl: 'https://www.youtube.com/embed/HIkErNJj_Oc',
+  thumbnail: capaDefault,
+  category: 'intermediario'
+},
+{
+  id: 'intermediario-6',
+  title: 'Sistema de Workspace',
+  description: 'Veja como o sistema de Workspaces permite gerenciar múltiplas contas e equipes de forma organizada.',
+  videoUrl: 'https://www.youtube.com/embed/sdcHHttDuNc',
+  thumbnail: capaDefault,
+  category: 'intermediario'
+},
+{
+  id: 'intermediario-7',
+  title: 'Configuração do Google Agenda',
+  description: 'Aprenda a integrar o Google Agenda com a Guimoo para automatizar seus compromissos.',
+  videoUrl: 'https://www.youtube.com/embed/O00atxrkStY',
+  thumbnail: capaDefault,
+  category: 'intermediario'
+},
+{
+  id: 'intermediario-8',
+  title: 'Configurando Google Agenda - Workspace',
+  description: 'Tutorial detalhado para integrar o Google Workspace com o sistema e sincronizar agendas de todos os usuários.',
+  videoUrl: 'https://www.youtube.com/embed/MxRlIa5I45A',
+  thumbnail: capaDefault,
+  category: 'intermediario'
+},
 
+// ==========================
+// 🔵 AVANÇADO
+// ==========================
+{
+  id: 'avancado-1',
+  title: 'Agente de IA - Movimentação Automática',
+  description: 'Entenda como configurar a movimentação automática da IA para agilizar atendimentos e distribuir tarefas entre etapas.',
+  videoUrl: 'https://www.youtube.com/embed/RfMSykWNiSU',
+  thumbnail: capaDefault,
+  category: 'avancado'
+},
+{
+  id: 'avancado-2',
+  title: 'Agente de IA - Etapas de Atendimento',
+  description: 'Aprenda a criar e ajustar as etapas do atendimento do agente de IA, otimizando fluxos de conversa e qualificação de leads.',
+  videoUrl: 'https://www.youtube.com/embed/ziAEnz_TtNU',
+  thumbnail: capaDefault,
+  category: 'avancado'
+},
+{
+  id: 'avancado-3',
+  title: 'Agente de IA - Perguntas Frequentes',
+  description: 'Configure perguntas frequentes para que a IA responda automaticamente dúvidas recorrentes dos clientes.',
+  videoUrl: 'https://www.youtube.com/embed/QJtyEIlIOdg',
+  thumbnail: capaDefault,
+  category: 'avancado'
+},
+{
+  id: 'avancado-4',
+  title: 'Agente de IA - Regras Gerais',
+  description: 'Veja como definir regras gerais que orientam o comportamento da IA durante todo o atendimento.',
+  videoUrl: 'https://www.youtube.com/embed/Ob57-CzgtKY',
+  thumbnail: capaDefault,
+  category: 'avancado'
+},
+{
+  id: 'avancado-5',
+  title: 'Agente de IA - Personalidade',
+  description: 'Crie a personalidade da sua IA para deixá-la mais próxima do tom de voz do seu escritório e público-alvo.',
+  videoUrl: 'https://www.youtube.com/embed/7oyC6BeB5mU',
+  thumbnail: capaDefault,
+  category: 'avancado'
+},
+{
+  id: 'avancado-6',
+  title: 'Agente de IA - Áudio',
+  description: 'Aprenda a configurar o reconhecimento e envio de áudios pela IA, tornando o atendimento mais natural.',
+  videoUrl: 'https://www.youtube.com/embed/IHMhKjGWRxc',
+  thumbnail: capaDefault,
+  category: 'avancado'
+},
+{
+  id: 'avancado-7',
+  title: 'Agente de IA - Gatilhos',
+  description: 'Veja como criar gatilhos automáticos para ativar respostas e ações da IA de forma inteligente.',
+  videoUrl: 'https://www.youtube.com/embed/ngpRqvil5dg',
+  thumbnail: capaDefault,
+  category: 'avancado'
+},
+{
+  id: 'avancado-8',
+  title: 'Agente de IA - Horário de Funcionamento',
+  description: 'Configure o horário de funcionamento da IA para que ela atenda apenas dentro do período desejado.',
+  videoUrl: 'https://www.youtube.com/embed/4-5hr5hhmU4',
+  thumbnail: capaDefault,
+  category: 'avancado'
+},
+{
+  id: 'avancado-9',
+  title: 'Agente de IA - Modelos de Agente',
+  description: 'Aprenda a salvar, duplicar e reaproveitar modelos de agentes para diferentes tipos de atendimento.',
+  videoUrl: 'https://www.youtube.com/embed/PEgQzrvM2c0',
+  thumbnail: capaDefault,
+  category: 'avancado'
+},
+{
+  id: 'avancado-10',
+  title: 'Agente de IA - Notificações no WhatsApp',
+  description: 'Saiba como configurar notificações automáticas via WhatsApp para acompanhar a atuação da IA em tempo real.',
+  videoUrl: 'https://www.youtube.com/embed/LSK2t4GJACw',
+  thumbnail: capaDefault,
+  category: 'avancado'
+},
+{
+  id: 'avancado-11',
+  title: 'Agente de IA - Parâmetros do Agente',
+  description: 'Entenda cada parâmetro do agente e aprenda a ajustar tempo de resposta, reativação e comportamento da IA.',
+  videoUrl: 'https://www.youtube.com/embed/PMKp2fuN-QQ',
+  thumbnail: capaDefault,
+  category: 'avancado'
+},
+{
+  id: 'avancado-12',
+  title: 'Agente de IA - Teste de Agente',
+  description: 'Veja como testar corretamente seu agente de IA e validar o comportamento em diferentes cenários.',
+  videoUrl: 'https://www.youtube.com/embed/rVQ0lfx-TBU',
+  thumbnail: capaDefault,
+  category: 'avancado'
+},
+{
+  id: 'avancado-13',
+  title: 'Agente de IA - Follow-up Automático',
+  description: 'Aprenda a configurar o follow-up automático para que a IA retome conversas e aumente a taxa de conversão.',
+  videoUrl: 'https://www.youtube.com/embed/uk_K6VqrFOY',
+  thumbnail: capaDefault,
+  category: 'avancado'
+},
 
-  // AVANÇADO
-
-
-  // GUIMOO ACADEMY
-
+// ==========================
+// 🎓 GUIMOO ACADEMY
+// ==========================
 {
   id: 'academy-1',
   title: 'Criando uma campanha Trabalhista no Google Ads',
@@ -166,6 +304,7 @@ const videoLessons: VideoLesson[] = [
   thumbnail: capaDefault,
   category: 'academy'
 },
+
 
   
 ];

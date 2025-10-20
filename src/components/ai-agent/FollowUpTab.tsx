@@ -64,6 +64,13 @@ export default function FollowUpTab({ token, canViewAgent, activeSubTab }: Follo
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  // Filter states
+  const [phoneFilter, setPhoneFilter] = useState('');
+  const [dateFromFilter, setDateFromFilter] = useState('');
+  const [dateToFilter, setDateToFilter] = useState('');
+  const [funnelFilter, setFunnelFilter] = useState('');
+  const [stageFilter, setStageFilter] = useState('');
+
   const timeOptions = [
     { value: '10 minutos', label: '10 minutos' },
     { value: '20 minutos', label: '20 minutos' },
@@ -415,10 +422,54 @@ const fetchHistory = async (isRefreshing = false) => {
     'media',
   ];
 
+  // Apply filters to history
+  const filteredHistory = history.filter(item => {
+    // Phone filter
+    if (phoneFilter && !item.numero?.includes(phoneFilter.replace(/\D/g, ''))) {
+      return false;
+    }
+
+    // Date from filter
+    if (dateFromFilter) {
+      const itemDate = new Date(item.data);
+      const filterDate = new Date(dateFromFilter);
+      if (itemDate < filterDate) {
+        return false;
+      }
+    }
+
+    // Date to filter
+    if (dateToFilter) {
+      const itemDate = new Date(item.data);
+      const filterDate = new Date(dateToFilter);
+      filterDate.setHours(23, 59, 59, 999); // End of day
+      if (itemDate > filterDate) {
+        return false;
+      }
+    }
+
+    // Funnel filter
+    if (funnelFilter && item.id_funil.toString() !== funnelFilter) {
+      return false;
+    }
+
+    // Stage filter
+    if (stageFilter && item.id_estagio.toString() !== stageFilter) {
+      return false;
+    }
+
+    return true;
+  });
+
   // Pagination calculations
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedHistory = history.slice(startIndex, endIndex);
+  const paginatedHistory = filteredHistory.slice(startIndex, endIndex);
+
+  // Get unique stages for the selected funnel
+  const availableStages = funnelFilter
+    ? funnels.find(f => f.id.toString() === funnelFilter)?.estagios || []
+    : [];
 
   if (loading && loadingConfig) {
     return (
@@ -513,7 +564,41 @@ const fetchHistory = async (isRefreshing = false) => {
                   <p className="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">Defina quando e como o follow-up deve ser enviado</p>
                 </div>
                 {canViewAgent && (
-                  <>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const defaultText = `Analise as últimas mensagens trocadas e continuar o atendimento a partir do ponto exato em que parou, sem repetir perguntas já feitas.
+
+Regras:
+Sempre leia o histórico recente da conversa antes de responder.
+Identifique o último ponto da interação:
+Se o cliente estava respondendo perguntas, continue da próxima pergunta do fluxo.
+Se o cliente ficou em dúvida, retome oferecendo esclarecimento ou simplificação.
+Se já havia sido feita uma oferta de contrato ou agendamento, faça o follow-up direto sobre esse ponto.
+Nunca pressione de forma agressiva. Use uma linguagem acolhedora e consultiva.
+Evite mensagens genéricas como "oi, tudo bem?". Sempre personalize de acordo com o contexto anterior.
+Nunca diga o nome do cliente. (obrigatório)
+Estrutura da Mensagem de Follow-up:
+Retomar o contexto: Lembrar rapidamente do que estava sendo tratado.
+Avançar no ponto parado: Continuar a partir da última interação.
+Chamada leve para ação: Convidar o cliente a responder ou confirmar o próximo passo.
+Exemplos:
+Se o cliente parou na etapa de análise:
+"Você tinha me contado sobre [resumo da resposta anterior]. Para avançarmos, preciso só confirmar [pergunta seguinte]."
+Se o cliente parou na etapa de contrato:
+"Na última mensagem falamos sobre o contrato. Deseja que eu reenvie o link para assinatura agora?"
+Se o cliente parou em dúvida:
+"Notei que você ficou em dúvida sobre [tema]. Posso explicar de forma mais simples ou prefere que eu mostre um exemplo prático?"
+
+
+REGRA INTERNA IMPORTANTE: Nunca responda nenhuma dúvida jurídica ou dê instruções de casos. Seu papel é única e exclusivamente analisar através de perguntas se o cliente tem direito ou não a abrir um processo contra a empresa, mantendo sempre tom acolhedor e direto.`;
+                        setConfig({ ...config, prompt: defaultText });
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-lg text-blue-700 dark:text-blue-300 transition-colors"
+                    >
+                      Aplicar texto padrão
+                    </button>
                     <input
                       id="followup-file-upload"
                       type="file"
@@ -530,7 +615,7 @@ const fetchHistory = async (isRefreshing = false) => {
                       <Upload className="w-3.5 h-3.5" />
                       {isUploading ? 'Carregando...' : 'Adicionar Mídia'}
                     </button>
-                  </>
+                  </div>
                 )}
               </div>
 
@@ -596,28 +681,153 @@ const fetchHistory = async (isRefreshing = false) => {
 
       {/* Histórico de Follow-up */}
       {activeSubTab === 'history' && (
-      <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 overflow-hidden transition-theme">
-        {/* Header Minimalista */}
-        <div className="px-5 py-3.5 border-b border-gray-100 dark:border-neutral-700/50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-baseline gap-3">
-              <h2 className="text-base font-semibold text-gray-900 dark:text-neutral-100">Histórico</h2>
-              <span className="text-xs font-medium text-gray-500 dark:text-neutral-500">
-                {history.length} {history.length === 1 ? 'registro' : 'registros'}
-              </span>
+      <div className="space-y-4">
+        {/* Filtros */}
+        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-4 transition-theme">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-neutral-100 mb-3">Filtros</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+            {/* Busca por telefone */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1.5">
+                Telefone
+              </label>
+              <input
+                type="text"
+                placeholder="Digite o número..."
+                value={phoneFilter}
+                onChange={(e) => {
+                  setPhoneFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
+              />
             </div>
-            {canViewAgent && (
-              <button
-                onClick={() => fetchHistory(true)}
-                disabled={refreshing}
-                className="p-1.5 text-gray-500 dark:text-neutral-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-all disabled:opacity-50"
-                title="Atualizar histórico"
+
+            {/* Data de */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1.5">
+                Data de
+              </label>
+              <input
+                type="date"
+                value={dateFromFilter}
+                onChange={(e) => {
+                  setDateFromFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
+              />
+            </div>
+
+            {/* Data até */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1.5">
+                Data até
+              </label>
+              <input
+                type="date"
+                value={dateToFilter}
+                onChange={(e) => {
+                  setDateToFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
+              />
+            </div>
+
+            {/* Funil */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1.5">
+                Funil
+              </label>
+              <select
+                value={funnelFilter}
+                onChange={(e) => {
+                  setFunnelFilter(e.target.value);
+                  setStageFilter(''); // Reset stage when funnel changes
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-              </button>
-            )}
+                <option value="">Todos os funis</option>
+                {funnels.map((funnel) => (
+                  <option key={funnel.id} value={funnel.id}>
+                    {funnel.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Etapa */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1.5">
+                Etapa
+              </label>
+              <select
+                value={stageFilter}
+                onChange={(e) => {
+                  setStageFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                disabled={!funnelFilter}
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <option value="">Todas as etapas</option>
+                {availableStages.map((stage) => (
+                  <option key={stage.Id} value={stage.Id}>
+                    {stage.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+
+          {/* Limpar filtros */}
+          {(phoneFilter || dateFromFilter || dateToFilter || funnelFilter || stageFilter) && (
+            <div className="mt-3 flex justify-end">
+              <button
+                onClick={() => {
+                  setPhoneFilter('');
+                  setDateFromFilter('');
+                  setDateToFilter('');
+                  setFunnelFilter('');
+                  setStageFilter('');
+                  setCurrentPage(1);
+                }}
+                className="px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-100 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+              >
+                Limpar filtros
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Tabela de histórico */}
+        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 overflow-hidden transition-theme">
+          {/* Header Minimalista */}
+          <div className="px-5 py-3.5 border-b border-gray-100 dark:border-neutral-700/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-baseline gap-3">
+                <h2 className="text-base font-semibold text-gray-900 dark:text-neutral-100">Histórico</h2>
+                <span className="text-xs font-medium text-gray-500 dark:text-neutral-500">
+                  {filteredHistory.length} {filteredHistory.length === 1 ? 'registro' : 'registros'}
+                  {filteredHistory.length !== history.length && (
+                    <span className="text-gray-400 dark:text-neutral-600"> de {history.length}</span>
+                  )}
+                </span>
+              </div>
+              {canViewAgent && (
+                <button
+                  onClick={() => fetchHistory(true)}
+                  disabled={refreshing}
+                  className="p-1.5 text-gray-500 dark:text-neutral-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-all disabled:opacity-50"
+                  title="Atualizar histórico"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+                </button>
+              )}
+            </div>
+          </div>
 
         {/* Tabela Refinada */}
         <div className="overflow-x-auto">
@@ -684,13 +894,14 @@ const fetchHistory = async (isRefreshing = false) => {
           </table>
 
           <Pagination
-            totalItems={history.length}
+            totalItems={filteredHistory.length}
             itemsPerPage={itemsPerPage}
             currentPage={currentPage}
             onPageChange={setCurrentPage}
             onItemsPerPageChange={setItemsPerPage}
           />
         </div>
+      </div>
       </div>
       )}
     </div>
