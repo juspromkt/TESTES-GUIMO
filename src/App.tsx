@@ -15,11 +15,13 @@ import DealDetails from './pages/DealDetails';
 import Appointments from './pages/Appointments';
 import ChatProprio from './pages/ChatProprio';
 import ParceirosSidebar from './components/sidebar/ParceirosSidebar';
+import TutorialInterno from './pages/TutorialInterno';
 import { fetchUserPermissions } from './utils/permissions';
 import { MessageEventsProvider } from './pages/MessageEventsContext';
 import { NotificationManager } from './components/NotificationManager';
 import { ChatProvider } from './context/ChatContext';
 import { ConversationProvider } from './context/ConversationContext';
+import { VideoPlayerProvider } from './context/VideoPlayerContext';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = localStorage.getItem('user');
@@ -46,14 +48,16 @@ function App() {
           path="/"
           element={
             <PrivateRoute>
-              <ChatProvider>
-                <ConversationProvider>
-                  <MessageEventsProvider>
-                    <MainLayout />
-                    <NotificationManager />
-                  </MessageEventsProvider>
-                </ConversationProvider>
-              </ChatProvider>
+              <VideoPlayerProvider>
+                <ChatProvider>
+                  <ConversationProvider>
+                    <MessageEventsProvider>
+                      <MainLayout />
+                      <NotificationManager />
+                    </MessageEventsProvider>
+                  </ConversationProvider>
+                </ChatProvider>
+              </VideoPlayerProvider>
             </PrivateRoute>
           }
         >
@@ -73,6 +77,7 @@ function App() {
           <Route path="configuracoes" element={<Configuracoes />} />
           <Route path="conversas" element={<ChatProprio />} />
           <Route path="parceiros" element={<ParceirosSidebar />} />
+          <Route path="tutorial-interno" element={<TutorialInterno />} />
         </Route>
       </Routes>
     </BrowserRouter>

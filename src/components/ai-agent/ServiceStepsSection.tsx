@@ -265,9 +265,15 @@ export default function ServiceStepsSection({
   }, [serviceSteps.length, serviceSteps]);
 
   useEffect(() => {
-    fetchAtribuicoes();
     fetchUsuarios();
   }, []);
+
+  // Buscar atribuições quando o atribuirStepIndex mudar
+  useEffect(() => {
+    if (atribuirStepIndex !== null) {
+      fetchAtribuicoes();
+    }
+  }, [atribuirStepIndex]);
 
   useEffect(() => {
     const initializeQuill = async () => {
