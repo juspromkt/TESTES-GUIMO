@@ -30,6 +30,7 @@ import {
   PauseCircle,
   Ban,
   ChevronDown,
+  ChevronLeft,
   Info,
   Reply,
   Copy,
@@ -3692,6 +3693,18 @@ return (
       title="Buscar mensagens"
     >
       <Search className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-white" />
+    </button>
+
+    {/* Contact Sidebar Toggle Button */}
+    <button
+      onClick={() => {
+        setSidebarOpen(!sidebarOpen);
+        if (!sidebarOpen) setSearchOpen(false);
+      }}
+      className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group"
+      title="Informações do contato"
+    >
+      <ChevronLeft className={`w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-white transition-transform duration-200 ${sidebarOpen ? 'rotate-180' : ''}`} />
     </button>
 
   </div>

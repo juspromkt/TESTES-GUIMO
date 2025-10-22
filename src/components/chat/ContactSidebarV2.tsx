@@ -1199,17 +1199,8 @@ export default function ContactSidebarV2({
         {/* Subtle gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/5 dark:to-gray-900/10 pointer-events-none"></div>
 
-        <div className="relative flex items-center justify-end px-6 py-4">
-          <button
-            onClick={onToggle}
-            className="group p-2 rounded-xl hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition-all duration-300 active:scale-95"
-          >
-            <ChevronRight className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors duration-200" />
-          </button>
-        </div>
-
         {/* Tabs Premium com efeito de elevação */}
-        <div className="relative flex gap-2 px-6 pb-4">
+        <div className="relative flex gap-2 px-6 pt-4 pb-4">
           <button
             onClick={() => setActiveView('info')}
             className={`group relative flex-1 flex items-center justify-center gap-2.5 px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
