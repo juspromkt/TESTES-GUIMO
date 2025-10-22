@@ -668,23 +668,18 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
         >
           <div className="relative">
             {/* Header do Modal */}
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 px-8 py-10 -mt-6 -mx-6 rounded-t-2xl mb-8">
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                  <Book className="w-8 h-8 text-white" />
-                </div>
-              </div>
-              <h2 className="text-3xl font-bold text-white text-center mb-2">
+            <div className="px-8 py-6 -mt-6 -mx-6 mb-6 border-b border-gray-200 dark:border-neutral-700">
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white text-center mb-2">
                 Escolha a Área do seu Agente
               </h2>
-              <p className="text-blue-100 dark:text-purple-100 text-center max-w-2xl mx-auto">
-                Selecione uma especialização para configurar automaticamente seu agente com as melhores práticas
+              <p className="text-gray-600 dark:text-neutral-400 text-center text-sm">
+                Selecione uma especialização para configurar seu agente
               </p>
             </div>
 
             {/* Grid de Cards */}
             <div className="px-8 pb-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-h-[550px] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[550px] overflow-y-auto pr-2 custom-scrollbar">
                 {Object.entries(agentModels).map(([key, model]) => {
                   const colors = {
                     bpc: 'from-blue-500 to-blue-600',
@@ -703,46 +698,32 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
                     <button
                       key={key}
                       onClick={() => handleSelectModel(key)}
-                      className="group relative bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 text-left overflow-hidden"
+                      className="group relative bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl p-5 hover:border-gray-300 dark:hover:border-neutral-600 hover:shadow-md transition-all duration-200 text-left"
                     >
-                      {/* Decorative gradient bar */}
-                      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${colors[key] || 'from-blue-500 to-purple-500'}`}></div>
-
-                      {/* Icon and Badge */}
-                      <div className="flex items-start gap-4 mb-4">
-                        <div className={`w-12 h-12 bg-gradient-to-br ${colors[key] || 'from-blue-500 to-purple-500'} rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform`}>
-                          <Book className="w-6 h-6 text-white" />
+                      {/* Icon and Title */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={`w-10 h-10 bg-gradient-to-br ${colors[key] || 'from-blue-500 to-purple-500'} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                          <Book className="w-5 h-5 text-white" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-gray-900 dark:text-white text-base mb-1 line-clamp-2 leading-tight">
-                            {model.name}
-                          </h3>
-                        </div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight flex-1">
+                          {model.name}
+                        </h3>
                       </div>
 
                       {/* Description */}
-                      <p className="text-sm text-gray-600 dark:text-neutral-400 line-clamp-3 mb-4 leading-relaxed">
+                      <p className="text-xs text-gray-600 dark:text-neutral-400 line-clamp-2 leading-relaxed">
                         {modelDescriptions[key] || 'Modelo pré-configurado para otimizar o atendimento.'}
                       </p>
-
-                      {/* Arrow indicator */}
-                      <div className="flex items-center text-blue-600 dark:text-blue-400 text-sm font-semibold group-hover:gap-2 transition-all">
-                        <span>Ver detalhes</span>
-                        <span className="group-hover:translate-x-1 transition-transform">→</span>
-                      </div>
-
-                      {/* Hover background effect */}
-                      <div className={`absolute inset-0 bg-gradient-to-br ${colors[key] || 'from-blue-500 to-purple-500'} opacity-0 group-hover:opacity-5 transition-opacity rounded-2xl`}></div>
                     </button>
                   );
                 })}
               </div>
 
               {/* Footer Button */}
-              <div className="mt-8 pt-6 border-t border-gray-200 dark:border-neutral-700">
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-neutral-700">
                 <button
                   onClick={() => setIsModelsModalOpen(false)}
-                  className="w-full px-6 py-3 text-base font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-xl transition-colors"
+                  className="w-full px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
                 >
                   Cancelar
                 </button>
