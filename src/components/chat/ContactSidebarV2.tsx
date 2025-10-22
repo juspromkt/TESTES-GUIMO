@@ -1199,11 +1199,7 @@ export default function ContactSidebarV2({
         {/* Subtle gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/5 dark:to-gray-900/10 pointer-events-none"></div>
 
-        <div className="relative flex items-center justify-between px-6 py-4">
-          <h2 className="text-base font-light text-gray-800 dark:text-gray-100 tracking-wide transition-colors duration-200">
-            Informações
-          </h2>
-
+        <div className="relative flex items-center justify-end px-6 py-4">
           <button
             onClick={onToggle}
             className="group p-2 rounded-xl hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition-all duration-300 active:scale-95"
