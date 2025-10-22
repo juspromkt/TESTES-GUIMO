@@ -1419,31 +1419,45 @@ useEffect(() => {
   };
 
 
+  // Ref para o elemento sentinela (detecta quando chegamos ao final)
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const isLoadingRef = useRef(false);
+
+  // IntersectionObserver - Funciona independente de qual elemento está fazendo o scroll
   useEffect(() => {
-    const listElement = chatListRef.current;
-    if (!listElement || loading || loadingMore || !hasMore) return;
+    const sentinel = sentinelRef.current;
 
-    lastScrollTopRef.current = listElement.scrollTop;
+    if (!sentinel || loading || loadingMore || !hasMore) {
+      isLoadingRef.current = false;
+      return;
+    }
 
-    const handleScroll = () => {
-      // Verifica se o elemento ainda está visível ao fazer scroll
-      if (listElement.offsetParent === null) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
 
-      const { scrollTop, scrollHeight, clientHeight } = listElement;
-      const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
-      const isScrollingDown = scrollTop > lastScrollTopRef.current;
+        // Evitar múltiplos carregamentos simultâneos
+        if (entry.isIntersecting && !isLoadingRef.current && !loadingMore) {
+          isLoadingRef.current = true;
+          const nextPage = pageRef.current + 1;
 
-      lastScrollTopRef.current = scrollTop;
+          void fetchChats(nextPage).finally(() => {
+            isLoadingRef.current = false;
+          });
+        }
+      },
+      {
+        root: null,
+        rootMargin: '100px',
+        threshold: 0.1
+      }
+    );
 
-      if (!isScrollingDown) return;
-      if (distanceFromBottom > 100) return;
+    observer.observe(sentinel);
 
-      const nextPage = pageRef.current + 1;
-      void fetchChats(nextPage);
+    return () => {
+      observer.disconnect();
     };
-
-    listElement.addEventListener('scroll', handleScroll);
-    return () => listElement.removeEventListener('scroll', handleScroll);
   }, [loading, loadingMore, hasMore, fetchChats]);
 
 
@@ -2433,6 +2447,7 @@ const getLastMessageText = (chat) => {
         ref={chatListRef}
         className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar"
         style={{
+          maxHeight: '100%',
           scrollbarWidth: 'thin',
           scrollbarColor: '#d1d5db transparent'
         }}
@@ -2632,6 +2647,15 @@ const getLastMessageText = (chat) => {
                 </div>
               );
             })}
+
+            {/* Elemento sentinela para IntersectionObserver */}
+            {hasMore && !loading && (
+              <div
+                ref={sentinelRef}
+                className="h-1 w-full"
+                style={{ background: 'transparent' }}
+              />
+            )}
 
             {loadingMore && (
               <div className="flex justify-center py-4">

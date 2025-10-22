@@ -192,6 +192,13 @@ const ChatProprio = () => {
     }
   }, []);
 
+  const handleCategoryCountsChange = useCallback((counts: { ia: number; unread: number; unanswered: number; transfers: number }) => {
+    setIaCount(counts.ia);
+    setUnreadCount(counts.unread);
+    setUnansweredCount(counts.unanswered);
+    setTransfersCount(counts.transfers);
+  }, []);
+
   const handleNewChatSuccess = async (remoteJid: string, name: string) => {
     const user = localStorage.getItem('user');
     const token = user ? JSON.parse(user).token : null;
@@ -387,7 +394,7 @@ const ChatProprio = () => {
       {/* Main area - chat list e message view lado a lado */}
       <div className="flex-1 flex min-w-0 overflow-x-hidden flex-row pt-[60px] md:pt-0">
         {/* Chat list - hidden on mobile when chat is selected */}
-        <div className={`w-full md:w-96 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 ${showMobileChat ? 'hidden md:block' : 'block'} flex-shrink-0 flex flex-col overflow-y-auto overflow-x-hidden transition-colors duration-200`} style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className={`w-full md:w-96 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 ${showMobileChat ? 'hidden md:block' : 'block'} flex-shrink-0 flex flex-col ${selectedChat ? 'overflow-hidden' : 'overflow-y-auto'} overflow-x-hidden transition-colors duration-200`} style={{ WebkitOverflowScrolling: 'touch' }}>
           {activeTab === 'chat' && (           
             <>
 
@@ -474,12 +481,7 @@ const ChatProprio = () => {
                     externalActiveTab={chatListActiveTab}
                     externalHandleTabChange={handleTabChange}
                     onFilteredCountChange={setFilteredChatCount}
-                    onCategoryCountsChange={(counts) => {
-                      setIaCount(counts.ia);
-                      setUnreadCount(counts.unread);
-                      setUnansweredCount(counts.unanswered);
-                      setTransfersCount(counts.transfers);
-                    }}
+                    onCategoryCountsChange={handleCategoryCountsChange}
                   />
                 </div>
               </div>

@@ -1412,6 +1412,9 @@ function ensureKey(m: any, fallbackJid: string): any {
       ? rawFromMe === "true"
       : Boolean(rawFromMe);
 
+  // Garantir que messageType existe, usando 'text' como fallback
+  const messageType = m?.messageType || m?.message?.messageType || 'text';
+
   return {
     ...m,
     id: m?.id ?? key.id ?? String(Date.now()),
@@ -1420,6 +1423,7 @@ function ensureKey(m: any, fallbackJid: string): any {
       fromMe,
       remoteJid: String(key.remoteJid ?? fallbackJid),
     },
+    messageType: typeof messageType === 'string' && messageType.trim() !== '' ? messageType : 'text'
   };
 }
 
@@ -1430,7 +1434,16 @@ function ensureKey(m: any, fallbackJid: string): any {
       append: boolean = false,
       overrideJid?: string
     ) => {
+      console.log('🚀 fetchMessages called:', {
+        pageNum,
+        append,
+        hasToken: !!token,
+        noMorePages: noMorePagesRef.current,
+        firstPageLoaded: firstPageLoadedRef.current
+      });
+
       if (!token || noMorePagesRef.current) {
+        console.log('❌ fetchMessages blocked:', { hasToken: !!token, noMorePages: noMorePagesRef.current });
         return;
       }
 
@@ -1487,7 +1500,7 @@ function ensureKey(m: any, fallbackJid: string): any {
               const data = await apiClient.findMessages(
                 token,
                 target,
-                50,
+                200, // Carregar 200 mensagens por página
                 pageNum,
                 forceRefresh
               );
@@ -1507,17 +1520,76 @@ function ensureKey(m: any, fallbackJid: string): any {
           return;
         }
 
+        const totalRawMessages = responses.reduce((sum, r) => sum + (r.data?.length || 0), 0);
+        console.log('📨 API Response:', {
+          pageNum,
+          totalRawMessages,
+          responses: responses.map(r => ({ target: r.target, count: r.data?.length || 0 }))
+        });
+        console.log('📨 fetchMessages responses:', {
+          pageNum,
+          totalRawMessages,
+          responses: responses.map(r => ({ target: r.target, dataLength: r.data?.length || 0 }))
+        });
+
         const combinedMessages = responses.flatMap(({ target, data }) => {
           const fallbackJid = selectedChatJidRef.current || target;
-          return (Array.isArray(data) ? data : [])
-            .map((m) => ({
-              ...ensureKey(m, fallbackJid),
-              messageTimestamp: normalizeTimestamp(m?.messageTimestamp),
-            }))
-            .filter(isValidMsg);
+          const rawMessages = Array.isArray(data) ? data : [];
+          const mapped = rawMessages.map((m) => ({
+            ...ensureKey(m, fallbackJid),
+            messageTimestamp: normalizeTimestamp(m?.messageTimestamp),
+          }));
+          const filtered = mapped.filter(isValidMsg);
+
+          // Log de mensagens rejeitadas
+          const rejected = mapped.filter(m => !isValidMsg(m));
+          if (rejected.length > 0) {
+            console.log('⚠️ Rejected messages:', {
+              count: rejected.length,
+              sample: rejected.slice(0, 3).map(m => {
+                const checks = {
+                  hasObject: !!m && typeof m === "object",
+                  hasId: !!m?.id,
+                  hasKey: !!m?.key,
+                  hasFromMeBoolean: m?.key ? typeof m.key.fromMe === "boolean" : false,
+                  hasRemoteJidString: m?.key ? typeof m.key.remoteJid === "string" : false,
+                  hasMessageTypeString: typeof m?.messageType === "string",
+                  messageTypeNotEmpty: m?.messageType?.trim() !== ""
+                };
+                return {
+                  ...checks,
+                  failedChecks: Object.entries(checks).filter(([k, v]) => !v).map(([k]) => k),
+                  messageType: m?.messageType,
+                  fullMessage: m
+                };
+              })
+            });
+          }
+
+          console.log('📊 Message processing:', {
+            target,
+            rawCount: rawMessages.length,
+            mappedCount: mapped.length,
+            filteredCount: filtered.length,
+            removedByFilter: mapped.length - filtered.length
+          });
+
+          return filtered;
         });
 
         const noNewMessages = combinedMessages.length === 0;
+
+        // Se a API retornou 200 mensagens, pode haver mais
+        // Se retornou menos de 200, chegamos ao fim
+        const pageHasMore = totalRawMessages >= 200;
+
+        console.log('🔍 hasMore decision:', {
+          pageNum,
+          totalRawMessages,
+          combinedMessagesLength: combinedMessages.length,
+          noNewMessages,
+          pageHasMore
+        });
 
         if (noNewMessages) {
           if (pageNum === 1) {
@@ -1528,8 +1600,9 @@ function ensureKey(m: any, fallbackJid: string): any {
           return;
         }
 
-        noMorePagesRef.current = false;
-        setHasMore(true);
+        // Define hasMore baseado se a página retornou 200 mensagens
+        noMorePagesRef.current = !pageHasMore;
+        setHasMore(pageHasMore);
 
         const final = applyNormalizedMessages(combinedMessages, append);
 
@@ -1673,16 +1746,26 @@ useEffect(() => {
 
   // ✅ Scroll automático para o final quando a conversa é aberta pela primeira vez
   useEffect(() => {
+    // NÃO fazer scroll se estamos carregando mensagens antigas (prevScrollHeight foi setado)
+    if (prevScrollHeightRef.current !== null || loadingMore) {
+      return;
+    }
+
     if (messages.length > 0 && firstPageLoadedRef.current && !loading) {
       // Aguarda um momento para garantir que o DOM foi atualizado
       setTimeout(() => {
         scrollToBottom(false); // false = scroll instantâneo, sem animação
       }, 100);
     }
-  }, [selectedChat?.id, messages.length, loading]); // Roda quando muda de conversa ou carrega mensagens
+  }, [selectedChat?.id, messages.length, loading, loadingMore]); // Roda quando muda de conversa ou carrega mensagens
 
   // ✅ NOVO: Scroll automático ao final quando novas mensagens chegam
   useEffect(() => {
+    // NÃO fazer scroll se estamos carregando mensagens antigas
+    if (prevScrollHeightRef.current !== null || loadingMore) {
+      return;
+    }
+
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
       const container = scrollAreaRef.current;
@@ -1700,7 +1783,7 @@ useEffect(() => {
         }
       }
     }
-  }, [messages]);
+  }, [messages, loadingMore]);
 
   useEffect(() => {
     if (!token || !selectedChat?.remoteJid || !nonEssentialReady) {
@@ -2375,6 +2458,16 @@ if (isBusiness && newMessage && newMessage.key && !newMessage.key.fromMe) {
   };
 
   const scrollToBottom = (smooth: boolean = true) => {
+    // NÃO fazer scroll se estamos carregando mensagens antigas
+    if (prevScrollHeightRef.current !== null || loadingMore) {
+      console.log('🔻 scrollToBottom BLOCKED (loading old messages):', {
+        loadingMore,
+        prevScrollHeight: prevScrollHeightRef.current
+      });
+      return;
+    }
+
+    console.log('🔻 scrollToBottom executed');
     const behavior: ScrollBehavior = smooth ? "smooth" : "auto";
     messagesEndRef.current?.scrollIntoView({ behavior });
   };
@@ -2579,9 +2672,26 @@ const AlbumCarousel = ({ items, type }: { items: Message[]; type: string }) => {
 
     // Se estamos carregando mensagens antigas (scroll para cima)
     if (prevScrollHeightRef.current !== null) {
-      const diff = container.scrollHeight - prevScrollHeightRef.current;
+      const oldHeight = prevScrollHeightRef.current;
+      const newHeight = container.scrollHeight;
+      const diff = newHeight - oldHeight;
+
+      console.log('📍 Ajustando scroll após carregar mensagens antigas:', {
+        oldHeight,
+        newHeight,
+        diff,
+        oldScrollTop: container.scrollTop,
+        newScrollTop: diff
+      });
+
       container.scrollTop = diff;
-      prevScrollHeightRef.current = null;
+
+      // Limpa o ref após um pequeno delay para garantir que todos os useEffects processaram
+      setTimeout(() => {
+        prevScrollHeightRef.current = null;
+        console.log('✅ prevScrollHeightRef limpo - scroll automático liberado');
+      }, 500);
+
       return; // 🔹 importante: sai aqui para não rolar para o final
     }
   }, [messages]);
@@ -2646,6 +2756,16 @@ useMessageEvents(handleNewMessage);
 const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
   const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
 
+  console.log('📜 MessageView scroll:', {
+    scrollTop,
+    scrollHeight,
+    clientHeight,
+    distanceFromTop: scrollTop,
+    hasMore,
+    loadingMore,
+    page
+  });
+
   // Controla visibilidade do botão "scroll to bottom"
   const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
   setShowScrollToBottom(distanceFromBottom > 300); // Mostra se estiver mais de 300px do final
@@ -2664,14 +2784,26 @@ const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     (jid) => (inFlightPagesRef.current.get(jid)?.size ?? 0) > 0
   );
 
+  console.log('🔍 Load more check:', {
+    scrollTop,
+    'scrollTop < 100': scrollTop < 100,
+    hasMore,
+    loadingMore,
+    isFetchingCurrent,
+    noMorePages: noMorePagesRef.current,
+    firstPageLoaded: firstPageLoadedRef.current
+  });
+
+  // Mudei de scrollTop === 0 para scrollTop < 100 para disparar antes de chegar no topo
   if (
-    scrollTop === 0 &&
+    scrollTop < 100 &&
     hasMore &&
     !loadingMore &&
     !isFetchingCurrent &&
     !noMorePagesRef.current &&
     firstPageLoadedRef.current
   ) {
+    console.log('✅ Loading more messages! Page:', page + 1);
     const container = scrollAreaRef.current;
     if (container) {
       prevScrollHeightRef.current = container.scrollHeight;
