@@ -757,47 +757,36 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
                 selectedModel === 'pensaoDivorcio' ? 'from-emerald-500 to-emerald-600' :
                 selectedModel === 'pensaoMorte' ? 'from-teal-500 to-teal-600' :
                 'from-blue-500 to-purple-600'
-              } px-8 py-10 -mt-6 -mx-6 rounded-t-2xl mb-0 relative overflow-hidden`}>
-                {/* Padrão decorativo de fundo */}
-                <div className="absolute inset-0 opacity-10">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl"></div>
-                  <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full mix-blend-overlay filter blur-2xl"></div>
-                </div>
-
-                <div className="relative z-10 text-center">
-                  <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-3xl mb-5 shadow-2xl">
-                    <Book className="w-10 h-10 text-white" />
+              } px-8 py-6 -mt-6 -mx-6 mb-0`}>
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-14 h-14 bg-white/20 rounded-xl mb-3">
+                    <Book className="w-7 h-7 text-white" />
                   </div>
-                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 leading-tight">
+                  <h2 className="text-2xl font-semibold text-white mb-2">
                     {agentModels[selectedModel]?.name}
                   </h2>
-                  <p className="text-white/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+                  <p className="text-white/90 text-sm max-w-2xl mx-auto">
                     {modelDescriptions[selectedModel]}
                   </p>
                 </div>
               </div>
 
               {/* Conteúdo do modal */}
-              <div className="px-8 py-8">
+              <div className="px-8 py-6">
                 {modelDetails[selectedModel] && (
-                  <div className="space-y-8">
+                  <div className="space-y-6">
                     {/* Etapas do Atendimento */}
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/30">
-                      <div className="flex items-center gap-3 mb-5">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                          <span className="text-2xl">⚙️</span>
+                    <div className="bg-gray-50 dark:bg-neutral-800/50 rounded-xl p-5 border border-gray-200 dark:border-neutral-700">
+                      <div className="flex items-center gap-2.5 mb-4">
+                        <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                          <span className="text-lg">⚙️</span>
                         </div>
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                            Etapas do Atendimento
-                          </h3>
-                          <p className="text-sm text-gray-600 dark:text-neutral-400">
-                            Fluxo completo de interação com o cliente
-                          </p>
-                        </div>
+                        <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                          Etapas do Atendimento
+                        </h3>
                       </div>
 
-                      <div className="space-y-3">
+                      <div className="space-y-2.5">
                         {modelDetails[selectedModel].steps.map((step, index) => {
                           const stepName = step.split(':')[0];
                           const stepDescription = step.split(':')[1];
@@ -805,19 +794,19 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
                           return (
                             <div
                               key={index}
-                              className="group bg-white dark:bg-neutral-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 dark:border-neutral-700"
+                              className="bg-white dark:bg-neutral-800 rounded-lg p-3.5 border border-gray-200 dark:border-neutral-700"
                             >
-                              <div className="flex gap-4">
+                              <div className="flex gap-3">
                                 <div className="flex-shrink-0">
-                                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-sm font-bold text-white shadow-md group-hover:scale-110 transition-transform">
+                                  <div className="w-7 h-7 bg-blue-500 rounded-md flex items-center justify-center text-xs font-semibold text-white">
                                     {index + 1}
                                   </div>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <h4 className="font-bold text-gray-900 dark:text-white mb-1 text-sm">
+                                  <h4 className="font-semibold text-gray-900 dark:text-white mb-0.5 text-xs">
                                     {stepName}
                                   </h4>
-                                  <p className="text-sm text-gray-600 dark:text-neutral-400 leading-relaxed">
+                                  <p className="text-xs text-gray-600 dark:text-neutral-400 leading-relaxed">
                                     {stepDescription}
                                   </p>
                                 </div>
@@ -829,34 +818,29 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
                     </div>
 
                     {/* O que o Agente Faz */}
-                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-6 border border-emerald-100 dark:border-emerald-800/30">
-                      <div className="flex items-center gap-3 mb-5">
-                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-                          <span className="text-2xl">🧭</span>
+                    <div className="bg-gray-50 dark:bg-neutral-800/50 rounded-xl p-5 border border-gray-200 dark:border-neutral-700">
+                      <div className="flex items-center gap-2.5 mb-4">
+                        <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                          <span className="text-lg">🧭</span>
                         </div>
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                            O que o Agente Faz
-                          </h3>
-                          <p className="text-sm text-gray-600 dark:text-neutral-400">
-                            Principais funcionalidades e capacidades
-                          </p>
-                        </div>
+                        <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                          O que o Agente Faz
+                        </h3>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                         {modelDetails[selectedModel].features.map((feature, index) => (
                           <div
                             key={index}
-                            className="group bg-white dark:bg-neutral-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 dark:border-neutral-700"
+                            className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-gray-200 dark:border-neutral-700"
                           >
-                            <div className="flex gap-3 items-start">
+                            <div className="flex gap-2 items-start">
                               <div className="flex-shrink-0 mt-0.5">
-                                <div className="w-6 h-6 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                                  <Check className="w-4 h-4 text-white" />
+                                <div className="w-5 h-5 bg-emerald-500 rounded flex items-center justify-center">
+                                  <Check className="w-3 h-3 text-white" />
                                 </div>
                               </div>
-                              <p className="text-sm text-gray-700 dark:text-neutral-300 leading-relaxed flex-1">
+                              <p className="text-xs text-gray-700 dark:text-neutral-300 leading-relaxed flex-1">
                                 {feature}
                               </p>
                             </div>
@@ -879,21 +863,21 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
                 )}
 
                 {/* Botões de ação */}
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 pt-6 border-t border-gray-200 dark:border-neutral-700">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-neutral-700">
                   <button
                     onClick={() => {
                       setIsModelDetailsModalOpen(false);
                       setSelectedModel('');
                       setIsModelsModalOpen(true);
                     }}
-                    className="w-full sm:w-auto order-2 sm:order-1 px-6 py-3 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-xl transition-colors"
+                    className="w-full sm:w-auto order-2 sm:order-1 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
                   >
                     ← Voltar aos Modelos
                   </button>
                   {canEdit && (
                     <button
                       onClick={handleConfirmModel}
-                      className={`w-full sm:w-auto order-1 sm:order-2 flex items-center justify-center gap-2 px-8 py-3 text-sm font-semibold text-white rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 bg-gradient-to-r ${
+                      className={`w-full sm:w-auto order-1 sm:order-2 flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium text-white rounded-lg transition-colors bg-gradient-to-r ${
                         selectedModel === 'bpc' ? 'from-blue-500 to-blue-600' :
                         selectedModel === 'trabalhista' ? 'from-red-500 to-red-600' :
                         selectedModel === 'auxilio' ? 'from-yellow-500 to-yellow-600' :
@@ -907,7 +891,7 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
                         'from-blue-600 to-purple-600'
                       }`}
                     >
-                      <Check className="w-5 h-5" />
+                      <Check className="w-4 h-4" />
                       Aplicar este Modelo
                     </button>
                   )}
