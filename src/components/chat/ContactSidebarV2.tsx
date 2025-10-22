@@ -1276,53 +1276,16 @@ export default function ContactSidebarV2({
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  {editingName ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={editedName}
-                        onChange={(e) => setEditedName(e.target.value)}
-                        className="flex-1 px-3 py-2 text-sm border border-gray-300/50 dark:border-gray-600/50 rounded-xl bg-white/50 dark:bg-gray-700/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-400/50 backdrop-blur-sm transition-all duration-200"
-                      />
-                      <button
-                        onClick={handleUpdateName}
-                        disabled={savingName}
-                        className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50/80 dark:hover:bg-green-900/30 rounded-xl transition-all duration-200 active:scale-95"
-                      >
-                        {savingName ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Check className="w-4 h-4" />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditingName(false);
-                          setEditedName(contactData?.nome || "");
-                        }}
-                        className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-50/80 dark:hover:bg-gray-700/50 rounded-xl transition-all duration-200 active:scale-95"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <h3
-                        className="font-medium text-lg text-gray-900 dark:text-white transition-colors duration-200 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 truncate"
-                        onClick={() => setEditingName(true)}
-                        title="Clique para editar"
-                      >
-                        {contactData?.nome || selectedChat.pushName}
-                      </h3>
-                      <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 mt-1.5 font-light">
-                        <Phone className="w-3.5 h-3.5" />
-                        <span className="tracking-wide">
-                          {contactData?.telefone ||
-                            selectedChat.remoteJid.replace(/\D/g, "")}
-                        </span>
-                      </div>
-                    </>
-                  )}
+                  <h3 className="font-medium text-lg text-gray-900 dark:text-white transition-colors duration-200 truncate">
+                    {contactData?.nome || selectedChat.pushName}
+                  </h3>
+                  <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 mt-1.5 font-light">
+                    <Phone className="w-3.5 h-3.5" />
+                    <span className="tracking-wide">
+                      {contactData?.telefone ||
+                        selectedChat.remoteJid.replace(/\D/g, "")}
+                    </span>
+                  </div>
                 </div>
               </div>
 
