@@ -56,6 +56,533 @@ function toTransferRemoteJid(value: any): string | null {
   return `${digits}@s.whatsapp.net`;
 }
 
+// ===== CACHE UTILITIES =====
+const LONG_CACHE_TTL = 365 * 24 * 60 * 60 * 1000; // 1 ano
+
+function toByteArray(value: unknown): number[] | null {
+  if (value == null) {
+    return null;
+  }
+
+  if (Array.isArray(value)) {
+    if (value.every((item) => typeof item === "number" && Number.isFinite(item))) {
+      return value.map((item) => Number(item));
+    }
+    return null;
+  }
+
+  if (typeof ArrayBuffer !== "undefined") {
+    if (value instanceof ArrayBuffer) {
+      return Array.from(new Uint8Array(value));
+    }
+
+    if (ArrayBuffer.isView(value)) {
+      const view = value as ArrayBufferView;
+      return Array.from(new Uint8Array(view.buffer, view.byteOffset, view.byteLength));
+    }
+  }
+
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+
+    if ("data" in record && record.data !== value) {
+      const nested = toByteArray(record.data);
+      if (nested) {
+        return nested;
+      }
+    }
+
+    const numericKeys = Object.keys(record).filter((key) => /^-?\d+$/.test(key));
+    if (numericKeys.length) {
+      numericKeys.sort((a, b) => Number(a) - Number(b));
+      const result: number[] = [];
+
+      for (const key of numericKeys) {
+        const raw = record[key];
+        if (typeof raw !== "number" || !Number.isFinite(raw)) {
+          return null;
+        }
+        result.push(Number(raw));
+      }
+
+      if (result.length) {
+        return result;
+      }
+    }
+  }
+
+  return null;
+}
+
+function bytesToHex(bytes: ArrayLike<number>): string {
+  let hex = "";
+  for (let i = 0; i < bytes.length; i += 1) {
+    const numeric = Number(bytes[i]);
+    if (!Number.isFinite(numeric)) {
+      continue;
+    }
+    const clamped = Math.min(255, Math.max(0, Math.floor(numeric)));
+    hex += clamped.toString(16).padStart(2, "0");
+  }
+  return hex;
+}
+
+function normalizeHashValue(value: unknown): string | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed ? trimmed : undefined;
+  }
+
+  const byteArray = toByteArray(value);
+  if (byteArray) {
+    return bytesToHex(byteArray);
+  }
+
+  if (typeof value === "number" || typeof value === "boolean" || typeof value === "bigint") {
+    return String(value);
+  }
+
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function buildCacheKey(prefix: string, values: unknown[]): string | null {
+  const normalized = values
+    .map((value) => normalizeHashValue(value))
+    .filter((value): value is string => Boolean(value));
+
+  if (!normalized.length) {
+    return null;
+  }
+
+  const suffix = normalized.join("|").trim();
+  if (!suffix) {
+    return null;
+  }
+
+  return `${prefix}:${suffix}`;
+}
+
+function mediaCacheKey(id?: unknown, sha256?: unknown) {
+  return buildCacheKey("midia", [id, sha256]);
+}
+
+function readMediaFromLocalCache(key: string): string | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data?.dataUrl || !data?.ts) return null;
+    // mesmo com TTL, seguimos a regra de "no máximo 1 vez":
+    // se existe no cache, usamos — a expiração é apenas safety.
+    if (Date.now() - data.ts > LONG_CACHE_TTL) return data.dataUrl;
+    return data.dataUrl;
+  } catch {
+    return null;
+  }
+}
+
+function writeMediaToLocalCache(key: string, dataUrl: string, extra?: any) {
+  try {
+    localStorage.setItem(
+      key,
+      JSON.stringify({ ts: Date.now(), dataUrl, ...extra })
+    );
+  } catch {
+    // pode estourar quota; só ignora
+  }
+}
+
+// ===== EVO MEDIA CACHE (não-oficial) =====
+function evoMediaCacheKey(part: {
+  url?: string;
+  id?: string;
+  fileEncSha256?: unknown;
+  fileSha256?: unknown;
+}) {
+  return buildCacheKey("evo", [part.fileEncSha256, part.fileSha256, part.id, part.url]);
+}
+
+async function blobToDataURL(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(fr.result as string);
+    fr.onerror = reject;
+    fr.readAsDataURL(blob);
+  });
+}
+
+// ===== MEDIA FETCH FUNCTIONS =====
+async function fetchEvoMediaUrl(
+  part: {
+    url?: string;
+    mediaKey?: MediaKeyInput;
+    mimetype?: string;
+    id?: string;
+    fileEncSha256?: unknown;
+    fileSha256?: unknown;
+  },
+  mediaUrlCache: Map<string, string>
+): Promise<string | null> {
+  if (!part?.url) return null;
+
+  // Se a URL não é do whatsapp.net, não descriptografa (usa direto)
+  const isWhatsappCdn = /whatsapp\.net/.test(part.url);
+  if (!isWhatsappCdn) return part.url;
+
+  // cache em memória + persistente
+  const key = evoMediaCacheKey(part);
+  if (key) {
+    const mem = mediaUrlCache.get(key);
+    if (mem) return mem;
+
+    const persisted = readMediaFromLocalCache(key);
+    if (persisted) {
+      mediaUrlCache.set(key, persisted);
+      return persisted;
+    }
+  }
+
+  // Descriptografa via helper EVO
+  try {
+    const buffer = await decryptEvoMedia(part.url, part.mediaKey!, part.mimetype!);
+    const blob = new Blob([buffer], { type: part.mimetype || "application/octet-stream" });
+    const dataUrl = await blobToDataURL(blob);
+
+    // cache
+    if (key) {
+      writeMediaToLocalCache(key, dataUrl, {
+        mimeType: part.mimetype,
+        id: part.id,
+        fileEncSha256: part.fileEncSha256,
+        fileSha256: part.fileSha256,
+      });
+      mediaUrlCache.set(key, dataUrl);
+    }
+    return dataUrl;
+  } catch (e) {
+    console.error("Erro ao obter mídia EVO:", e);
+    return null;
+  }
+}
+
+type OfficialPart = { id?: string; sha256?: unknown; mime_type?: string };
+
+async function fetchOfficialMediaUrl(
+  part: OfficialPart,
+  token: string | null,
+  mediaUrlCache: Map<string, string>
+): Promise<string | null> {
+  if (!part?.id || !part?.sha256) return null;
+
+  const key = mediaCacheKey(part.id, part.sha256);
+
+  if (key) {
+    // 1) cache em memória
+    const mem = mediaUrlCache.get(key);
+    if (mem) return mem;
+
+    // 2) cache persistente (localStorage)
+    const persisted = readMediaFromLocalCache(key);
+    if (persisted) {
+      mediaUrlCache.set(key, persisted);
+      return persisted;
+    }
+  }
+
+  // 3) request (somente se não tiver NENHUM cache)
+  try {
+    const resp = await fetch(
+      "https://n8n.lumendigital.com.br/webhook/prospecta/chat/findMidia",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { token } : {}),
+        },
+        body: JSON.stringify({
+          // o n8n só precisa identificar a mídia; envie tudo que tiver
+          id: part.id,
+          sha256: part.sha256,
+          mime_type: part.mime_type,
+        }),
+      }
+    );
+
+    if (!resp.ok) {
+      console.error(
+        "Falha ao baixar mídia oficial:",
+        resp.status,
+        await resp.text().catch(() => "")
+      );
+      return null;
+    }
+
+    // Novo formato: array com 1 objeto que contém base64 + metadata
+    const payload = await resp.json();
+    const item = Array.isArray(payload) ? payload[0] : payload;
+
+    if (!item?.base64) {
+      console.error("Resposta sem base64 válida:", payload);
+      return null;
+    }
+
+    const mime =
+      item.mimeType || part.mime_type || "application/octet-stream";
+    const dataUrl = `data:${mime};base64,${item.base64}`;
+
+    // grava cache persistente + memória
+    if (key) {
+      writeMediaToLocalCache(key, dataUrl, {
+        mimeType: mime,
+        fileName: item.fileName,
+        fileType: item.fileType,
+        fileExtension: item.fileExtension,
+      });
+      mediaUrlCache.set(key, dataUrl);
+    }
+
+    return dataUrl;
+  } catch (e) {
+    console.error("Erro na requisição de mídia oficial:", e);
+    return null;
+  }
+}
+
+// ===== MEDIA COMPONENTS =====
+// Componente para resolver e renderizar a mídia binária oficial
+function OfficialBinaryMedia({
+  part,
+  kind,
+  isEdited,
+  fetchOfficialMediaUrl,
+  openPreview,
+}: {
+  part: OfficialPart;
+  kind: "image" | "video" | "audio" | "document" | "sticker";
+  isEdited?: boolean;
+  fetchOfficialMediaUrl: (part: OfficialPart) => Promise<string | null>;
+  openPreview: (url: string, type: 'image' | 'video') => void;
+}) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    fetchOfficialMediaUrl(part).then((u) => {
+      if (mounted) {
+        setUrl(u);
+        setLoading(false);
+      }
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [part?.id, part?.sha256, part?.mime_type]);
+
+  if (loading) {
+    return (
+      <div className="w-40 h-40 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse flex items-center justify-center transition-colors duration-200">
+        <Loader2 className="w-5 h-5 animate-spin text-gray-400 dark:text-gray-500" />
+      </div>
+    );
+  }
+
+  if (!url) {
+    return <div className="text-xs text-red-500 dark:text-red-400">Não foi possível carregar a mídia.</div>;
+  }
+
+  switch (kind) {
+    case "image":
+      return (
+        <div className="space-y-1">
+          <img
+            src={url}
+            alt="Imagem"
+            className="max-w-[200px] rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+            onClick={() => openPreview(url, "image")}
+          />
+          {isEdited && <div className="text-[10px] text-emerald-600">Mensagem editada</div>}
+        </div>
+      );
+    case "video":
+      return (
+        <div className="space-y-1">
+          <video
+            src={url}
+            className="max-w-[200px] rounded-lg cursor-pointer"
+            onClick={() => openPreview(url, "video")}
+          />
+          {isEdited && <div className="text-[10px] text-emerald-600">Mensagem editada</div>}
+        </div>
+      );
+    case "audio":
+      return <AudioPlayer url={url} />;
+    case "document":
+      return (
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <FileText className="w-5 h-5 text-emerald-600" />
+            <span className="text-sm font-medium">Documento</span>
+          </div>
+          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 flex justify-center transition-colors duration-200">
+            <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+          </div>
+          <a
+            href={url}
+            download
+            className="w-full inline-block px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm text-center"
+          >
+            Baixar arquivo
+          </a>
+        </div>
+      );
+    case "sticker":
+      return <img src={url} alt="Sticker" className="max-w-[200px] rounded-lg" />;
+    default:
+      return null;
+  }
+}
+
+// Componente para resolver e renderizar a mídia da API NÃO-OFICIAL (EVO)
+function EvoBinaryMedia({
+  part,
+  kind,
+  isEdited,
+  fetchEvoMediaUrl,
+  openPreview,
+}: {
+  part: {
+    url?: string;
+    mediaKey?: MediaKeyInput;
+    mimetype?: string;
+    id?: string;
+    fileEncSha256?: unknown;
+    fileSha256?: unknown;
+    width?: number;
+    height?: number;
+  };
+  kind: "image" | "video" | "audio" | "document" | "sticker";
+  isEdited?: boolean;
+  fetchEvoMediaUrl: (part: any) => Promise<string | null>;
+  openPreview: (url: string, type: 'image' | 'video') => void;
+}) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+
+    (async () => {
+      // Se não tem URL, nada a fazer
+      if (!part?.url) {
+        if (mounted) {
+          setUrl(null);
+          setLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const resolved = await fetchEvoMediaUrl(part);
+        if (mounted) {
+          setUrl(resolved);
+          setLoading(false);
+        }
+      } catch (e) {
+        console.error("EvoBinaryMedia error:", e);
+        if (mounted) {
+          setUrl(null);
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [part?.id, part?.sha256, part?.mime_type]);
+
+  if (loading) {
+    return (
+      <div className="w-40 h-40 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse flex items-center justify-center transition-colors duration-200">
+        <Loader2 className="w-5 h-5 animate-spin text-gray-400 dark:text-gray-500" />
+      </div>
+    );
+  }
+
+  if (!url) {
+    return <div className="text-xs text-red-500 dark:text-red-400">Não foi possível carregar a mídia.</div>;
+  }
+
+  switch (kind) {
+    case "image":
+      return (
+        <div className="space-y-1">
+          <img
+            src={url}
+            alt="Imagem"
+            className="max-w-[200px] rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+            onClick={() => openPreview(url, "image")}
+            width={part.width}
+            height={part.height}
+          />
+          {isEdited && <div className="text-[10px] text-emerald-600">Mensagem editada</div>}
+        </div>
+      );
+
+    case "video":
+      return (
+        <div className="space-y-1">
+          <video
+            src={url}
+            className="max-w-[200px] rounded-lg cursor-pointer"
+            onClick={() => openPreview(url, "video")}
+          />
+          {isEdited && <div className="text-[10px] text-emerald-600">Mensagem editada</div>}
+        </div>
+      );
+
+    case "audio":
+      return <AudioPlayer url={url} />;
+
+    case "document":
+      return (
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <FileText className="w-5 h-5 text-emerald-600" />
+            <span className="text-sm font-medium">Documento</span>
+          </div>
+          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 flex justify-center transition-colors duration-200">
+            <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+          </div>
+          <a
+            href={url}
+            download
+            className="w-full inline-block px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm text-center"
+          >
+            Baixar arquivo
+          </a>
+        </div>
+      );
+
+    case "sticker":
+      return <img src={url} alt="Sticker" className="max-w-[200px] rounded-lg" />;
+
+    default:
+      return null;
+  }
+}
+
 interface MessageViewProps {
   selectedChat: Chat;
   onBack: () => void;
@@ -627,7 +1154,7 @@ const handleDownloadMedia = async (msg: Message) => {
   try {
     if (isBusiness && part.id && part.sha256) {
       finalUrl =
-        (await fetchOfficialMediaUrl({
+        (await wrappedFetchOfficialMediaUrl({
           id: part.id,
           sha256: part.sha256,
           mime_type: part.mime_type,
@@ -639,7 +1166,7 @@ const handleDownloadMedia = async (msg: Message) => {
       part.mimetype
     ) {
       finalUrl =
-        (await fetchEvoMediaUrl({
+        (await wrappedFetchEvoMediaUrl({
           url: directUrl,
           mediaKey: part.mediaKey,
           mimetype: part.mimetype,
@@ -1109,7 +1636,6 @@ useEffect(() => {
     if (!token || !selectedChat?.remoteJid || activeChatJids.length === 0) return;
 
     const intervalId = setInterval(() => {
-      console.log("[MessageView] Revalidando mensagens (polling 3s)");
       fetchMessages(1, false);
     }, 3000);
 
@@ -1121,7 +1647,6 @@ useEffect(() => {
   // ✅ NOVO: Listener global "new_message" para atualização instantânea
   useEffect(() => {
     const handleNewMessage = () => {
-      console.log("[MessageView] Nova mensagem recebida — recarregando");
       handleReloadMessages();
 
       // Scroll automático ao final após receber nova mensagem, apenas se já estiver perto do final
@@ -1598,7 +2123,8 @@ function normalizeMessages(rawMessages: Message[]): Message[] {
 const applyNormalizedMessages = (newData: Message[], append: boolean): Message[] => {
   let updated: Message[] = [];
   setMessages(prev => {
-    const combined = append ? [...prev, ...newData] : [...newData];
+    // 🔹 Quando append=true (carregando msgs antigas), coloca newData ANTES de prev
+    const combined = append ? [...newData, ...prev] : [...newData];
     updated = normalizeMessages(combined);
     return updated;
   });
@@ -1881,522 +2407,19 @@ if (isBusiness && newMessage && newMessage.key && !newMessage.key.fromMe) {
     }
   };
 
-const mediaUrlCache = useRef<Map<string, string>>(new Map());
+  // Media URL cache usado pelas funções de fetch
+  const mediaUrlCache = useRef<Map<string, string>>(new Map());
 
-const LONG_CACHE_TTL = 365 * 24 * 60 * 60 * 1000; // 1 ano
+  // Wrappers para as funções globais de fetch que usam o mediaUrlCache local
+  const wrappedFetchEvoMediaUrl = useCallback(
+    (part: any) => fetchEvoMediaUrl(part, mediaUrlCache.current),
+    []
+  );
 
-function toByteArray(value: unknown): number[] | null {
-  if (value == null) {
-    return null;
-  }
-
-  if (Array.isArray(value)) {
-    if (value.every((item) => typeof item === "number" && Number.isFinite(item))) {
-      return value.map((item) => Number(item));
-    }
-    return null;
-  }
-
-  if (typeof ArrayBuffer !== "undefined") {
-    if (value instanceof ArrayBuffer) {
-      return Array.from(new Uint8Array(value));
-    }
-
-    if (ArrayBuffer.isView(value)) {
-      const view = value as ArrayBufferView;
-      return Array.from(new Uint8Array(view.buffer, view.byteOffset, view.byteLength));
-    }
-  }
-
-  if (typeof value === "object") {
-    const record = value as Record<string, unknown>;
-
-    if ("data" in record && record.data !== value) {
-      const nested = toByteArray(record.data);
-      if (nested) {
-        return nested;
-      }
-    }
-
-    const numericKeys = Object.keys(record).filter((key) => /^-?\d+$/.test(key));
-    if (numericKeys.length) {
-      numericKeys.sort((a, b) => Number(a) - Number(b));
-      const result: number[] = [];
-
-      for (const key of numericKeys) {
-        const raw = record[key];
-        if (typeof raw !== "number" || !Number.isFinite(raw)) {
-          return null;
-        }
-        result.push(Number(raw));
-      }
-
-      if (result.length) {
-        return result;
-      }
-    }
-  }
-
-  return null;
-}
-
-function bytesToHex(bytes: ArrayLike<number>): string {
-  let hex = "";
-  for (let i = 0; i < bytes.length; i += 1) {
-    const numeric = Number(bytes[i]);
-    if (!Number.isFinite(numeric)) {
-      continue;
-    }
-    const clamped = Math.min(255, Math.max(0, Math.floor(numeric)));
-    hex += clamped.toString(16).padStart(2, "0");
-  }
-  return hex;
-}
-
-function normalizeHashValue(value: unknown): string | undefined {
-  if (value == null) {
-    return undefined;
-  }
-
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    return trimmed ? trimmed : undefined;
-  }
-
-  const byteArray = toByteArray(value);
-  if (byteArray) {
-    return bytesToHex(byteArray);
-  }
-
-  if (typeof value === "number" || typeof value === "boolean" || typeof value === "bigint") {
-    return String(value);
-  }
-
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return String(value);
-  }
-}
-
-function buildCacheKey(prefix: string, values: unknown[]): string | null {
-  const normalized = values
-    .map((value) => normalizeHashValue(value))
-    .filter((value): value is string => Boolean(value));
-
-  if (!normalized.length) {
-    return null;
-  }
-
-  const suffix = normalized.join("|").trim();
-  if (!suffix) {
-    return null;
-  }
-
-  return `${prefix}:${suffix}`;
-}
-
-function mediaCacheKey(id?: unknown, sha256?: unknown) {
-  return buildCacheKey("midia", [id, sha256]);
-}
-function readMediaFromLocalCache(key: string): string | null {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    const data = JSON.parse(raw);
-    if (!data?.dataUrl || !data?.ts) return null;
-    // mesmo com TTL, seguimos a regra de "no máximo 1 vez":
-    // se existe no cache, usamos — a expiração é apenas safety.
-    if (Date.now() - data.ts > LONG_CACHE_TTL) return data.dataUrl; 
-    return data.dataUrl;
-  } catch {
-    return null;
-  }
-}
-function writeMediaToLocalCache(key: string, dataUrl: string, extra?: any) {
-  try {
-    localStorage.setItem(
-      key,
-      JSON.stringify({ ts: Date.now(), dataUrl, ...extra })
-    );
-  } catch {
-    // pode estourar quota; só ignora
-  }
-}
-
-// ===== EVO MEDIA CACHE (não-oficial) =====
-function evoMediaCacheKey(part: {
-  url?: string;
-  id?: string;
-  fileEncSha256?: unknown;
-  fileSha256?: unknown;
-}) {
-  return buildCacheKey("evo", [part.fileEncSha256, part.fileSha256, part.id, part.url]);
-}
-
-async function blobToDataURL(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onload = () => resolve(fr.result as string);
-    fr.onerror = reject;
-    fr.readAsDataURL(blob);
-  });
-}
-
-const fetchEvoMediaUrl = useCallback(
-  async (part: {
-    url?: string;
-    mediaKey?: MediaKeyInput;
-    mimetype?: string;
-    id?: string;
-    fileEncSha256?: unknown;
-    fileSha256?: unknown;
-  }): Promise<string | null> => {
-    if (!part?.url) return null;
-
-    // Se a URL não é do whatsapp.net, não descriptografa (usa direto)
-    const isWhatsappCdn = /whatsapp\.net/.test(part.url);
-    if (!isWhatsappCdn) return part.url;
-
-    // cache em memória + persistente
-    const key = evoMediaCacheKey(part);
-    if (key) {
-      const mem = mediaUrlCache.current.get(key);
-      if (mem) return mem;
-
-      const persisted = readMediaFromLocalCache(key);
-      if (persisted) {
-        mediaUrlCache.current.set(key, persisted);
-        return persisted;
-      }
-    }
-
-    // Descriptografa via helper EVO
-    try {
-      const buffer = await decryptEvoMedia(part.url, part.mediaKey!, part.mimetype!);
-      const blob = new Blob([buffer], { type: part.mimetype || "application/octet-stream" });
-      const dataUrl = await blobToDataURL(blob);
-
-      // cache
-      if (key) {
-        writeMediaToLocalCache(key, dataUrl, {
-          mimeType: part.mimetype,
-          id: part.id,
-          fileEncSha256: part.fileEncSha256,
-          fileSha256: part.fileSha256,
-        });
-        mediaUrlCache.current.set(key, dataUrl);
-      }
-      return dataUrl;
-    } catch (e) {
-      console.error("Erro ao obter mídia EVO:", e);
-      return null;
-    }
-  },
-  []
-);
-
-
-type OfficialPart = { id?: string; sha256?: unknown; mime_type?: string };
-
-const fetchOfficialMediaUrl = useCallback(
-  async (part: OfficialPart): Promise<string | null> => {
-    if (!part?.id || !part?.sha256) return null;
-
-    const key = mediaCacheKey(part.id, part.sha256);
-
-    if (key) {
-      // 1) cache em memória
-      const mem = mediaUrlCache.current.get(key);
-      if (mem) return mem;
-
-      // 2) cache persistente (localStorage)
-      const persisted = readMediaFromLocalCache(key);
-      if (persisted) {
-        mediaUrlCache.current.set(key, persisted);
-        return persisted;
-      }
-    }
-
-    // 3) request (somente se não tiver NENHUM cache)
-    try {
-      const resp = await fetch(
-        "https://n8n.lumendigital.com.br/webhook/prospecta/chat/findMidia",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { token } : {}),
-          },
-          body: JSON.stringify({
-            // o n8n só precisa identificar a mídia; envie tudo que tiver
-            id: part.id,
-            sha256: part.sha256,
-            mime_type: part.mime_type,
-          }),
-        }
-      );
-
-      if (!resp.ok) {
-        console.error(
-          "Falha ao baixar mídia oficial:",
-          resp.status,
-          await resp.text().catch(() => "")
-        );
-        return null;
-      }
-
-      // Novo formato: array com 1 objeto que contém base64 + metadata
-      const payload = await resp.json();
-      const item = Array.isArray(payload) ? payload[0] : payload;
-
-      if (!item?.base64) {
-        console.error("Resposta sem base64 válida:", payload);
-        return null;
-      }
-
-      const mime =
-        item.mimeType || part.mime_type || "application/octet-stream";
-      const dataUrl = `data:${mime};base64,${item.base64}`;
-
-      // grava cache persistente + memória
-      if (key) {
-        writeMediaToLocalCache(key, dataUrl, {
-          mimeType: mime,
-          fileName: item.fileName,
-          fileType: item.fileType,
-          fileExtension: item.fileExtension,
-        });
-        mediaUrlCache.current.set(key, dataUrl);
-      }
-
-      return dataUrl;
-    } catch (e) {
-      console.error("Erro na requisição de mídia oficial:", e);
-      return null;
-    }
-  },
-  [token]
-);
-
-
-// Componente interno para resolver e renderizar a mídia binária oficial
-function OfficialBinaryMedia({
-  part,
-  kind,
-  isEdited,
-}: {
-  part: OfficialPart;
-  kind: "image" | "video" | "audio" | "document" | "sticker";
-  isEdited?: boolean;
-}) {
-  const [url, setUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    let mounted = true;
-    setLoading(true);
-    fetchOfficialMediaUrl(part).then((u) => {
-      if (mounted) {
-        setUrl(u);
-        setLoading(false);
-      }
-    });
-    return () => {
-      mounted = false;
-    };
-  }, [part?.id, part?.sha256, part?.mime_type, fetchOfficialMediaUrl]);
-
-  if (loading) {
-    return (
-      <div className="w-40 h-40 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse flex items-center justify-center transition-colors duration-200">
-        <Loader2 className="w-5 h-5 animate-spin text-gray-400 dark:text-gray-500" />
-      </div>
-    );
-  }
-
-  if (!url) {
-    return <div className="text-xs text-red-500 dark:text-red-400">Não foi possível carregar a mídia.</div>;
-  }
-
-  switch (kind) {
-    case "image":
-      return (
-        <div className="space-y-1">
-          <img
-            src={url}
-            alt="Imagem"
-            className="max-w-xs rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-            onClick={() => openPreview(url, "image")}
-          />
-          {isEdited && <div className="text-[10px] text-emerald-600">Mensagem editada</div>}
-        </div>
-      );
-    case "video":
-      return (
-        <div className="space-y-1">
-          <video
-            src={url}
-            className="max-w-xs rounded-lg cursor-pointer"
-            onClick={() => openPreview(url, "video")}
-          />
-          {isEdited && <div className="text-[10px] text-emerald-600">Mensagem editada</div>}
-        </div>
-      );
-    case "audio":
-      return <AudioPlayer url={url} />;
-    case "document":
-      return (
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <FileText className="w-5 h-5 text-emerald-600" />
-            <span className="text-sm font-medium">Documento</span>
-          </div>
-          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 flex justify-center transition-colors duration-200">
-            <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500" />
-          </div>
-          <a
-            href={url}
-            download
-            className="w-full inline-block px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm text-center"
-          >
-            Baixar arquivo
-          </a>
-        </div>
-      );
-    case "sticker":
-      return <img src={url} alt="Sticker" className="max-w-[200px] rounded-lg" />;
-    default:
-      return null;
-  }
-}
-
-// Componente interno para resolver e renderizar a mídia da API NÃO-OFICIAL (EVO)
-function EvoBinaryMedia({
-  part,
-  kind,
-  isEdited,
-}: {
-  part: {
-    url?: string;
-    mediaKey?: MediaKeyInput;
-    mimetype?: string;
-    id?: string;
-    fileEncSha256?: unknown;
-    fileSha256?: unknown;
-    width?: number;
-    height?: number;
-  };
-  kind: "image" | "video" | "audio" | "document" | "sticker";
-  isEdited?: boolean;
-}) {
-  const [url, setUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    let mounted = true;
-    setLoading(true);
-
-    (async () => {
-      // Se não tem URL, nada a fazer
-      if (!part?.url) {
-        if (mounted) {
-          setUrl(null);
-          setLoading(false);
-        }
-        return;
-      }
-
-      try {
-        const resolved = await fetchEvoMediaUrl(part);
-        if (mounted) {
-          setUrl(resolved);
-          setLoading(false);
-        }
-      } catch (e) {
-        console.error("EvoBinaryMedia error:", e);
-        if (mounted) {
-          setUrl(null);
-          setLoading(false);
-        }
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [part?.url, part?.mediaKey, part?.mimetype, part?.fileEncSha256, part?.fileSha256, fetchEvoMediaUrl]);
-
-  if (loading) {
-    return (
-      <div className="w-40 h-40 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse flex items-center justify-center transition-colors duration-200">
-        <Loader2 className="w-5 h-5 animate-spin text-gray-400 dark:text-gray-500" />
-      </div>
-    );
-  }
-
-  if (!url) {
-    return <div className="text-xs text-red-500 dark:text-red-400">Não foi possível carregar a mídia.</div>;
-  }
-
-  switch (kind) {
-    case "image":
-      return (
-        <div className="space-y-1">
-          <img
-            src={url}
-            alt="Imagem"
-            className="max-w-xs rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-            onClick={() => openPreview(url, "image")}
-            width={part.width}
-            height={part.height}
-          />
-          {isEdited && <div className="text-[10px] text-emerald-600">Mensagem editada</div>}
-        </div>
-      );
-
-    case "video":
-      return (
-        <div className="space-y-1">
-          <video
-            src={url}
-            className="max-w-xs rounded-lg cursor-pointer"
-            onClick={() => openPreview(url, "video")}
-          />
-          {isEdited && <div className="text-[10px] text-emerald-600">Mensagem editada</div>}
-        </div>
-      );
-
-    case "audio":
-      return <AudioPlayer url={url} />;
-
-    case "document":
-      return (
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <FileText className="w-5 h-5 text-emerald-600" />
-            <span className="text-sm font-medium">Documento</span>
-          </div>
-          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 flex justify-center transition-colors duration-200">
-            <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500" />
-          </div>
-          <a
-            href={url}
-            download
-            className="w-full inline-block px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm text-center"
-          >
-            Baixar arquivo
-          </a>
-        </div>
-      );
-
-    case "sticker":
-      return <img src={url} alt="Sticker" className="max-w-[200px] rounded-lg" />;
-
-    default:
-      return null;
-  }
-}
+  const wrappedFetchOfficialMediaUrl = useCallback(
+    (part: OfficialPart) => fetchOfficialMediaUrl(part, token, mediaUrlCache.current),
+    [token]
+  );
 
 const AlbumCarousel = ({ items, type }: { items: Message[]; type: string }) => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -2554,19 +2577,12 @@ const AlbumCarousel = ({ items, type }: { items: Message[]; type: string }) => {
     const container = scrollAreaRef.current;
     if (!container) return;
 
+    // Se estamos carregando mensagens antigas (scroll para cima)
     if (prevScrollHeightRef.current !== null) {
-      // Quando carregamos mensagens antigas (scroll para cima), mantemos a posição
       const diff = container.scrollHeight - prevScrollHeightRef.current;
       container.scrollTop = diff;
       prevScrollHeightRef.current = null;
-    } else {
-      // Só faz scroll automático se o usuário já estiver perto do final (últimos 150px)
-      const { scrollTop, scrollHeight, clientHeight } = container;
-      const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
-
-      if (distanceFromBottom < 150) {
-        scrollToBottom(false);
-      }
+      return; // 🔹 importante: sai aqui para não rolar para o final
     }
   }, [messages]);
 
@@ -3070,10 +3086,9 @@ case "imageMessage": {
   const part = msgContent?.imageMessage;
   const directUrl = msgContent?.mediaUrl || part?.url;
 
-  console.log('📷 Processando imageMessage:', { isBusiness, part, directUrl, msgContent });
 
   if (isBusiness && part?.id && part?.sha256 && part?.mime_type) {
-    content = <OfficialBinaryMedia part={part} kind="image" isEdited={isEdited} />;
+    content = <OfficialBinaryMedia part={part} kind="image" isEdited={isEdited} fetchOfficialMediaUrl={wrappedFetchOfficialMediaUrl} openPreview={openPreview} />;
     break;
   }
 
@@ -3095,6 +3110,8 @@ case "imageMessage": {
           }}
           kind="image"
           isEdited={isEdited}
+          fetchEvoMediaUrl={wrappedFetchEvoMediaUrl}
+          openPreview={openPreview}
         />
       );
       break;
@@ -3105,7 +3122,7 @@ case "imageMessage": {
         <img
           src={directUrl}
           alt="Imagem"
-          className="max-w-xs rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+          className="max-w-[200px] rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
           onClick={() => openPreview(directUrl, "image")}
         />
         {isEdited && <div className="text-[10px] text-emerald-600">Mensagem editada</div>}
@@ -3115,7 +3132,6 @@ case "imageMessage": {
   }
 
   // Fallback se nenhuma condição foi atendida
-  console.warn('⚠️ ImageMessage sem URL válida:', message);
   content = (
     <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
       <FileText className="w-5 h-5 text-gray-500 dark:text-gray-400" />
@@ -3132,10 +3148,9 @@ case "videoMessage": {
   const part = msgContent?.videoMessage;
   const directUrl = msgContent?.mediaUrl || part?.url;
 
-  console.log('🎥 Processando videoMessage:', { isBusiness, part, directUrl });
 
   if (isBusiness && part?.id && part?.sha256 && part?.mime_type) {
-    content = <OfficialBinaryMedia part={part} kind="video" isEdited={isEdited} />;
+    content = <OfficialBinaryMedia part={part} kind="video" isEdited={isEdited} fetchOfficialMediaUrl={wrappedFetchOfficialMediaUrl} openPreview={openPreview} />;
     break;
   }
 
@@ -3154,6 +3169,8 @@ case "videoMessage": {
           }}
           kind="video"
           isEdited={isEdited}
+          fetchEvoMediaUrl={wrappedFetchEvoMediaUrl}
+          openPreview={openPreview}
         />
       );
       break;
@@ -3162,7 +3179,7 @@ case "videoMessage": {
       <div className="space-y-1">
         <video
           src={directUrl}
-          className="max-w-xs rounded-lg cursor-pointer"
+          className="max-w-[200px] rounded-lg cursor-pointer"
           onClick={() => openPreview(directUrl, "video")}
         />
         {isEdited && <div className="text-[10px] text-emerald-600">Mensagem editada</div>}
@@ -3172,7 +3189,6 @@ case "videoMessage": {
   }
 
   // Fallback
-  console.warn('⚠️ VideoMessage sem URL válida:', message);
   content = (
     <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
       <FileText className="w-5 h-5 text-gray-500 dark:text-gray-400" />
@@ -3189,10 +3205,9 @@ case "audioMessage": {
   const part = msgContent?.audioMessage;
   const directUrl = msgContent?.mediaUrl || part?.url;
 
-  console.log('🎵 Processando audioMessage:', { isBusiness, part, directUrl });
 
   if (isBusiness && part?.id && part?.sha256 && part?.mime_type) {
-    content = <OfficialBinaryMedia part={part} kind="audio" isEdited={isEdited} />;
+    content = <OfficialBinaryMedia part={part} kind="audio" isEdited={isEdited} fetchOfficialMediaUrl={wrappedFetchOfficialMediaUrl} openPreview={openPreview} />;
     break;
   }
 
@@ -3211,6 +3226,8 @@ case "audioMessage": {
           }}
           kind="audio"
           isEdited={isEdited}
+          fetchEvoMediaUrl={wrappedFetchEvoMediaUrl}
+          openPreview={openPreview}
         />
       );
       break;
@@ -3220,7 +3237,6 @@ case "audioMessage": {
   }
 
   // Fallback
-  console.warn('⚠️ AudioMessage sem URL válida:', message);
   content = (
     <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
       <FileText className="w-5 h-5 text-gray-500 dark:text-gray-400" />
@@ -3238,7 +3254,7 @@ case "documentMessage": {
   const directUrl = msgContent?.mediaUrl || part?.url;
 
   if (isBusiness && part?.id && part?.sha256 && part?.mime_type) {
-    content = <OfficialBinaryMedia part={part} kind="document" isEdited={isEdited} />;
+    content = <OfficialBinaryMedia part={part} kind="document" isEdited={isEdited} fetchOfficialMediaUrl={wrappedFetchOfficialMediaUrl} openPreview={openPreview} />;
     break;
   }
 
@@ -3257,6 +3273,8 @@ case "documentMessage": {
           }}
           kind="document"
           isEdited={isEdited}
+          fetchEvoMediaUrl={wrappedFetchEvoMediaUrl}
+          openPreview={openPreview}
         />
       );
       break;
@@ -3287,7 +3305,7 @@ case "documentMessage": {
 case "stickerMessage": {
   const part = msgContent?.stickerMessage;
   if (isBusiness && part?.id && part?.sha256 && part?.mime_type) {
-    content = <OfficialBinaryMedia part={part} kind="sticker" isEdited={isEdited} />;
+    content = <OfficialBinaryMedia part={part} kind="sticker" isEdited={isEdited} fetchOfficialMediaUrl={wrappedFetchOfficialMediaUrl} openPreview={openPreview} />;
     break;
   }
   content = (
@@ -3343,7 +3361,6 @@ case "stickerMessage": {
       return null;
 
     default:
-      console.log('Tipo de mensagem não suportado:', message.messageType, message);
       content = (
         <div className="text-sm text-gray-500 dark:text-gray-400 italic">
           Tipo de mensagem não suportado ({message.messageType || 'desconhecido'})
@@ -3402,10 +3419,10 @@ case "stickerMessage": {
     (transferLookup ? transferSet.has(transferLookup) : false);
 
 return (
-  <div className="h-full flex relative" data-message-view="true">
+  <div className="h-full w-full flex relative overflow-hidden" data-message-view="true">
     <div
-      className={`flex-1 flex flex-col min-h-0 transition-all duration-300 ${
-        sidebarOpen || searchOpen ? 'mr-[420px]' : 'mr-0'
+      className={`flex-1 flex flex-col min-h-0 min-w-0 transition-all duration-300 ${
+        sidebarOpen || searchOpen ? 'md:mr-[420px]' : 'mr-0'
       }`}
       style={{
         backgroundImage: isDarkMode
@@ -3442,14 +3459,15 @@ return (
       }}
     >
 {/* Header Premium */}
-<div className="fixed md:relative top-[131px] md:top-0 left-0 right-0 md:left-auto md:right-auto z-10 md:z-20 flex items-center justify-between px-3 md:px-4 py-2.5 md:py-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
+<div className="fixed md:relative top-[60px] md:top-0 left-0 right-0 md:left-auto md:right-auto z-30 md:z-20 flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-white dark:bg-gray-800 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
   <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0">
     <button
       onClick={onBack}
-      className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-all duration-200 md:hidden group touch-manipulation flex-shrink-0"
-      aria-label="Voltar"
+      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-all duration-200 md:hidden group touch-manipulation flex-shrink-0"
+      aria-label="Voltar para lista de conversas"
+      title="Voltar"
     >
-      <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-white" />
+      <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white" />
     </button>
 
     {/* Clickable area - Avatar + Contact Info */}
@@ -3458,8 +3476,10 @@ return (
         setSidebarOpen(!sidebarOpen);
         if (!sidebarOpen) setSearchOpen(false);
       }}
-      className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0 cursor-pointer touch-manipulation"
-      title="Abrir informações do contato"
+      className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0 cursor-pointer touch-manipulation hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700 rounded-lg p-1 -ml-1 transition-all"
+      title="Tocar para ver informações do contato"
+      role="button"
+      aria-label="Abrir sidebar de informações do contato"
     >
       {/* Avatar com Status */}
       <div className="relative flex-shrink-0">
@@ -3467,24 +3487,24 @@ return (
           <img
             src={selectedChat.profilePicUrl}
             alt={displayName}
-            className="h-10 w-10 md:h-10 md:w-10 rounded-full object-cover ring-1 ring-gray-200 dark:ring-gray-600"
+            className="h-9 w-9 md:h-10 md:w-10 rounded-full object-cover ring-1 ring-gray-200 dark:ring-gray-600"
           />
         ) : (
-          <div className="h-10 w-10 md:h-10 md:w-10 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold text-sm ring-1 ring-gray-200 dark:ring-gray-600">
+          <div className="h-9 w-9 md:h-10 md:w-10 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold text-xs md:text-sm ring-1 ring-gray-200 dark:ring-gray-600">
             {getInitials(displayName)}
           </div>
         )}
-        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 md:w-3 md:h-3 bg-emerald-400 border-2 border-white dark:border-gray-800 rounded-full"></div>
+        <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 md:w-3 md:h-3 bg-emerald-400 border-2 border-white dark:border-gray-800 rounded-full"></div>
       </div>
 
       <div className="flex-1 text-left min-w-0">
-        <h3 className="font-semibold text-[15px] md:text-[15px] text-gray-900 dark:text-white leading-tight flex items-center truncate">
+        <h3 className="font-semibold text-sm md:text-[15px] text-gray-900 dark:text-white leading-tight flex items-center truncate">
           {displayName}
         </h3>
 
         <div className="flex items-center gap-1 md:gap-1.5">
-          <Phone className="w-3 h-3 md:w-3 md:h-3 text-slate-400 dark:text-slate-500 flex-shrink-0" />
-          <span className="text-[11px] md:text-[11px] text-slate-500 dark:text-slate-400 truncate">
+          <Phone className="w-2.5 h-2.5 md:w-3 md:h-3 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+          <span className="text-[10px] md:text-[11px] text-slate-500 dark:text-slate-400 truncate">
             {formatPhoneNumber(selectedChat.remoteJid)}
           </span>
         </div>
@@ -3494,7 +3514,7 @@ return (
     {/* Reload Button */}
     <button
       onClick={handleReloadMessages}
-      className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-all duration-200 touch-manipulation flex-shrink-0"
+      className="p-1.5 md:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-all duration-200 touch-manipulation flex-shrink-0"
       title="Recarregar mensagens"
       aria-label="Recarregar mensagens"
     >
@@ -3503,7 +3523,7 @@ return (
   </div>
 
   {/* Actions Bar - Tudo em uma linha */}
-  <div className="flex items-center space-x-2">
+  <div className="flex items-center space-x-1 md:space-x-2">
     {/* Status Indicators */}
     <div className="flex items-center space-x-2">
       {isTransferChat && (
@@ -3548,7 +3568,7 @@ return (
     {/* Messages Area */}
     <div
       ref={scrollAreaRef}
-      className="flex-1 overflow-y-auto px-3 md:px-8 py-3 pt-[56px] md:pt-3 min-h-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent bg-[url('/src/imgs/guimoo/tema-claro-chat.png')] dark:bg-[url('/src/imgs/guimoo/tema-escuro-chat.png')] bg-cover bg-center bg-fixed bg-no-repeat"
+      className="flex-1 overflow-y-auto px-3 md:px-8 py-3 pt-[112px] md:pt-3 min-h-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent bg-[url('/src/imgs/guimoo/tema-claro-chat.png')] dark:bg-[url('/src/imgs/guimoo/tema-escuro-chat.png')] bg-cover bg-center bg-fixed bg-no-repeat"
       style={{
         WebkitOverflowScrolling: 'touch'
       }}
@@ -3686,7 +3706,7 @@ return (
 
                 <div
                   className={`
-                    max-w-[85%] md:max-w-[65%] rounded-lg shadow-md transition-all duration-200
+                    max-w-[80%] md:max-w-[65%] rounded-lg shadow-md transition-all duration-200
                     ${isFromMe ? 'order-1' : 'order-2'}
                     ${
                       isFromMe
@@ -3695,7 +3715,7 @@ return (
                     }
                   `}
                 >
-                  <div className="px-3 py-2 md:px-2 md:py-1.5">
+                  <div className="px-2.5 py-1.5 md:px-2 md:py-1.5">
                     {message.isEncaminhada && (
                       <div className="text-xs mb-1.5 flex items-center space-x-1 text-gray-500 dark:text-gray-400">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

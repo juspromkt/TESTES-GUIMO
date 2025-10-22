@@ -4,6 +4,42 @@ import ConfigLayout from '../components/configuracoes/ConfigLayout';
 import capaDefault from '/src/imgs/tutoriais/Capa Tutoriais.png';
 import { useVideoPlayer } from '../context/VideoPlayerContext';
 
+// Importando capas dos tutoriais
+import capaVisaoGeral from '../components/capaTutoriais/Visão Geral do Sistema.jpg';
+import capaPrimeirosPassos from '../components/capaTutoriais/Primeiros Passos.jpg';
+import capaConexoesWhatsApp from '../components/capaTutoriais/Conexões de WhatsApp.jpg';
+import capaAbaConversas from '../components/capaTutoriais/Aba de Conversas.jpg';
+import capaControleIA from '../components/capaTutoriais/Controle da IA.jpg';
+import capaOrigemLead from '../components/capaTutoriais/Origem do Lead.jpg';
+import capaCamposPersonalizados from '../components/capaTutoriais/Campos Personalizados.jpg';
+import capaGestaoUsuarios from '../components/capaTutoriais/Gestão de Usuários.jpg';
+import capaFunilVendas from '../components/capaTutoriais/Funil de Vendas.jpg';
+import capaEtiquetas from '../components/capaTutoriais/Etiquetas.jpg';
+import capaEnvioMassa from '../components/capaTutoriais/Envio em Massa.jpg';
+import capaAgendamentos from '../components/capaTutoriais/Agendamentos.jpg';
+import capaDashboard from '../components/capaTutoriais/Dashboard.jpg';
+import capaFuncaoSair from '../components/capaTutoriais/Função Sair.jpg';
+import capaZapSign from '../components/capaTutoriais/Como criar e usar modelos no ZapSign.jpg';
+import capaHistoricoFollowUp from '../components/capaTutoriais/Histórico de Follow-Up.jpg';
+import capaSistemaWorkspace from '../components/capaTutoriais/Sistema de Workspace.jpg';
+import capaGoogleAgenda from '../components/capaTutoriais/Configuração do Google Agenda.jpg';
+import capaGoogleAgendaWorkspace from '../components/capaTutoriais/Configurando Google Agenda - Workspace.jpg';
+import capaIAMovimentacao from '../components/capaTutoriais/Agente de IA - Movimentação Automática.jpg';
+import capaIAEtapas from '../components/capaTutoriais/Agente de IA - Etapas de Atendimento.jpg';
+import capaIAPerguntasFrequentes from '../components/capaTutoriais/Agente de IA - Perguntas Frequentes.jpg';
+import capaIARegrasGerais from '../components/capaTutoriais/Agente de IA - Regras Gerais.jpg';
+import capaIAPersonalidade from '../components/capaTutoriais/Agente de IA - Personalidade.jpg';
+import capaIAAudio from '../components/capaTutoriais/Agente de IA - Áudio.jpg';
+import capaIAGatilhos from '../components/capaTutoriais/Agente de IA - Gatilhos.jpg';
+import capaIAHorarios from '../components/capaTutoriais/Agente de IA - Horários de Funcionamento.jpg';
+import capaIAModelos from '../components/capaTutoriais/Agente de IA - Modelos de Agente.jpg';
+import capaIANotificacoes from '../components/capaTutoriais/Agente de IA - Notificações no WhatsApp.jpg';
+import capaIAParametros from '../components/capaTutoriais/Agente de IA - Parâmetros do Agente.jpg';
+import capaIATeste from '../components/capaTutoriais/Agente de IA - Teste de Agente.jpg';
+import capaIAFollowUp from '../components/capaTutoriais/Agente de IA - Follow-Up Automático.jpg';
+import capaCampanhaTrabalhista from '../components/capaTutoriais/Criando uma campanha trabalhista no Google Ads.jpg';
+import capaCaixaPreta from '../components/capaTutoriais/Caixa Preta dos Anúncios BPC-LOAS que convertem.jpg';
+
 type SectionId = 'iniciante' | 'intermediario' | 'avancado' | 'academy';
 
 interface VideoLesson {
@@ -13,6 +49,7 @@ interface VideoLesson {
   videoUrl: string;
   thumbnail?: string;
   category: SectionId;
+  duration?: string;
 }
 
 // Dados de exemplo - você pode substituir pelos seus vídeos reais
@@ -25,7 +62,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Visão geral do sistema',
   description: 'Conheça a visão geral do sistema e entenda todas as principais áreas, menus e funcionalidades para começar a usar com confiança.',
   videoUrl: 'https://www.youtube.com/embed/9bvB2s3yYY4',
-  thumbnail: capaDefault,
+  thumbnail: capaVisaoGeral,
   category: 'iniciante'
 },
 {
@@ -33,7 +70,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Primeiros passos',
   description: 'Aprenda como dar os primeiros passos no sistema e configurar sua conta inicial.',
   videoUrl: 'https://www.youtube.com/embed/JA1XbU0m7dg',
-  thumbnail: capaDefault,
+  thumbnail: capaPrimeirosPassos,
   category: 'iniciante'
 },
 {
@@ -41,7 +78,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Conexões de WhatsApp',
   description: 'Aprenda como conectar seu número de WhatsApp no sistema de forma segura e estável.',
   videoUrl: 'https://www.youtube.com/embed/opEk2CZXPbQ',
-  thumbnail: capaDefault,
+  thumbnail: capaConexoesWhatsApp,
   category: 'iniciante'
 },
 {
@@ -49,7 +86,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Aba de conversas',
   description: 'Entenda como funciona a aba de conversas e gerencie seus atendimentos com eficiência.',
   videoUrl: 'https://www.youtube.com/embed/zJ5uU6T7mXU',
-  thumbnail: capaDefault,
+  thumbnail: capaAbaConversas,
   category: 'iniciante'
 },
 {
@@ -57,7 +94,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Controle da IA',
   description: 'Veja como ativar, pausar e configurar o comportamento da inteligência artificial no atendimento.',
   videoUrl: 'https://www.youtube.com/embed/2dmfLEFO_M4',
-  thumbnail: capaDefault,
+  thumbnail: capaControleIA,
   category: 'iniciante'
 },
 {
@@ -65,7 +102,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Origem do Lead',
   description: 'Aprenda a identificar e organizar as origens dos seus leads para melhorar seus resultados.',
   videoUrl: 'https://www.youtube.com/embed/CvIO6rpdxyE',
-  thumbnail: capaDefault,
+  thumbnail: capaOrigemLead,
   category: 'iniciante'
 },
 {
@@ -73,7 +110,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Campos Personalizados',
   description: 'Veja como criar e usar campos personalizados para armazenar informações específicas dos seus contatos.',
   videoUrl: 'https://www.youtube.com/embed/BpqRa2z5C70',
-  thumbnail: capaDefault,
+  thumbnail: capaCamposPersonalizados,
   category: 'iniciante'
 },
 {
@@ -81,7 +118,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Gestão de Usuários',
   description: 'Veja como adicionar, editar e gerenciar usuários e suas permissões no sistema.',
   videoUrl: 'https://www.youtube.com/embed/rwpc7-RhnZY',
-  thumbnail: capaDefault,
+  thumbnail: capaGestaoUsuarios,
   category: 'iniciante'
 },
 {
@@ -89,7 +126,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Funil de Vendas',
   description: 'Entenda como funciona o funil de vendas e organize suas etapas de negociação.',
   videoUrl: 'https://www.youtube.com/embed/ZB7dnxzPtVQ',
-  thumbnail: capaDefault,
+  thumbnail: capaFunilVendas,
   category: 'iniciante'
 },
 {
@@ -97,7 +134,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Etiquetas',
   description: 'Aprenda a criar e usar etiquetas para classificar e filtrar seus contatos e atendimentos.',
   videoUrl: 'https://www.youtube.com/embed/MlfyAv0T-yM',
-  thumbnail: capaDefault,
+  thumbnail: capaEtiquetas,
   category: 'iniciante'
 },
 {
@@ -105,7 +142,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Envios em Massa',
   description: 'Descubra como enviar mensagens para vários contatos ao mesmo tempo de forma rápida e segura.',
   videoUrl: 'https://www.youtube.com/embed/g-LnY0tsRys',
-  thumbnail: capaDefault,
+  thumbnail: capaEnvioMassa,
   category: 'iniciante'
 },
 {
@@ -113,7 +150,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Agendamentos',
   description: 'Aprenda a criar e gerenciar agendamentos automáticos ou manuais dentro do sistema.',
   videoUrl: 'https://www.youtube.com/embed/sxfOVulE5bY',
-  thumbnail: capaDefault,
+  thumbnail: capaAgendamentos,
   category: 'iniciante'
 },
 {
@@ -121,7 +158,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Dashboard',
   description: 'Veja como interpretar e acompanhar seus resultados através do painel de controle do sistema.',
   videoUrl: 'https://www.youtube.com/embed/CXEojhawVVA',
-  thumbnail: capaDefault,
+  thumbnail: capaDashboard,
   category: 'iniciante'
 },
 
@@ -133,7 +170,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Função #SAIR',
   description: 'Saiba como utilizar o comando #SAIR para reiniciar uma conversa com a IA e evitar erros de contexto durante os testes.',
   videoUrl: 'https://www.youtube.com/embed/ac5xdr3eRvA',
-  thumbnail: capaDefault,
+  thumbnail: capaFuncaoSair,
   category: 'intermediario'
 },
 {
@@ -141,7 +178,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Como criar e usar Modelos na ZapSign',
   description: 'Aprenda como criar modelos na ZapSign e integrar seus documentos de forma rápida e eficiente.',
   videoUrl: 'https://www.youtube.com/embed/yQHe_uflWH4',
-  thumbnail: capaDefault,
+  thumbnail: capaZapSign,
   category: 'intermediario'
 },
 {
@@ -149,7 +186,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Histórico de Follow-up',
   description: 'Aprenda como visualizar e gerenciar o histórico de follow-up dos seus contatos e negociações.',
   videoUrl: 'https://www.youtube.com/embed/HIkErNJj_Oc',
-  thumbnail: capaDefault,
+  thumbnail: capaHistoricoFollowUp,
   category: 'intermediario'
 },
 {
@@ -157,7 +194,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Sistema de Workspace',
   description: 'Veja como o sistema de Workspaces permite gerenciar múltiplas contas e equipes de forma organizada.',
   videoUrl: 'https://www.youtube.com/embed/sdcHHttDuNc',
-  thumbnail: capaDefault,
+  thumbnail: capaSistemaWorkspace,
   category: 'intermediario'
 },
 {
@@ -165,7 +202,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Configuração do Google Agenda',
   description: 'Aprenda a integrar o Google Agenda com a Guimoo para automatizar seus compromissos.',
   videoUrl: 'https://www.youtube.com/embed/O00atxrkStY',
-  thumbnail: capaDefault,
+  thumbnail: capaGoogleAgenda,
   category: 'intermediario'
 },
 {
@@ -173,7 +210,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Configurando Google Agenda - Workspace',
   description: 'Tutorial detalhado para integrar o Google Workspace com o sistema e sincronizar agendas de todos os usuários.',
   videoUrl: 'https://www.youtube.com/embed/MxRlIa5I45A',
-  thumbnail: capaDefault,
+  thumbnail: capaGoogleAgendaWorkspace,
   category: 'intermediario'
 },
 
@@ -185,7 +222,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Agente de IA - Movimentação Automática',
   description: 'Entenda como configurar a movimentação automática da IA para agilizar atendimentos e distribuir tarefas entre etapas.',
   videoUrl: 'https://www.youtube.com/embed/RfMSykWNiSU',
-  thumbnail: capaDefault,
+  thumbnail: capaIAMovimentacao,
   category: 'avancado'
 },
 {
@@ -193,7 +230,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Agente de IA - Etapas de Atendimento',
   description: 'Aprenda a criar e ajustar as etapas do atendimento do agente de IA, otimizando fluxos de conversa e qualificação de leads.',
   videoUrl: 'https://www.youtube.com/embed/ziAEnz_TtNU',
-  thumbnail: capaDefault,
+  thumbnail: capaIAEtapas,
   category: 'avancado'
 },
 {
@@ -201,7 +238,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Agente de IA - Perguntas Frequentes',
   description: 'Configure perguntas frequentes para que a IA responda automaticamente dúvidas recorrentes dos clientes.',
   videoUrl: 'https://www.youtube.com/embed/QJtyEIlIOdg',
-  thumbnail: capaDefault,
+  thumbnail: capaIAPerguntasFrequentes,
   category: 'avancado'
 },
 {
@@ -209,7 +246,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Agente de IA - Regras Gerais',
   description: 'Veja como definir regras gerais que orientam o comportamento da IA durante todo o atendimento.',
   videoUrl: 'https://www.youtube.com/embed/Ob57-CzgtKY',
-  thumbnail: capaDefault,
+  thumbnail: capaIARegrasGerais,
   category: 'avancado'
 },
 {
@@ -217,7 +254,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Agente de IA - Personalidade',
   description: 'Crie a personalidade da sua IA para deixá-la mais próxima do tom de voz do seu escritório e público-alvo.',
   videoUrl: 'https://www.youtube.com/embed/7oyC6BeB5mU',
-  thumbnail: capaDefault,
+  thumbnail: capaIAPersonalidade,
   category: 'avancado'
 },
 {
@@ -225,7 +262,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Agente de IA - Áudio',
   description: 'Aprenda a configurar o reconhecimento e envio de áudios pela IA, tornando o atendimento mais natural.',
   videoUrl: 'https://www.youtube.com/embed/IHMhKjGWRxc',
-  thumbnail: capaDefault,
+  thumbnail: capaIAAudio,
   category: 'avancado'
 },
 {
@@ -233,7 +270,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Agente de IA - Gatilhos',
   description: 'Veja como criar gatilhos automáticos para ativar respostas e ações da IA de forma inteligente.',
   videoUrl: 'https://www.youtube.com/embed/ngpRqvil5dg',
-  thumbnail: capaDefault,
+  thumbnail: capaIAGatilhos,
   category: 'avancado'
 },
 {
@@ -241,7 +278,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Agente de IA - Horário de Funcionamento',
   description: 'Configure o horário de funcionamento da IA para que ela atenda apenas dentro do período desejado.',
   videoUrl: 'https://www.youtube.com/embed/4-5hr5hhmU4',
-  thumbnail: capaDefault,
+  thumbnail: capaIAHorarios,
   category: 'avancado'
 },
 {
@@ -249,7 +286,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Agente de IA - Modelos de Agente',
   description: 'Aprenda a salvar, duplicar e reaproveitar modelos de agentes para diferentes tipos de atendimento.',
   videoUrl: 'https://www.youtube.com/embed/PEgQzrvM2c0',
-  thumbnail: capaDefault,
+  thumbnail: capaIAModelos,
   category: 'avancado'
 },
 {
@@ -257,7 +294,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Agente de IA - Notificações no WhatsApp',
   description: 'Saiba como configurar notificações automáticas via WhatsApp para acompanhar a atuação da IA em tempo real.',
   videoUrl: 'https://www.youtube.com/embed/LSK2t4GJACw',
-  thumbnail: capaDefault,
+  thumbnail: capaIANotificacoes,
   category: 'avancado'
 },
 {
@@ -265,7 +302,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Agente de IA - Parâmetros do Agente',
   description: 'Entenda cada parâmetro do agente e aprenda a ajustar tempo de resposta, reativação e comportamento da IA.',
   videoUrl: 'https://www.youtube.com/embed/PMKp2fuN-QQ',
-  thumbnail: capaDefault,
+  thumbnail: capaIAParametros,
   category: 'avancado'
 },
 {
@@ -273,7 +310,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Agente de IA - Teste de Agente',
   description: 'Veja como testar corretamente seu agente de IA e validar o comportamento em diferentes cenários.',
   videoUrl: 'https://www.youtube.com/embed/rVQ0lfx-TBU',
-  thumbnail: capaDefault,
+  thumbnail: capaIATeste,
   category: 'avancado'
 },
 {
@@ -281,7 +318,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Agente de IA - Follow-up Automático',
   description: 'Aprenda a configurar o follow-up automático para que a IA retome conversas e aumente a taxa de conversão.',
   videoUrl: 'https://www.youtube.com/embed/uk_K6VqrFOY',
-  thumbnail: capaDefault,
+  thumbnail: capaIAFollowUp,
   category: 'avancado'
 },
 
@@ -293,7 +330,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Criando uma campanha Trabalhista no Google Ads',
   description: 'Aprenda passo a passo como criar uma campanha trabalhista no Google Ads para atrair clientes qualificados para seu escritório.',
   videoUrl: 'https://www.youtube.com/embed/wMfBxHPlhMs',
-  thumbnail: capaDefault,
+  thumbnail: capaCampanhaTrabalhista,
   category: 'academy'
 },
 {
@@ -301,7 +338,7 @@ const videoLessons: VideoLesson[] = [
   title: 'Caixa Preta dos anúncios BPC/Loas que convertem',
   description: 'Descubra as estratégias e configurações que tornam os anúncios de BPC/Loas altamente eficazes e aprenda como replicar campanhas que realmente convertem.',
   videoUrl: 'https://www.youtube.com/embed/1MohNBa9ZBQ',
-  thumbnail: capaDefault,
+  thumbnail: capaCaixaPreta,
   category: 'academy'
 },
 

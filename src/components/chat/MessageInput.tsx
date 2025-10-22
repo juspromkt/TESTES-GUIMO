@@ -164,6 +164,7 @@ reader.readAsDataURL(audioBlob);
       try {
         let sentMessages: Message[] = [];
         if (audioPreview) {
+          console.log('[MessageInput] Enviando áudio...', { jid, mimetype: 'audio/mp3' });
           sentMessages = await apiClient.sendMessage(token, {
             jid: jid,
             mediatype: 'audio',
@@ -178,6 +179,13 @@ reader.readAsDataURL(audioBlob);
               : undefined,
           });
         } else if (pendingFile) {
+          console.log('[MessageInput] Enviando arquivo...', {
+            jid,
+            mediatype: pendingFile.mediatype,
+            mimetype: pendingFile.mimetype,
+            fileName: pendingFile.file.name,
+            size: pendingFile.file.size
+          });
           sentMessages = await apiClient.sendMessage(token, {
             jid: jid,
             mediatype: pendingFile.mediatype,
@@ -192,6 +200,7 @@ reader.readAsDataURL(audioBlob);
             fileName: pendingFile.file.name,
           });
         } else {
+          console.log('[MessageInput] Enviando texto...', { jid, text: message.trim() });
           sentMessages = await apiClient.sendMessage(token, {
             jid: jid,
             type: 'text',
@@ -205,11 +214,12 @@ reader.readAsDataURL(audioBlob);
           });
         }
 
+        console.log('[MessageInput] Mensagens enviadas com sucesso:', sentMessages);
         onReplaceTempMessage?.(tempId, sentMessages);
         onMessageSent(sentMessages);
         toast.success('✨', { duration: 1000 });
       } catch (error) {
-        console.error('Erro ao enviar:', error);
+        console.error('[MessageInput] Erro ao enviar:', error);
         toast.error('Erro ao enviar');
         onMessageError?.(tempId);
       }
@@ -222,6 +232,16 @@ reader.readAsDataURL(audioBlob);
   ) => {
     const file = event.target.files?.[0];
     if (!file || !token) return;
+
+    // Validação de tamanho
+    const MAX_FILE_SIZE = 16 * 1024 * 1024; // 16MB
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`Arquivo muito grande! Tamanho máximo: 16MB. Tamanho do arquivo: ${(file.size / (1024 * 1024)).toFixed(1)}MB`);
+      if (fileInputRef?.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
 
     try {
       const reader = new FileReader();
@@ -239,6 +259,8 @@ reader.readAsDataURL(audioBlob);
           mediatype,
           mimetype: file.type,
         });
+
+        toast.success(`Arquivo selecionado: ${file.name}`);
       };
       reader.readAsDataURL(file);
     } catch (error) {
@@ -293,7 +315,14 @@ reader.readAsDataURL(audioBlob);
                 className="w-16 h-16 object-cover rounded-lg"
               />
             )}
-            {pendingFile.mediatype !== 'image' && (
+            {pendingFile.mediatype === 'video' && (
+              <video
+                src={`data:${pendingFile.mimetype};base64,${pendingFile.base64}`}
+                className="w-16 h-16 object-cover rounded-lg"
+                controls={false}
+              />
+            )}
+            {pendingFile.mediatype === 'document' && (
               <div className="w-16 h-16 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-colors duration-200">
                 <FileText className="w-8 h-8 text-gray-400 dark:text-gray-300" />
               </div>

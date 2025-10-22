@@ -127,6 +127,12 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
     setSuccess('');
 
     try {
+      // Concatena o código do país com o número de telefone (sem o símbolo +)
+      const countryCode = selectedCountry.code.replace('+', ''); // Remove o +
+      const fullPhoneNumber = formData.telefone
+        ? `${countryCode}${formData.telefone}`
+        : '';
+
       const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospectai/usuario/criar', {
         method: 'POST',
         headers: {
@@ -135,6 +141,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
         },
         body: JSON.stringify({
           ...formData,
+          telefone: fullPhoneNumber,
           tipo: formData.tipo
         }),
       });
@@ -320,10 +327,28 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
   const handleOpenEditUser = (user: User) => {
     setError('');
     setSuccess('');
+
+    // Extrai o código do país do telefone se existir
+    let phoneNumber = user.telefone ?? '';
+    let detectedCountry = countries[0]; // Brasil por padrão
+
+    if (phoneNumber) {
+      // Tenta encontrar o código do país no início do número (sem o símbolo +)
+      for (const country of countries) {
+        const codeWithoutPlus = country.code.replace('+', ''); // Remove o + para comparação
+        if (phoneNumber.startsWith(codeWithoutPlus)) {
+          detectedCountry = country;
+          phoneNumber = phoneNumber.substring(codeWithoutPlus.length); // Remove o código do país
+          break;
+        }
+      }
+    }
+
+    setSelectedCountry(detectedCountry);
     setEditFormData({
       id: user.Id,
       nome: user.nome,
-      telefone: user.telefone ?? '',
+      telefone: phoneNumber,
       tipo: user.tipo
     });
     setIsEditModalOpen(true);
@@ -338,6 +363,12 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
     setSuccess('');
 
     try {
+      // Concatena o código do país com o número de telefone (sem o símbolo +)
+      const countryCode = selectedCountry.code.replace('+', ''); // Remove o +
+      const fullPhoneNumber = editFormData.telefone
+        ? `${countryCode}${editFormData.telefone}`
+        : '';
+
       const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospectai/usuario/update', {
         method: 'PUT',
         headers: {
@@ -347,7 +378,7 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
         body: JSON.stringify({
           id: editFormData.id,
           nome: editFormData.nome,
-          telefone: editFormData.telefone,
+          telefone: fullPhoneNumber,
           tipo: editFormData.tipo,
         }),
       });

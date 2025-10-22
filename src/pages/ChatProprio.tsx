@@ -315,7 +315,7 @@ const ChatProprio = () => {
     <div className="h-screen flex flex-col w-full bg-background dark:bg-gray-900 overflow-hidden md:pt-0 transition-colors duration-200">
       {/* Barra superior fixa - ocupa toda a largura da tela */}
       {activeTab === 'chat' && (
-        <div className="fixed top-[80px] md:relative md:top-0 left-0 right-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 shadow-sm transition-colors duration-200">
+        <div className="hidden md:block md:relative md:top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 shadow-sm transition-colors duration-200">
           <div className="px-2 md:px-4 py-2 flex items-center justify-between gap-1.5 md:gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
 
             {/* Grupo Esquerdo: Campo de busca + Filtros */}
@@ -452,11 +452,9 @@ const ChatProprio = () => {
 
                 {/* 🔹 Wrapper fixo com scroll isolado */}
                 <div
-                  className="flex-1 overflow-y-auto overflow-x-hidden"
+                  className="flex-1 overflow-x-hidden"
                   style={{
                     maxHeight: 'calc(100vh - 120px)',
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: '#bdbdbd transparent',
                   }}
                 >
                   <ChatList

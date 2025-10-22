@@ -339,14 +339,22 @@ export interface SendTextMessage {
   jid: string;
   type: 'text';
   text: string;
+  resposta?: {
+    idMensagem: string;
+    mensagem: string;
+  };
 }
 
 export interface SendMediaMessage {
   jid: string;
-  mediatype: 'image' | 'video' | 'document';
+  mediatype: 'image' | 'video' | 'document' | 'audio';
   mimetype: string;
   base64: string;
-  fileName: string;
+  fileName?: string;
+  resposta?: {
+    idMensagem: string;
+    mensagem: string;
+  };
 }
 
 export const apiClient = {

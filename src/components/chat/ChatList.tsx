@@ -966,7 +966,6 @@ useEffect(() => {
   const fetchChats = useCallback(
     async (pageNum: number) => {
       if (!token) return;
-      if (pageNum <= 1) return;
       if (loadingMoreFlagRef.current) return;
       if (pageNum <= pageRef.current) return;
 
@@ -1427,6 +1426,9 @@ useEffect(() => {
     lastScrollTopRef.current = listElement.scrollTop;
 
     const handleScroll = () => {
+      // Verifica se o elemento ainda está visível ao fazer scroll
+      if (listElement.offsetParent === null) return;
+
       const { scrollTop, scrollHeight, clientHeight } = listElement;
       const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
       const isScrollingDown = scrollTop > lastScrollTopRef.current;
@@ -2181,8 +2183,8 @@ const getLastMessageText = (chat) => {
       {/* Header - oculto quando controlado externamente */}
       {!isExternallyControlled && (
         <div className="border-b border-gray-300 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 transition-colors duration-200">
-          <div className="px-3 py-3 space-y-3">
-            <div className="flex items-start justify-between gap-3">
+          <div className="px-4 py-3 space-y-3">
+            <div className="flex items-center justify-between gap-3">
               <div>
                 <h1 className="text-lg font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-200">Conversas</h1>
               </div>

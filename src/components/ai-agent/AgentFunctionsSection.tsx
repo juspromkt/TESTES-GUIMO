@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Zap,
@@ -8,7 +8,8 @@ import {
   X,
   Settings,
   Edit3,
-  Check
+  Check,
+  ChevronDown
 } from 'lucide-react';
 
 interface AgentFunctionAttribute {
@@ -49,6 +50,18 @@ const MESSAGE_TAGS = [
   { label: 'Resumo da conversa', value: '{{resumo}}' }
 ];
 
+const COUNTRIES = [
+  { code: '+55', country: 'BR', name: 'Brasil', flag: '🇧🇷' },
+  { code: '+1', country: 'US', name: 'Estados Unidos', flag: '🇺🇸' },
+  { code: '+54', country: 'AR', name: 'Argentina', flag: '🇦🇷' },
+  { code: '+56', country: 'CL', name: 'Chile', flag: '🇨🇱' },
+  { code: '+57', country: 'CO', name: 'Colômbia', flag: '🇨🇴' },
+  { code: '+51', country: 'PE', name: 'Peru', flag: '🇵🇪' },
+  { code: '+52', country: 'MX', name: 'México', flag: '🇲🇽' },
+  { code: '+351', country: 'PT', name: 'Portugal', flag: '🇵🇹' },
+  { code: '+34', country: 'ES', name: 'Espanha', flag: '🇪🇸' },
+];
+
 const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, canEdit }) => {
   const [functions, setFunctions] = useState<AgentFunction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +90,9 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
   const [recipientType, setRecipientType] = useState<'' | 'numero' | 'usuario' | 'responsavel'>('');
   const [recipientPhone, setRecipientPhone] = useState('');
   const [recipientUserId, setRecipientUserId] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0]); // Brasil por padrão
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const countryDropdownRef = useRef<HTMLDivElement | null>(null);
 
   // Mensagens
   const [error, setError] = useState('');
@@ -85,6 +101,17 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
   useEffect(() => {
     fetchFunctions();
     fetchUsuarios();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target as Node)) {
+        setIsCountryDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const fetchFunctions = async () => {
@@ -482,7 +509,9 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
         showMessage('Informe o número de telefone', 'error');
         return;
       }
-      payload.numero = numero;
+      // Concatena o código do país (sem +) com o número
+      const countryCode = selectedCountry.code.replace('+', '');
+      payload.numero = `${countryCode}${numero}`;
     } else if (recipientType === 'usuario') {
       const idUsuario = Number(recipientUserId);
       if (!idUsuario || !Number.isFinite(idUsuario)) {
@@ -507,18 +536,27 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
 
       if (!res.ok) throw new Error(`Erro HTTP: ${res.status}`);
 
-      const newAttr = await res.json();
+      const response = await res.json();
+      console.log('Resposta da API ao adicionar destinatário:', response);
 
-      // Atualizar imediatamente o selectedFunction com o novo destinatário
-      setSelectedFunction(prev => prev ? {
-        ...prev,
-        atributos: [...prev.atributos, newAttr]
-      } : null);
+      // A API retorna apenas {status: 'success'}, então precisamos fazer refresh
+      // Recarregar todas as funções para pegar os dados atualizados
+      await fetchFunctions();
 
-      // Atualizar a lista de funções
-      setFunctions(prev => prev.map(f =>
-        f.id === selectedFunction.id ? { ...f, atributos: [...f.atributos, newAttr] } : f
-      ));
+      // Atualizar o selectedFunction com os dados mais recentes
+      const updatedFunctionsRes = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/funcao/get', {
+        headers: { token }
+      });
+      const updatedFunctions = await updatedFunctionsRes.json();
+
+      const updatedFunction = Array.isArray(updatedFunctions)
+        ? updatedFunctions.find((f: AgentFunction) => f.id === selectedFunction.id)
+        : null;
+
+      if (updatedFunction) {
+        setSelectedFunction(updatedFunction);
+        console.log('selectedFunction atualizado com dados do servidor:', updatedFunction);
+      }
 
       // Limpar apenas os campos de dados, mantendo o tipo selecionado
       setRecipientPhone('');
@@ -936,14 +974,50 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                           <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
                             Número de telefone
                           </label>
-                          <input
-                            type="text"
-                            placeholder="Ex: +55 11 91234-5678"
-                            value={recipientPhone}
-                            onChange={e => setRecipientPhone(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
-                            maxLength={60}
-                          />
+                          <div className="flex gap-2">
+                            <div className="relative" ref={countryDropdownRef}>
+                              <button
+                                type="button"
+                                onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
+                                className="h-[42px] w-[120px] pl-3 pr-2 py-2 flex items-center gap-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors"
+                              >
+                                <span className="text-2xl">{selectedCountry.flag}</span>
+                                <span className="text-sm text-gray-900 dark:text-neutral-100">{selectedCountry.code}</span>
+                                <ChevronDown className="w-4 h-4 ml-auto text-gray-400 dark:text-neutral-500" />
+                              </button>
+
+                              {isCountryDropdownOpen && (
+                                <div className="absolute top-full left-0 mt-1 w-[240px] max-h-[300px] overflow-y-auto bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg shadow-lg z-50">
+                                  {COUNTRIES.map((country) => (
+                                    <button
+                                      key={country.country}
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedCountry(country);
+                                        setIsCountryDropdownOpen(false);
+                                      }}
+                                      className="w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-neutral-600 text-left transition-colors"
+                                    >
+                                      <span className="text-2xl">{country.flag}</span>
+                                      <div className="flex-1">
+                                        <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{country.name}</div>
+                                        <div className="text-xs text-gray-500 dark:text-neutral-400">{country.code}</div>
+                                      </div>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            <input
+                              type="tel"
+                              placeholder="(11) 98888-8888"
+                              value={recipientPhone}
+                              onChange={e => setRecipientPhone(e.target.value.replace(/\D/g, ''))}
+                              className="flex-1 px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
+                              maxLength={15}
+                            />
+                          </div>
                         </div>
                       )}
 
@@ -1023,20 +1097,25 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                             description = 'O responsável atual da negociação receberá esta notificação automaticamente.';
                           }
 
+                          // Se não tiver label, não renderiza (evita cards vazios)
+                          if (!label) {
+                            return null;
+                          }
+
                           return (
                             <div
                               key={attr.id}
                               className="flex items-center justify-between bg-gray-50 dark:bg-neutral-700/50 border border-gray-200 dark:border-neutral-600 rounded-lg p-3"
                             >
-                              <div>
+                              <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-gray-900 dark:text-neutral-100">{label}</p>
-                                <p className="text-xs text-gray-600 dark:text-neutral-400">{description}</p>
+                                <p className="text-xs text-gray-600 dark:text-neutral-400 break-all">{description}</p>
                               </div>
                               {canEdit && (
                                 <button
                                   onClick={() => handleDeleteRecipient(attr.id, attr.id_funcao)}
                                   disabled={saving}
-                                  className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
+                                  className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors ml-2 flex-shrink-0"
                                   title="Remover"
                                 >
                                   <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />

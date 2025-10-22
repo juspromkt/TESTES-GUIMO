@@ -3,6 +3,83 @@
 
 type MediaKind = "image" | "video" | "audio" | "document" | "sticker";
 
+// ============================================================================
+// SISTEMA DE CACHE SIMPLES EM MEMÓRIA
+// ============================================================================
+// Cache apenas em memória (Map) - rápido e sem problemas de quota
+const memoryCache = new Map<string, Uint8Array>();
+
+// Limita o tamanho do cache para evitar uso excessivo de memória
+const MAX_CACHE_ITEMS = 100;
+const cacheAccessOrder: string[] = [];
+
+/**
+ * Gera uma chave única para cache baseada na URL
+ */
+function generateCacheKey(url: string): string {
+  let hash = 0;
+  for (let i = 0; i < url.length; i++) {
+    hash = ((hash << 5) - hash) + url.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return `media_${Math.abs(hash).toString(36)}`;
+}
+
+/**
+ * Salva mídia descriptografada no cache
+ */
+function saveToCache(cacheKey: string, data: Uint8Array): void {
+  // Remove item mais antigo se cache estiver cheio
+  if (memoryCache.size >= MAX_CACHE_ITEMS && !memoryCache.has(cacheKey)) {
+    const oldestKey = cacheAccessOrder.shift();
+    if (oldestKey) {
+      memoryCache.delete(oldestKey);
+      console.log(`🗑️ Cache cheio - removido: ${oldestKey}`);
+    }
+  }
+
+  memoryCache.set(cacheKey, data);
+
+  // Atualiza ordem de acesso
+  const existingIndex = cacheAccessOrder.indexOf(cacheKey);
+  if (existingIndex !== -1) {
+    cacheAccessOrder.splice(existingIndex, 1);
+  }
+  cacheAccessOrder.push(cacheKey);
+
+  console.log(`💾 Cache salvo: ${cacheKey} (${(data.length / 1024).toFixed(2)} KB) - Total: ${memoryCache.size} itens`);
+}
+
+/**
+ * Recupera mídia do cache
+ */
+function getFromCache(cacheKey: string): Uint8Array | null {
+  const cached = memoryCache.get(cacheKey);
+  if (cached) {
+    // Atualiza ordem de acesso (move para o final = mais recente)
+    const index = cacheAccessOrder.indexOf(cacheKey);
+    if (index !== -1) {
+      cacheAccessOrder.splice(index, 1);
+      cacheAccessOrder.push(cacheKey);
+    }
+    return cached;
+  }
+  return null;
+}
+
+/**
+ * Limpa todo o cache
+ */
+export function clearMediaCache(): void {
+  memoryCache.clear();
+  cacheAccessOrder.length = 0;
+  console.log('🗑️ Cache de mídias limpo completamente');
+}
+
+// ============================================================================
+// FIM DO SISTEMA DE CACHE
+// ============================================================================
+
 /**
  * Aceita os diferentes formatos de mediaKey enviados pelo backend/API.
  * Pode ser a string base64 original, Buffer/TypedArray ou o novo payload
@@ -236,14 +313,38 @@ export async function decryptEvoMedia(
   mediaKey: MediaKeyInput,
   mimetype?: string
 ): Promise<Uint8Array> {
+  // 🔍 LOG: Início da descriptografia
+  const timestamp = new Date().toLocaleTimeString();
+
+  // Gera chave de cache baseada na URL
+  const cacheKey = generateCacheKey(url);
+  const mediaId = cacheKey.substring(6).toUpperCase(); // Remove 'media_' para log
+
+  // ===== FASE 1: VERIFICA CACHE =====
+  const cached = getFromCache(cacheKey);
+  if (cached) {
+    console.log(`[${timestamp}] ⚡ ${mediaId} - CACHE HIT! Retornando do cache (${(cached.length / 1024).toFixed(2)} KB)`);
+    return cached;
+  }
+
+  // ===== FASE 2: CACHE MISS - BAIXA E DESCRIPTOGRAFA =====
+  const urlShort = url.substring(url.length - 40);
+  console.log(`[${timestamp}] 🔐 ${mediaId} - CACHE MISS - Processando...`, {
+    urlEnd: '...' + urlShort,
+    mimetype,
+  });
+
   const mediaKeyBytes = normalizeMediaKey(mediaKey);
 
   // 1) Baixa o arquivo .enc
+  console.log(`[${timestamp}] 📥 ${mediaId} - Baixando mídia...`);
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`Falha ao baixar mídia: HTTP ${res.status}`);
   }
   const enc = new Uint8Array(await res.arrayBuffer());
+  console.log(`[${timestamp}] ✅ ${mediaId} - Download completo: ${(enc.length / 1024).toFixed(2)} KB`);
+
   if (enc.length <= 10) {
     throw new Error("Arquivo cifrado inválido (tamanho muito pequeno).");
   }
@@ -272,6 +373,12 @@ export async function decryptEvoMedia(
   }
 
   // 5) Decrypt AES-CBC
+  console.log(`[${timestamp}] 🔓 ${mediaId} - Descriptografando...`);
   const plain = await aesCbcDecrypt(cipherKey, iv, fileCipher);
+  console.log(`[${timestamp}] ✅ ${mediaId} - Descriptografia concluída: ${(plain.length / 1024).toFixed(2)} KB`);
+
+  // ===== FASE 3: SALVA NO CACHE =====
+  saveToCache(cacheKey, plain);
+
   return plain;
 }

@@ -306,7 +306,7 @@ const handleSavePersonality = async () => {
       horarios: 'Horário de Funcionamento',
       modelos: 'Modelo de Agente',
       gatilhos: 'Gatilhos',
-      audio: 'Áudio (TTS/STT)',
+      audio: 'Áudio',
       parametros: 'Parâmetros do Agente',
     };
 
@@ -487,7 +487,7 @@ const handleSavePersonality = async () => {
                 ['horarios', 'Horário de Funcionamento'],
                 ['modelos', 'Modelo de Agente'],
                 ['gatilhos', 'Gatilhos'],
-                ['audio', 'Áudio (TTS/STT)'],
+                ['audio', 'Áudio'],
                 ['parametros', 'Parâmetros do Agente'],
               ].map(([key, label]) => (
                 <button
