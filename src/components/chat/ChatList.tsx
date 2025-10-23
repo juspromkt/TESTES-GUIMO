@@ -53,6 +53,7 @@ interface ChatListProps {
   externalTagFiltroId?: number | null;
   externalUsuarioFiltroIds?: number[];
   externalTagFiltroIds?: number[];
+  externalDepartamentoFiltroIds?: number[];
   externalFunilId?: number | null;
   externalStageFiltroIds?: string[];
   externalStartDate?: Date | null;
@@ -75,6 +76,7 @@ export function ChatList({
   externalTagFiltroId,
   externalUsuarioFiltroIds,
   externalTagFiltroIds,
+  externalDepartamentoFiltroIds,
   externalFunilId,
   externalStageFiltroIds,
   externalStartDate,
@@ -108,6 +110,7 @@ export function ChatList({
   const [internalTagFiltroId, setInternalTagFiltroId] = useState<number | null>(null);
   const [internalUsuarioFiltroIds, setInternalUsuarioFiltroIds] = useState<number[]>([]);
   const [internalTagFiltroIds, setInternalTagFiltroIds] = useState<number[]>([]);
+  const [internalDepartamentoFiltroIds, setInternalDepartamentoFiltroIds] = useState<number[]>([]);
   const [internalStageFiltroIds, setInternalStageFiltroIds] = useState<string[]>([]);
   const [internalStartDate, setInternalStartDate] = useState<Date | null>(null);
   const [internalEndDate, setInternalEndDate] = useState<Date | null>(null);
@@ -127,6 +130,8 @@ export function ChatList({
   const setUsuarioFiltroIds = externalUsuarioFiltroIds !== undefined ? () => {} : setInternalUsuarioFiltroIds;
   const tagFiltroIds = externalTagFiltroIds !== undefined ? externalTagFiltroIds : internalTagFiltroIds;
   const setTagFiltroIds = externalTagFiltroIds !== undefined ? () => {} : setInternalTagFiltroIds;
+  const departamentoFiltroIds = externalDepartamentoFiltroIds !== undefined ? externalDepartamentoFiltroIds : internalDepartamentoFiltroIds;
+  const setDepartamentoFiltroIds = externalDepartamentoFiltroIds !== undefined ? () => {} : setInternalDepartamentoFiltroIds;
   const stageFiltroIds = externalStageFiltroIds !== undefined ? externalStageFiltroIds : internalStageFiltroIds;
   const setStageFiltroIds = externalStageFiltroIds !== undefined ? () => {} : setInternalStageFiltroIds;
   const startDate = externalStartDate !== undefined ? externalStartDate : internalStartDate;
@@ -150,6 +155,7 @@ export function ChatList({
   const [usuariosPorContato, setUsuariosPorContato] = useState<any[]>([]);
   const [tagsMap, setTagsMap] = useState<Record<string, Tag[]>>({});
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [departamentosMap, setDepartamentosMap] = useState<Record<string, any[]>>({});
   const [sessions, setSessions] = useState<any[]>([]);
   const [interventions, setInterventions] = useState<any[]>([]);
   const [permanentExclusions, setPermanentExclusions] = useState<any[]>([]);
@@ -1635,6 +1641,18 @@ const filteredChats = useMemo(() => {
       if (!tags.some(t => tagFiltroIds.includes(t.Id))) return false;
     }
 
+    // Multi-select filter for departamentos
+    if (departamentoFiltroIds.length > 0) {
+      const normalized = normalizeRemoteJid(chat.remoteJid);
+      const digits = jidDigits(chat.remoteJid);
+      const departamentos =
+        departamentosMap[normalized] ||
+        (digits ? departamentosMap[digits] : undefined) ||
+        [];
+      // Check if chat has at least one of the selected departamentos
+      if (!departamentos.some((d: any) => departamentoFiltroIds.includes(d.Id))) return false;
+    }
+
     // Multi-select filter for stages (etapas do funil)
     // 🔹 Filtra pelo chatStageId (id_estagio da negociação vinculada ao chat)
     if (stageFiltroIds.length > 0) {
@@ -1832,7 +1850,7 @@ const chatsToShow = filteredChats;
     });
 
     onCategoryCountsChange({ ia: iaCount, unread: unreadCount, unanswered: unansweredCount, transfers: transfersCount });
-  }, [chats, searchTerm, unreadMessages, transferSet, sessionsSet, interventionsSet, permanentSet, tagsMap, tagFiltroId, tagFiltroIds, usuarioFiltroId, usuarioFiltroIds, stageFiltroIds, startDate, endDate, iaStatusFilter, showOnlyUnread, showUnanswered, onCategoryCountsChange, contactMap, resolveUsuarioDono, sanitizePushName, extractPhoneNumber, removeAccents]);
+  }, [chats, searchTerm, unreadMessages, transferSet, sessionsSet, interventionsSet, permanentSet, tagsMap, departamentosMap, tagFiltroId, tagFiltroIds, departamentoFiltroIds, usuarioFiltroId, usuarioFiltroIds, stageFiltroIds, startDate, endDate, iaStatusFilter, showOnlyUnread, showUnanswered, onCategoryCountsChange, contactMap, resolveUsuarioDono, sanitizePushName, extractPhoneNumber, removeAccents]);
 
   useEffect(() => {
     chatsRef.current = chats;
