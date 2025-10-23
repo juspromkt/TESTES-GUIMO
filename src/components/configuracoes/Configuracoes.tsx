@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { GitBranch, Globe2, ListChecks, Tag, Users2, Link2 } from "lucide-react"; // 👈 substituí o ícone da conexão
+import { GitBranch, Globe2, ListChecks, Tag, Users2, Link2, Building2 } from "lucide-react";
 import ConfigLayout from "./ConfigLayout";
 
 import FontesSection from "./FontesSection";
@@ -7,14 +7,15 @@ import FunisSection from "./FunisSection";
 import CamposSection from "./CamposSection";
 import TagsSection from "./TagsSection";
 import UsersSection from "./UsersSection";
+import DepartamentosSection from "./DepartamentosSection";
 import Conexao from "../../pages/Conexao";
 
 
 import { hasPermission } from "../../utils/permissions";
 import type { UserType } from "../../types/user";
 
-// adiciona "conexao" ao tipo
-type SectionId = "funis" | "fontes" | "campos" | "etiquetas" | "usuarios" | "conexao";
+// adiciona "conexao" e "departamentos" ao tipo
+type SectionId = "funis" | "fontes" | "campos" | "etiquetas" | "departamentos" | "usuarios" | "conexao";
 
 export default function Configuracoes() {
   const [activeSection, setActiveSection] = useState<SectionId>("funis");
@@ -43,13 +44,14 @@ export default function Configuracoes() {
     checkUserType();
   }, [token]);
 
-  // Sidebar com ícones coerentes e a nova aba de Conexão
+  // Sidebar com ícones coerentes
   const sections = [
     { id: "funis", label: "Funis de Vendas", icon: GitBranch, show: true },
     { id: "fontes", label: "Origem do Lead", icon: Globe2, show: true },
     { id: "campos", label: "Campos Personalizados", icon: ListChecks, show: true },
     { id: "etiquetas", label: "Etiquetas", icon: Tag, show: true },
-    { id: "conexao", label: "Conexões", icon: Link2, show: true }, // 👈 ajustado nome e ícone
+    { id: "departamentos", label: "Departamentos", icon: Building2, show: true },
+    { id: "conexao", label: "Conexões", icon: Link2, show: true },
     { id: "usuarios", label: "Gestão de Usuários", icon: Users2, show: showUsers },
   ];
 
@@ -63,8 +65,10 @@ export default function Configuracoes() {
         return <CamposSection isActive={true} canEdit={canEditConfigs} />;
       case "etiquetas":
         return <TagsSection isActive={true} canEdit={canEditConfigs} />;
+      case "departamentos":
+        return <DepartamentosSection isActive={true} canEdit={canEditConfigs} />;
       case "conexao":
-        return <Conexao isActive={true} canEdit={canEditConfigs} />; // 👈 corrigido nome
+        return <Conexao isActive={true} canEdit={canEditConfigs} />;
       case "usuarios":
         return <UsersSection isActive={true} canEdit={canEditConfigs} />;
       default:
