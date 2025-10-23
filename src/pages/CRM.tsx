@@ -48,6 +48,10 @@ export default function CRM() {
   const [selectedAnuncioId, setSelectedAnuncioId] = useState<number | null>(null);
   const [showAnuncioModal, setShowAnuncioModal] = useState(false);
 
+  // Departamentos states
+  const [departamentos, setDepartamentos] = useState<import('../types/departamento').Departamento[]>([]);
+  const [departamentosMap, setDepartamentosMap] = useState<Record<number, import('../types/departamento').Departamento[]>>({});
+
   // Refs para os botões de filtro
   const dateFilterButtonRef = useRef<HTMLButtonElement>(null);
   const tagFilterButtonRef = useRef<HTMLButtonElement>(null);
@@ -126,6 +130,51 @@ useEffect(() => {
   };
   window.addEventListener('storage', handleStorage);
   return () => window.removeEventListener('storage', handleStorage);
+}, []);
+
+  const fetchDepartamentosData = async () => {
+    try {
+      const { isDepartamento } = await import('../types/departamento');
+      const [deptsRes, assocRes] = await Promise.all([
+        fetch('https://n8n.lumendigital.com.br/webhook/produtos/get', {
+          headers: { token }
+        }),
+        fetch('https://n8n.lumendigital.com.br/webhook/produtos/lead/get', {
+          headers: { token }
+        })
+      ]);
+
+      const deptsData = deptsRes.ok ? await deptsRes.json() : [];
+      const assocData = assocRes.ok ? await assocRes.json() : [];
+
+      const deptsList = Array.isArray(deptsData) ? deptsData.filter(isDepartamento) : [];
+      setDepartamentos(deptsList);
+
+      const map: Record<number, import('../types/departamento').Departamento[]> = {};
+      const associations = Array.isArray(assocData) ? assocData : [];
+
+      associations.forEach((rel: { id_negociacao: number; id_produto: number }) => {
+        const negociacaoId = rel.id_negociacao;
+        const produtoId = rel.id_produto;
+
+        const dept = deptsList.find(d => d.Id === produtoId);
+
+        if (dept) {
+          if (!map[negociacaoId]) map[negociacaoId] = [];
+          if (!map[negociacaoId].some(d => d.Id === dept.Id)) {
+            map[negociacaoId].push(dept);
+          }
+        }
+      });
+
+      setDepartamentosMap(map);
+    } catch (err) {
+      console.error('Erro ao carregar departamentos:', err);
+    }
+  };
+
+useEffect(() => {
+  fetchDepartamentosData();
 }, []);
 
   // Filter states
@@ -875,6 +924,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                     onItemsPerPageChange={handleItemsPerPageChange}
                     users={users}
                     tagsMap={tagsMap}
+                    departamentosMap={departamentosMap}
                   />
                 </DragDropContext>
               </div>

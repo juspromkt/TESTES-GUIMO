@@ -23,13 +23,16 @@ import {
   Edit,
   Save,
   Package,
-  Bot
+  Bot,
+  Building2
 } from 'lucide-react';
 import type { Deal } from '../types/deal';
 import type { Funil } from '../types/funil';
 import type { Fonte } from '../types/fonte';
 import type { Anuncio } from '../types/anuncio';
 import type { CampoPersonalizado, CampoPersonalizadoValor } from '../types/campo';
+import type { Departamento } from '../types/departamento';
+import { isDepartamento } from '../types/departamento';
 import AnuncioCard from '../components/crm/AnuncioCard';
 import Modal from '../components/Modal';
 import DealAppointmentsTab from '../components/crm/DealAppointmentsTab';
@@ -147,6 +150,13 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
   const [editingTags, setEditingTags] = useState(false);
   const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
   const [savingTag, setSavingTag] = useState(false);
+
+  // Departamentos states
+  const [availableDepartamentos, setAvailableDepartamentos] = useState<Departamento[]>([]);
+  const [dealDepartamentos, setDealDepartamentos] = useState<Departamento[]>([]);
+  const [editingDepartamentos, setEditingDepartamentos] = useState(false);
+  const [selectedDepartamentoId, setSelectedDepartamentoId] = useState<number | null>(null);
+  const [savingDepartamento, setSavingDepartamento] = useState(false);
 
   // Custom fields states
   const [customFields, setCustomFields] = useState<CampoPersonalizado[]>([]);
@@ -1071,6 +1081,87 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
     }
   };
 
+  // Departamentos functions
+  const fetchAvailableDepartamentos = async () => {
+    try {
+      const response = await fetch('https://n8n.lumendigital.com.br/webhook/produtos/get', { headers: { token } });
+      if (response.ok) {
+        const data = await response.json();
+        const departamentos = Array.isArray(data) ? data.filter(isDepartamento) : [];
+        setAvailableDepartamentos(departamentos);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar departamentos:', err);
+    }
+  };
+
+  const fetchDealDepartamentos = async () => {
+    if (!id) return;
+    try {
+      const response = await fetch(
+        `https://n8n.lumendigital.com.br/webhook/produtos/lead/get?id_negociacao=${id}`,
+        { headers: { token } }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          const departamentoIds = data
+            .filter(item => item.id_produto)
+            .map(item => item.id_produto);
+
+          const departamentos = availableDepartamentos.filter(dept =>
+            departamentoIds.includes(dept.Id)
+          );
+          setDealDepartamentos(departamentos);
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao carregar departamentos do lead:', err);
+    }
+  };
+
+  const handleAddDepartamento = async () => {
+    if (!id || !selectedDepartamentoId) return;
+    setSavingDepartamento(true);
+    try {
+      await fetch('https://n8n.lumendigital.com.br/webhook/produtos/lead/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', token },
+        body: JSON.stringify({
+          id_negociacao: parseInt(id),
+          id_produto: selectedDepartamentoId,
+          quantidade: 1,
+          valor_unitario: 0
+        })
+      });
+      await fetchDealDepartamentos();
+      setSelectedDepartamentoId(null);
+      setEditingDepartamentos(false);
+    } catch (err) {
+      console.error('Erro ao adicionar departamento:', err);
+    } finally {
+      setSavingDepartamento(false);
+    }
+  };
+
+  const handleRemoveDepartamento = async (departamentoId: number) => {
+    if (!id) return;
+    setSavingDepartamento(true);
+    try {
+      await fetch('https://n8n.lumendigital.com.br/webhook/produtos/lead/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', token },
+        body: JSON.stringify({ id_negociacao: parseInt(id), id_produto: departamentoId })
+      });
+      await fetchDealDepartamentos();
+      setEditingDepartamentos(false);
+    } catch (err) {
+      console.error('Erro ao remover departamento:', err);
+    } finally {
+      setSavingDepartamento(false);
+    }
+  };
+
   const handleMediaUpload = async (file: File) => {
     setIsUploading(true);
     try {
@@ -1175,6 +1266,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
 
   useEffect(() => {
     fetchAvailableTags();
+    fetchAvailableDepartamentos();
   }, []);
 
   useEffect(() => {
@@ -1182,6 +1274,12 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
       fetchDealTags();
     }
   }, [id, availableTags]);
+
+  useEffect(() => {
+    if (id && availableDepartamentos.length > 0) {
+      fetchDealDepartamentos();
+    }
+  }, [id, availableDepartamentos]);
 
   useEffect(() => {
     if (!hideConversations && activeTab === 'conversas') {
@@ -1589,6 +1687,57 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                       ))}
                       {canEditCRM && (
                         <button type="button" onClick={() => setEditingTags(true)} className="ml-2 text-blue-600">
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-500 dark:text-neutral-400 mb-1 flex items-center gap-2">
+                    <Building2 className="w-4 h-4" />
+                    Departamentos
+                  </label>
+                  {editingDepartamentos ? (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <select
+                          value={selectedDepartamentoId || ''}
+                          onChange={e => setSelectedDepartamentoId(e.target.value ? parseInt(e.target.value) : null)}
+                          className="px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg transition-theme"
+                        >
+                          <option value="">Selecione</option>
+                          {availableDepartamentos.filter(dept => !dealDepartamentos.find(d => d.Id === dept.Id)).map(dept => (
+                            <option key={dept.Id} value={dept.Id}>{dept.nome}</option>
+                          ))}
+                        </select>
+                        <button onClick={handleAddDepartamento} disabled={savingDepartamento} className="px-3 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 transition-theme">Adicionar</button>
+                        <button type="button" onClick={() => setEditingDepartamentos(false)} className="px-3 py-2 bg-gray-200 dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg hover:bg-gray-300 dark:hover:bg-neutral-600 transition-theme">Concluir</button>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {dealDepartamentos.map(dept => (
+                          <span key={dept.Id} className="px-2 py-0.5 rounded text-xs flex items-center bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                            <Building2 className="w-3 h-3 mr-1" />
+                            {dept.nome}
+                            <button type="button" className="ml-1" onClick={() => handleRemoveDepartamento(dept.Id)}>
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-1 items-center">
+                      {dealDepartamentos.length === 0 && <span className="text-sm text-gray-500 dark:text-neutral-400">Sem departamentos</span>}
+                      {dealDepartamentos.map(dept => (
+                        <span key={dept.Id} className="px-2 py-0.5 rounded text-xs flex items-center bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                          <Building2 className="w-3 h-3 mr-1" />
+                          {dept.nome}
+                        </span>
+                      ))}
+                      {canEditCRM && (
+                        <button type="button" onClick={() => setEditingDepartamentos(true)} className="ml-2 text-indigo-600">
                           <Pencil className="w-4 h-4" />
                         </button>
                       )}

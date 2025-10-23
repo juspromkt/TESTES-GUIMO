@@ -1,8 +1,9 @@
 // src/components/crm/DealCard.tsx
 import React from 'react';
-import { Calendar, ShieldCheck, Phone, UserCircle2 } from 'lucide-react';
+import { Calendar, ShieldCheck, Phone, UserCircle2, Building2 } from 'lucide-react';
 import type { Deal } from '../../types/deal';
 import type { Tag } from '../../types/tag';
+import type { Departamento } from '../../types/departamento';
 
 interface DealCardProps {
   deal: Deal;
@@ -12,6 +13,7 @@ interface DealCardProps {
   // Aceita usuários com 'Id' ou 'id' para evitar inconsistência de tipos
   users: Array<{ Id?: number; id?: number; nome: string }>;
   tags?: Tag[];
+  departamentos?: Departamento[];
 }
 
 export default function DealCard({
@@ -20,7 +22,8 @@ export default function DealCard({
   onClick,
   isDragging,
   users,
-  tags
+  tags,
+  departamentos
 }: DealCardProps) {
   // Responsável (compatível com objetos que tenham Id OU id)
   const responsavel =
@@ -93,21 +96,41 @@ export default function DealCard({
         )}
       </div>
 
-      {/* TAGS */}
-      {tags && tags.length > 0 && (
-        <div className="flex flex-wrap gap-1 pt-2 border-t border-gray-100 dark:border-neutral-700">
-          {tags.map((tag) => (
-            <span
-              key={tag.Id}
-              className="px-1.5 py-0.5 rounded text-[10px] font-medium"
-              style={{
-                backgroundColor: tag.cor,
-                color: tag.cor_texto
-              }}
-            >
-              {tag.nome}
-            </span>
-          ))}
+      {/* TAGS E DEPARTAMENTOS */}
+      {((tags && tags.length > 0) || (departamentos && departamentos.length > 0)) && (
+        <div className="flex flex-col gap-1.5 pt-2 border-t border-gray-100 dark:border-neutral-700">
+          {/* Tags */}
+          {tags && tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {tags.map((tag) => (
+                <span
+                  key={tag.Id}
+                  className="px-1.5 py-0.5 rounded text-[10px] font-medium"
+                  style={{
+                    backgroundColor: tag.cor,
+                    color: tag.cor_texto
+                  }}
+                >
+                  {tag.nome}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Departamentos */}
+          {departamentos && departamentos.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {departamentos.map((dept) => (
+                <span
+                  key={dept.Id}
+                  className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200 flex items-center gap-0.5"
+                >
+                  <Building2 className="w-2.5 h-2.5" />
+                  {dept.nome}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

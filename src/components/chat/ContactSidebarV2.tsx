@@ -21,10 +21,13 @@ import {
   Cloud,
   Info,
   Download,
+  Building2,
 } from "lucide-react";
 import type { Chat } from "./utils/api";
 import { apiClient, clearApiCache, getCacheKey } from "./utils/api";
 import type { Tag } from "../../types/tag";
+import type { Departamento } from "../../types/departamento";
+import { isDepartamento } from "../../types/departamento";
 import DealSummaryWidget from "../crm/DealSummaryWidget";
 import { useChat } from "../../context/ChatContext";
 import { toast } from "sonner";
@@ -284,6 +287,10 @@ export default function ContactSidebarV2({
   const [contactData, setContactData] = useState<ContactData | null>(null);
   const [dealData, setDealData] = useState<DealData | null>(null);
   const [dealTags, setDealTags] = useState<Tag[]>([]);
+
+  // departamentos
+  const [availableDepartamentos, setAvailableDepartamentos] = useState<Departamento[]>([]);
+  const [dealDepartamentos, setDealDepartamentos] = useState<Departamento[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
@@ -712,6 +719,16 @@ export default function ContactSidebarV2({
     }
   }, [dealData?.Id, availableTags]);
 
+  useEffect(() => {
+    loadAvailableDepartamentos();
+  }, [token]);
+
+  useEffect(() => {
+    if (dealData?.Id && availableDepartamentos.length > 0) {
+      loadDealDepartamentos();
+    }
+  }, [dealData?.Id, availableDepartamentos]);
+
   // Controlar visibilidade do modal de criar negociação
   useEffect(() => {
     // Fecha o modal se a sidebar for fechada e reseta o controle
@@ -1128,6 +1145,83 @@ export default function ContactSidebarV2({
     } catch (error) {
       console.error("Erro ao remover etiqueta:", error);
       toast.error('Erro ao remover etiqueta');
+    }
+  };
+
+  // Departamentos functions
+  const loadAvailableDepartamentos = async () => {
+    if (!token) return;
+    try {
+      const response = await fetch(`https://n8n.lumendigital.com.br/webhook/produtos/get`, {
+        headers: { token },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const depts = Array.isArray(data) ? data.filter(isDepartamento) : [];
+        setAvailableDepartamentos(depts);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar departamentos disponíveis:", error);
+    }
+  };
+
+  const loadDealDepartamentos = async () => {
+    if (!dealData || !token) return;
+    try {
+      const response = await fetch(
+        `https://n8n.lumendigital.com.br/webhook/produtos/lead/get?id_negociacao=${dealData.Id}`,
+        { headers: { token } }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          const deptIds = data.filter(item => item.id_produto).map(item => item.id_produto);
+          setDealDepartamentos(availableDepartamentos.filter(dept => deptIds.includes(dept.Id)));
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao carregar departamentos da negociação:", error);
+    }
+  };
+
+  const handleAddDepartamento = async (departamentoId: number) => {
+    if (!dealData || !token) return;
+
+    try {
+      await fetch(`https://n8n.lumendigital.com.br/webhook/produtos/lead/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", token },
+        body: JSON.stringify({
+          id_negociacao: dealData.Id,
+          id_produto: departamentoId,
+          quantidade: 1,
+          valor_unitario: 0
+        }),
+      });
+
+      await loadDealDepartamentos();
+      toast.success('Departamento adicionado');
+    } catch (error) {
+      console.error("Erro ao adicionar departamento:", error);
+      toast.error('Erro ao adicionar departamento');
+    }
+  };
+
+  const handleRemoveDepartamento = async (departamentoId: number) => {
+    if (!dealData || !token) return;
+
+    try {
+      await fetch(`https://n8n.lumendigital.com.br/webhook/produtos/lead/delete`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", token },
+        body: JSON.stringify({ id_negociacao: dealData.Id, id_produto: departamentoId }),
+      });
+
+      await loadDealDepartamentos();
+      toast.success('Departamento removido');
+    } catch (error) {
+      console.error("Erro ao remover departamento:", error);
+      toast.error('Erro ao remover departamento');
     }
   };
 
@@ -1549,6 +1643,60 @@ export default function ContactSidebarV2({
                     .map((tag) => (
                       <option key={tag.Id} value={tag.Id}>
                         {tag.nome}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
+
+            {/* Departamentos */}
+            {dealData && (
+              <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-800 space-y-2">
+                <div className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>Departamentos</span>
+                </div>
+
+                {/* Departamentos atuais */}
+                <div className="flex flex-wrap gap-1.5">
+                  {dealDepartamentos.length > 0 ? (
+                    dealDepartamentos.map((dept) => (
+                      <div
+                        key={dept.Id}
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200"
+                      >
+                        <Building2 className="w-2.5 h-2.5 mr-1" />
+                        {dept.nome}
+                        <button
+                          onClick={() => handleRemoveDepartamento(dept.Id)}
+                          className="ml-1 hover:opacity-80"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400">Nenhum departamento adicionado</p>
+                  )}
+                </div>
+
+                {/* Adicionar novo departamento */}
+                <select
+                  onChange={(e) => {
+                    const deptId = Number(e.target.value);
+                    if (deptId) {
+                      handleAddDepartamento(deptId);
+                      e.target.value = "";
+                    }
+                  }}
+                  className="w-full border border-gray-200 dark:border-gray-700 rounded-md p-2 text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                >
+                  <option value="">+ Adicionar departamento</option>
+                  {availableDepartamentos
+                    .filter((dept) => !dealDepartamentos.find((dd) => dd.Id === dept.Id))
+                    .map((dept) => (
+                      <option key={dept.Id} value={dept.Id}>
+                        {dept.nome}
                       </option>
                     ))}
                 </select>

@@ -16,6 +16,7 @@ interface StageColumnProps {
   canEdit: boolean;
   users: { id: number; nome: string }[];
   tagsMap: Record<number, import('../../types/tag').Tag[]>;
+  departamentosMap: Record<number, import('../../types/departamento').Departamento[]>;
 }
 
 export default function StageColumn({
@@ -28,6 +29,7 @@ export default function StageColumn({
   canEdit,
   users,
   tagsMap,
+  departamentosMap,
 }: StageColumnProps) {
   // Estado para detectar modo dark
   const [isDark, setIsDark] = useState(false);
@@ -155,6 +157,7 @@ export default function StageColumn({
                                 isDragging={snapshot.isDragging}
                                 users={users}
                                 tags={tagsMap[deal.Id] || []}
+                                departamentos={departamentosMap[deal.Id] || []}
                               />
                             </div>
                           )}
@@ -168,6 +171,7 @@ export default function StageColumn({
                             isDragging={false}
                             users={users}
                             tags={tagsMap[deal.Id] || []}
+                            departamentos={departamentosMap[deal.Id] || []}
                           />
                         </div>
                       )

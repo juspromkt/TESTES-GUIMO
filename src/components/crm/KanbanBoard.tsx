@@ -16,6 +16,7 @@ interface KanbanBoardProps {
   canEdit: boolean;
   users: { id: number; nome: string }[];
   tagsMap: Record<number, import('../../types/tag').Tag[]>;
+  departamentosMap: Record<number, import('../../types/departamento').Departamento[]>;
 }
 
 export default function KanbanBoard({
@@ -27,7 +28,8 @@ export default function KanbanBoard({
   onItemsPerPageChange,
   canEdit,
   users,
-  tagsMap
+  tagsMap,
+  departamentosMap
 }: KanbanBoardProps) {
   const [showItemsDropdown, setShowItemsDropdown] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
@@ -229,6 +231,7 @@ export default function KanbanBoard({
                 canEdit={canEdit}
                 users={users}
                 tagsMap={tagsMap}
+                departamentosMap={departamentosMap}
               />
             );
           })}
