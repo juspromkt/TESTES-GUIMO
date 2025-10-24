@@ -4,7 +4,8 @@ import { createPortal } from 'react-dom';
 import type { Deal } from '../../types/deal';
 import type { Funil } from '../../types/funil';
 import StageColumn from './StageColumn';
-import { Layers, Settings2, ChevronDown, Check } from 'lucide-react';
+import { Layers, Settings2, ChevronDown, Check, Download, X } from 'lucide-react';
+import Papa from 'papaparse';
 
 interface KanbanBoardProps {
   funil: Funil;
@@ -34,6 +35,10 @@ export default function KanbanBoard({
   const [showItemsDropdown, setShowItemsDropdown] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const itemsButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Export modal
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [selectedStages, setSelectedStages] = useState<string[]>([]);
 
   const itemOptions = [
     { value: 10, label: '10 itens' },
@@ -66,6 +71,62 @@ export default function KanbanBoard({
     if (mainScroll) mainScroll.scrollLeft = (e.target as HTMLElement).scrollLeft;
   };
 
+  const handleExport = () => {
+    const stagesToExport = selectedStages.length > 0 ? selectedStages : funil.estagios?.map(e => e.Id) || [];
+
+    const dealsToExport = deals.filter(deal =>
+      stagesToExport.includes(String(deal.id_estagio))
+    );
+
+    const exportData = dealsToExport.map(deal => {
+      const stage = funil.estagios?.find(s => parseInt(s.Id) === deal.id_estagio);
+      return {
+        id: deal.Id,
+        data: formatDate(deal.UpdatedAt ?? deal.CreatedAt),
+        funil: funil.nome,
+        estagio: stage?.nome || 'N/A',
+        titulo: deal.titulo,
+        contato_nome: deal.contato?.nome || 'N/A',
+        contato_telefone: deal.contato?.telefone || 'N/A',
+        contato_email: deal.contato?.Email || 'N/A'
+      };
+    });
+
+    const csv = Papa.unparse(exportData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('pt-BR').replace(/\//g, '-');
+    const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Guimoo Leads ${dateStr} ${timeStr}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setShowExportModal(false);
+    setSelectedStages([]);
+  };
+
+  const toggleStage = (stageId: string) => {
+    setSelectedStages(prev =>
+      prev.includes(stageId)
+        ? prev.filter(id => id !== stageId)
+        : [...prev, stageId]
+    );
+  };
+
+  const selectAllStages = () => {
+    setSelectedStages(funil.estagios?.map(e => e.Id) || []);
+  };
+
+  const deselectAllStages = () => {
+    setSelectedStages([]);
+  };
+
   return (
     <div className="flex-1 overflow-hidden flex flex-col min-w-0 relative bg-gray-50 dark:bg-neutral-900 transition-theme">
       {/* Header Minimalista */}
@@ -90,6 +151,13 @@ export default function KanbanBoard({
 
             {/* Controles */}
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowExportModal(true)}
+                className="flex items-center gap-2 bg-white dark:bg-neutral-800 px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+              >
+                <Download className="w-4 h-4 text-gray-500 dark:text-neutral-400" />
+                <span className="text-sm text-gray-700 dark:text-neutral-300">Exportar</span>
+              </button>
               <button
                 ref={itemsButtonRef}
                 onClick={() => setShowItemsDropdown(!showItemsDropdown)}
@@ -237,6 +305,97 @@ export default function KanbanBoard({
           })}
         </div>
       </div>
+
+      {/* Modal de Exportação */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg w-full max-w-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Exportar Leads</h3>
+              <button
+                onClick={() => {
+                  setShowExportModal(false);
+                  setSelectedStages([]);
+                }}
+                className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 dark:text-neutral-400 mb-3">
+                Selecione as etapas que deseja exportar:
+              </p>
+
+              <div className="flex gap-2 mb-3">
+                <button
+                  onClick={selectAllStages}
+                  className="flex-1 px-3 py-1.5 text-sm text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-600"
+                >
+                  Selecionar Todas
+                </button>
+                <button
+                  onClick={deselectAllStages}
+                  className="flex-1 px-3 py-1.5 text-sm text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-600"
+                >
+                  Desmarcar Todas
+                </button>
+              </div>
+
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {funil.estagios?.map((stage) => {
+                  const stageDeals = deals.filter(d => d.id_estagio === parseInt(stage.Id));
+                  const isSelected = selectedStages.includes(stage.Id);
+
+                  return (
+                    <label
+                      key={stage.Id}
+                      className="flex items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-neutral-700/50 rounded cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleStage(stage.Id)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-neutral-600 rounded"
+                      />
+                      <span className="flex-1 text-sm text-gray-700 dark:text-neutral-300">
+                        {stage.nome}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-neutral-400">
+                        ({stageDeals.length})
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowExportModal(false);
+                  setSelectedStages([]);
+                }}
+                className="px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-600"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleExport}
+                className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                <div className="flex items-center gap-2">
+                  <Download className="w-4 h-4" />
+                  Exportar
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

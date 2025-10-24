@@ -48,8 +48,7 @@ export default function CRM() {
   const [selectedAnuncioId, setSelectedAnuncioId] = useState<number | null>(null);
   const [showAnuncioModal, setShowAnuncioModal] = useState(false);
 
-  // Departamentos states
-  const [departamentos, setDepartamentos] = useState<import('../types/departamento').Departamento[]>([]);
+  // Departamentos (apenas para exibição, sem filtro)
   const [departamentosMap, setDepartamentosMap] = useState<Record<number, import('../types/departamento').Departamento[]>>({});
 
   // Refs para os botões de filtro
@@ -132,6 +131,7 @@ useEffect(() => {
   return () => window.removeEventListener('storage', handleStorage);
 }, []);
 
+  // Carrega departamentos apenas para exibição (sem filtro)
   const fetchDepartamentosData = async () => {
     try {
       const { isDepartamento } = await import('../types/departamento');
@@ -148,15 +148,12 @@ useEffect(() => {
       const assocData = assocRes.ok ? await assocRes.json() : [];
 
       const deptsList = Array.isArray(deptsData) ? deptsData.filter(isDepartamento) : [];
-      setDepartamentos(deptsList);
-
       const map: Record<number, import('../types/departamento').Departamento[]> = {};
       const associations = Array.isArray(assocData) ? assocData : [];
 
       associations.forEach((rel: { id_negociacao: number; id_produto: number }) => {
         const negociacaoId = rel.id_negociacao;
         const produtoId = rel.id_produto;
-
         const dept = deptsList.find(d => d.Id === produtoId);
 
         if (dept) {
@@ -173,9 +170,9 @@ useEffect(() => {
     }
   };
 
-useEffect(() => {
-  fetchDepartamentosData();
-}, []);
+  useEffect(() => {
+    fetchDepartamentosData();
+  }, []);
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');

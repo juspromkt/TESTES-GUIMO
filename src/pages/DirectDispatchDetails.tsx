@@ -14,7 +14,8 @@ import {
   Download,
   Search,
   ChevronDown,
-  ArrowLeft
+  ArrowLeft,
+  GitBranch
 } from 'lucide-react';
 import Papa from 'papaparse';
 import Modal from '../components/Modal';
@@ -85,6 +86,16 @@ export default function DirectDispatchDetails() {
   const [manualLeads, setManualLeads] = useState("");
   const [manualError, setManualError] = useState("");
   const [importingManual, setImportingManual] = useState(false);
+
+  // CRM Import modal
+  const [isCRMModalOpen, setIsCRMModalOpen] = useState(false);
+  const [funis, setFunis] = useState<any[]>([]);
+  const [selectedFunilId, setSelectedFunilId] = useState<number | null>(null);
+  const [selectedStageIds, setSelectedStageIds] = useState<string[]>([]);
+  const [crmDeals, setCrmDeals] = useState<any[]>([]);
+  const [importingCRM, setImportingCRM] = useState(false);
+  const [crmError, setCrmError] = useState("");
+
 const canEditProspect = hasPermission('can_edit_prospect');
 
 const handleManualImport = async () => {
@@ -146,7 +157,158 @@ const handleManualImport = async () => {
   }
 };
 
+// CRM Import functions
+const fetchFunis = async () => {
+  try {
+    const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/funil/get', {
+      headers: { token }
+    });
+    const data = await response.json();
+    setFunis(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error('Erro ao carregar funis:', err);
+  }
+};
 
+const fetchDealsFromFunil = async (funilId: number) => {
+  try {
+    console.log('🔄 Carregando todas as negociações...');
+
+    // Buscar todas as negociações (usando offset alto como no CRM)
+    const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/get', {
+      method: 'POST',
+      headers: {
+        token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        page: 1,
+        offset: 999,
+        id_funil: funilId
+      })
+    });
+
+    const data = await response.json();
+    const deals = Array.isArray(data) ? data : [];
+
+    console.log('📊 Deals retornados pela API:', deals.length);
+
+    // Buscar contatos para associar
+    const contatosResponse = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/contato/get', {
+      headers: { token }
+    });
+    const contatosData = await contatosResponse.json();
+    const contatos = Array.isArray(contatosData) ? contatosData : [];
+
+    // Mapear contatos aos deals
+    const dealsWithContacts = deals.map(deal => {
+      const contato = contatos.find(c => c.Id === deal.id_contato);
+      return {
+        ...deal,
+        contato: contato || null
+      };
+    });
+
+    console.log('📊 Deals carregados:', dealsWithContacts.length);
+    console.log('📱 Deals com telefone:', dealsWithContacts.filter(d => d.contato?.telefone).length);
+
+    setCrmDeals(dealsWithContacts);
+  } catch (err) {
+    console.error('Erro ao carregar negociações:', err);
+    setCrmDeals([]);
+  }
+};
+
+const handleCRMImport = async () => {
+  try {
+    setCrmError("");
+    setImportingCRM(true);
+
+    if (!selectedFunilId) {
+      setCrmError("Selecione um funil");
+      setImportingCRM(false);
+      return;
+    }
+
+    const stagesToImport = selectedStageIds.length > 0
+      ? selectedStageIds
+      : funis.find(f => f.id === selectedFunilId)?.estagios?.map((e: any) => e.Id) || [];
+
+    console.log('🎯 Etapas para importar:', stagesToImport);
+
+    const dealsToImport = crmDeals.filter(deal =>
+      stagesToImport.includes(String(deal.id_estagio)) && deal.contato?.telefone
+    );
+
+    console.log('📦 Deals filtrados:', dealsToImport.length);
+
+    if (dealsToImport.length === 0) {
+      setCrmError("Nenhum lead encontrado com telefone nas etapas selecionadas");
+      setImportingCRM(false);
+      return;
+    }
+
+    const contatos = dealsToImport.map(deal => ({
+      nome: deal.contato?.nome || deal.titulo || 'Sem nome',
+      telefone: deal.contato?.telefone
+    }));
+
+    console.log('👥 Contatos a importar:', contatos.length);
+    console.log('📝 Exemplo de contato:', contatos[0]);
+
+    const response = await fetch(
+      "https://n8n.lumendigital.com.br/webhook/prospecta/dd/lead/create",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          token,
+        },
+        body: JSON.stringify({
+          id_disparo: parseInt(id!),
+          contatos,
+        }),
+      }
+    );
+
+    console.log('📡 Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Response error:', errorText);
+      throw new Error(`Erro ao importar leads: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log('✅ Import result:', result);
+
+    await fetchData();
+    setIsCRMModalOpen(false);
+    setSelectedFunilId(null);
+    setSelectedStageIds([]);
+    setCrmDeals([]);
+    setSuccess(`${contatos.length} leads importados com sucesso!`);
+    setTimeout(() => setSuccess(""), 3000);
+  } catch (err: any) {
+    console.error("❌ Erro ao importar do CRM:", err);
+    setCrmError(err.message || "Erro ao importar leads do CRM. Tente novamente.");
+  } finally {
+    setImportingCRM(false);
+  }
+};
+
+useEffect(() => {
+  if (isCRMModalOpen) {
+    fetchFunis();
+  }
+}, [isCRMModalOpen]);
+
+useEffect(() => {
+  if (selectedFunilId) {
+    fetchDealsFromFunil(selectedFunilId);
+    setSelectedStageIds([]);
+  }
+}, [selectedFunilId]);
 
   // Pagination and sorting state
   const [currentPage, setCurrentPage] = useState(1);
@@ -641,6 +803,14 @@ const filteredAndSortedLeads = [...leads]
                       <Send className="w-5 h-5" />
                       Importar Manualmente
                     </button>
+
+                    <button
+                      onClick={() => setIsCRMModalOpen(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 dark:bg-indigo-700 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
+                    >
+                      <GitBranch className="w-5 h-5" />
+                      Importar do CRM
+                    </button>
                   </div>
                 </div>
 
@@ -926,6 +1096,162 @@ const filteredAndSortedLeads = [...leads]
           </div>
         </form>
       </Modal>
+
+      {/* Modal Importar do CRM */}
+      {isCRMModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-neutral-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Importar Leads do CRM</h3>
+              <button
+                onClick={() => {
+                  setIsCRMModalOpen(false);
+                  setSelectedFunilId(null);
+                  setSelectedStageIds([]);
+                  setCrmDeals([]);
+                  setCrmError("");
+                }}
+                className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(80vh-140px)]">
+              {/* Seleção de Funil */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                  Selecione o Funil
+                </label>
+                <select
+                  value={selectedFunilId || ''}
+                  onChange={(e) => setSelectedFunilId(Number(e.target.value) || null)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Selecione um funil...</option>
+                  {funis.map((funil) => (
+                    <option key={funil.id} value={funil.id}>
+                      {funil.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Seleção de Etapas */}
+              {selectedFunilId && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                    Selecione as Etapas {selectedStageIds.length > 0 && `(${selectedStageIds.length})`}
+                  </label>
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={() => {
+                        const funil = funis.find(f => f.id === selectedFunilId);
+                        setSelectedStageIds(funil?.estagios?.map((e: any) => e.Id) || []);
+                      }}
+                      className="flex-1 px-3 py-1.5 text-sm text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-600"
+                    >
+                      Selecionar Todas
+                    </button>
+                    <button
+                      onClick={() => setSelectedStageIds([])}
+                      className="flex-1 px-3 py-1.5 text-sm text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-600"
+                    >
+                      Desmarcar Todas
+                    </button>
+                  </div>
+
+                  <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 dark:border-neutral-700 rounded-md p-3">
+                    {funis.find(f => f.id === selectedFunilId)?.estagios?.map((stage: any) => {
+                      const stageDeals = crmDeals.filter(d => d.id_estagio === parseInt(stage.Id) && d.contato?.telefone);
+                      const isSelected = selectedStageIds.includes(stage.Id);
+
+                      return (
+                        <label
+                          key={stage.Id}
+                          className="flex items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-neutral-700/50 rounded cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedStageIds([...selectedStageIds, stage.Id]);
+                              } else {
+                                setSelectedStageIds(selectedStageIds.filter(id => id !== stage.Id));
+                              }
+                            }}
+                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-neutral-600 rounded"
+                          />
+                          <span className="flex-1 text-sm text-gray-700 dark:text-neutral-300">
+                            {stage.nome}
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-neutral-400">
+                            ({stageDeals.length} com telefone)
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {crmError && (
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                  <p className="text-sm text-red-600 dark:text-red-400">{crmError}</p>
+                </div>
+              )}
+
+              {selectedFunilId && (
+                <div className="text-sm text-gray-600 dark:text-neutral-400">
+                  <p>
+                    Total de leads com telefone:{' '}
+                    <span className="font-medium text-gray-900 dark:text-neutral-100">
+                      {selectedStageIds.length > 0
+                        ? crmDeals.filter(d =>
+                            selectedStageIds.includes(String(d.id_estagio)) && d.contato?.telefone
+                          ).length
+                        : crmDeals.filter(d => d.contato?.telefone).length}
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 p-6 border-t border-gray-200 dark:border-neutral-700">
+              <button
+                onClick={() => {
+                  setIsCRMModalOpen(false);
+                  setSelectedFunilId(null);
+                  setSelectedStageIds([]);
+                  setCrmDeals([]);
+                  setCrmError("");
+                }}
+                className="px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-600"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCRMImport}
+                disabled={!selectedFunilId || importingCRM}
+                className="px-4 py-2 text-sm text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {importingCRM ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Importando...
+                  </>
+                ) : (
+                  <>
+                    <GitBranch className="w-4 h-4" />
+                    Importar Leads
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

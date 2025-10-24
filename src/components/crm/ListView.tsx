@@ -314,30 +314,32 @@ export default function ListView({
       `}</style>
 
       <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden w-full transition-theme">
-      {selectedDeals.length > 0 && canEdit && (
+      {canEdit && (
         <div className="px-4 py-3 bg-gray-50 dark:bg-neutral-700/50 border-b border-gray-200 dark:border-neutral-700 flex items-center justify-between transition-theme">
           <div className="text-sm text-gray-700 dark:text-neutral-300">
-            {selectedDeals.length} negociação(ões) selecionada(s)
+            {selectedDeals.length > 0 ? `${selectedDeals.length} negociação(ões) selecionada(s)` : 'Nenhuma negociação selecionada'}
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-700 dark:text-neutral-200 bg-white dark:bg-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-500 border border-gray-300 dark:border-neutral-500 rounded-lg transition-colors"
+              disabled={selectedDeals.length === 0}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-700 dark:text-neutral-200 bg-white dark:bg-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-500 border border-gray-300 dark:border-neutral-500 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="w-4 h-4" />
               Exportar Selecionados
             </button>
             <button
               onClick={() => setIsBulkMoveModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+              disabled={selectedDeals.length === 0}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <GitBranch className="w-4 h-4" />
               Mover Selecionados
             </button>
             <button
               onClick={handleBulkDelete}
-              disabled={bulkDeleting}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-50 transition-colors"
+              disabled={bulkDeleting || selectedDeals.length === 0}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {bulkDeleting ? (
                 <>

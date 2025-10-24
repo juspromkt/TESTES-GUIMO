@@ -634,6 +634,86 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
     }
   }, [token]);
 
+  const loadDepartamentos = useCallback(async () => {
+    if (!token) return;
+    try {
+      const { isDepartamento } = await import('../../types/departamento');
+
+      // Buscar departamentos disponíveis
+      const produtosRes = await fetch('https://n8n.lumendigital.com.br/webhook/produtos/get', {
+        headers: { token }
+      });
+      const produtosData = produtosRes.ok ? await produtosRes.json() : [];
+      const departamentos = Array.isArray(produtosData) ? produtosData.filter(isDepartamento) : [];
+
+      console.log('🏢 [loadDepartamentos] Departamentos disponíveis:', departamentos.length);
+
+      // Buscar negociações usando apiClient
+      const negociacoesData = await apiClient.findDeals(token, 1, 1000);
+      const negociacoes = Array.isArray(negociacoesData) ? negociacoesData : [];
+
+      console.log('📋 [loadDepartamentos] Negociações carregadas:', negociacoes.length);
+
+      const map: Record<string, any[]> = {};
+      let processadas = 0;
+
+      // Para cada negociação, buscar seus departamentos
+      for (const negociacao of negociacoes) {
+        try {
+          const telefone = String(negociacao.telefone_lead || '').replace(/\D/g, '');
+          if (!telefone) continue;
+
+          // Buscar departamentos desta negociação
+          const response = await fetch(
+            `https://n8n.lumendigital.com.br/webhook/produtos/lead/get?id_negociacao=${negociacao.Id}`,
+            { headers: { token } }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data) && data.length > 0) {
+              const deptIds = data.filter(item => item.id_produto).map(item => item.id_produto);
+              const depts = departamentos.filter(dept => deptIds.includes(dept.Id));
+
+              if (depts.length > 0) {
+                // Criar variações de chaves
+                const baseJid = `${telefone}@s.whatsapp.net`;
+                const normalized = normalizeRemoteJid(baseJid);
+                const digits = jidDigits(baseJid);
+
+                const keys = [baseJid];
+                if (normalized && normalized !== baseJid) keys.push(normalized);
+                if (digits) keys.push(digits);
+
+                // Adicionar departamentos para todas as chaves
+                keys.forEach(key => {
+                  if (!map[key]) map[key] = [];
+                  depts.forEach(dept => {
+                    if (!map[key].some(d => d.Id === dept.Id)) {
+                      map[key].push(dept);
+                    }
+                  });
+                });
+
+                processadas++;
+              }
+            }
+          }
+        } catch (err) {
+          // Ignora erros individuais
+          continue;
+        }
+      }
+
+      console.log('✅ [loadDepartamentos] Processadas:', processadas, 'negociações com departamentos');
+      console.log('📦 [loadDepartamentos] Total de chaves mapeadas:', Object.keys(map).length);
+
+      setDepartamentosMap(map);
+    } catch (err) {
+      console.error('❌ Erro ao carregar departamentos:', err);
+    }
+  }, [token]);
+
   const loadInternalContacts = useCallback(async () => {
     if (!token) return;
     try {
@@ -677,7 +757,7 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
   return () => window.removeEventListener('messages_marked_as_read', handler as EventListener);
 }, []);
 
-  
+
   useEffect(() => {
     const timer = setTimeout(loadTags, 0);
     const handler = (e: StorageEvent) => {
@@ -691,6 +771,20 @@ function mergeChats(existing: Chat[], incoming: Chat[]): Chat[] {
       window.removeEventListener('storage', handler);
     };
   }, [loadTags]);
+
+  useEffect(() => {
+    const timer = setTimeout(loadDepartamentos, 0);
+    const handler = (e: StorageEvent) => {
+      if (e.key === 'departamentos_updated') {
+        loadDepartamentos();
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('storage', handler);
+    };
+  }, [loadDepartamentos]);
 
   const loadContactMap = useCallback(async () => {
     if (!token || whatsappType === 'WHATSAPP-BUSINESS') return;
@@ -1645,10 +1739,19 @@ const filteredChats = useMemo(() => {
     if (departamentoFiltroIds.length > 0) {
       const normalized = normalizeRemoteJid(chat.remoteJid);
       const digits = jidDigits(chat.remoteJid);
+
+      // Tentar encontrar departamentos usando múltiplas chaves possíveis
       const departamentos =
-        departamentosMap[normalized] ||
-        (digits ? departamentosMap[digits] : undefined) ||
+        departamentosMap[chat.remoteJid] || // Formato original
+        departamentosMap[normalized] || // Normalizado
+        (digits ? departamentosMap[digits] : undefined) || // Apenas dígitos
         [];
+
+      // Debug: log quando filtrar
+      if (departamentos.length > 0) {
+        console.log('🔍 [Filtro Departamentos] Chat:', chat.pushName, 'remoteJid:', chat.remoteJid, 'departamentos:', departamentos.map((d: any) => d.nome));
+      }
+
       // Check if chat has at least one of the selected departamentos
       if (!departamentos.some((d: any) => departamentoFiltroIds.includes(d.Id))) return false;
     }
@@ -2627,29 +2730,8 @@ const getLastMessageText = (chat) => {
                       </div>
                     </div>
 
-                    {/* Linha 3: Estágio do funil + Responsável */}
+                    {/* Linha 3: Responsável */}
                     <div className="flex items-center gap-2 mt-0.5">
-                      {/* Estágio do funil */}
-                      {(() => {
-                        const chatStageId = (chat as any).chatStageId;
-                        if (!chatStageId) return null;
-
-                        const stage = availableStages.find(s => String(s.id) === String(chatStageId));
-                        if (!stage) return null;
-
-                        return (
-                          <span
-                            className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium"
-                            style={{
-                              backgroundColor: stage.cor || '#e5e7eb',
-                              color: '#374151'
-                            }}
-                          >
-                            {stage.nome}
-                          </span>
-                        );
-                      })()}
-
                       {/* Responsável */}
                       {dono && (
                         <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400 transition-colors duration-200">
