@@ -12,7 +12,6 @@ import {
   Activity,
   AlertTriangle,
   GripVertical,
-  Building2,
 } from "lucide-react";
 import {
   DndContext,
@@ -163,12 +162,6 @@ interface TagCount {
   quantidade: number;
 }
 
-interface DepartamentoCount {
-  id_departamento: number;
-  nome: string;
-  quantidade: number;
-}
-
 // ==================== Utils ====================
 const buildDateRange = (start: string, end: string) => {
   const out: string[] = [];
@@ -249,7 +242,6 @@ export default function Dashboard() {
   const [stageDeals, setStageDeals] = useState<StageDeals[]>([]);
   const [orderedFunnelStages, setOrderedFunnelStages] = useState<StageDeals[]>([]);
   const [tagCounts, setTagCounts] = useState<TagCount[]>([]);
-  const [departamentoCounts, setDepartamentoCounts] = useState<DepartamentoCount[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
 
@@ -266,7 +258,6 @@ export default function Dashboard() {
     fetchData();
     fetchPreviousPeriodData();
     fetchTagCounts();
-    fetchDepartamentoCounts();
   }, [startDate, endDate]);
 
   // Buscar funis e etapas para obter a ordem correta
@@ -411,38 +402,6 @@ export default function Dashboard() {
     } catch (err) {
       console.error("Erro ao buscar etiquetas:", err);
       setTagCounts([]);
-    }
-  };
-
-  const fetchDepartamentoCounts = async () => {
-    try {
-      const { isDepartamento } = await import('../types/departamento');
-      const [deptsRes, assocRes] = await Promise.all([
-        fetch("https://n8n.lumendigital.com.br/webhook/produtos/get", { headers: { token } }),
-        fetch("https://n8n.lumendigital.com.br/webhook/produtos/lead/get", { headers: { token } }),
-      ]);
-
-      const deptsData = deptsRes.ok ? await deptsRes.json() : [];
-      const assocData = assocRes.ok ? await assocRes.json() : [];
-
-      const departamentos = Array.isArray(deptsData) ? deptsData.filter(isDepartamento) : [];
-      const counts: Record<number, number> = {};
-
-      assocData.forEach((rel: { id_negociacao: number; id_produto: number }) => {
-        counts[rel.id_produto] = (counts[rel.id_produto] || 0) + 1;
-      });
-
-      const deptsList: DepartamentoCount[] = departamentos.map((d: any) => ({
-        id_departamento: d.Id,
-        nome: d.nome,
-        quantidade: counts[d.Id] || 0,
-      }));
-
-      const topDepts = deptsList.sort((a, b) => b.quantidade - a.quantidade).slice(0, 8);
-      setDepartamentoCounts(topDepts);
-    } catch (err) {
-      console.error("Erro ao buscar departamentos:", err);
-      setDepartamentoCounts([]);
     }
   };
 
@@ -834,62 +793,6 @@ export default function Dashboard() {
               </div>
             ) : (
               <p className="text-sm text-gray-500 dark:text-neutral-400 text-center py-6">Nenhuma etiqueta disponível.</p>
-            )}
-          </div>
-        </div>
-
-        {/* Departamentos Card */}
-        <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden">
-          <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
-            <div className="w-7 h-7 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Building2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <h3 className="text-base font-bold text-gray-900 dark:text-neutral-100">Departamentos</h3>
-          </div>
-
-          <div className="p-3 sm:p-4">
-            {departamentoCounts.length > 0 ? (
-              <div className="space-y-2">
-                {departamentoCounts.map((dept) => {
-                  const totalDepts = departamentoCounts.reduce((sum, d) => sum + d.quantidade, 0);
-                  const percent = totalDepts > 0 ? ((dept.quantidade / totalDepts) * 100).toFixed(1) : 0;
-                  const maxQtd = Math.max(...departamentoCounts.map(d => d.quantidade));
-                  const widthPercent = maxQtd > 0 ? (dept.quantidade / maxQtd) * 100 : 0;
-
-                  return (
-                    <div
-                      key={dept.id_departamento}
-                      className="relative bg-gray-50 dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 rounded px-3 py-2 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-theme"
-                    >
-                      {/* Barra de progresso */}
-                      <div
-                        className="absolute inset-0 bg-gradient-to-r from-indigo-100/50 to-purple-100/50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded"
-                        style={{ width: `${widthPercent}%` }}
-                      />
-
-                      {/* Conteúdo */}
-                      <div className="relative flex items-center justify-between">
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <Building2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
-                          <span className="text-gray-800 dark:text-neutral-200 text-sm font-medium truncate">
-                            {dept.nome}
-                          </span>
-                        </div>
-                        <div className="text-gray-700 dark:text-neutral-300 text-sm font-bold whitespace-nowrap ml-2">
-                          {dept.quantidade}{" "}
-                          <span className="text-gray-400 dark:text-neutral-500 text-xs">
-                            ({percent}%)
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500 dark:text-neutral-400 text-center py-6">
-                Nenhum departamento disponível.
-              </p>
             )}
           </div>
         </div>

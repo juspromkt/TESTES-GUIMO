@@ -53,8 +53,12 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
 
       setFunis(funisValidos);
 
-      // Recolhe todos os funis por padrão
-      setCollapsedFunis(new Set(funisValidos.map(f => f.id)));
+      // Recolhe todos os funis, EXCETO o padrão
+      const funilPadrao = funisValidos.find(f => f.isFunilPadrao);
+      const collapsedIds = funilPadrao
+        ? funisValidos.filter(f => f.id !== funilPadrao.id).map(f => f.id)
+        : funisValidos.map(f => f.id);
+      setCollapsedFunis(new Set(collapsedIds));
     } catch (err) {
       console.error('Erro ao carregar funis:', err);
       setError('Erro ao carregar funis');
@@ -512,6 +516,7 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
             onDeleteFunil={handleDeleteFunil}
             token={token}
             canEdit={canEdit}
+            totalFunis={funis.length}
           />
         )}
       </div>

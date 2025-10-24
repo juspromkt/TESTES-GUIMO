@@ -22,6 +22,7 @@ interface FunnelModalProps {
   onDeleteFunil?: () => Promise<void>;
   token: string;
   canEdit: boolean;
+  totalFunis?: number;
 }
 
 // Cores predefinidas profissionais
@@ -45,7 +46,8 @@ export default function FunnelModal({
   onDeleteStage,
   onDeleteFunil,
   token,
-  canEdit
+  canEdit,
+  totalFunis = 1
 }: FunnelModalProps) {
   const [stages, setStages] = useState<Estagio[]>([]);
   const [editingStage, setEditingStage] = useState<Estagio | null>(null);
@@ -80,9 +82,16 @@ export default function FunnelModal({
   useEffect(() => {
     if (selectedFunil) {
       setStages(selectedFunil.estagios || []);
-      setIsDefaultFunnel(selectedFunil.isFunilPadrao);
+      // Se há apenas um funil, ele deve ser padrão obrigatoriamente
+      const shouldBeDefault = totalFunis === 1 || selectedFunil.isFunilPadrao;
+      setIsDefaultFunnel(shouldBeDefault);
+
+      // Se há apenas um funil e ele não é padrão, força a atualização
+      if (totalFunis === 1 && !selectedFunil.isFunilPadrao) {
+        handleToggleDefaultFunnel();
+      }
     }
-  }, [selectedFunil]);
+  }, [selectedFunil, totalFunis]);
 
   const handleAddStage = async () => {
     if (!selectedFunil || !newStageName.trim()) return;
@@ -169,6 +178,14 @@ export default function FunnelModal({
 
   const handleToggleDefaultFunnel = async () => {
     if (!selectedFunil) return;
+
+    // Se há apenas um funil e ele já é padrão, não permite desabilitar
+    if (totalFunis === 1 && isDefaultFunnel) {
+      setError('Quando há apenas um funil, ele deve ser o padrão obrigatoriamente.');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
     setUpdatingDefault(true);
     setError('');
 

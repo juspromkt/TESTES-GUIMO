@@ -1070,7 +1070,7 @@ const Sidebar = () => {
           style={{
             scrollbarWidth: 'thin',
             scrollbarColor: 'rgba(255, 255, 255, 0.3) transparent',
-            maxHeight: isMobile ? 'auto' : 'calc(100vh - 64px - 280px)'
+            maxHeight: isMobile ? 'auto' : 'calc(100vh - 64px - 200px)'
           }}
         >
           {/* Mobile Logo */}
