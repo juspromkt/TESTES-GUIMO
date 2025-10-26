@@ -81,14 +81,6 @@ interface WhatsAppMessage {
     mediaUrl: string | null;
   };
   data: string;
-  messageTimestamp?: number;
-  // Flags para identificação de remetente
-  respostaIA?: boolean;
-  isFollowUp?: boolean;
-  isLembrete?: boolean;
-  isGerouIntervencao?: boolean;
-  isIntervencaoAtiva?: boolean;
-  isAbriuSessao?: boolean;
 }
 
 interface User {
@@ -1247,53 +1239,14 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
 
   const formatWhatsAppMessage = (text: string) => {
     if (!text) return '';
-
+    
     // Handle bold text (*text*)
     text = text.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
-
+    
     // Handle italic text (_text_)
     text = text.replace(/_(.*?)_/g, '<em>$1</em>');
-
+    
     return text;
-  };
-
-  // Função para identificar o remetente da mensagem
-  const getRemetente = (message: WhatsAppMessage): string => {
-    // Se não é da empresa, é do lead
-    if (!message.key.fromMe) {
-      return 'Lead';
-    }
-
-    // Se é da empresa, verifica as flags
-    if (message.respostaIA) {
-      return 'IA (Agente Automatizado)';
-    }
-
-    if (message.isFollowUp) {
-      return 'Follow-up automático';
-    }
-
-    if (message.isLembrete) {
-      return 'Lembrete de reunião';
-    }
-
-    // Se não tem nenhuma flag específica, é usuário humano
-    return 'Usuário humano';
-  };
-
-  // Função para formatar data/hora completa
-  const formatarDataHora = (message: WhatsAppMessage): string => {
-    // Usa messageTimestamp se disponível, senão usa data
-    const timestamp = message.messageTimestamp || new Date(message.data).getTime();
-    const date = new Date(timestamp);
-
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
   useEffect(() => {
@@ -2377,49 +2330,40 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
               >
                 {messages.length > 0 ? (
                   messages.map((message, index) => (
-                    <div key={index} className="space-y-1">
+                    <div
+                      key={index}
+                      className={`flex ${message.key.fromMe ? 'justify-end' : 'justify-start'}`}
+                    >
                       <div
-                        className={`flex ${message.key.fromMe ? 'justify-end' : 'justify-start'}`}
+                        className={`max-w-[80%] rounded-lg p-3 ${
+                          message.key.fromMe
+                            ? 'bg-emerald-100 dark:bg-emerald-900/50 text-gray-800 dark:text-neutral-100'
+                            : 'bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-100'
+                        }`}
                       >
-                        <div
-                          className={`max-w-[80%] rounded-lg p-3 ${
-                            message.key.fromMe
-                              ? 'bg-emerald-100 dark:bg-emerald-900/50 text-gray-800 dark:text-neutral-100'
-                              : 'bg-white dark:bg-neutral-700 text-gray-800 dark:text-neutral-100'
-                          }`}
-                        >
-                          {message.messageType === 'imageMessage' && message.message.mediaUrl && (
-                            <img
-                              src={message.message.mediaUrl}
-                              alt="Imagem"
-                              className="max-w-full h-auto rounded mb-1"
-                            />
-                          )}
-                          {message.messageType === 'audioMessage' && message.message.mediaUrl && (
-                            <audio controls className="max-w-full mb-1">
-                              <source src={message.message.mediaUrl} type="audio/ogg" />
-                              Seu navegador não suporta o elemento de áudio.
-                            </audio>
-                          )}
-                          {message.messageType === 'conversation' && message.message.conversation && (
-                            <div
-                              className="text-sm whitespace-pre-wrap"
-                              dangerouslySetInnerHTML={{
-                                __html: formatWhatsAppMessage(message.message.conversation)
-                              }}
-                            />
-                          )}
-                          <p className="text-right text-xs text-gray-500 dark:text-neutral-400 mt-1">
-                            {formatMessageDateTime(message.data)}
-                          </p>
-                        </div>
-                      </div>
-                      {/* Linha informativa do remetente */}
-                      <div
-                        className={`flex ${message.key.fromMe ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <p className="text-xs text-gray-400 dark:text-neutral-500 italic px-1">
-                          💬 Enviada por: {getRemetente(message)} — {formatarDataHora(message)}
+                        {message.messageType === 'imageMessage' && message.message.mediaUrl && (
+                          <img
+                            src={message.message.mediaUrl}
+                            alt="Imagem"
+                            className="max-w-full h-auto rounded mb-1"
+                          />
+                        )}
+                        {message.messageType === 'audioMessage' && message.message.mediaUrl && (
+                          <audio controls className="max-w-full mb-1">
+                            <source src={message.message.mediaUrl} type="audio/ogg" />
+                            Seu navegador não suporta o elemento de áudio.
+                          </audio>
+                        )}
+                        {message.messageType === 'conversation' && message.message.conversation && (
+                          <div
+                            className="text-sm whitespace-pre-wrap"
+                            dangerouslySetInnerHTML={{
+                              __html: formatWhatsAppMessage(message.message.conversation)
+                            }}
+                          />
+                        )}
+                        <p className="text-right text-xs text-gray-500 dark:text-neutral-400 mt-1">
+                          {formatMessageDateTime(message.data)}
                         </p>
                       </div>
                     </div>
