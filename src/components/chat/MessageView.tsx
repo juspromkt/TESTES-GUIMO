@@ -1243,6 +1243,11 @@ function getLastInboundTimestamp(
   }>({ open: false, message: null });
   const [editText, setEditText] = useState("");
 const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
+const [forwardMessage, setForwardMessage] = useState<Message | null>(null);
+const [forwardModalOpen, setForwardModalOpen] = useState(false);
+const [forwardChats, setForwardChats] = useState<Chat[]>([]);
+const [forwardSearchQuery, setForwardSearchQuery] = useState('');
+const [loadingForwardChats, setLoadingForwardChats] = useState(false);
 const sentMessageIds = useRef<Set<string>>(new Set());
 const [deals, setDeals] = useState([]);
 const [funis, setFunis] = useState([]);
@@ -2455,6 +2460,34 @@ if (isBusiness && newMessage && newMessage.key && !newMessage.key.fromMe) {
       setEditModal({ open: false, message: null });
     } catch {
       toast.error("Erro ao editar");
+    }
+  };
+
+  const handleForwardMessage = async (targetChat: Chat) => {
+    if (!forwardMessage) return;
+
+    try {
+      const messageContent = forwardMessage.message.conversation ||
+                            forwardMessage.message.extendedTextMessage?.text ||
+                            '';
+
+      if (messageContent) {
+        await apiClient.sendMessage(token, {
+          jid: targetChat.remoteJid,
+          type: 'text',
+          text: messageContent,
+        });
+        toast.success(`Mensagem encaminhada para ${targetChat.pushName || targetChat.remoteJid}`);
+      } else {
+        toast.error('Não é possível encaminhar este tipo de mensagem');
+      }
+
+      setForwardModalOpen(false);
+      setForwardMessage(null);
+      setForwardSearchQuery('');
+    } catch (error) {
+      console.error('Error forwarding message:', error);
+      toast.error('Erro ao encaminhar mensagem');
     }
   };
 
@@ -3834,6 +3867,32 @@ return (
                           <span>Responder</span>
                         </button>
 
+                        {/* Encaminhar */}
+                        <button
+                          className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center space-x-3 transition-colors text-[14.2px]"
+                          onClick={async () => {
+                            setForwardMessage(message);
+                            setForwardModalOpen(true);
+                            setLoadingForwardChats(true);
+                            try {
+                              const user = localStorage.getItem("user");
+                              const token = user ? JSON.parse(user).token : null;
+                              if (token) {
+                                const chats = await apiClient.findChats(token, 1, 50);
+                                setForwardChats(Array.isArray(chats) ? chats : []);
+                              }
+                            } catch (error) {
+                              console.error('Error loading chats:', error);
+                              toast.error('Erro ao carregar conversas');
+                            } finally {
+                              setLoadingForwardChats(false);
+                            }
+                          }}
+                        >
+                          <Forward className="w-[18px] h-[18px] text-gray-600 dark:text-gray-400" />
+                          <span>Encaminhar</span>
+                        </button>
+
                         {/* Baixar (apenas para mídias) */}
                         {isMediaMessage(message) && (
                           <button
@@ -4120,6 +4179,102 @@ return (
               >
                 Salvar alterações
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Forward Modal */}
+    {forwardModalOpen && (
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 transition-colors duration-200">
+          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 px-6 py-4 border-b border-gray-300 dark:border-gray-600">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center space-x-3">
+                <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center transition-colors duration-200">
+                  <Forward className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <span>Encaminhar mensagem</span>
+              </h2>
+              <button
+                onClick={() => {
+                  setForwardModalOpen(false);
+                  setForwardMessage(null);
+                  setForwardSearchQuery('');
+                }}
+                className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+              </button>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-4">
+            {/* Search input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar conversas..."
+                value={forwardSearchQuery}
+                onChange={(e) => setForwardSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent transition-colors duration-200"
+              />
+            </div>
+
+            {/* Message preview */}
+            {forwardMessage && (
+              <div className="p-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Mensagem a encaminhar:</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
+                  {forwardMessage.message.conversation || forwardMessage.message.extendedTextMessage?.text || 'Mensagem sem texto'}
+                </p>
+              </div>
+            )}
+
+            {/* Chats list */}
+            <div className="max-h-96 overflow-y-auto space-y-2">
+              {loadingForwardChats ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+                </div>
+              ) : forwardChats.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  Nenhuma conversa encontrada
+                </div>
+              ) : (
+                forwardChats
+                  .filter((chat) => {
+                    if (!forwardSearchQuery) return true;
+                    const searchLower = forwardSearchQuery.toLowerCase();
+                    return (
+                      (chat.pushName?.toLowerCase().includes(searchLower)) ||
+                      (chat.remoteJid?.toLowerCase().includes(searchLower))
+                    );
+                  })
+                  .map((chat) => (
+                    <button
+                      key={chat.id}
+                      onClick={() => handleForwardMessage(chat)}
+                      className="w-full p-3 flex items-center space-x-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors text-left"
+                    >
+                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-white font-semibold text-sm">
+                          {chat.pushName?.charAt(0).toUpperCase() || chat.remoteJid?.charAt(0) || '?'}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                          {chat.pushName || chat.remoteJid}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                          {chat.remoteJid}
+                        </p>
+                      </div>
+                    </button>
+                  ))
+              )}
             </div>
           </div>
         </div>
