@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Book, AlertCircle, Check, Loader2, Download, Upload, Plus } from 'lucide-react';
+import { Book, AlertCircle, Check, Loader2, Download, Upload, Plus, Copy } from 'lucide-react';
 import { agentModels } from '../../data/agent-models';
 import Modal from '../Modal';
 import AIPromptGenerator from './AIPromptGenerator';
@@ -25,6 +25,7 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
   const [importLoading, setImportLoading] = useState(false);
   const [importError, setImportError] = useState('');
   const [isAIPromptModalOpen, setIsAIPromptModalOpen] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const CONFIRMATION_TEXT = "Eu confirmo que desejo aplicar este modelo";
 
@@ -527,6 +528,16 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const handleCopyModel = async () => {
+    try {
+      await navigator.clipboard.writeText(exportedModel);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Erro ao copiar:', err);
+    }
   };
 
   return (
@@ -1086,7 +1097,10 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
 
         <Modal
           isOpen={isExportModalOpen}
-          onClose={() => setIsExportModalOpen(false)}
+          onClose={() => {
+            setIsExportModalOpen(false);
+            setCopySuccess(false);
+          }}
           title="Exportar Modelo"
           maxWidth="lg"
         >
@@ -1101,10 +1115,33 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
 
             <div className="flex justify-end gap-3 pt-4">
               <button
-                onClick={() => setIsExportModalOpen(false)}
+                onClick={() => {
+                  setIsExportModalOpen(false);
+                  setCopySuccess(false);
+                }}
                 className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md"
               >
                 Fechar
+              </button>
+              <button
+                onClick={handleCopyModel}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md transition-all ${
+                  copySuccess
+                    ? 'bg-green-600 dark:bg-green-700'
+                    : 'bg-gray-600 dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600'
+                }`}
+              >
+                {copySuccess ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Copiado!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    <span>Copiar JSON</span>
+                  </>
+                )}
               </button>
               <button
                 onClick={handleDownloadModel}

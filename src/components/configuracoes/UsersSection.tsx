@@ -538,7 +538,8 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
         </div>
       )}
 
-      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-neutral-700">
+      {/* Desktop Table View */}
+      <div className="hidden md:block bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-neutral-700">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
           <thead className="bg-gray-50 dark:bg-neutral-900">
             <tr>
@@ -626,6 +627,71 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
         </table>
       </div>
 
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {activeUsers.map((user) => (
+          <div key={user.Id} className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-4">
+            {/* Header with Name and Status */}
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">{user.nome}</h3>
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${getTypeStyle(user.tipo)}`}>
+                  {user.tipo}
+                </span>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={user.isAtivo}
+                  onChange={canEdit ? () => handleToggleStatus(user.Id) : undefined}
+                  disabled={!canEdit || togglingUser === user.Id}
+                />
+                <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-700"></div>
+              </label>
+            </div>
+
+            {/* Info Fields */}
+            <div className="space-y-2 mb-3">
+              <div>
+                <span className="text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Email</span>
+                <p className="text-sm text-gray-900 dark:text-neutral-100 break-all">{user.email}</p>
+              </div>
+              <div>
+                <span className="text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Telefone</span>
+                <p className="text-sm text-gray-900 dark:text-neutral-100">{user.telefone || '-'}</p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            {canEdit && (
+              <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200 dark:border-neutral-700">
+                <button
+                  onClick={() => handleOpenResetModal(user)}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                >
+                  Resetar senha
+                </button>
+                <button
+                  onClick={() => handleOpenEditUser(user)}
+                  className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
+                  title="Editar usuário"
+                >
+                  <Pencil className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => handleEditPermissions(user)}
+                  className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
+                  title="Editar permissões"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
       {/* Seção de Usuários Inativos */}
       {inactiveUsers.length > 0 && (
         <div className="mt-4">
@@ -644,93 +710,161 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
           </button>
 
           {showInactive && (
-            <div className="mt-4 bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-neutral-700">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                <thead className="bg-gray-50 dark:bg-neutral-900">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
-                      Nome
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
-                      Telefone
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
-                      Tipo
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
-                      Status
-                    </th>
-                    {canEdit && (
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
-                        Ações
+            <>
+              {/* Desktop Table View - Inactive Users */}
+              <div className="hidden md:block mt-4 bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-neutral-700">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+                  <thead className="bg-gray-50 dark:bg-neutral-900">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                        Nome
                       </th>
-                    )}
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
-                  {inactiveUsers.map((user) => (
-                    <tr key={user.Id} className="hover:bg-gray-50 dark:hover:bg-neutral-700 opacity-60">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{user.nome}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500 dark:text-neutral-400">{user.email}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500 dark:text-neutral-400">{user.telefone || '-'}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeStyle(user.tipo)}`}>
-                          {user.tipo}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="sr-only peer"
-                            checked={user.isAtivo}
-                            onChange={canEdit ? () => handleToggleStatus(user.Id) : undefined}
-                            disabled={!canEdit || togglingUser === user.Id}
-                          />
-                          <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-700"></div>
-                        </label>
-                      </td>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                        Telefone
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                        Tipo
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                        Status
+                      </th>
                       {canEdit && (
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end gap-3">
-                            <button
-                              onClick={() => handleOpenResetModal(user)}
-                              className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline"
-                              title="Resetar senha"
-                            >
-                              Resetar senha
-                            </button>
-                            <button
-                              onClick={() => handleOpenEditUser(user)}
-                              className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
-                              title="Editar usuário"
-                            >
-                              <Pencil className="w-5 h-5" />
-                            </button>
-                            <button
-                              onClick={() => handleEditPermissions(user)}
-                              className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
-                              title="Editar permissões"
-                            >
-                              <Settings className="w-5 h-5" />
-                            </button>
-                          </div>
-                        </td>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                          Ações
+                        </th>
                       )}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
+                    {inactiveUsers.map((user) => (
+                      <tr key={user.Id} className="hover:bg-gray-50 dark:hover:bg-neutral-700 opacity-60">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{user.nome}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500 dark:text-neutral-400">{user.email}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500 dark:text-neutral-400">{user.telefone || '-'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeStyle(user.tipo)}`}>
+                            {user.tipo}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="sr-only peer"
+                              checked={user.isAtivo}
+                              onChange={canEdit ? () => handleToggleStatus(user.Id) : undefined}
+                              disabled={!canEdit || togglingUser === user.Id}
+                            />
+                            <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-700"></div>
+                          </label>
+                        </td>
+                        {canEdit && (
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end gap-3">
+                              <button
+                                onClick={() => handleOpenResetModal(user)}
+                                className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline"
+                                title="Resetar senha"
+                              >
+                                Resetar senha
+                              </button>
+                              <button
+                                onClick={() => handleOpenEditUser(user)}
+                                className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
+                                title="Editar usuário"
+                              >
+                                <Pencil className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={() => handleEditPermissions(user)}
+                                className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
+                                title="Editar permissões"
+                              >
+                                <Settings className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View - Inactive Users */}
+              <div className="md:hidden mt-4 space-y-4">
+                {inactiveUsers.map((user) => (
+                  <div key={user.Id} className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-4 opacity-60">
+                    {/* Header with Name and Status */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">{user.nome}</h3>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${getTypeStyle(user.tipo)}`}>
+                          {user.tipo}
+                        </span>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={user.isAtivo}
+                          onChange={canEdit ? () => handleToggleStatus(user.Id) : undefined}
+                          disabled={!canEdit || togglingUser === user.Id}
+                        />
+                        <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-700"></div>
+                      </label>
+                    </div>
+
+                    {/* Info Fields */}
+                    <div className="space-y-2 mb-3">
+                      <div>
+                        <span className="text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Email</span>
+                        <p className="text-sm text-gray-900 dark:text-neutral-100 break-all">{user.email}</p>
+                      </div>
+                      <div>
+                        <span className="text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Telefone</span>
+                        <p className="text-sm text-gray-900 dark:text-neutral-100">{user.telefone || '-'}</p>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    {canEdit && (
+                      <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200 dark:border-neutral-700">
+                        <button
+                          onClick={() => handleOpenResetModal(user)}
+                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                        >
+                          Resetar senha
+                        </button>
+                        <button
+                          onClick={() => handleOpenEditUser(user)}
+                          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
+                          title="Editar usuário"
+                        >
+                          <Pencil className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleEditPermissions(user)}
+                          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
+                          title="Editar permissões"
+                        >
+                          <Settings className="w-5 h-5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}
