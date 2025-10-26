@@ -7,10 +7,20 @@ import {
   Loader2,
   X,
   Settings,
-  Edit3,
   Check,
-  ChevronDown
+  ChevronDown,
+  Bell,
+  UserCheck,
+  UserX,
+  FileText,
+  FileCheck,
+  Calendar,
+  Building2,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
+
+// ==================== INTERFACES ====================
 
 interface AgentFunctionAttribute {
   id: number;
@@ -32,17 +42,21 @@ interface AgentFunction {
   tipo: 'NOTIFICACAO';
   mensagem?: string;
   atributos: AgentFunctionAttribute[];
+  isTemplate?: boolean; // Flag para identificar templates prontos
 }
 
 interface CRMUser {
   Id: number;
   nome: string;
+  telefone?: string;
 }
 
 interface AgentFunctionsSectionProps {
   token: string;
   canEdit: boolean;
 }
+
+// ==================== CONSTANTES ====================
 
 const MESSAGE_TAGS = [
   { label: 'Nome do lead', value: '{{nome}}' },
@@ -62,6 +76,121 @@ const COUNTRIES = [
   { code: '+34', country: 'ES', name: 'Espanha', flag: '🇪🇸' },
 ];
 
+// ==================== TEMPLATES PRONTOS ====================
+
+interface NotificationTemplate {
+  key: string;
+  nome: string;
+  descricao_curta: string;
+  mensagem: string;
+  descricao_ia: string;
+  icon: typeof Bell;
+  colorClass: string;
+  bgClass: string;
+}
+
+const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
+  {
+    key: 'novo_lead',
+    nome: 'Novo Lead Recebido',
+    descricao_curta: 'Notifica quando um novo lead entra no sistema',
+    mensagem: `\`🔵 NOVO LEAD RECEBIDO\`
+
+👤 *Cliente*: {{nome}}
+📞 *WhatsApp*: {{telefone}}`,
+    descricao_ia: 'Envie esta notificação IMEDIATAMENTE quando detectar que é o PRIMEIRO contato do lead. Situações que exigem esta notificação: primeira mensagem recebida no WhatsApp, novo número que nunca interagiu antes, qualquer lead iniciando conversa pela primeira vez. Envie mesmo que ele ainda não tenha informado o nome completo. Nunca deixe de enviar na primeira interação.',
+    icon: Bell,
+    colorClass: 'text-blue-600 dark:text-blue-400',
+    bgClass: 'bg-blue-100 dark:bg-blue-900/30'
+  },
+  {
+    key: 'lead_qualificado',
+    nome: 'Lead Qualificado',
+    descricao_curta: 'Notifica quando um lead é qualificado pelo agente',
+    mensagem: `\`🟢 LEAD QUALIFICADO\`
+
+👤 *Cliente*: {{nome}}
+📞 *WhatsApp*: {{telefone}}
+📋 *Resumo*: {{resumo}}`,
+    descricao_ia: 'Envie esta notificação IMEDIATAMENTE após concluir a análise de viabilidade e identificar que o lead TEM CONDIÇÕES de processo. Sinais de qualificação: aceitou fazer a análise, respondeu todas as perguntas de viabilidade, demonstra interesse real em processo judicial, tem irregularidades trabalhistas confirmadas.',
+    icon: UserCheck,
+    colorClass: 'text-emerald-600 dark:text-emerald-400',
+    bgClass: 'bg-emerald-100 dark:bg-emerald-900/30'
+  },
+  {
+    key: 'lead_desqualificado',
+    nome: 'Lead Desqualificado',
+    descricao_curta: 'Notifica quando um lead é desqualificado',
+    mensagem: `\`🔴 LEAD DESQUALIFICADO\`
+
+👤 *Cliente*: {{nome}}
+📞 *WhatsApp*: {{telefone}}
+❌ *Motivo*: {{resumo}}`,
+    descricao_ia: 'Envie esta notificação IMEDIATAMENTE após concluir a análise de viabilidade e identificar que o lead NÃO TEM CONDIÇÕES de processo. Critérios de desqualificação: não quer processo judicial (quer só consultoria/dúvidas), saiu da empresa há mais de 2 anos, nunca trabalhou com carteira e nunca teve pagamento comprovável, caso sem viabilidade jurídica.',
+    icon: UserX,
+    colorClass: 'text-red-600 dark:text-red-400',
+    bgClass: 'bg-red-100 dark:bg-red-900/30'
+  },
+  {
+    key: 'contrato_enviado',
+    nome: 'Contrato Enviado',
+    descricao_curta: 'Notifica quando um contrato é enviado ao cliente',
+    mensagem: `\`🟣 CONTRATO ENVIADO\`
+
+👤 *Cliente*: {{nome}}
+📞 *WhatsApp*: {{telefone}}
+⏳ *Status*: Aguardando assinatura`,
+    descricao_ia: 'Envie esta notificação IMEDIATAMENTE após enviar o link do contrato para o cliente. Situações que exigem esta notificação: você enviou o link de assinatura do contrato, compartilhou proposta comercial, enviou documento para análise/assinatura. Frases que indicam envio: "vou te enviar o link", "segue o link do contrato", "acabei de enviar", "clique no link para assinar". Nunca envie antes de compartilhar o link.',
+    icon: FileText,
+    colorClass: 'text-purple-600 dark:text-purple-400',
+    bgClass: 'bg-purple-100 dark:bg-purple-900/30'
+  },
+  {
+    key: 'contrato_assinado',
+    nome: 'Contrato Assinado',
+    descricao_curta: 'Notifica quando um contrato é assinado',
+    mensagem: `\`🟢 CONTRATO ASSINADO\`
+
+👤 *Cliente*: {{nome}}
+📞 *WhatsApp*: {{telefone}}
+🎉 *Status*: Cliente confirmado!`,
+    descricao_ia: 'Envie esta notificação IMEDIATAMENTE quando o cliente CONFIRMAR que assinou o contrato. Situações que exigem esta notificação: cliente disse "já assinei", "acabei de assinar", "assinatura concluída", "já enviei assinado", ou qualquer confirmação explícita de que assinou. Esta notificação marca o fechamento do negócio. Nunca envie baseado apenas em promessa de assinar depois, apenas quando ele confirmar que JÁ ASSINOU.',
+    icon: FileCheck,
+    colorClass: 'text-green-600 dark:text-green-400',
+    bgClass: 'bg-green-100 dark:bg-green-900/30'
+  },
+  {
+    key: 'reuniao_agendada',
+    nome: 'Reunião Agendada',
+    descricao_curta: 'Notifica quando uma reunião é agendada',
+    mensagem: `\`🟠 REUNIÃO AGENDADA\`
+
+👤 *Cliente*: {{nome}}
+📞 *WhatsApp*: {{telefone}}
+📅 *Detalhes*: {{resumo}}`,
+    descricao_ia: 'Envie esta notificação IMEDIATAMENTE quando o cliente ESCOLHER e CONFIRMAR um horário específico para a reunião. Situações que exigem esta notificação: cliente escolheu data e horário da lista que você ofereceu, confirmou disponibilidade para reunião agendada. Nunca envie apenas por oferecer horários, envie só após a confirmação do cliente.',
+    icon: Calendar,
+    colorClass: 'text-orange-600 dark:text-orange-400',
+    bgClass: 'bg-orange-100 dark:bg-orange-900/30'
+  },
+  {
+    key: 'lead_cliente_escritorio',
+    nome: 'Lead é Cliente do Escritório',
+    descricao_curta: 'Notifica quando identificar que é um cliente existente',
+    mensagem: `\`🟣 CLIENTE DO ESCRITÓRIO IDENTIFICADO\`
+
+👤 *Cliente*: {{nome}}
+📞 *WhatsApp*: {{telefone}}
+⚠️ *Atenção*: Necessário atendimento prioritário`,
+    descricao_ia: 'Envie esta notificação IMEDIATAMENTE quando identificar que o lead JÁ É CLIENTE do escritório. Situações que exigem esta notificação: lead menciona processo anterior com o escritório, cita advogado do escritório que já o atendeu, diz "já sou cliente de vocês", menciona caso em andamento, reconhece relacionamento prévio. Esta notificação é CRÍTICA para atendimento prioritário e evitar constrangimentos. Envie mesmo que seja ex-cliente.',
+    icon: Building2,
+    colorClass: 'text-indigo-600 dark:text-indigo-400',
+    bgClass: 'bg-indigo-100 dark:bg-indigo-900/30'
+  }
+];
+
+// ==================== COMPONENTE PRINCIPAL ====================
+
 const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, canEdit }) => {
   const [functions, setFunctions] = useState<AgentFunction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,26 +206,24 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
 
   // Função selecionada para configuração
   const [selectedFunction, setSelectedFunction] = useState<AgentFunction | null>(null);
-  const [configTab, setConfigTab] = useState<'message' | 'guide' | 'recipients'>('message');
+  const [configTab, setConfigTab] = useState<'message' | 'guide' | 'recipients'>('recipients');
 
   // Campos de edição
   const [newFunctionName, setNewFunctionName] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState<string>(''); // '' = personalizado, ou key do template
   const [editingMessage, setEditingMessage] = useState('');
   const [editingGuide, setEditingGuide] = useState('');
-  const [editingName, setEditingName] = useState('');
-  const [isEditingName, setIsEditingName] = useState(false);
 
   // Destinatários
   const [recipientType, setRecipientType] = useState<'' | 'numero' | 'usuario' | 'responsavel'>('');
   const [recipientPhone, setRecipientPhone] = useState('');
   const [recipientUserId, setRecipientUserId] = useState('');
-  const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0]); // Brasil por padrão
+  const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0]);
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const countryDropdownRef = useRef<HTMLDivElement | null>(null);
 
-  // Mensagens
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  // Mensagens - Sistema de Toast
+  const [toasts, setToasts] = useState<Array<{ id: number; message: string; type: 'error' | 'success' }>>([]);
 
   useEffect(() => {
     fetchFunctions();
@@ -202,7 +329,11 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
             nome:
               typeof user.nome === 'string' && user.nome.trim().length > 0
                 ? user.nome.trim()
-                : `Usuário ${user.Id}`
+                : `Usuário ${user.Id}`,
+            telefone:
+              typeof user.telefone === 'string' && user.telefone.trim().length > 0
+                ? user.telefone.trim()
+                : undefined
           }));
         setUsuarios(validUsers);
       } else {
@@ -219,20 +350,23 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
   const getUsuarioNome = (id?: number | null) => {
     if (!id) return '';
     const usuario = usuarios.find(user => user.Id === id);
-    return usuario ? usuario.nome : `Usuário #${id}`;
+    if (!usuario) return `Usuário #${id}`;
+
+    // Se tem telefone, exibe nome + telefone
+    if (usuario.telefone) {
+      return `${usuario.telefone} - ${usuario.nome}`;
+    }
+
+    return usuario.nome;
   };
 
   const showMessage = (message: string, type: 'error' | 'success') => {
-    if (type === 'error') {
-      setError(message);
-      setSuccess('');
-    } else {
-      setSuccess(message);
-      setError('');
-    }
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+
+    // Remover automaticamente após 5 segundos
     setTimeout(() => {
-      setError('');
-      setSuccess('');
+      setToasts(prev => prev.filter(toast => toast.id !== id));
     }, 5000);
   };
 
@@ -242,13 +376,26 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
       return;
     }
 
+    // Validar limite de 5 notificações criadas
     if (functions.length >= 5) {
-      showMessage('Limite máximo de 5 notificações atingido', 'error');
+      showMessage('Limite de 5 notificações atingido. Delete uma notificação para criar outra.', 'error');
       return;
     }
 
     setSaving(true);
     try {
+      // Buscar dados do template se selecionado
+      let mensagem = '';
+      let descricao = 'Configurar descrição';
+
+      if (selectedTemplate) {
+        const template = NOTIFICATION_TEMPLATES.find(t => t.key === selectedTemplate);
+        if (template) {
+          mensagem = template.mensagem;
+          descricao = template.descricao_ia;
+        }
+      }
+
       const res = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/funcao/create', {
         method: 'POST',
         headers: {
@@ -258,10 +405,10 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
         body: JSON.stringify({
           nome: newFunctionName.trim(),
           url: '',
-          descricao: 'Configurar descrição',
-          isAtivo: true,
+          descricao: descricao,
+          isAtivo: false, // Criar como inativo
           tipo: 'NOTIFICACAO',
-          mensagem: ''
+          mensagem: mensagem
         })
       });
 
@@ -269,8 +416,9 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
 
       await fetchFunctions();
       setNewFunctionName('');
+      setSelectedTemplate('');
       setShowCreateModal(false);
-      showMessage('Notificação criada com sucesso!', 'success');
+      showMessage('Notificação criada! Configure os destinatários para ativá-la.', 'success');
     } catch (err) {
       console.error('Erro ao criar função:', err);
       showMessage('Erro ao criar notificação. Tente novamente.', 'error');
@@ -280,6 +428,12 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
   };
 
   const handleToggleFunction = async (func: AgentFunction) => {
+    // Validar se tem destinatários ao tentar ativar
+    if (!func.isAtivo && (!func.atributos || func.atributos.length === 0)) {
+      showMessage('Adicione pelo menos um destinatário antes de ativar esta notificação', 'error');
+      return;
+    }
+
     setSaving(true);
     try {
       const res = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/funcao/update', {
@@ -335,60 +489,12 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
     }
   };
 
-  const handleOpenConfig = (func: AgentFunction) => {
+  const handleOpenConfigModal = (func: AgentFunction, isTemplate: boolean = false) => {
     setSelectedFunction(func);
     setEditingMessage(func.mensagem || '');
     setEditingGuide(func.descricao || '');
-    setEditingName(func.nome);
-    setConfigTab('message');
+    setConfigTab(isTemplate ? 'recipients' : 'message');
     setShowConfigModal(true);
-    setIsEditingName(false);
-  };
-
-  const handleSaveName = async () => {
-    if (!selectedFunction) return;
-
-    if (!editingName.trim()) {
-      showMessage('O nome não pode estar vazio', 'error');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const res = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/funcao/update', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          token
-        },
-        body: JSON.stringify({
-          id: selectedFunction.id,
-          nome: editingName.trim(),
-          url: selectedFunction.url,
-          descricao: selectedFunction.descricao,
-          isAtivo: selectedFunction.isAtivo,
-          tipo: selectedFunction.tipo,
-          mensagem: selectedFunction.mensagem || ''
-        })
-      });
-
-      if (!res.ok) throw new Error(`Erro HTTP: ${res.status}`);
-
-      // Atualizar imediatamente
-      const novoNome = editingName.trim();
-      setSelectedFunction(prev => prev ? { ...prev, nome: novoNome } : null);
-      setFunctions(prev => prev.map(f =>
-        f.id === selectedFunction.id ? { ...f, nome: novoNome } : f
-      ));
-
-      setIsEditingName(false);
-      showMessage('Nome atualizado com sucesso!', 'success');
-    } catch (err) {
-      console.error('Erro ao atualizar nome:', err);
-      showMessage('Erro ao atualizar nome. Tente novamente.', 'error');
-    } finally {
-      setSaving(false);
-    }
   };
 
   const handleSaveMessage = async () => {
@@ -420,7 +526,6 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
 
       if (!res.ok) throw new Error(`Erro HTTP: ${res.status}`);
 
-      // Atualizar imediatamente
       const novaMensagem = editingMessage.trim();
       setSelectedFunction(prev => prev ? { ...prev, mensagem: novaMensagem } : null);
       setFunctions(prev => prev.map(f =>
@@ -465,7 +570,6 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
 
       if (!res.ok) throw new Error(`Erro HTTP: ${res.status}`);
 
-      // Atualizar imediatamente
       const novaGuia = editingGuide.trim();
       setSelectedFunction(prev => prev ? { ...prev, descricao: novaGuia } : null);
       setFunctions(prev => prev.map(f =>
@@ -509,7 +613,6 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
         showMessage('Informe o número de telefone', 'error');
         return;
       }
-      // Concatena o código do país (sem +) com o número
       const countryCode = selectedCountry.code.replace('+', '');
       payload.numero = `${countryCode}${numero}`;
     } else if (recipientType === 'usuario') {
@@ -536,14 +639,8 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
 
       if (!res.ok) throw new Error(`Erro HTTP: ${res.status}`);
 
-      const response = await res.json();
-      console.log('Resposta da API ao adicionar destinatário:', response);
-
-      // A API retorna apenas {status: 'success'}, então precisamos fazer refresh
-      // Recarregar todas as funções para pegar os dados atualizados
       await fetchFunctions();
 
-      // Atualizar o selectedFunction com os dados mais recentes
       const updatedFunctionsRes = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/funcao/get', {
         headers: { token }
       });
@@ -555,10 +652,8 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
 
       if (updatedFunction) {
         setSelectedFunction(updatedFunction);
-        console.log('selectedFunction atualizado com dados do servidor:', updatedFunction);
       }
 
-      // Limpar apenas os campos de dados, mantendo o tipo selecionado
       setRecipientPhone('');
       setRecipientUserId('');
       showMessage('Destinatário adicionado com sucesso!', 'success');
@@ -587,7 +682,6 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
 
       if (!res.ok) throw new Error(`Erro HTTP: ${res.status}`);
 
-      // Atualizar imediatamente o selectedFunction removendo o destinatário
       if (selectedFunction && selectedFunction.id === funcId) {
         setSelectedFunction(prev => prev ? {
           ...prev,
@@ -595,7 +689,6 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
         } : null);
       }
 
-      // Atualizar a lista de funções
       setFunctions(prev => prev.map(f =>
         f.id === funcId ? { ...f, atributos: f.atributos.filter(a => a.id !== attrId) } : f
       ));
@@ -629,119 +722,247 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
           animation: fadeIn 0.3s ease-out forwards;
           opacity: 0;
         }
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes slideOutRight {
+          from {
+            opacity: 1;
+            transform: translateX(0);
+          }
+          to {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+        }
+        .toast-enter {
+          animation: slideInRight 0.3s ease-out forwards;
+        }
+        .toast-exit {
+          animation: slideOutRight 0.3s ease-in forwards;
+        }
       `}</style>
 
-      <div className="space-y-6">
-        <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-md p-8">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
-                <Zap className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+      {/* Toast Container - Fixed no canto direito superior */}
+      {toasts.length > 0 && createPortal(
+        <div className="fixed top-4 right-4 z-[10001] flex flex-col gap-3 max-w-md">
+          {toasts.map((toast) => (
+            <div
+              key={toast.id}
+              className={`toast-enter flex items-start gap-3 p-4 rounded-lg shadow-2xl border ${
+                toast.type === 'success'
+                  ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
+                  : 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
+              }`}
+            >
+              {toast.type === 'success' ? (
+                <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              )}
+              <div className="flex-1 text-sm font-medium">
+                {toast.message}
+              </div>
+              <button
+                onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+                className="text-current opacity-50 hover:opacity-100 transition-opacity"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>,
+        document.body
+      )}
+
+      <div className="space-y-12 max-w-[1400px] mx-auto">
+        {/* Header Premium */}
+        <div className="flex items-start justify-between gap-8">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl blur-lg opacity-20"></div>
+                <div className="relative w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Zap className="w-7 h-7 text-white" strokeWidth={2.5} />
+                </div>
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">
-                  Notificações no WhatsApp
-                  <span className="ml-2 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 text-xs font-medium rounded-full">
-                    BETA
+                <div className="flex items-center gap-2">
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-neutral-100 dark:to-white bg-clip-text text-transparent">
+                    Notificações no WhatsApp
+                  </h1>
+                  <span className="px-2.5 py-1 bg-gradient-to-r from-blue-500/10 to-blue-600/10 border border-blue-500/20 text-blue-700 dark:text-blue-400 text-[10px] font-semibold tracking-wider rounded-full uppercase">
+                    Beta
                   </span>
-                </h2>
-                <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">
-                  Configure e visualize as notificações automáticas enviadas pela IA
+                </div>
+                <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1.5 font-light">
+                  Configure notificações automáticas inteligentes enviadas pela IA
                 </p>
               </div>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-gray-900 dark:text-neutral-100">{functions.length}/5</p>
-              <p className="text-xs text-gray-500 dark:text-neutral-400">Notificações</p>
             </div>
           </div>
-
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg mb-4">
-              {error}
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-4xl font-light tracking-tight text-gray-900 dark:text-white">
+                {functions.length}
+              </span>
+              <span className="text-2xl font-light text-gray-400 dark:text-neutral-500">/</span>
+              <span className="text-2xl font-light text-gray-400 dark:text-neutral-500">5</span>
             </div>
-          )}
-
-          {success && (
-            <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 px-4 py-3 rounded-lg mb-4">
-              {success}
-            </div>
-          )}
-
-          {/* Lista de Notificações */}
-          <div className="space-y-3">
-            {functions.map((func, index) => (
-              <div
-                key={func.id}
-                className="flex items-center justify-between bg-gray-50 dark:bg-neutral-700/50 border border-gray-200 dark:border-neutral-600 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors animate-fadeIn"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                <div className="flex items-center gap-3 flex-1">
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={func.isAtivo}
-                      onChange={() => handleToggleFunction(func)}
-                      disabled={saving}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-300 dark:bg-neutral-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-700 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600 dark:peer-checked:bg-emerald-500"></div>
-                  </label>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900 dark:text-neutral-100">{func.nome}</p>
-                    <p className="text-xs text-gray-500 dark:text-neutral-400">{func.mensagem || 'Mensagem não configurada'}</p>
-                  </div>
-                </div>
-                {canEdit && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        setFunctionToDelete(func.id);
-                        setShowDeleteModal(true);
-                      }}
-                      disabled={saving}
-                      className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                      title="Deletar notificação"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleOpenConfig(func)}
-                      className="p-2 text-gray-600 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
-                      title="Configurar notificação"
-                    >
-                      <Settings className="w-5 h-5" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {functions.length === 0 && (
-              <div className="text-center py-12 text-gray-500 dark:text-neutral-400">
-                <Zap className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-neutral-600" />
-                <h4 className="text-lg font-medium text-gray-900 dark:text-neutral-100 mb-2">Nenhuma notificação cadastrada</h4>
-                <p className="text-gray-500 dark:text-neutral-400 mb-4">
-                  Crie sua primeira notificação para começar a receber alertas automáticos.
-                </p>
+            <p className="text-xs font-medium text-gray-400 dark:text-neutral-500 tracking-wide uppercase">Notificações criadas</p>
+            {functions.filter(f => f.isAtivo).length > 0 && (
+              <div className="mt-2 flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                  {functions.filter(f => f.isAtivo).length} ativa{functions.filter(f => f.isAtivo).length !== 1 ? 's' : ''}
+                </span>
               </div>
             )}
           </div>
+        </div>
 
-          {/* Botão Criar Nova */}
-          {canEdit && (
+        {/* Botão Criar Nova Notificação */}
+        {canEdit && (
+          <div className="flex items-center justify-between gap-4">
             <button
               onClick={() => setShowCreateModal(true)}
               disabled={functions.length >= 5}
-              className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-emerald-500 disabled:hover:to-teal-600 transition-all duration-200 font-medium text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 group"
             >
-              <Plus className="w-5 h-5" />
-              Criar Nova Notificação
-              {functions.length >= 5 && <span className="text-xs">(Limite atingido)</span>}
+              <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" strokeWidth={2.5} />
+              <span>Criar Nova Notificação</span>
             </button>
-          )}
-        </div>
+            <p className="text-xs text-gray-500 dark:text-neutral-400 font-light">
+              {functions.length >= 5
+                ? 'Limite de 5 notificações atingido'
+                : `${5 - functions.length} de 5 disponível${5 - functions.length !== 1 ? 'is' : ''}`
+              }
+            </p>
+          </div>
+        )}
+
+        {/* Lista de Notificações */}
+        {functions.length > 0 ? (
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {functions.map((func, index) => {
+                // Buscar template correspondente para usar ícone e cores
+                const matchedTemplate = NOTIFICATION_TEMPLATES.find(t => t.nome === func.nome);
+                const IconComponent = matchedTemplate?.icon || Zap;
+                const iconColorClass = matchedTemplate?.colorClass || 'text-indigo-600 dark:text-indigo-400';
+                const iconBgClass = matchedTemplate?.bgClass || 'bg-indigo-100 dark:bg-indigo-900/30';
+
+                return (
+                  <div
+                    key={func.id}
+                    className="group relative bg-white dark:bg-neutral-900 border-2 border-gray-300 dark:border-neutral-700 rounded-2xl p-5 hover:border-emerald-500 dark:hover:border-emerald-500 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300 animate-fadeIn"
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    {/* Status Indicator */}
+                    {func.isAtivo && (
+                      <div className="absolute top-4 right-4">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ring-4 ring-emerald-500/20"></div>
+                      </div>
+                    )}
+
+                    {/* Header: Icon, Nome & Toggle */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="relative flex-shrink-0">
+                          <div className={`absolute inset-0 ${iconBgClass} rounded-xl blur opacity-50`}></div>
+                          <div className={`relative w-11 h-11 ${iconBgClass} rounded-xl flex items-center justify-center shadow-sm`}>
+                            <IconComponent className={`w-5 h-5 ${iconColorClass}`} strokeWidth={2.5} />
+                          </div>
+                        </div>
+                        <h4 className="text-base font-semibold text-gray-900 dark:text-white line-clamp-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                          {func.nome}
+                        </h4>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={func.isAtivo}
+                          onChange={() => handleToggleFunction(func)}
+                          disabled={saving}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-300 dark:bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-500/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:shadow-sm peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:to-teal-600 peer-disabled:opacity-40 peer-disabled:cursor-not-allowed"></div>
+                      </label>
+                    </div>
+
+                    {/* Mensagem Preview */}
+                    <div className="mb-4">
+                      <p className="text-xs text-gray-600 dark:text-neutral-400 line-clamp-2 leading-relaxed">
+                        {func.mensagem || 'Mensagem não configurada'}
+                      </p>
+                    </div>
+
+                    {/* Recipients Status */}
+                    <div className="mb-4">
+                      {func.atributos && func.atributos.length > 0 ? (
+                        <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/50">
+                          <Check className="w-3 h-3" strokeWidth={3} />
+                          <span>{func.atributos.length} destinatário{func.atributos.length !== 1 ? 's' : ''}</span>
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 px-2.5 py-1 rounded-lg border border-orange-200 dark:border-orange-800/50">
+                          <Bell className="w-3 h-3" strokeWidth={3} />
+                          <span>Configure para ativar</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    {canEdit && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleOpenConfigModal(func, false)}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-neutral-300 rounded-xl hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 dark:hover:text-white transition-all duration-200 text-sm font-medium group/btn"
+                        >
+                          <Settings className="w-4 h-4 group-hover/btn:rotate-90 transition-transform duration-300" strokeWidth={2.5} />
+                          <span>Configurar</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setFunctionToDelete(func.id);
+                            setShowDeleteModal(true);
+                          }}
+                          disabled={saving}
+                          className="px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-all duration-200 group/btn"
+                          title="Deletar notificação"
+                        >
+                          <Trash2 className="w-4 h-4 group-hover/btn:scale-110 transition-transform duration-200" strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white dark:bg-neutral-800 rounded-2xl border border-gray-200/60 dark:border-neutral-700/60 p-16 text-center">
+            <div className="relative inline-flex mb-6">
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-neutral-700 dark:to-neutral-800 rounded-full blur-xl opacity-50"></div>
+              <div className="relative w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-neutral-700 dark:to-neutral-800 rounded-full flex items-center justify-center">
+                <Bell className="w-10 h-10 text-gray-400 dark:text-neutral-500" strokeWidth={1.5} />
+              </div>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              Nenhuma notificação criada
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-neutral-400 font-light max-w-sm mx-auto">
+              Comece criando sua primeira notificação automática usando um modelo pronto ou personalizado
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Modal: Criar Notificação */}
@@ -758,6 +979,43 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                  Modelo
+                </label>
+                <select
+                  value={selectedTemplate}
+                  onChange={(e) => {
+                    const templateKey = e.target.value;
+                    setSelectedTemplate(templateKey);
+
+                    // Se selecionou um template, preenche o nome automaticamente
+                    if (templateKey) {
+                      const template = NOTIFICATION_TEMPLATES.find(t => t.key === templateKey);
+                      if (template) {
+                        setNewFunctionName(template.nome);
+                      }
+                    } else {
+                      setNewFunctionName('');
+                    }
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400"
+                >
+                  <option value="">Personalizado (criar do zero)</option>
+                  <optgroup label="Modelos Prontos">
+                    {NOTIFICATION_TEMPLATES.map((template) => (
+                      <option key={template.key} value={template.key}>
+                        {template.nome}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+                {selectedTemplate && (
+                  <p className="text-xs text-gray-500 dark:text-neutral-400 mt-2">
+                    {NOTIFICATION_TEMPLATES.find(t => t.key === selectedTemplate)?.descricao_curta}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
                   Nome da Notificação
                 </label>
                 <input
@@ -767,12 +1025,18 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                   placeholder="Ex: Contrato Enviado"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
                   maxLength={100}
-                  autoFocus
                 />
+                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-2">
+                  {selectedTemplate ? 'Você pode editar o nome sugerido' : 'Digite um nome para sua notificação personalizada'}
+                </p>
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setSelectedTemplate('');
+                    setNewFunctionName('');
+                  }}
                   className="flex-1 px-4 py-2 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
                 >
                   Cancelar
@@ -809,75 +1073,38 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-neutral-700">
-              <div className="flex items-center gap-3 flex-1">
-                {isEditingName ? (
-                  <div className="flex items-center gap-2 flex-1">
-                    <input
-                      type="text"
-                      value={editingName}
-                      onChange={(e) => setEditingName(e.target.value)}
-                      className="flex-1 px-3 py-1 border border-emerald-300 dark:border-emerald-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400"
-                      autoFocus
-                    />
-                    <button
-                      onClick={handleSaveName}
-                      disabled={saving}
-                      className="p-2 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition-colors"
-                    >
-                      <Check className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsEditingName(false);
-                        setEditingName(selectedFunction.nome);
-                      }}
-                      className="p-2 text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100">Configurar Notificação – {selectedFunction.nome}</h3>
-                    {canEdit && (
-                      <button
-                        onClick={() => setIsEditingName(true)}
-                        className="p-1 text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded transition-colors"
-                        title="Renomear"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
-              <button onClick={() => setShowConfigModal(false)} className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-400 ml-4">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100">Configurar – {selectedFunction.nome}</h3>
+              <button onClick={() => setShowConfigModal(false)} className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-400">
                 <X className="w-6 h-6" />
               </button>
             </div>
 
             {/* Tabs */}
             <div className="flex border-b border-gray-200 dark:border-neutral-700 px-6">
-              <button
-                onClick={() => setConfigTab('message')}
-                className={`px-4 py-3 font-medium transition-colors ${
-                  configTab === 'message'
-                    ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400'
-                    : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300'
-                }`}
-              >
-                Mensagem
-              </button>
-              <button
-                onClick={() => setConfigTab('guide')}
-                className={`px-4 py-3 font-medium transition-colors ${
-                  configTab === 'guide'
-                    ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400'
-                    : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300'
-                }`}
-              >
-                Guia IA
-              </button>
+              {!selectedFunction.isTemplate && (
+                <>
+                  <button
+                    onClick={() => setConfigTab('message')}
+                    className={`px-4 py-3 font-medium transition-colors ${
+                      configTab === 'message'
+                        ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400'
+                        : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300'
+                    }`}
+                  >
+                    Mensagem
+                  </button>
+                  <button
+                    onClick={() => setConfigTab('guide')}
+                    className={`px-4 py-3 font-medium transition-colors ${
+                      configTab === 'guide'
+                        ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400'
+                        : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300'
+                    }`}
+                  >
+                    Guia IA
+                  </button>
+                </>
+              )}
               <button
                 onClick={() => setConfigTab('recipients')}
                 className={`px-4 py-3 font-medium transition-colors ${
@@ -1097,7 +1324,6 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                             description = 'O responsável atual da negociação receberá esta notificação automaticamente.';
                           }
 
-                          // Se não tiver label, não renderiza (evita cards vazios)
                           if (!label) {
                             return null;
                           }
