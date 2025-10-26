@@ -39,6 +39,8 @@ import {
   Pin,
   Star,
   Trash2,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import { MessageInput } from "./MessageInput";
 import { toast } from "sonner";
@@ -588,6 +590,53 @@ interface MessageViewProps {
   selectedChat: Chat;
   onBack: () => void;
   whatsappType?: string;
+}
+
+// Helper functions from ChatList
+function jidDigits(jid: string): string | null {
+  const digits = String(jid || '').replace(/\D/g, '');
+  return digits || null;
+}
+
+function normalizeRemoteJid(jid: string): string | null {
+  if (!jid) return null;
+  const clean = String(jid).replace(/\D/g, '');
+  if (clean.startsWith('55') && clean.length === 13) {
+    return `${clean}@s.whatsapp.net`;
+  }
+  if (clean.length === 11 || clean.length === 10) {
+    return `55${clean}@s.whatsapp.net`;
+  }
+  return jid.includes('@') ? jid : `${clean}@s.whatsapp.net`;
+}
+
+function sanitizePushName(
+  name: string | undefined,
+  remoteJid: string,
+): string | undefined {
+  if (!name) return undefined;
+  return name.toLowerCase() === 'você' ? (jidDigits(remoteJid) || remoteJid.split('@')[0]) : name;
+}
+
+function formatPhoneNumber(remoteJid: string): string {
+  const digits = jidDigits(remoteJid) || '';
+
+  // Remove o DDI 55 se existir
+  const cleanDigits = digits.startsWith('55') && digits.length === 13
+    ? digits.slice(2)
+    : digits;
+
+  // Formata: +55 (XX) XXXXX-XXXX ou +55 (XX) XXXX-XXXX
+  if (cleanDigits.length === 11) {
+    // Celular: +55 (XX) XXXXX-XXXX
+    return `+55 (${cleanDigits.slice(0, 2)}) ${cleanDigits.slice(2, 7)}-${cleanDigits.slice(7)}`;
+  } else if (cleanDigits.length === 10) {
+    // Fixo: +55 (XX) XXXX-XXXX
+    return `+55 (${cleanDigits.slice(0, 2)}) ${cleanDigits.slice(2, 6)}-${cleanDigits.slice(6)}`;
+  }
+
+  // Se não conseguir formatar, retorna os dígitos originais
+  return digits;
 }
 
 export function MessageView({ selectedChat, onBack, whatsappType }: MessageViewProps) {
@@ -1248,6 +1297,10 @@ const [forwardModalOpen, setForwardModalOpen] = useState(false);
 const [forwardChats, setForwardChats] = useState<Chat[]>([]);
 const [forwardSearchQuery, setForwardSearchQuery] = useState('');
 const [loadingForwardChats, setLoadingForwardChats] = useState(false);
+const [selectionMode, setSelectionMode] = useState(false);
+const [selectedMessages, setSelectedMessages] = useState<Set<string>>(new Set());
+const [selectedForwardChats, setSelectedForwardChats] = useState<Set<string>>(new Set());
+const [contactsMap, setContactsMap] = useState<Record<string, any>>({});
 const sentMessageIds = useRef<Set<string>>(new Set());
 const [deals, setDeals] = useState([]);
 const [funis, setFunis] = useState([]);
@@ -2463,31 +2516,98 @@ if (isBusiness && newMessage && newMessage.key && !newMessage.key.fromMe) {
     }
   };
 
-  const handleForwardMessage = async (targetChat: Chat) => {
-    if (!forwardMessage) return;
+  const forwardSingleMessage = async (msg: Message, targetJid: string) => {
+    // Verifica se é mensagem de texto
+    const textContent = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
+    if (textContent) {
+      await apiClient.sendMessage(token, {
+        jid: targetJid,
+        type: 'text',
+        text: textContent,
+      });
+      return true;
+    }
 
-    try {
-      const messageContent = forwardMessage.message.conversation ||
-                            forwardMessage.message.extendedTextMessage?.text ||
-                            '';
+    // Verifica se é mensagem de mídia
+    const mediaType = getMediaType(msg);
+    if (mediaType && (mediaType === 'image' || mediaType === 'video' || mediaType === 'audio' || mediaType === 'document')) {
+      const mediaUrl = getMediaUrl(msg);
+      const mediaPart = getMediaPart(msg);
 
-      if (messageContent) {
-        await apiClient.sendMessage(token, {
-          jid: targetChat.remoteJid,
-          type: 'text',
-          text: messageContent,
-        });
-        toast.success(`Mensagem encaminhada para ${targetChat.pushName || targetChat.remoteJid}`);
-      } else {
-        toast.error('Não é possível encaminhar este tipo de mensagem');
+      if (!mediaUrl || !mediaPart) {
+        return false;
       }
 
-      setForwardModalOpen(false);
-      setForwardMessage(null);
-      setForwardSearchQuery('');
-    } catch (error) {
-      console.error('Error forwarding message:', error);
-      toast.error('Erro ao encaminhar mensagem');
+      try {
+        // Baixa a mídia
+        const response = await fetch(mediaUrl);
+        const blob = await response.blob();
+
+        // Converte para base64
+        const base64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const result = reader.result as string;
+            resolve(result.split(',')[1]);
+          };
+          reader.readAsDataURL(blob);
+        });
+
+        // Envia a mídia
+        await apiClient.sendMessage(token, {
+          jid: targetJid,
+          mediatype: mediaType as 'image' | 'video' | 'audio' | 'document',
+          mimetype: mediaPart.mimetype || blob.type,
+          base64: base64,
+          fileName: mediaPart.fileName || `media.${blob.type.split('/')[1]}`,
+        });
+        return true;
+      } catch (error) {
+        console.error('Error forwarding media:', error);
+        return false;
+      }
+    }
+
+    return false;
+  };
+
+  const handleForwardMessage = async (targetChat: Chat) => {
+    // Encaminhar múltiplas mensagens selecionadas
+    if (selectionMode && selectedMessages.size > 0) {
+      try {
+        const messagesToForward = messages.filter(msg => selectedMessages.has(msg.id));
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const msg of messagesToForward) {
+          try {
+            const success = await forwardSingleMessage(msg, targetChat.remoteJid);
+            if (success) {
+              successCount++;
+            } else {
+              failCount++;
+            }
+          } catch (error) {
+            console.error('Error forwarding message:', error);
+            failCount++;
+          }
+        }
+
+        if (successCount > 0) {
+          toast.success(`${successCount} ${successCount === 1 ? 'mensagem encaminhada' : 'mensagens encaminhadas'} para ${targetChat.pushName || targetChat.remoteJid}`);
+        }
+        if (failCount > 0) {
+          toast.error(`${failCount} ${failCount === 1 ? 'mensagem não pôde ser encaminhada' : 'mensagens não puderam ser encaminhadas'}`);
+        }
+
+        setForwardModalOpen(false);
+        setForwardSearchQuery('');
+        setSelectionMode(false);
+        setSelectedMessages(new Set());
+      } catch (error) {
+        console.error('Error forwarding messages:', error);
+        toast.error('Erro ao encaminhar mensagens');
+      }
     }
   };
 
@@ -3831,82 +3951,44 @@ return (
                   onDoubleClick={() => {
                     setReplyToMessage(message);
                   }}
+                  onClick={() => {
+                    if (selectionMode) {
+                      const newSelected = new Set(selectedMessages);
+                      if (newSelected.has(message.id)) {
+                        newSelected.delete(message.id);
+                      } else {
+                        newSelected.add(message.id);
+                      }
+                      setSelectedMessages(newSelected);
+
+                      // Se desmarcar todas, sai do modo seleção
+                      if (newSelected.size === 0) {
+                        setSelectionMode(false);
+                      }
+                    }
+                  }}
                 >
                 {/* Avatar removido para mensagens recebidas - estilo WhatsApp Web */}
 
-                {/* Botão de menu - aparece ao hover (estilo WhatsApp Web) */}
-                <Popover.Root>
-                  <Popover.Trigger asChild>
-                    <button
-                      className={`
-                        opacity-0 group-hover:opacity-100 transition-opacity duration-200
-                        p-1.5 rounded-full hover:bg-gray-200/80 dark:hover:bg-gray-700/80
-                        ${isFromMe ? 'order-2 ml-1' : 'order-1 mr-1'}
-                      `}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                    </button>
-                  </Popover.Trigger>
-
-                  <Popover.Portal>
-                    <Popover.Content
-                      className="z-50 bg-white dark:bg-gray-800 shadow-2xl rounded-md overflow-hidden min-w-[200px] animate-in fade-in-0 zoom-in-95 transition-colors duration-200"
-                      sideOffset={5}
-                      align={isFromMe ? "end" : "start"}
-                    >
-                      <div className="py-2">
-                        {/* Responder */}
-                        <button
-                          className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center space-x-3 transition-colors text-[14.2px]"
-                          onClick={() => {
-                            setReplyToMessage(message);
-                          }}
-                        >
-                          <Reply className="w-[18px] h-[18px] text-gray-600 dark:text-gray-400" />
-                          <span>Responder</span>
-                        </button>
-
-                        {/* Encaminhar */}
-                        <button
-                          className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center space-x-3 transition-colors text-[14.2px]"
-                          onClick={async () => {
-                            setForwardMessage(message);
-                            setForwardModalOpen(true);
-                            setLoadingForwardChats(true);
-                            try {
-                              const user = localStorage.getItem("user");
-                              const token = user ? JSON.parse(user).token : null;
-                              if (token) {
-                                const chats = await apiClient.findChats(token, 1, 50);
-                                setForwardChats(Array.isArray(chats) ? chats : []);
-                              }
-                            } catch (error) {
-                              console.error('Error loading chats:', error);
-                              toast.error('Erro ao carregar conversas');
-                            } finally {
-                              setLoadingForwardChats(false);
-                            }
-                          }}
-                        >
-                          <Forward className="w-[18px] h-[18px] text-gray-600 dark:text-gray-400" />
-                          <span>Encaminhar</span>
-                        </button>
-
-                        {/* Baixar (apenas para mídias) */}
-                        {isMediaMessage(message) && (
-                          <button
-                            className="w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center space-x-3 transition-colors text-[14.2px]"
-                            onClick={() => handleDownloadMedia(message)}
-                          >
-                            <Download className="w-[18px] h-[18px] text-gray-600 dark:text-gray-400" />
-                            <span>Baixar</span>
-                          </button>
-                        )}
-                      </div>
-                    </Popover.Content>
-                  </Popover.Portal>
-                </Popover.Root>
+                {/* Checkbox para seleção (modo seleção) */}
+                {selectionMode && (
+                  <div
+                    className={`
+                      p-1.5 rounded-full transition-all duration-200 cursor-pointer
+                      ${isFromMe ? 'order-2 ml-1' : 'order-1 mr-1'}
+                      ${selectedMessages.has(message.id)
+                        ? 'bg-emerald-100 dark:bg-emerald-900/30'
+                        : 'hover:bg-gray-200/80 dark:hover:bg-gray-700/80'
+                      }
+                    `}
+                  >
+                    {selectedMessages.has(message.id) ? (
+                      <CheckSquare className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    ) : (
+                      <Square className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                    )}
+                  </div>
+                )}
 
                 <div
                   className={`
@@ -3919,7 +4001,101 @@ return (
                     }
                   `}
                 >
-                  <div className="px-2.5 py-1.5 md:px-2 md:py-1.5">
+                  <div className="px-2.5 py-1.5 md:px-2 md:py-1.5 relative">
+                    {/* Botão de menu - aparece ao hover no canto superior direito */}
+                    {!selectionMode && (
+                      <Popover.Root>
+                        <Popover.Trigger asChild>
+                          <button
+                            className="absolute -top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 rounded-full bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 shadow-md z-10"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                          </button>
+                        </Popover.Trigger>
+
+                        <Popover.Portal>
+                          <Popover.Content
+                            className="z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden min-w-[220px] border border-gray-200/50 dark:border-gray-700/50 animate-in fade-in-0 zoom-in-95 transition-all duration-200"
+                            sideOffset={8}
+                            align={isFromMe ? "end" : "start"}
+                          >
+                            <div className="py-2 px-1">
+                              {/* Responder */}
+                              <Popover.Close asChild>
+                                <button
+                                  className="w-full px-4 py-2.5 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/20 dark:hover:to-indigo-900/20 text-gray-700 dark:text-gray-300 flex items-center space-x-3 transition-all duration-200 rounded-xl group"
+                                  onClick={() => {
+                                    setReplyToMessage(message);
+                                  }}
+                                >
+                                  <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30 group-hover:bg-blue-200 dark:group-hover:bg-blue-800/40 transition-colors">
+                                    <Reply className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                  </div>
+                                  <span className="font-medium text-sm">Responder</span>
+                                </button>
+                              </Popover.Close>
+
+                              {/* Copiar */}
+                              <Popover.Close asChild>
+                                <button
+                                  className="w-full px-4 py-2.5 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 dark:hover:from-emerald-900/20 dark:hover:to-teal-900/20 text-gray-700 dark:text-gray-300 flex items-center space-x-3 transition-all duration-200 rounded-xl group"
+                                  onClick={() => {
+                                    const textContent = message.message.conversation || message.message.extendedTextMessage?.text || '';
+                                    if (textContent) {
+                                      navigator.clipboard.writeText(textContent);
+                                      toast.success('Mensagem copiada!');
+                                    } else {
+                                      toast.error('Não há texto para copiar');
+                                    }
+                                  }}
+                                >
+                                  <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/30 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-800/40 transition-colors">
+                                    <Copy className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                  </div>
+                                  <span className="font-medium text-sm">Copiar</span>
+                                </button>
+                              </Popover.Close>
+
+                              {/* Encaminhar */}
+                              <Popover.Close asChild>
+                                <button
+                                  className="w-full px-4 py-2.5 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/20 dark:hover:to-pink-900/20 text-gray-700 dark:text-gray-300 flex items-center space-x-3 transition-all duration-200 rounded-xl group"
+                                  onClick={() => {
+                                    // Ativa modo de seleção e seleciona a mensagem atual
+                                    setSelectionMode(true);
+                                    const newSelected = new Set<string>();
+                                    newSelected.add(message.id);
+                                    setSelectedMessages(newSelected);
+                                  }}
+                                >
+                                  <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30 group-hover:bg-purple-200 dark:group-hover:bg-purple-800/40 transition-colors">
+                                    <Forward className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                  </div>
+                                  <span className="font-medium text-sm">Encaminhar</span>
+                                </button>
+                              </Popover.Close>
+
+                              {/* Baixar (apenas para mídias) */}
+                              {isMediaMessage(message) && (
+                                <Popover.Close asChild>
+                                  <button
+                                    className="w-full px-4 py-2.5 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 dark:hover:from-amber-900/20 dark:hover:to-orange-900/20 text-gray-700 dark:text-gray-300 flex items-center space-x-3 transition-all duration-200 rounded-xl group"
+                                    onClick={() => handleDownloadMedia(message)}
+                                  >
+                                    <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30 group-hover:bg-amber-200 dark:group-hover:bg-amber-800/40 transition-colors">
+                                      <Download className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                                    </div>
+                                    <span className="font-medium text-sm">Baixar</span>
+                                  </button>
+                                </Popover.Close>
+                              )}
+                            </div>
+                          </Popover.Content>
+                        </Popover.Portal>
+                      </Popover.Root>
+                    )}
+
                     {message.isEncaminhada && (
                       <div className="text-xs mb-1.5 flex items-center space-x-1 text-gray-500 dark:text-gray-400">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4185,98 +4361,181 @@ return (
       </div>
     )}
 
-    {/* Forward Modal */}
+    {/* Forward Modal - WhatsApp Web Style */}
     {forwardModalOpen && (
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 transition-colors duration-200">
-          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 px-6 py-4 border-b border-gray-300 dark:border-gray-600">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center space-x-3">
-                <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center transition-colors duration-200">
-                  <Forward className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <span>Encaminhar mensagem</span>
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-[#202c33] w-full max-w-md h-[600px] rounded-lg shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 transition-colors duration-200">
+
+          {/* Header */}
+          <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                Encaminhar mensagem para
               </h2>
               <button
                 onClick={() => {
                   setForwardModalOpen(false);
                   setForwardMessage(null);
                   setForwardSearchQuery('');
+                  setSelectedForwardChats(new Set());
                 }}
-                className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
-                <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </button>
             </div>
-          </div>
 
-          <div className="p-6 space-y-4">
             {/* Search input */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar conversas..."
+                placeholder="Pesquisar nome ou número"
                 value={forwardSearchQuery}
                 onChange={(e) => setForwardSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent transition-colors duration-200"
+                className="w-full pl-10 pr-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-transparent text-gray-900 dark:text-gray-100 text-sm focus:outline-none placeholder:text-gray-500"
               />
             </div>
+          </div>
 
-            {/* Message preview */}
-            {forwardMessage && (
-              <div className="p-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Mensagem a encaminhar:</p>
-                <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
-                  {forwardMessage.message.conversation || forwardMessage.message.extendedTextMessage?.text || 'Mensagem sem texto'}
-                </p>
+          {/* Conversas recentes label */}
+          <div className="px-6 py-3 bg-gray-50 dark:bg-[#111b21]">
+            <p className="text-xs uppercase text-gray-500 dark:text-gray-400 font-medium tracking-wide">
+              Conversas recentes
+            </p>
+          </div>
+
+          {/* Chats list */}
+          <div className="flex-1 overflow-y-auto">
+            {loadingForwardChats ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
               </div>
-            )}
+            ) : forwardChats.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400 text-sm">
+                Nenhuma conversa encontrada
+              </div>
+            ) : (
+              forwardChats
+                .filter((chat) => {
+                  if (!forwardSearchQuery) return true;
 
-            {/* Chats list */}
-            <div className="max-h-96 overflow-y-auto space-y-2">
-              {loadingForwardChats ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
-                </div>
-              ) : forwardChats.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  Nenhuma conversa encontrada
-                </div>
-              ) : (
-                forwardChats
-                  .filter((chat) => {
-                    if (!forwardSearchQuery) return true;
-                    const searchLower = forwardSearchQuery.toLowerCase();
-                    return (
-                      (chat.pushName?.toLowerCase().includes(searchLower)) ||
-                      (chat.remoteJid?.toLowerCase().includes(searchLower))
-                    );
-                  })
-                  .map((chat) => (
-                    <button
+                  const query = forwardSearchQuery.toLowerCase().trim();
+
+                  // Busca o contato no mapa (igual ao ChatList)
+                  const normalized = normalizeRemoteJid(chat.remoteJid);
+                  const digits = jidDigits(chat.remoteJid);
+                  const contact =
+                    contactsMap[chat.remoteJid] ||
+                    (normalized ? contactsMap[normalized] : undefined) ||
+                    (digits ? contactsMap[digits] : undefined);
+
+                  // Pega o nome do contato (igual ao getDisplayName do ChatList)
+                  const displayName = (
+                    sanitizePushName(contact?.pushName || chat.pushName, chat.remoteJid) ||
+                    chat.remoteJid.split('@')[0] ||
+                    'Contato'
+                  ).toLowerCase();
+
+                  // Pega os dígitos do número
+                  const phoneDigits = (jidDigits(chat.remoteJid) || '').toLowerCase();
+
+                  // Busca por nome OU número (igual ao ChatList)
+                  return displayName.includes(query) || phoneDigits.includes(query);
+                })
+                .map((chat) => {
+                  const isSelected = selectedForwardChats.has(chat.id);
+                  return (
+                    <div
                       key={chat.id}
-                      onClick={() => handleForwardMessage(chat)}
-                      className="w-full p-3 flex items-center space-x-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors text-left"
+                      onClick={() => {
+                        const newSelected = new Set(selectedForwardChats);
+                        if (newSelected.has(chat.id)) {
+                          newSelected.delete(chat.id);
+                        } else {
+                          newSelected.add(chat.id);
+                        }
+                        setSelectedForwardChats(newSelected);
+                      }}
+                      className="flex items-center px-6 py-3 hover:bg-gray-50 dark:hover:bg-[#2a3942] cursor-pointer transition-colors"
                     >
-                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-white font-semibold text-sm">
-                          {chat.pushName?.charAt(0).toUpperCase() || chat.remoteJid?.charAt(0) || '?'}
-                        </span>
+                      {/* Checkbox */}
+                      <div className="mr-4">
+                        <div className={`w-5 h-5 rounded-sm border-2 flex items-center justify-center transition-all ${
+                          isSelected
+                            ? 'bg-emerald-500 border-emerald-500'
+                            : 'border-gray-300 dark:border-gray-600'
+                        }`}>
+                          {isSelected && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                          {chat.pushName || chat.remoteJid}
+
+                      {/* Avatar */}
+                      {chat.profilePicUrl ? (
+                        <img
+                          src={chat.profilePicUrl}
+                          alt={chat.pushName || 'Contato'}
+                          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-gray-700 dark:text-gray-300 font-medium text-lg">
+                            {chat.pushName?.charAt(0).toUpperCase() || chat.remoteJid?.charAt(0) || '?'}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Info */}
+                      <div className="ml-4 flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {(() => {
+                            // Usa o mesmo padrão de busca do ChatList
+                            const normalized = normalizeRemoteJid(chat.remoteJid);
+                            const digits = jidDigits(chat.remoteJid);
+
+                            // Busca o contato no mapa (exatamente como o ChatList faz)
+                            const contact =
+                              contactsMap[chat.remoteJid] ||
+                              (normalized ? contactsMap[normalized] : undefined) ||
+                              (digits ? contactsMap[digits] : undefined);
+
+                            // Aplica sanitizePushName e fallback (exatamente como o ChatList faz)
+                            return (
+                              sanitizePushName(contact?.pushName || chat.pushName, chat.remoteJid) ||
+                              chat.remoteJid.split('@')[0]
+                            );
+                          })()}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                          {chat.remoteJid}
+                          {formatPhoneNumber(chat.remoteJid)}
                         </p>
                       </div>
-                    </button>
-                  ))
-              )}
-            </div>
+                    </div>
+                  );
+                })
+            )}
           </div>
+
+          {/* Footer com botão enviar */}
+          {selectedForwardChats.size > 0 && (
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-[#202c33]">
+              <button
+                onClick={() => {
+                  const selectedChats = forwardChats.filter(chat => selectedForwardChats.has(chat.id));
+                  selectedChats.forEach(chat => handleForwardMessage(chat));
+                  setSelectedForwardChats(new Set());
+                }}
+                className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full font-medium transition-colors flex items-center justify-center space-x-2"
+              >
+                <Send className="w-4 h-4" />
+                <span>Enviar para {selectedForwardChats.size} {selectedForwardChats.size === 1 ? 'conversa' : 'conversas'}</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     )}
@@ -4350,6 +4609,91 @@ return (
         </div>
       </div>
     )}
+
+      {/* Selection Actions Bar */}
+      {selectionMode && selectedMessages.size > 0 && (
+        <div className="fixed md:relative bottom-[72px] md:bottom-auto left-0 right-0 md:left-auto md:right-auto z-10 px-4 md:px-6 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 border-t border-b border-emerald-200 dark:border-emerald-800 shadow-lg transition-all duration-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center">
+                <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
+                  {selectedMessages.size} {selectedMessages.size === 1 ? 'mensagem selecionada' : 'mensagens selecionadas'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              {/* Botão Encaminhar */}
+              <button
+                onClick={async () => {
+                  setForwardModalOpen(true);
+                  setLoadingForwardChats(true);
+                  try {
+                    const user = localStorage.getItem("user");
+                    const token = user ? JSON.parse(user).token : null;
+                    if (token) {
+                      // Busca chats e contatos em paralelo
+                      const [chats, contacts] = await Promise.all([
+                        apiClient.findChats(token, 1, 50),
+                        apiClient.findContacts(token).catch(() => [])
+                      ]);
+
+                      setForwardChats(Array.isArray(chats) ? chats : []);
+
+                      // Cria um mapa de contatos usando o mesmo padrão do ChatList
+                      const map: Record<string, any> = {};
+                      if (Array.isArray(contacts)) {
+                        contacts.forEach((c: any) => {
+                          const remote = c.remoteJid || '';
+                          const normalized = normalizeRemoteJid(remote);
+                          const digits = jidDigits(remote);
+
+                          // Indexa por remoteJid original
+                          if (remote) {
+                            map[remote] = c;
+                          }
+                          // Indexa por remoteJid normalizado
+                          if (normalized && normalized !== remote) {
+                            map[normalized] = c;
+                          }
+                          // Indexa por dígitos apenas
+                          if (digits && !map[digits]) {
+                            map[digits] = c;
+                          }
+                        });
+                      }
+                      setContactsMap(map);
+                    }
+                  } catch (error) {
+                    console.error('Error loading chats:', error);
+                    toast.error('Erro ao carregar conversas');
+                  } finally {
+                    setLoadingForwardChats(false);
+                  }
+                }}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md flex items-center space-x-2"
+              >
+                <Forward className="w-4 h-4" />
+                <span>Encaminhar</span>
+              </button>
+
+              {/* Botão Cancelar */}
+              <button
+                onClick={() => {
+                  setSelectionMode(false);
+                  setSelectedMessages(new Set());
+                }}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-medium transition-all duration-200"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Message Input / Templates */}
       <div className="fixed md:relative bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto z-20 px-2 md:px-4 py-2 border-t bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 transition-colors duration-200">
