@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MapPin } from "lucide-react";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 import brasilGeo from "../../assets/brasil-states.json";
@@ -16,14 +16,50 @@ interface BrazilMapSectionProps {
 export default function BrazilMapSection({ stateData = [] }: BrazilMapSectionProps) {
   const [hoveredState, setHoveredState] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [hasError, setHasError] = useState(false);
 
-  // Dados padrão para exemplo (serão substituídos pelos dados reais da API)
+  // Verifica se o GeoJSON é válido
+  useEffect(() => {
+    try {
+      if (!brasilGeo || !brasilGeo.features || !Array.isArray(brasilGeo.features)) {
+        console.error("GeoJSON do Brasil está inválido ou corrompido");
+        setHasError(true);
+      }
+    } catch (error) {
+      console.error("Erro ao validar GeoJSON:", error);
+      setHasError(true);
+    }
+  }, []);
+
+  // Dados padrão: todos os estados com 0 leads quando não houver dados
   const defaultData: StateData[] = [
-    { uf: "SP", nome: "São Paulo", leads: 23 },
-    { uf: "MG", nome: "Minas Gerais", leads: 10 },
-    { uf: "RJ", nome: "Rio de Janeiro", leads: 10 },
-    { uf: "BA", nome: "Bahia", leads: 8 },
-    { uf: "PE", nome: "Pernambuco", leads: 6 },
+    { uf: "AC", nome: "Acre", leads: 0 },
+    { uf: "AL", nome: "Alagoas", leads: 0 },
+    { uf: "AP", nome: "Amapá", leads: 0 },
+    { uf: "AM", nome: "Amazonas", leads: 0 },
+    { uf: "BA", nome: "Bahia", leads: 0 },
+    { uf: "CE", nome: "Ceará", leads: 0 },
+    { uf: "DF", nome: "Distrito Federal", leads: 0 },
+    { uf: "ES", nome: "Espírito Santo", leads: 0 },
+    { uf: "GO", nome: "Goiás", leads: 0 },
+    { uf: "MA", nome: "Maranhão", leads: 0 },
+    { uf: "MT", nome: "Mato Grosso", leads: 0 },
+    { uf: "MS", nome: "Mato Grosso do Sul", leads: 0 },
+    { uf: "MG", nome: "Minas Gerais", leads: 0 },
+    { uf: "PA", nome: "Pará", leads: 0 },
+    { uf: "PB", nome: "Paraíba", leads: 0 },
+    { uf: "PR", nome: "Paraná", leads: 0 },
+    { uf: "PE", nome: "Pernambuco", leads: 0 },
+    { uf: "PI", nome: "Piauí", leads: 0 },
+    { uf: "RJ", nome: "Rio de Janeiro", leads: 0 },
+    { uf: "RN", nome: "Rio Grande do Norte", leads: 0 },
+    { uf: "RS", nome: "Rio Grande do Sul", leads: 0 },
+    { uf: "RO", nome: "Rondônia", leads: 0 },
+    { uf: "RR", nome: "Roraima", leads: 0 },
+    { uf: "SC", nome: "Santa Catarina", leads: 0 },
+    { uf: "SP", nome: "São Paulo", leads: 0 },
+    { uf: "SE", nome: "Sergipe", leads: 0 },
+    { uf: "TO", nome: "Tocantins", leads: 0 },
   ];
 
   const data = stateData.length > 0 ? stateData : defaultData;
@@ -65,11 +101,42 @@ export default function BrazilMapSection({ stateData = [] }: BrazilMapSectionPro
     return data.find(d => d.uf === uf);
   };
 
-  // Ordena os estados por quantidade de leads
-  const sortedStates = [...data].sort((a, b) => b.leads - a.leads).slice(0, 5);
+  // Ordena os estados por quantidade de leads e filtra apenas os que têm leads > 0
+  const sortedStates = [...data]
+    .filter(state => state.leads > 0)
+    .sort((a, b) => b.leads - a.leads)
+    .slice(0, 5);
 
   // Calcula o total de conversas
   const totalConversas = data.reduce((sum, state) => sum + state.leads, 0);
+
+  // Verifica se há dados reais (stateData foi fornecido e tem conteúdo)
+  const hasRealData = stateData.length > 0;
+
+  // Se houver erro, mostra mensagem
+  if (hasError) {
+    return (
+      <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden flex flex-col h-full">
+        <div className="px-3 py-2.5 flex items-center justify-between border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 rounded-lg flex items-center justify-center flex-shrink-0">
+              <MapPin className="w-4 h-4 text-green-600 dark:text-green-400" />
+            </div>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-neutral-100">Total de conversas por estado</h3>
+          </div>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
+            <span className="text-xs font-semibold text-green-700 dark:text-green-300">Total:</span>
+            <span className="text-sm font-bold text-green-800 dark:text-green-200">{totalConversas.toLocaleString()}</span>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-6">
+          <p className="text-sm text-gray-500 dark:text-neutral-400 text-center">
+            Erro ao carregar o mapa do Brasil. Por favor, tente novamente mais tarde.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden flex flex-col h-full">
@@ -100,42 +167,53 @@ export default function BrazilMapSection({ stateData = [] }: BrazilMapSectionPro
             style={{ width: '110%', height: '100%', maxHeight: '450px' }}
           >
             <Geographies geography={brasilGeo}>
-              {({ geographies }) =>
-                geographies.map((geo) => {
-                  const uf = geo.properties.sigla;
-                  return (
-                    <Geography
-                      key={geo.rsmKey}
-                      geography={geo}
-                      onMouseEnter={(e) => handleMouseEnter(uf, e as any)}
-                      onMouseMove={(e) => handleMouseMove(e as any)}
-                      onMouseLeave={handleMouseLeave}
-                      style={{
-                        default: {
-                          fill: getStateColor(uf),
-                          stroke: "#fff",
-                          strokeWidth: 0.75,
-                          outline: "none",
-                        },
-                        hover: {
-                          fill: getStateColor(uf),
-                          stroke: "#fff",
-                          strokeWidth: 1.5,
-                          outline: "none",
-                          opacity: 0.8,
-                          cursor: "pointer",
-                        },
-                        pressed: {
-                          fill: getStateColor(uf),
-                          stroke: "#fff",
-                          strokeWidth: 1.5,
-                          outline: "none",
-                        },
-                      }}
-                    />
-                  );
-                })
-              }
+              {({ geographies }) => {
+                try {
+                  if (!geographies || !Array.isArray(geographies)) {
+                    console.error("Geographies não é um array válido");
+                    return null;
+                  }
+
+                  return geographies.map((geo) => {
+                    const uf = geo.properties?.sigla || '';
+                    return (
+                      <Geography
+                        key={geo.rsmKey}
+                        geography={geo}
+                        onMouseEnter={(e) => handleMouseEnter(uf, e as any)}
+                        onMouseMove={(e) => handleMouseMove(e as any)}
+                        onMouseLeave={handleMouseLeave}
+                        style={{
+                          default: {
+                            fill: getStateColor(uf),
+                            stroke: "#fff",
+                            strokeWidth: 0.75,
+                            outline: "none",
+                          },
+                          hover: {
+                            fill: getStateColor(uf),
+                            stroke: "#fff",
+                            strokeWidth: 1.5,
+                            outline: "none",
+                            opacity: 0.8,
+                            cursor: "pointer",
+                          },
+                          pressed: {
+                            fill: getStateColor(uf),
+                            stroke: "#fff",
+                            strokeWidth: 1.5,
+                            outline: "none",
+                          },
+                        }}
+                      />
+                    );
+                  });
+                } catch (error) {
+                  console.error("Erro ao renderizar geografias:", error);
+                  setHasError(true);
+                  return null;
+                }
+              }}
             </Geographies>
           </ComposableMap>
 
@@ -160,6 +238,14 @@ export default function BrazilMapSection({ stateData = [] }: BrazilMapSectionPro
 
         {/* Legenda - Top 5 Estados em GRID 3 colunas - PREMIUM */}
         <div className="w-full px-3 pb-3 space-y-2">
+          {!hasRealData || sortedStates.length === 0 ? (
+            <div className="flex items-center justify-center py-6">
+              <p className="text-sm text-gray-500 dark:text-neutral-400 text-center">
+                Nenhuma conversa por estado registrada no período selecionado
+              </p>
+            </div>
+          ) : (
+            <>
           {/* Primeira linha: 3 estados */}
           <div className="grid grid-cols-3 gap-2">
           {sortedStates.slice(0, 3).map((state, index) => {
@@ -237,6 +323,8 @@ export default function BrazilMapSection({ stateData = [] }: BrazilMapSectionPro
                 );
               })}
             </div>
+          )}
+            </>
           )}
         </div>
       </div>
