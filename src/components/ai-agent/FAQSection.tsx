@@ -58,7 +58,7 @@ export default function FAQSection({
   const [faqToDelete, setFaqToDelete] = useState<number | null>(null);
   const [isQuillReady, setIsQuillReady] = useState(false);
   const [collapsedFaqs, setCollapsedFaqs] = useState<boolean[]>(() =>
-    faqs.map(() => true)
+    (faqs || []).map(() => true)
   );
 
   const MAX_CHARS = 2000;
@@ -71,9 +71,9 @@ export default function FAQSection({
   };
 
   // Contabilizar caracteres de todas as perguntas juntas
-  const totalCharCount = faqs.reduce((total, faq) => {
-    const perguntaLength = faq.pergunta.length;
-    const respostaLength = getTextLength(faq.resposta);
+  const totalCharCount = (faqs || []).reduce((total, faq) => {
+    const perguntaLength = faq?.pergunta?.length || 0;
+    const respostaLength = getTextLength(faq?.resposta || '');
     return total + perguntaLength + respostaLength;
   }, 0);
 
@@ -103,6 +103,8 @@ export default function FAQSection({
   }, []);
 
   useEffect(() => {
+    if (!faqs || !Array.isArray(faqs)) return;
+
     setCollapsedFaqs((prev) => {
       if (prev.length === 0) {
         return faqs.map(() => true);
@@ -118,7 +120,7 @@ export default function FAQSection({
 
       return prev;
     });
-  }, [faqs.length, faqs]);
+  }, [faqs?.length, faqs]);
 
   async function registerMediaBlot() {
     if (typeof window !== "undefined") {
@@ -183,8 +185,8 @@ export default function FAQSection({
 
   const handleAddFAQ = () => {
     setFaqs((prev) => [
-      ...prev,
-      { ordem: prev.length + 1, pergunta: "", resposta: "" },
+      ...(prev || []),
+      { ordem: (prev || []).length + 1, pergunta: "", resposta: "" },
     ]);
   };
 
@@ -195,7 +197,7 @@ export default function FAQSection({
 
   const confirmDelete = () => {
     if (faqToDelete !== null) {
-      const updated = faqs
+      const updated = (faqs || [])
         .filter((f) => f.ordem !== faqToDelete)
         .map((f, i) => ({ ...f, ordem: i + 1 }));
       setFaqs(updated);
@@ -210,7 +212,7 @@ export default function FAQSection({
   };
 
   const handleRemoveFAQ = (ordem: number) => {
-    const updated = faqs
+    const updated = (faqs || [])
       .filter((f) => f.ordem !== ordem)
       .map((f, i) => ({ ...f, ordem: i + 1 }));
     setFaqs(updated);
@@ -222,7 +224,7 @@ export default function FAQSection({
     value: string
   ) => {
     setFaqs((prev) =>
-      prev.map((f) => (f.ordem === ordem ? { ...f, [field]: value } : f))
+      (prev || []).map((f) => (f.ordem === ordem ? { ...f, [field]: value } : f))
     );
   };
 
@@ -299,16 +301,16 @@ export default function FAQSection({
   };
 
   const onDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
+    if (!result.destination || !faqs) return;
 
-    const reordered = [...faqs];
+    const reordered = [...(faqs || [])];
     const [removed] = reordered.splice(result.source.index, 1);
     reordered.splice(result.destination.index, 0, removed);
 
     setFaqs(reordered.map((faq, i) => ({ ...faq, ordem: i + 1 })));
 
     setCollapsedFaqs((prev) => {
-      const updated = [...prev];
+      const updated = [...(prev || [])];
       const [collapsed] = updated.splice(result.source.index, 1);
       updated.splice(
         result.destination.index,
@@ -321,7 +323,7 @@ export default function FAQSection({
 
   const toggleFaqCollapse = (index: number) => {
     setCollapsedFaqs((prev) => {
-      const next = [...prev];
+      const next = [...(prev || [])];
       next[index] = !next[index];
       return next;
     });
@@ -368,7 +370,7 @@ export default function FAQSection({
       </div>
 
       {/* Contador de caracteres total */}
-      {faqs.length > 0 && (
+      {faqs && faqs.length > 0 && (
         <div className="mb-6 space-y-2">
           <div className="flex justify-between items-center">
             <span className={`text-sm font-medium ${getTextColor()}`}>
@@ -410,7 +412,7 @@ export default function FAQSection({
               ref={provided.innerRef}
               {...provided.droppableProps}
             >
-              {faqs.map((faq, index) => (
+              {(faqs || []).map((faq, index) => (
                 <Draggable
                   key={faq.ordem}
                   draggableId={String(faq.ordem)}
