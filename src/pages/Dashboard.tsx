@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   GripVertical,
 } from "lucide-react";
+import BrazilMapSection from "../components/dashboard/BrazilMapSection";
 import {
   DndContext,
   closestCenter,
@@ -160,6 +161,13 @@ interface TagCount {
   id_tag: number;
   nome: string;
   quantidade: number;
+  cor?: string; // Cor da etiqueta da API
+}
+
+interface StateData {
+  uf: string;
+  nome: string;
+  leads: number;
 }
 
 // ==================== Utils ====================
@@ -242,6 +250,7 @@ export default function Dashboard() {
   const [stageDeals, setStageDeals] = useState<StageDeals[]>([]);
   const [orderedFunnelStages, setOrderedFunnelStages] = useState<StageDeals[]>([]);
   const [tagCounts, setTagCounts] = useState<TagCount[]>([]);
+  const [stateData, setStateData] = useState<StateData[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
 
@@ -258,6 +267,7 @@ export default function Dashboard() {
     fetchData();
     fetchPreviousPeriodData();
     fetchTagCounts();
+    fetchStateData();
   }, [startDate, endDate]);
 
   // Buscar funis e etapas para obter a ordem correta
@@ -387,21 +397,55 @@ export default function Dashboard() {
 
       const tagsData = tagsRes.ok ? await tagsRes.json() : [];
       const assocData = assocRes.ok ? await assocRes.json() : [];
+
       const counts: Record<number, number> = {};
       assocData.forEach((rel: { id_negociacao: number | number[]; id_tag: number }) => {
         const qtd = Array.isArray(rel.id_negociacao) ? rel.id_negociacao.length : 1;
         counts[rel.id_tag] = (counts[rel.id_tag] || 0) + qtd;
       });
+
       const tagsList: TagCount[] = (Array.isArray(tagsData) ? tagsData : []).map((t: any) => ({
         id_tag: t.Id,
         nome: t.nome,
         quantidade: counts[t.Id] || 0,
+        cor: t.cor || undefined, // Captura a cor da API
       }));
       const topTags = tagsList.sort((a, b) => b.quantidade - a.quantidade).slice(0, 8);
       setTagCounts(topTags);
     } catch (err) {
       console.error("Erro ao buscar etiquetas:", err);
       setTagCounts([]);
+    }
+  };
+
+  const fetchStateData = async () => {
+    try {
+      const response = await fetch("https://n8n.lumendigital.com.br/webhook/prospecta/contato/get", {
+        headers: { token }
+      });
+
+      if (!response.ok) {
+        console.warn("Erro ao buscar contatos");
+        setStateData([]);
+        return;
+      }
+
+      const contacts = await response.json();
+
+      if (!Array.isArray(contacts) || contacts.length === 0) {
+        console.warn("Nenhum contato encontrado");
+        setStateData([]);
+        return;
+      }
+
+      // Agrupa contatos por estado baseado no DDD do telefone
+      const { groupContactsByState } = await import("../utils/dddToState");
+      const stateData = groupContactsByState(contacts);
+
+      setStateData(stateData);
+    } catch (err) {
+      console.error("Erro ao buscar dados por estado:", err);
+      setStateData([]);
     }
   };
 
@@ -540,8 +584,8 @@ export default function Dashboard() {
   const tagValues = finalTags.map((t) => t.quantidade);
   const totalTags = tagValues.reduce((a, b) => a + b, 0);
 
-  // 🌈 Cores harmônicas
-  const tagColors = [
+  // 🌈 Cores padrão (fallback caso a etiqueta não tenha cor definida)
+  const defaultTagColors = [
     "rgba(59,130,246,0.9)",
     "rgba(99,102,241,0.9)",
     "rgba(56,189,248,0.9)",
@@ -551,17 +595,31 @@ export default function Dashboard() {
     "rgba(239,68,68,0.9)",
   ];
 
+  // Usa cores reais da API ou fallback para cores padrão
+  const tagColors = finalTags.map((tag, i) => {
+    if (tag.cor) {
+      // Se a cor vier em formato hex (#RRGGBB), converte para rgba
+      if (tag.cor.startsWith('#')) {
+        const hex = tag.cor.replace('#', '');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        return `rgba(${r},${g},${b},0.9)`;
+      }
+      return tag.cor;
+    }
+    return defaultTagColors[i % defaultTagColors.length];
+  });
+
   const tagsData = {
     labels: tagLabels,
     datasets: [
       {
         data: tagValues,
-        backgroundColor: tagColors.slice(0, finalTags.length),
+        backgroundColor: tagColors,
         borderColor: "rgba(255,255,255,0.9)",
         borderWidth: 2,
-        hoverBackgroundColor: tagColors
-          .slice(0, finalTags.length)
-          .map((c) => lightenColor(c, 0.25)),
+        hoverBackgroundColor: tagColors.map((c) => lightenColor(c, 0.25)),
         hoverBorderColor: "#fff",
         hoverBorderWidth: 4,
         hoverOffset: 12,
@@ -571,7 +629,11 @@ export default function Dashboard() {
 
   const tagsOptions = {
     responsive: true,
+    maintainAspectRatio: true,
     cutout: "72%",
+    layout: {
+      padding: 20, // Espaço extra para permitir expansão no hover
+    },
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -631,23 +693,33 @@ export default function Dashboard() {
           )}
         </div>
 
-        <button
-          onClick={() => setShowDateModal(true)}
-          className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-neutral-600 px-3 py-2 bg-white dark:bg-neutral-700 hover:bg-blue-50 dark:hover:bg-neutral-600 transition-theme text-sm font-medium text-gray-700 dark:text-neutral-200"
-        >
-          <Filter className="w-4 h-4 text-blue-600" />
-          <span>Selecionar Data</span>
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Período Selecionado */}
+          <div className="hidden md:flex items-center gap-2 text-sm">
+            <Calendar className="w-4 h-4 text-gray-400 dark:text-neutral-500" />
+            <span className="text-gray-600 dark:text-neutral-400 font-medium">
+              {startDate && endDate
+                ? `${new Date(startDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} - ${new Date(endDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}`
+                : 'Nenhum período selecionado'}
+            </span>
+          </div>
+
+          {/* Botão Selecionar Data */}
+          <button
+            onClick={() => setShowDateModal(true)}
+            className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-neutral-600 px-3 py-2 bg-white dark:bg-neutral-700 hover:bg-blue-50 dark:hover:bg-neutral-600 transition-theme text-sm font-medium text-gray-700 dark:text-neutral-200"
+          >
+            <Filter className="w-4 h-4 text-blue-600" />
+            <span>Selecionar Data</span>
+          </button>
+        </div>
       </div>
 
-      {/* Layout Principal: KPIs + Alertas + Volume || Etiquetas || Funil */}
-      <div className="px-3 md:pl-4 md:pr-0 py-3 grid grid-cols-1 lg:grid-cols-[1fr_340px_450px] xl:grid-cols-[1fr_380px_500px] 2xl:grid-cols-[1fr_420px_550px] gap-3">
+      {/* Layout Principal: KPIs no topo, depois 3 colunas */}
+      <div className="px-3 md:px-4 py-3">
 
-        {/* Coluna Esquerda: KPIs + Alertas + Volume */}
-        <div className="flex flex-col gap-3">
-
-          {/* KPIs Compactos (3 colunas) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+        {/* KPIs Compactos em linha horizontal */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
             {/* Total de Contatos com comparação */}
             <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-gray-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-600 transition-theme">
               <div className="flex items-center justify-between mb-1">
@@ -685,48 +757,15 @@ export default function Dashboard() {
                 {peakDay ? `${formatBR(peakDay.dia)}` : 'Sem dados'}
               </p>
             </div>
-          </div>
+        </div>
 
-          {/* ==================== ALERTAS INTELIGENTES ==================== */}
-          {(growthRate < -10 || growthRate > 20 || (peakDay && peakDay.qtdLeads > dealMetrics.quantidadeMedia * 1.5)) && (
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950 dark:to-orange-950 border border-amber-200 dark:border-amber-800 rounded-lg p-4 transition-theme">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200 mb-2">Insights</h4>
-                  <div className="space-y-2">
-                    {growthRate < -10 && (
-                      <div className="flex items-start gap-2">
-                        <TrendingDown className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-                        <p className="text-sm text-gray-700 dark:text-neutral-300">
-                          <span className="font-semibold">Queda de {Math.abs(growthRate).toFixed(1)}%</span> vs período anterior
-                        </p>
-                      </div>
-                    )}
-                    {growthRate > 20 && (
-                      <div className="flex items-start gap-2">
-                        <TrendingUp className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                        <p className="text-sm text-gray-700 dark:text-neutral-300">
-                          <span className="font-semibold">Crescimento de {growthRate.toFixed(1)}%!</span> Excelente performance
-                        </p>
-                      </div>
-                    )}
-                    {peakDay && peakDay.qtdLeads > dealMetrics.quantidadeMedia * 1.5 && (
-                      <div className="flex items-start gap-2">
-                        <Activity className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <p className="text-sm text-gray-700 dark:text-neutral-300">
-                          Pico de <span className="font-semibold">{peakDay.qtdLeads} contatos</span> em {formatBR(peakDay.dia)}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+        {/* Grid de 3 colunas: Volume+Etiquetas | Mapa | Funil */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
 
-          {/* Gráfico de Volume */}
-          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden">
+          {/* Coluna 1: Volume + Etiquetas */}
+          <div className="flex flex-col gap-3">
+            {/* Gráfico de Volume */}
+            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden">
             <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
               <div className="w-7 h-7 bg-blue-50 dark:bg-blue-950 rounded-lg flex items-center justify-center flex-shrink-0">
                 <BarIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -740,64 +779,64 @@ export default function Dashboard() {
             </div>
           </div>
 
-        </div>
-
-        {/* Etiquetas Centro (Meio) */}
-        <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden flex flex-col">
-          <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
-            <div className="w-7 h-7 bg-gradient-to-tr from-pink-100 to-blue-50 dark:from-pink-950 dark:to-blue-950 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Tags className="w-5 h-5 text-pink-600 dark:text-pink-400" />
+          {/* Etiquetas */}
+          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme flex flex-col overflow-visible">
+            <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
+              <div className="w-7 h-7 bg-gradient-to-tr from-pink-100 to-blue-50 dark:from-pink-950 dark:to-blue-950 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Tags className="w-5 h-5 text-pink-600 dark:text-pink-400" />
+              </div>
+              <h3 className="text-base font-bold text-gray-900 dark:text-neutral-100">Etiquetas</h3>
             </div>
-            <h3 className="text-base font-bold text-gray-900 dark:text-neutral-100">Etiquetas</h3>
-          </div>
 
-          <div className="p-3 sm:p-4 flex-1 flex flex-col items-center justify-center">
-            {tagCounts.length > 0 ? (
-              <div className="flex flex-col items-center gap-3 sm:gap-4 w-full">
-                {/* Donut Chart */}
-                <div className="relative w-40 h-40 sm:w-44 sm:h-44 xl:w-52 xl:h-52 2xl:w-60 2xl:h-60">
-                  <Doughnut data={tagsData} options={tagsOptions} />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <p className="text-[10px] sm:text-xs text-gray-500 dark:text-neutral-400 font-semibold uppercase">Total</p>
-                    <p className="text-xl sm:text-2xl xl:text-3xl 2xl:text-4xl font-bold text-gray-800 dark:text-neutral-100">{totalTags.toLocaleString()}</p>
+            <div className="p-8 flex-1 flex items-center justify-center overflow-visible">
+              {tagCounts.length > 0 ? (
+                <div className="flex items-center gap-6 w-full">
+                  {/* Pizza à esquerda */}
+                  <div className="flex-shrink-0">
+                    <div className="relative w-48 h-48 xl:w-56 xl:h-56">
+                      <Doughnut data={tagsData} options={tagsOptions} />
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <p className="text-xs text-gray-500 dark:text-neutral-400 font-semibold uppercase tracking-wide">Total</p>
+                        <p className="text-3xl xl:text-4xl font-bold text-gray-800 dark:text-neutral-100 mt-1">{totalTags.toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Legenda à direita */}
+                  <div className="flex-1 flex flex-col gap-2 min-w-0">
+                    {finalTags.map((tag, i) => {
+                      const percent = totalTags > 0 ? ((tag.quantidade / totalTags) * 100).toFixed(1) : 0;
+                      return (
+                        <div
+                          key={tag.id_tag}
+                          className="flex items-center justify-between gap-3 px-3 py-2.5 bg-gray-50 dark:bg-neutral-700/50 border border-gray-200 dark:border-neutral-600 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-600/50 hover:border-gray-300 dark:hover:border-neutral-500 transition-all group"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <span
+                              className="w-3.5 h-3.5 rounded-full flex-shrink-0 ring-2 ring-white dark:ring-neutral-800 shadow-sm"
+                              style={{ backgroundColor: tagColors[i] }}
+                            />
+                            <span className="text-gray-800 dark:text-neutral-200 text-sm font-medium truncate group-hover:text-gray-900 dark:group-hover:text-neutral-100 transition-colors">
+                              {tag.nome}
+                            </span>
+                          </div>
+                          <div className="flex items-baseline gap-1.5 text-gray-700 dark:text-neutral-300 font-semibold whitespace-nowrap">
+                            <span className="text-base">{tag.quantidade}</span>
+                            <span className="text-xs text-gray-400 dark:text-neutral-500">({percent}%)</span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-                {/* Legenda */}
-                <div className="flex flex-col gap-1.5 w-full">
-                  {finalTags.slice(0, 4).map((tag, i) => {
-                    const percent = totalTags > 0 ? ((tag.quantidade / totalTags) * 100).toFixed(1) : 0;
-                    return (
-                      <div
-                        key={tag.id_tag}
-                        className="flex items-center justify-between bg-gray-50 dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 rounded px-3 py-2 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-theme"
-                      >
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <span
-                            className="w-3 h-3 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: tagColors[i % tagColors.length] }}
-                          />
-                          <span className="text-gray-800 dark:text-neutral-200 text-sm font-medium truncate">{tag.nome}</span>
-                        </div>
-                        <div className="text-gray-700 dark:text-neutral-300 text-sm font-bold whitespace-nowrap ml-2">
-                          {tag.quantidade} <span className="text-gray-400 dark:text-neutral-500 text-xs">({percent}%)</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {finalTags.length > 4 && (
-                    <p className="text-xs text-gray-500 dark:text-neutral-400 text-center mt-1">
-                      +{finalTags.length - 4} etiquetas
-                    </p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500 dark:text-neutral-400 text-center py-6">Nenhuma etiqueta disponível.</p>
-            )}
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-neutral-400 text-center py-6">Nenhuma etiqueta disponível.</p>
+              )}
+            </div>
           </div>
-        </div>
+          </div>
 
-        {/* Funil de Conversão (Direita) */}
+          {/* Coluna 2: Funil de Conversão */}
         {orderedFunnelStages.length > 0 && (
           <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden">
             <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
@@ -857,6 +896,10 @@ export default function Dashboard() {
           </div>
         )}
 
+          {/* Coluna 3: Mapa do Brasil por Estado */}
+          <BrazilMapSection stateData={stateData} />
+
+      </div>
       </div>
 
       {/* ==================== MODAL DE PERÍODO ==================== */}
