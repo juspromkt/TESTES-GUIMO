@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { hasPermission } from '../utils/permissions';
+import AITutorialModal from '../components/AITutorialModal';
 
 // Seções internas
 import PersonalitySection from '../components/ai-agent/PersonalitySection';
@@ -70,6 +71,7 @@ const AIAgent = () => {
   const [configOpen, setConfigOpen] = useState(true);
   const [followUpOpen, setFollowUpOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [showTutorialModal, setShowTutorialModal] = useState(false);
 
   const [isEnabled, setIsEnabled] = useState(false);
   const [toggling, setToggling] = useState(false);
@@ -99,6 +101,24 @@ const AIAgent = () => {
 
   useEffect(() => {
     fetchInitialData();
+  }, []);
+
+  // Verificar se é a primeira vez que acessa a aba de Agente de IA
+  useEffect(() => {
+    // Garantir que o usuário está autenticado antes de mostrar o modal
+    const user = localStorage.getItem('user');
+    if (!user) return;
+
+    const hasSeenAITutorial = localStorage.getItem('hasSeenAITutorial');
+    if (!hasSeenAITutorial) {
+      // Delay para garantir que a página carregou completamente
+      const timer = setTimeout(() => {
+        setShowTutorialModal(true);
+        localStorage.setItem('hasSeenAITutorial', 'true');
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const fetchInitialData = async () => {
@@ -672,6 +692,12 @@ const handleSavePersonality = async () => {
         )}
         {mainSection === 'test' && <AgentTestTab token={token} />}
       </main>
+
+      {/* Tutorial Modal */}
+      <AITutorialModal
+        isOpen={showTutorialModal}
+        onClose={() => setShowTutorialModal(false)}
+      />
     </div>
   );
 };

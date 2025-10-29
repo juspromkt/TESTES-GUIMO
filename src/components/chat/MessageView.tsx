@@ -558,25 +558,77 @@ function EvoBinaryMedia({
     case "audio":
       return <AudioPlayer url={url} />;
 
-    case "document":
+    case "document": {
+      const handleDownloadDocument = async () => {
+        try {
+          // Converte Data URL para Blob
+          const response = await fetch(url);
+          const blob = await response.blob();
+
+          // Cria Blob URL (mais eficiente que Data URL)
+          const blobUrl = window.URL.createObjectURL(blob);
+
+          // Determina extensão do arquivo baseado no mimetype
+          let extension = 'bin';
+          if (part.mimetype) {
+            const mimeToExt: Record<string, string> = {
+              'application/pdf': 'pdf',
+              'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+              'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+              'application/msword': 'doc',
+              'application/vnd.ms-excel': 'xls',
+              'application/vnd.ms-powerpoint': 'ppt',
+              'text/plain': 'txt',
+              'image/jpeg': 'jpg',
+              'image/png': 'png',
+              'image/gif': 'gif',
+              'application/zip': 'zip',
+              'application/x-rar-compressed': 'rar',
+            };
+            extension = mimeToExt[part.mimetype] || part.mimetype.split('/')[1] || 'bin';
+          }
+
+          // Cria link temporário para download
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = `documento-${part.id || Date.now()}.${extension}`;
+          link.style.display = 'none';
+
+          // Adiciona ao DOM, clica e remove
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          // Libera memória após um tempo
+          setTimeout(() => {
+            window.URL.revokeObjectURL(blobUrl);
+          }, 100);
+        } catch (error) {
+          console.error('Erro ao fazer download do documento:', error);
+          // Fallback: tenta abrir em nova aba
+          window.open(url, '_blank');
+        }
+      };
+
       return (
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
-            <FileText className="w-5 h-5 text-emerald-600" />
+            <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             <span className="text-sm font-medium">Documento</span>
           </div>
           <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 flex justify-center transition-colors duration-200">
             <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500" />
           </div>
-          <a
-            href={url}
-            download
-            className="w-full inline-block px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm text-center"
+          <button
+            onClick={handleDownloadDocument}
+            className="w-full px-4 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors text-sm text-center"
           >
             Baixar arquivo
-          </a>
+          </button>
         </div>
       );
+    }
 
     case "sticker":
       return <img src={url} alt="Sticker" className="max-w-[200px] rounded-lg" />;
@@ -2969,6 +3021,9 @@ const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
 };
 
   function formatWhatsAppText(text: string): JSX.Element[] {
+    // Regex para URLs
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+
     const tokens = text.split(/(\*[^*]+\*|_[^_]+_|~[^~]+~|```[^`]+```)/g);
     return tokens.map((token, i) => {
       if (/^\*[^*]+\*$/.test(token)) {
@@ -2990,6 +3045,34 @@ const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
           </code>
         );
       }
+
+      // Verifica se o token contém URLs
+      if (urlRegex.test(token)) {
+        const parts = token.split(urlRegex);
+        const urls = token.match(urlRegex) || [];
+
+        return (
+          <span key={i}>
+            {parts.map((part, idx) => {
+              if (urls.includes(part)) {
+                return (
+                  <a
+                    key={`${i}-${idx}`}
+                    href={part}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline break-all"
+                  >
+                    {part}
+                  </a>
+                );
+              }
+              return part;
+            })}
+          </span>
+        );
+      }
+
       return <span key={i}>{token}</span>;
     });
   }
@@ -3566,6 +3649,77 @@ case "documentMessage": {
       break;
     }
     // fallback: URL direta
+    const handleDirectDownload = async () => {
+      try {
+        // Faz fetch da URL para forçar download
+        const response = await fetch(directUrl);
+        const blob = await response.blob();
+
+        // Cria Blob URL
+        const blobUrl = window.URL.createObjectURL(blob);
+
+        // Determina extensão do arquivo
+        let extension = 'bin';
+        const contentType = response.headers.get('content-type') || part?.mimetype;
+        if (contentType) {
+          const mimeToExt: Record<string, string> = {
+            'application/pdf': 'pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+            'application/msword': 'doc',
+            'application/vnd.ms-excel': 'xls',
+            'application/vnd.ms-powerpoint': 'ppt',
+            'text/plain': 'txt',
+            'image/jpeg': 'jpg',
+            'image/png': 'png',
+            'image/gif': 'gif',
+            'application/zip': 'zip',
+            'application/x-rar-compressed': 'rar',
+          };
+          extension = mimeToExt[contentType] || contentType.split('/')[1] || 'bin';
+        }
+
+        // Tenta extrair nome do arquivo da URL
+        let filename = `documento-${Date.now()}.${extension}`;
+        try {
+          const urlPath = new URL(directUrl).pathname;
+          const urlFilename = decodeURIComponent(urlPath.split('/').pop() || '');
+          if (urlFilename && urlFilename.length > 0) {
+            // Se a URL já tem extensão, usa o nome completo
+            if (urlFilename.includes('.')) {
+              filename = urlFilename;
+            } else {
+              // Senão, adiciona a extensão
+              filename = `${urlFilename}.${extension}`;
+            }
+          }
+        } catch (e) {
+          // Ignora erro de parsing de URL
+        }
+
+        // Cria link temporário para download
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename;
+        link.style.display = 'none';
+
+        // Adiciona ao DOM, clica e remove
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Libera memória após um tempo
+        setTimeout(() => {
+          window.URL.revokeObjectURL(blobUrl);
+        }, 100);
+      } catch (error) {
+        console.error('Erro ao fazer download do documento:', error);
+        // Fallback: abre em nova aba
+        window.open(directUrl, '_blank', 'noopener,noreferrer');
+      }
+    };
+
     content = (
       <div className="space-y-2">
         <div className="flex items-center space-x-2">
@@ -3576,7 +3730,7 @@ case "documentMessage": {
           <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500" />
         </div>
         <button
-          onClick={() => window.open(directUrl, "_blank", "noopener,noreferrer")}
+          onClick={handleDirectDownload}
           className="w-full px-4 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors text-sm text-center"
         >
           Baixar arquivo

@@ -525,15 +525,20 @@ const fetchHistory = async (isRefreshing = false) => {
                   <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1.5">
                     Quantidade de Follow-ups
                   </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="5"
+                  <select
                     disabled={!canViewAgent}
                     value={config.quantidade}
                     onChange={(e) => setConfig({ ...config, quantidade: parseInt(e.target.value) })}
                     className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
-                  />
+                  >
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                  </select>
                 </div>
 
                 <div>

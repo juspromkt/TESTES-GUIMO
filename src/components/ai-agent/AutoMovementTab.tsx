@@ -11,6 +11,7 @@ interface AutoMovement {
   id_funil: number | null;
   id_estagio: number | null;
   tags?: Tag[];
+  isCustom?: boolean;
 }
 
 interface ServiceStep {
@@ -48,6 +49,7 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
   const [togglingStatus, setTogglingStatus] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [activeTab, setActiveTab] = useState<'standard' | 'custom'>('standard');
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [editingTagsId, setEditingTagsId] = useState<number | null>(null);
@@ -391,6 +393,37 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
     setShowConfigModal(true);
   };
 
+  const handleCreateNewMovement = () => {
+    // Encontrar o maior Id e ordem existente
+    const maxId = movements.length > 0 ? Math.max(...movements.map(m => m.Id)) : 0;
+    const maxOrdem = movements.length > 0 ? Math.max(...movements.map(m => m.ordem)) : 0;
+
+    // Criar nova movimentação personalizada
+    const newMovement: AutoMovement = {
+      Id: maxId + 1,
+      ordem: maxOrdem + 1,
+      descricao: null,
+      id_etapa: null,
+      id_funil: defaultFunnel?.id || null,
+      id_estagio: null,
+      tags: [],
+      isCustom: true
+    };
+
+    // Adicionar à lista
+    setMovements([...movements, newMovement]);
+
+    // Abrir modal de configuração
+    setSelectedMovement(newMovement);
+    setShowConfigModal(true);
+  };
+
+  const handleDeleteMovement = (movementId: number) => {
+    setMovements(movements.filter(m => m.Id !== movementId));
+    setShowConfigModal(false);
+    showMessage('Movimentação deletada com sucesso!', 'success');
+  };
+
   const getStepName = (id: number | null) => {
     if (!id) return 'Não configurado';
     const step = serviceSteps.find(s => s.Id === id);
@@ -493,117 +526,189 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
           </div>
         )}
 
-        {/* Lista de Movimentações */}
-        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 overflow-hidden transition-theme">
-          <div className="divide-y divide-gray-100 dark:divide-neutral-700/50">
-            {movements.map((movement, index) => (
-              <div
-                key={movement.ordem}
-                className="group flex items-center justify-between p-4 hover:bg-gray-50/50 dark:hover:bg-neutral-700/20 transition-colors animate-fadeIn"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="w-8 h-8 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-lg flex items-center justify-center text-orange-600 dark:text-orange-400 font-semibold text-sm">
-                    {movement.ordem}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold text-gray-900 dark:text-neutral-100">Movimentação #{movement.ordem}</span>
+        {/* Layout de 2 Colunas */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-4">
+
+          {/* Coluna Esquerda - Movimentações */}
+          <div className="space-y-3 min-w-0">
+            {/* Tabs */}
+            <div className="flex items-center justify-between border-b border-gray-200 dark:border-neutral-700">
+              <div className="flex gap-6">
+                <button
+                  onClick={() => setActiveTab('standard')}
+                  className={`pb-3 text-sm font-medium transition-all relative ${
+                    activeTab === 'standard'
+                      ? 'text-orange-600 dark:text-orange-400'
+                      : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300'
+                  }`}
+                >
+                  Padrão
+                  {activeTab === 'standard' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-600 dark:bg-orange-400"></div>
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveTab('custom')}
+                  className={`pb-3 text-sm font-medium transition-all relative ${
+                    activeTab === 'custom'
+                      ? 'text-orange-600 dark:text-orange-400'
+                      : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300'
+                  }`}
+                >
+                  Personalizada
+                  {activeTab === 'custom' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-600 dark:bg-orange-400"></div>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Lista de Movimentações */}
+            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-600 divide-y divide-gray-100 dark:divide-neutral-600">
+              {movements
+                .filter(m => activeTab === 'standard' ? !m.isCustom : m.isCustom)
+                .map((movement, index) => (
+                <div
+                  key={movement.ordem}
+                  className="group relative hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition-all cursor-pointer"
+                  onClick={() => canViewAgent && handleOpenConfig(movement)}
+                >
+                  <div className="flex items-start gap-3 px-4 py-3">
+                    <div className="w-6 h-6 rounded bg-gray-100 dark:bg-neutral-700 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-neutral-200 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/50 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-all flex-shrink-0 mt-0.5">
+                      {movement.ordem}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-medium text-gray-900 dark:text-neutral-50 truncate">
+                          {getStepName(movement.id_etapa)}
+                        </span>
+                        <svg className="w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span className="text-sm text-gray-600 dark:text-neutral-300 truncate">
+                          {getStageName(movement.id_funil, movement.id_estagio)}
+                        </span>
+                      </div>
+
+                      {movement.descricao && (
+                        <p className="text-xs text-gray-500 dark:text-neutral-400 line-clamp-2 leading-relaxed">
+                          {movement.descricao}
+                        </p>
+                      )}
+
                       {movement.tags && movement.tags.length > 0 && (
-                        <div className="flex gap-1">
-                          {movement.tags.map(tag => (
-                            <span
+                        <div className="flex gap-1.5 mt-2">
+                          {movement.tags.slice(0, 3).map(tag => (
+                            <div
                               key={tag.Id}
-                              className="px-1.5 py-0.5 rounded text-[10px] font-medium"
-                              style={{ backgroundColor: tag.cor, color: tag.cor_texto }}
-                            >
-                              {tag.nome}
-                            </span>
+                              className="w-1.5 h-1.5 rounded-full"
+                              style={{ backgroundColor: tag.cor }}
+                              title={tag.nome}
+                            />
                           ))}
+                          {movement.tags.length > 3 && (
+                            <span className="text-xs text-gray-400 dark:text-neutral-500">+{movement.tags.length - 3}</span>
+                          )}
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-gray-600 dark:text-neutral-400">
-                      <span className="font-medium">Etapa:</span> {getStepName(movement.id_etapa)} → <span className="font-medium">Etapa do Funil:</span> {getStageName(movement.id_funil, movement.id_estagio)}
-                    </p>
-                    {movement.descricao && (
-                      <p className="text-xs text-gray-500 dark:text-neutral-500 mt-1 line-clamp-1 italic">{movement.descricao}</p>
+
+                    {canViewAgent && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenConfig(movement);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 dark:text-neutral-500 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-100 dark:hover:bg-neutral-600 rounded transition-all flex-shrink-0"
+                      >
+                        <Settings className="w-4 h-4" />
+                      </button>
                     )}
                   </div>
-                </div>
-                {canViewAgent && (
-                  <button
-                    onClick={() => handleOpenConfig(movement)}
-                    className="p-1.5 text-gray-500 dark:text-neutral-500 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                    title="Configurar movimentação"
-                  >
-                    <Settings className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* AI Generator */}
-        {canViewAgent && (
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-xl p-4 border border-amber-200 dark:border-amber-800/50 transition-theme">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <div className="absolute left-0 top-0 bottom-0 w-0 group-hover:w-1 bg-orange-500 dark:bg-orange-400 transition-all rounded-l"></div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">Gerar Descrições com IA</h3>
-                  <p className="text-xs text-gray-600 dark:text-neutral-400">Crie descrições claras automaticamente</p>
-                </div>
-              </div>
-              <button
-                onClick={handleGenerateDescriptions}
-                disabled={isGeneratingDescriptions || serviceSteps.length === 0}
-                className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
-              >
-                {isGeneratingDescriptions ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    Gerando...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Gerar
-                  </>
-                )}
-              </button>
+              ))}
             </div>
-            {generationError && (
-              <div className="mt-2 text-xs text-red-600 dark:text-red-400">{generationError}</div>
+          </div>
+
+          {/* Coluna Direita - Ações */}
+          <div className="space-y-4 flex-shrink-0">
+            {/* Nova Movimentação */}
+            {canViewAgent && activeTab === 'custom' && (
+              <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <ListOrdered className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">Nova Movimentação</h3>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-neutral-400 mb-4 leading-relaxed">
+                  Crie uma movimentação personalizada para o seu fluxo
+                </p>
+                <button
+                  onClick={handleCreateNewMovement}
+                  className="w-full px-4 py-2.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium rounded-lg transition-all"
+                >
+                  + Nova Movimentação
+                </button>
+              </div>
+            )}
+
+            {/* Gerar Descrições */}
+            {canViewAgent && activeTab === 'standard' && (
+              <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">IA Generator</h3>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-neutral-400 mb-4 leading-relaxed">
+                  Gere descrições automaticamente para todas as movimentações
+                </p>
+                <button
+                  onClick={handleGenerateDescriptions}
+                  disabled={isGeneratingDescriptions || serviceSteps.length === 0}
+                  className="w-full px-4 py-2.5 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-sm font-medium rounded-lg transition-all disabled:opacity-50"
+                >
+                  {isGeneratingDescriptions ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Gerando...
+                    </span>
+                  ) : (
+                    'Gerar Descrições'
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* Salvar */}
+            {canViewAgent && (
+              <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Save className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">Salvar</h3>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-neutral-400 mb-4 leading-relaxed">
+                  Salve todas as alterações realizadas nas movimentações
+                </p>
+                <button
+                  onClick={handleSave}
+                  disabled={saving || funnels.length === 0}
+                  className="w-full px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Salvando...
+                    </span>
+                  ) : (
+                    'Salvar Alterações'
+                  )}
+                </button>
+              </div>
             )}
           </div>
-        )}
-
-        {/* Salvar */}
-        {canViewAgent && (
-          <div className="flex justify-end">
-            <button
-              onClick={handleSave}
-              disabled={saving || funnels.length === 0}
-              className="flex items-center gap-2 px-5 py-2.5 bg-orange-600 text-white text-sm font-medium rounded-xl hover:bg-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Salvar Movimentações
-                </>
-              )}
-            </button>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Modal: Configurar Movimentação */}
@@ -775,7 +880,18 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end gap-2 p-6 border-t border-gray-200 dark:border-neutral-700">
+            <div className="flex justify-between items-center gap-2 p-6 border-t border-gray-200 dark:border-neutral-700">
+              {selectedMovement.isCustom ? (
+                <button
+                  onClick={() => handleDeleteMovement(selectedMovement.Id)}
+                  className="px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors font-medium flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Deletar
+                </button>
+              ) : (
+                <div></div>
+              )}
               <button
                 onClick={() => setShowConfigModal(false)}
                 className="px-6 py-2 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-200 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors font-medium"

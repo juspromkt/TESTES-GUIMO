@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import MainLayout from './layouts/MainLayout';
@@ -22,6 +22,9 @@ import { NotificationManager } from './components/NotificationManager';
 import { ChatProvider } from './context/ChatContext';
 import { ConversationProvider } from './context/ConversationContext';
 import { VideoPlayerProvider } from './context/VideoPlayerContext';
+import WelcomeModal from './components/WelcomeModal';
+import UpgradeModal from './components/UpgradeModal';
+import { isDemoAccount } from './components/DemoBanner';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = localStorage.getItem('user');
@@ -40,8 +43,104 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  // Escuta evento de login bem-sucedido
+  useEffect(() => {
+    const handleLoginSuccess = () => {
+      // Pequeno delay para garantir que a página carregou
+      setTimeout(() => {
+        setShowWelcomeModal(true);
+      }, 800);
+
+      // Se for conta demo, inicia timer para mostrar modal de upgrade
+      if (isDemoAccount()) {
+        // Timer de 5 minutos
+        const upgradeTimer = setTimeout(() => {
+          setShowUpgradeModal(true);
+        }, 300000); // 5 minutos (300000ms)
+
+        // Salva o timer no localStorage para continuar após reload
+        const startTime = Date.now();
+        localStorage.setItem('upgradeModalTimer', startTime.toString());
+
+        return () => clearTimeout(upgradeTimer);
+      }
+    };
+
+    // Escuta o evento customizado de login
+    window.addEventListener('userLoggedIn', handleLoginSuccess);
+
+    return () => {
+      window.removeEventListener('userLoggedIn', handleLoginSuccess);
+    };
+  }, []);
+
+  // Gerencia timer de upgrade modal para contas demo (persiste após reloads)
+  useEffect(() => {
+    if (!isDemoAccount()) return;
+
+    const checkUpgradeTimer = () => {
+      const lastShownStr = localStorage.getItem('lastUpgradeModalShown');
+      const now = Date.now();
+
+      if (!lastShownStr) {
+        // Primeira vez - agenda para daqui 5 minutos
+        const timer = setTimeout(() => {
+          setShowUpgradeModal(true);
+          localStorage.setItem('lastUpgradeModalShown', now.toString());
+        }, 300000); // 5 minutos (300000ms)
+
+        return () => clearTimeout(timer);
+      } else {
+        // Verifica se já passou 5 minutos desde a última exibição
+        const lastShown = parseInt(lastShownStr);
+        const elapsed = now - lastShown;
+        const interval = 300000; // 5 minutos (300000ms)
+
+        if (elapsed >= interval) {
+          // Já passou o intervalo, mostra imediatamente
+          setShowUpgradeModal(true);
+          localStorage.setItem('lastUpgradeModalShown', now.toString());
+        } else {
+          // Agenda para o tempo restante
+          const remaining = interval - elapsed;
+          const timer = setTimeout(() => {
+            setShowUpgradeModal(true);
+            localStorage.setItem('lastUpgradeModalShown', Date.now().toString());
+          }, remaining);
+
+          return () => clearTimeout(timer);
+        }
+      }
+    };
+
+    checkUpgradeTimer();
+  }, []);
+
+  const handleCloseWelcomeModal = () => {
+    setShowWelcomeModal(false);
+  };
+
+  const handleCloseUpgradeModal = () => {
+    setShowUpgradeModal(false);
+    // Atualiza timestamp para contar 5 minutos a partir de agora
+    localStorage.setItem('lastUpgradeModalShown', Date.now().toString());
+
+    // Agenda o próximo modal
+    if (isDemoAccount()) {
+      setTimeout(() => {
+        setShowUpgradeModal(true);
+        localStorage.setItem('lastUpgradeModalShown', Date.now().toString());
+      }, 300000); // 5 minutos (300000ms)
+    }
+  };
+
   return (
     <BrowserRouter>
+      <WelcomeModal isOpen={showWelcomeModal} onClose={handleCloseWelcomeModal} />
+      <UpgradeModal isOpen={showUpgradeModal} onClose={handleCloseUpgradeModal} />
       <Routes>
         <Route path="/" element={<Login />} />
         <Route

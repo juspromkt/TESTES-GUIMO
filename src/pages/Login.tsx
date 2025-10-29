@@ -52,6 +52,10 @@ const Login = () => {
 
       if (response.data.status === "sucess") {
         localStorage.setItem("user", JSON.stringify(response.data));
+
+        // Dispara evento customizado para mostrar o modal de boas-vindas
+        window.dispatchEvent(new Event('userLoggedIn'));
+
         navigate("/dashboard");
       } else {
         setError("Credenciais inválidas");

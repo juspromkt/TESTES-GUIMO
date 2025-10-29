@@ -610,25 +610,125 @@ const handleConnect = async (e: React.FormEvent) => {
         </div>
       </Modal>
 
-      {/* QR Code Modal */}
+      {/* QR Code Modal Premium */}
       <Modal
         isOpen={isQRCodeModalOpen}
         onClose={() => setIsQRCodeModalOpen(false)}
-        title="Escaneie o QR Code"
+        title="Conectar WhatsApp"
+        maxWidth="4xl"
       >
-        <div className="p-6">
-          <div className="text-center mb-6">
-            <p className="text-gray-600 dark:text-neutral-400">
-              Abra o WhatsApp no seu celular e escaneie o QR Code abaixo
+        <div className="p-4">
+          {/* Header com ícone - Compacto */}
+          <div className="text-center mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <Smartphone className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-neutral-100 mb-1">
+              Escaneie o QR Code
+            </h3>
+            <p className="text-xs text-gray-600 dark:text-neutral-400">
+              Use o WhatsApp do seu celular para conectar
             </p>
           </div>
-          <div className="bg-white dark:bg-neutral-700 p-4 rounded-lg shadow-inner flex items-center justify-center">
-            <QRCodeSVG
-              value={qrCode}
-              size={256}
-              level="H"
-              includeMargin={true}
-            />
+
+          {/* Layout Horizontal: 2 Colunas */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {/* Coluna 1: QR Code */}
+            <div className="flex flex-col">
+              <div className="relative bg-gradient-to-br from-gray-50 to-white dark:from-neutral-800 dark:to-neutral-900 p-4 rounded-xl shadow-lg border border-gray-200 dark:border-neutral-700 h-full flex items-center justify-center">
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-blue-500/5 rounded-xl"></div>
+                <div className="relative bg-white dark:bg-neutral-700 p-3 rounded-lg shadow-inner">
+                  <QRCodeSVG
+                    value={qrCode}
+                    size={200}
+                    level="H"
+                    includeMargin={true}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Coluna 2: Instruções */}
+            <div className="flex flex-col justify-center space-y-3">
+              <h4 className="text-xs font-semibold text-gray-900 dark:text-neutral-100 flex items-center gap-2">
+                <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-[10px] font-bold">?</span>
+                </div>
+                Como conectar
+              </h4>
+
+              <div className="space-y-2">
+                {/* Passo 1 */}
+                <div className="flex gap-2.5 items-start">
+                  <div className="w-6 h-6 bg-green-100 dark:bg-green-900/30 rounded-md flex items-center justify-center flex-shrink-0">
+                    <span className="text-green-600 dark:text-green-400 font-bold text-[10px]">1</span>
+                  </div>
+                  <div className="flex-1 pt-0.5">
+                    <p className="text-xs text-gray-700 dark:text-neutral-300 leading-relaxed">
+                      Abra o <span className="font-semibold text-green-600 dark:text-green-400">WhatsApp</span> no seu celular
+                    </p>
+                  </div>
+                </div>
+
+                {/* Passo 2 */}
+                <div className="flex gap-2.5 items-start">
+                  <div className="w-6 h-6 bg-green-100 dark:bg-green-900/30 rounded-md flex items-center justify-center flex-shrink-0">
+                    <span className="text-green-600 dark:text-green-400 font-bold text-[10px]">2</span>
+                  </div>
+                  <div className="flex-1 pt-0.5">
+                    <p className="text-xs text-gray-700 dark:text-neutral-300 leading-relaxed">
+                      Toque em <span className="font-semibold">Menu (⋮)</span> ou <span className="font-semibold">Configurações</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Passo 3 */}
+                <div className="flex gap-2.5 items-start">
+                  <div className="w-6 h-6 bg-green-100 dark:bg-green-900/30 rounded-md flex items-center justify-center flex-shrink-0">
+                    <span className="text-green-600 dark:text-green-400 font-bold text-[10px]">3</span>
+                  </div>
+                  <div className="flex-1 pt-0.5">
+                    <p className="text-xs text-gray-700 dark:text-neutral-300 leading-relaxed">
+                      Selecione <span className="font-semibold">Aparelhos conectados</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Passo 4 */}
+                <div className="flex gap-2.5 items-start">
+                  <div className="w-6 h-6 bg-green-100 dark:bg-green-900/30 rounded-md flex items-center justify-center flex-shrink-0">
+                    <span className="text-green-600 dark:text-green-400 font-bold text-[10px]">4</span>
+                  </div>
+                  <div className="flex-1 pt-0.5">
+                    <p className="text-xs text-gray-700 dark:text-neutral-300 leading-relaxed">
+                      Toque em <span className="font-semibold">Conectar um aparelho</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Passo 5 */}
+                <div className="flex gap-2.5 items-start">
+                  <div className="w-6 h-6 bg-green-100 dark:bg-green-900/30 rounded-md flex items-center justify-center flex-shrink-0">
+                    <span className="text-green-600 dark:text-green-400 font-bold text-[10px]">5</span>
+                  </div>
+                  <div className="flex-1 pt-0.5">
+                    <p className="text-xs text-gray-700 dark:text-neutral-300 leading-relaxed">
+                      <span className="font-semibold text-green-600 dark:text-green-400">Escaneie o QR Code</span> com a câmera
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Aviso de tempo - Full Width Compacto */}
+          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+              <p className="text-xs text-blue-900 dark:text-blue-200">
+                <span className="font-medium">QR Code temporário:</span> Expira em 2 minutos. Se expirar, gere um novo.
+              </p>
+            </div>
           </div>
         </div>
       </Modal>

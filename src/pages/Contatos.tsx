@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Users, Plus, Loader2, Pencil, Trash2, AlertCircle, ChevronUp, ChevronDown, Search, X, Check, Download, Mail, Phone, UserPlus, FileDown, FileUp, Filter, Globe } from 'lucide-react';
+import { Users, Plus, Loader2, Pencil, Trash2, AlertCircle, ChevronUp, ChevronDown, Search, X, Check, Download, Mail, Phone, UserPlus, FileDown, FileUp, Filter, Globe, Calendar } from 'lucide-react';
 import Papa from 'papaparse';
 import Pagination from '../components/Pagination';
 import Modal from '../components/Modal';
@@ -10,9 +10,10 @@ interface Contato {
   nome: string;
   Email: string;
   telefone: string;
+  createdAt?: string;
 }
 
-type SortField = 'nome' | 'Email' | 'telefone';
+type SortField = 'nome' | 'Email' | 'telefone' | 'createdAt';
 type SortDirection = 'asc' | 'desc';
 
 export default function Contatos() {
@@ -39,6 +40,12 @@ export default function Contatos() {
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const countryDropdownRef = useRef<HTMLDivElement>(null);
 const canEditContacts = hasPermission('can_edit_contacts');
+
+  // Estados para seleção múltipla
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectAllPages, setSelectAllPages] = useState(false);
+  const [isDeletingMultiple, setIsDeletingMultiple] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
 
   const [sortConfig, setSortConfig] = useState<{ field: SortField; direction: SortDirection }>({
     field: 'nome',
@@ -263,6 +270,94 @@ useEffect(() => {
     setIsConfirmingDelete(false);
   };
 
+  // Funções de seleção múltipla
+  const handleSelectContact = (id: number) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+    setSelectAllPages(false);
+  };
+
+  const handleSelectAllCurrentPage = () => {
+    if (selectedIds.size === paginatedContatos.length && !selectAllPages) {
+      setSelectedIds(new Set());
+      setSelectAllPages(false);
+    } else {
+      setSelectedIds(new Set(paginatedContatos.map(c => c.Id)));
+      setSelectAllPages(false);
+    }
+  };
+
+  const handleSelectAllPages = () => {
+    setSelectedIds(new Set(filteredAndSortedContacts.map(c => c.Id)));
+    setSelectAllPages(true);
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedIds(new Set());
+    setSelectAllPages(false);
+  };
+
+  // Abre modal de confirmação de exclusão
+  const handleDeleteMultiple = () => {
+    if (!token || selectedIds.size === 0) return;
+    setShowDeleteConfirmModal(true);
+  };
+
+  // Confirma e executa a exclusão múltipla
+  const confirmDeleteMultiple = async () => {
+    setShowDeleteConfirmModal(false);
+    setIsDeletingMultiple(true);
+    setError('');
+
+    try {
+      const idsToDelete = selectAllPages
+        ? filteredAndSortedContacts.map(c => c.Id)
+        : Array.from(selectedIds);
+
+      console.log('[DeleteMultiple] Iniciando exclusão de', idsToDelete.length, 'contatos');
+
+      // Excluir em paralelo
+      const deletePromises = idsToDelete.map(async id => {
+        const url = `https://n8n.lumendigital.com.br/webhook/crm/contato/delete?id=${id}`;
+
+        const response = await fetch(url, {
+          method: 'DELETE',
+          headers: {
+            'token': token || ''
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erro ao excluir contato ${id}`);
+        }
+
+        return response;
+      });
+
+      await Promise.all(deletePromises);
+
+      console.log('[DeleteMultiple] Exclusão concluída com sucesso!');
+      setSuccess(`${idsToDelete.length} contato(s) excluído(s) com sucesso!`);
+      setSelectedIds(new Set());
+      setSelectAllPages(false);
+      await fetchContatos();
+
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('[DeleteMultiple] Erro geral:', err);
+      setError(`Erro ao excluir contatos: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+    } finally {
+      setIsDeletingMultiple(false);
+    }
+  };
+
   // Função para detectar e extrair o código do país do telefone
   const extractCountryCode = (phone: string) => {
     if (!phone) return { code: '+55', number: '' };
@@ -301,7 +396,7 @@ useEffect(() => {
 
   const formatPhoneNumber = (phone: string | null | undefined) => {
     if (!phone) return 'N/A';
-    
+
     const cleaned = phone.replace(/\D/g, '');
     if (cleaned.length === 11) {
       return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
@@ -310,6 +405,22 @@ useEffect(() => {
       return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 6)}-${cleaned.slice(6)}`;
     }
     return phone;
+  };
+
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '-';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return '-';
+    }
   };
 
   const filteredAndSortedContacts = [...contatos]
@@ -322,6 +433,14 @@ useEffect(() => {
     .sort((a, b) => {
       const field = sortConfig.field;
       const direction = sortConfig.direction === 'asc' ? 1 : -1;
+
+      // Ordenação especial para datas
+      if (field === 'createdAt') {
+        const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return aDate > bDate ? direction : -direction;
+      }
+
       const aValue = (a[field] || '').toLowerCase();
       const bValue = (b[field] || '').toLowerCase();
       return aValue > bValue ? direction : -direction;
@@ -374,6 +493,26 @@ useEffect(() => {
 
           {canEditContacts && (
             <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                onClick={handleDeleteMultiple}
+                disabled={selectedIds.size === 0 || isDeletingMultiple}
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-600 text-red-600 dark:text-red-400 rounded-lg hover:border-red-400 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeletingMultiple ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                <span>
+                  {isDeletingMultiple
+                    ? 'Excluindo...'
+                    : selectedIds.size > 0
+                      ? `Excluir (${selectedIds.size})`
+                      : 'Excluir'
+                  }
+                </span>
+              </button>
+
               <button
                 onClick={handleExportContacts}
                 className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-200 rounded-lg hover:border-gray-400 dark:hover:border-neutral-500 transition-colors text-sm font-medium"
@@ -488,11 +627,55 @@ useEffect(() => {
               </div>
             </div>
 
+            {/* Banner de seleção de todos os contatos */}
+            {selectedIds.size === paginatedContatos.length && paginatedContatos.length > 0 && filteredAndSortedContacts.length > paginatedContatos.length && !selectAllPages && (
+              <div className="px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <p className="text-sm text-blue-900 dark:text-blue-200">
+                    Todos os <strong>{paginatedContatos.length}</strong> contatos desta página estão selecionados.
+                  </p>
+                  <button
+                    onClick={handleSelectAllPages}
+                    className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline"
+                  >
+                    Selecionar todos os {filteredAndSortedContacts.length} contatos
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Banner quando todos os contatos estão selecionados */}
+            {selectAllPages && (
+              <div className="px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <p className="text-sm text-blue-900 dark:text-blue-200">
+                    Todos os <strong>{filteredAndSortedContacts.length}</strong> contatos estão selecionados.
+                  </p>
+                  <button
+                    onClick={handleDeselectAll}
+                    className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline"
+                  >
+                    Desmarcar todos
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Tabela Minimalista */}
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
                 <thead>
                   <tr className="bg-gray-50 dark:bg-neutral-700/50">
+                    {canEditContacts && (
+                      <th className="px-3 py-2.5 text-left w-12">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.size === paginatedContatos.length && paginatedContatos.length > 0}
+                          onChange={handleSelectAllCurrentPage}
+                          className="w-4 h-4 text-blue-600 bg-white dark:bg-neutral-700 border-gray-300 dark:border-neutral-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                        />
+                      </th>
+                    )}
                     <th
                       className="px-3 py-2.5 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
                       onClick={() => handleSort('nome')}
@@ -520,6 +703,15 @@ useEffect(() => {
                         <SortIcon field="telefone" />
                       </div>
                     </th>
+                    <th
+                      className="px-3 py-2.5 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                      onClick={() => handleSort('createdAt')}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-semibold text-gray-700 dark:text-neutral-200 uppercase tracking-wide">Data de Criação</span>
+                        <SortIcon field="createdAt" />
+                      </div>
+                    </th>
                     {canEditContacts && (
                       <th className="px-3 py-2.5 text-right">
                         <span className="text-xs font-semibold text-gray-700 dark:text-neutral-200 uppercase tracking-wide">Ações</span>
@@ -531,21 +723,37 @@ useEffect(() => {
                   {paginatedContatos.map((contato) => (
                     <tr
                       key={contato.Id}
-                      className="hover:bg-gray-50 dark:hover:bg-neutral-700/30 cursor-pointer transition-colors"
-                      onClick={() => {
-                        setSelectedContato(contato);
-                        const { code, number } = extractCountryCode(contato.telefone || '');
-                        setCountryCode(code);
-                        setPhoneNumber(number);
-                        setFormData({
-                          nome: contato.nome || '',
-                          Email: contato.Email || '',
-                          telefone: contato.telefone || ''
-                        });
-                        setIsModalOpen(true);
-                      }}
+                      className={`hover:bg-gray-50 dark:hover:bg-neutral-700/30 transition-colors ${selectedIds.has(contato.Id) ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
                     >
-                      <td className="px-3 py-2.5 whitespace-nowrap">
+                      {canEditContacts && (
+                        <td className="px-3 py-2.5 whitespace-nowrap w-12">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(contato.Id)}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              handleSelectContact(contato.Id);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-4 h-4 text-blue-600 bg-white dark:bg-neutral-700 border-gray-300 dark:border-neutral-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                          />
+                        </td>
+                      )}
+                      <td
+                        className="px-3 py-2.5 whitespace-nowrap cursor-pointer"
+                        onClick={() => {
+                          setSelectedContato(contato);
+                          const { code, number } = extractCountryCode(contato.telefone || '');
+                          setCountryCode(code);
+                          setPhoneNumber(number);
+                          setFormData({
+                            nome: contato.nome || '',
+                            Email: contato.Email || '',
+                            telefone: contato.telefone || ''
+                          });
+                          setIsModalOpen(true);
+                        }}
+                      >
                         <div className="flex items-center gap-2.5">
                           <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
                             {contato.nome?.charAt(0).toUpperCase() || '?'}
@@ -555,16 +763,64 @@ useEffect(() => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">
+                      <td
+                        className="px-3 py-2.5 whitespace-nowrap cursor-pointer"
+                        onClick={() => {
+                          setSelectedContato(contato);
+                          const { code, number } = extractCountryCode(contato.telefone || '');
+                          setCountryCode(code);
+                          setPhoneNumber(number);
+                          setFormData({
+                            nome: contato.nome || '',
+                            Email: contato.Email || '',
+                            telefone: contato.telefone || ''
+                          });
+                          setIsModalOpen(true);
+                        }}
+                      >
                         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-neutral-400">
                           <Mail className="w-3.5 h-3.5" />
                           <span>{contato.Email || '-'}</span>
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">
+                      <td
+                        className="px-3 py-2.5 whitespace-nowrap cursor-pointer"
+                        onClick={() => {
+                          setSelectedContato(contato);
+                          const { code, number } = extractCountryCode(contato.telefone || '');
+                          setCountryCode(code);
+                          setPhoneNumber(number);
+                          setFormData({
+                            nome: contato.nome || '',
+                            Email: contato.Email || '',
+                            telefone: contato.telefone || ''
+                          });
+                          setIsModalOpen(true);
+                        }}
+                      >
                         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-neutral-400">
                           <Phone className="w-3.5 h-3.5" />
                           <span>{formatPhoneNumber(contato.telefone)}</span>
+                        </div>
+                      </td>
+                      <td
+                        className="px-3 py-2.5 whitespace-nowrap cursor-pointer"
+                        onClick={() => {
+                          setSelectedContato(contato);
+                          const { code, number } = extractCountryCode(contato.telefone || '');
+                          setCountryCode(code);
+                          setPhoneNumber(number);
+                          setFormData({
+                            nome: contato.nome || '',
+                            Email: contato.Email || '',
+                            telefone: contato.telefone || ''
+                          });
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-neutral-400">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>{formatDate(contato.createdAt)}</span>
                         </div>
                       </td>
                       {canEditContacts && (
@@ -930,6 +1186,67 @@ useEffect(() => {
             )}
           </div>
         </Modal>
+
+        {/* Modal de Confirmação de Exclusão em Lote */}
+        {showDeleteConfirmModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 dark:border-neutral-700">
+              {/* Ícone e Header */}
+              <div className="p-6 text-center">
+                <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100 mb-2">
+                  Confirmar Exclusão
+                </h3>
+                <p className="text-gray-600 dark:text-neutral-400 text-sm mb-1">
+                  {selectAllPages ? (
+                    <>
+                      Você está prestes a excluir <span className="font-bold text-red-600 dark:text-red-400">{filteredAndSortedContacts.length} contatos</span>
+                    </>
+                  ) : (
+                    <>
+                      Você está prestes a excluir <span className="font-bold text-red-600 dark:text-red-400">{selectedIds.size} {selectedIds.size === 1 ? 'contato' : 'contatos'}</span>
+                    </>
+                  )}
+                </p>
+              </div>
+
+              {/* Aviso de Ação Irreversível */}
+              <div className="px-6 pb-6">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-red-900 dark:text-red-200 mb-1">
+                        ⚠️ Esta ação não pode ser desfeita!
+                      </p>
+                      <p className="text-xs text-red-800 dark:text-red-300">
+                        Todos os dados dos contatos selecionados serão permanentemente removidos do sistema.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Botões */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowDeleteConfirmModal(false)}
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-neutral-200 bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 border border-gray-300 dark:border-neutral-600 rounded-lg transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={confirmDeleteMultiple}
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 rounded-lg transition-colors shadow-sm"
+                  >
+                    Sim, Excluir {selectAllPages ? 'Todos' : selectedIds.size > 1 ? `(${selectedIds.size})` : ''}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
