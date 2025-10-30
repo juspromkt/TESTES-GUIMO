@@ -307,8 +307,13 @@ reader.readAsDataURL(audioBlob);
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+      // Reset para altura mínima primeiro
+      textarea.style.height = '44px';
+
+      // Se há conteúdo e precisa de mais espaço, expande
+      if (textarea.scrollHeight > 44) {
+        textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+      }
     }
   }, [message]);
  return (
@@ -478,9 +483,8 @@ reader.readAsDataURL(audioBlob);
               rows={1}
               className="w-full resize-none rounded-lg bg-transparent px-3 py-2.5 text-base md:text-[15px] text-[#111b21] dark:text-gray-100 placeholder:text-[#667781] dark:placeholder:text-gray-400 focus:outline-none overflow-y-auto touch-manipulation"
               style={{
-                minHeight: '44px',
+                height: '44px',
                 maxHeight: '120px',
-                height: 'auto',
                 WebkitOverflowScrolling: 'touch'
               }}
             />
