@@ -112,7 +112,7 @@ const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
 👤 *Cliente*: {{nome}}
 📞 *WhatsApp*: {{telefone}}
 📋 *Resumo*: {{resumo}}`,
-    descricao_ia: 'Envie esta notificação IMEDIATAMENTE após concluir a análise de viabilidade e identificar que o lead TEM CONDIÇÕES de processo. Sinais de qualificação: aceitou fazer a análise, respondeu todas as perguntas de viabilidade, demonstra interesse real em processo judicial, tem irregularidades trabalhistas confirmadas.',
+    descricao_ia: 'Envie esta notificação IMEDIATAMENTE após concluir a análise de viabilidade e identificar que o lead TEM CONDIÇÕES de processo.',
     icon: UserCheck,
     colorClass: 'text-emerald-600 dark:text-emerald-400',
     bgClass: 'bg-emerald-100 dark:bg-emerald-900/30'
