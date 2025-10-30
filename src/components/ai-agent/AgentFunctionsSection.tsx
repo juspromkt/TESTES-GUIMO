@@ -140,7 +140,7 @@ const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
 👤 *Cliente*: {{nome}}
 📞 *WhatsApp*: {{telefone}}
 ⏳ *Status*: Aguardando assinatura`,
-    descricao_ia: 'Envie esta notificação IMEDIATAMENTE após enviar o link do contrato para o cliente. Situações que exigem esta notificação: você enviou o link de assinatura do contrato, compartilhou proposta comercial, enviou documento para análise/assinatura. Frases que indicam envio: "vou te enviar o link", "segue o link do contrato", "acabei de enviar", "clique no link para assinar". Nunca envie antes de compartilhar o link.',
+    descricao_ia: 'Envie esta notificação IMEDIATAMENTE após enviar o link do contrato para o cliente. Situações que exigem esta notificação: você enviou o link de assinatura do contrato, compartilhou proposta comercial.',
     icon: FileText,
     colorClass: 'text-purple-600 dark:text-purple-400',
     bgClass: 'bg-purple-100 dark:bg-purple-900/30'
@@ -154,7 +154,7 @@ const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
 👤 *Cliente*: {{nome}}
 📞 *WhatsApp*: {{telefone}}
 🎉 *Status*: Cliente confirmado!`,
-    descricao_ia: 'Envie esta notificação IMEDIATAMENTE quando o cliente CONFIRMAR que assinou o contrato. Situações que exigem esta notificação: cliente disse "já assinei", "acabei de assinar", "assinatura concluída", "já enviei assinado", ou qualquer confirmação explícita de que assinou. Esta notificação marca o fechamento do negócio. Nunca envie baseado apenas em promessa de assinar depois, apenas quando ele confirmar que JÁ ASSINOU.',
+    descricao_ia: 'Envie esta notificação IMEDIATAMENTE quando o cliente CONFIRMAR que assinou o contrato.',
     icon: FileCheck,
     colorClass: 'text-green-600 dark:text-green-400',
     bgClass: 'bg-green-100 dark:bg-green-900/30'
@@ -168,7 +168,7 @@ const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
 👤 *Cliente*: {{nome}}
 📞 *WhatsApp*: {{telefone}}
 📅 *Detalhes*: {{resumo}}`,
-    descricao_ia: 'Envie esta notificação IMEDIATAMENTE quando o cliente ESCOLHER e CONFIRMAR um horário específico para a reunião. Situações que exigem esta notificação: cliente escolheu data e horário da lista que você ofereceu, confirmou disponibilidade para reunião agendada. Nunca envie apenas por oferecer horários, envie só após a confirmação do cliente.',
+    descricao_ia: 'Envie esta notificação IMEDIATAMENTE quando o cliente ESCOLHER e CONFIRMAR um horário específico para a reunião. Situações que exigem esta notificação: cliente escolheu data e horário da lista que você ofereceu.',
     icon: Calendar,
     colorClass: 'text-orange-600 dark:text-orange-400',
     bgClass: 'bg-orange-100 dark:bg-orange-900/30'
