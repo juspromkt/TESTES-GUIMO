@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
-import { Loader2, AlertCircle, ChevronDown, Plus, RefreshCw, Search, Calendar, Tags, X } from 'lucide-react';
+import { Loader2, AlertCircle, ChevronDown, Plus, RefreshCw, Search, Calendar, Tags, X, Play } from 'lucide-react';
 import type { Funil } from '../types/funil';
 import type { Fonte } from '../types/fonte';
 import type { Contato } from '../types/contato';
@@ -15,6 +15,7 @@ import ViewToggle from '../components/crm/ViewToggle';
 import TagFilter from '../components/crm/TagFilter';
 import SearchableSelect from '../components/crm/SearchableSelect';
 import AnuncioCard from '../components/crm/AnuncioCard';
+import AnuncioCarousel from '../components/crm/AnuncioCarousel';
 import Modal from '../components/Modal';
 import FilterDropdown from '../components/FilterDropdown';
 import { hasPermission } from '../utils/permissions';
@@ -859,23 +860,17 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                 placeholder="Fontes"
               />
 
-              {/* Anúncios */}
-              <SearchableSelect
-                options={anuncioOptions}
-                value={selectedAnuncioId}
-                onChange={(id) => setSelectedAnuncioId(id === 0 ? null : id)}
-                placeholder="Anúncios"
-                footerLabel="Ver anúncios"
-                onFooterClick={() => setShowAnuncioModal(true)}
-              />
             </div>
 
-            {/* Card do Anúncio Selecionado */}
-            {selectedAnuncio && (
-              <div className="mt-4">
-                <AnuncioCard anuncio={selectedAnuncio} />
-              </div>
-            )}
+            {/* Carrossel de Anúncios */}
+            <div className="mt-4">
+              <AnuncioCarousel
+                anuncios={anuncios}
+                selectedAnuncioId={selectedAnuncioId}
+                onAnuncioChange={(id) => setSelectedAnuncioId(id)}
+                dealsCount={filteredDeals.length}
+              />
+            </div>
           </div>
 
           {/* Modal de Anúncios */}
