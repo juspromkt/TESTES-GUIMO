@@ -81,38 +81,38 @@ export default function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
 
   return createPortal(
     <div
-      className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-6 z-[10000] animate-fadeIn"
+      className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 z-[10000] animate-fadeIn"
     >
       <div
-        className="bg-gradient-to-br from-white to-gray-50 dark:from-neutral-900 dark:to-neutral-800 rounded-3xl shadow-2xl w-full max-w-6xl overflow-hidden border border-gray-200/50 dark:border-neutral-700/50 transition-theme"
-        style={{ aspectRatio: '16/9' }}
+        className="bg-gradient-to-br from-white to-gray-50 dark:from-neutral-900 dark:to-neutral-800 rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-6xl overflow-y-auto max-h-[95vh] sm:max-h-none sm:overflow-hidden border border-gray-200/50 dark:border-neutral-700/50 transition-theme"
+        style={{ aspectRatio: window.innerWidth >= 640 ? '16/9' : 'auto' }}
       >
         <div className="relative h-full flex flex-col">
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 dark:text-neutral-500 dark:hover:text-neutral-300 hover:bg-white/50 dark:hover:bg-neutral-800/50 rounded-xl transition-all z-10 backdrop-blur-sm"
+            className="absolute top-3 right-3 sm:top-6 sm:right-6 p-2 text-gray-400 hover:text-gray-600 dark:text-neutral-500 dark:hover:text-neutral-300 hover:bg-white/50 dark:hover:bg-neutral-800/50 rounded-xl transition-all z-10 backdrop-blur-sm"
           >
             <X className="w-5 h-5" />
           </button>
 
           {/* Content */}
-          <div className="flex-1 flex flex-col px-16 py-10">
+          <div className="flex-1 flex flex-col px-4 py-6 sm:px-16 sm:py-10">
             {/* Header */}
-            <div className="text-center mb-8">
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-orange-600 to-purple-600 dark:from-orange-400 dark:to-purple-400 bg-clip-text text-transparent mb-3">
+            <div className="text-center mb-6 sm:mb-8">
+              <h1 className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-orange-600 to-purple-600 dark:from-orange-400 dark:to-purple-400 bg-clip-text text-transparent mb-2 sm:mb-3">
                 Bem-vindo à Guimoo!
               </h1>
-              <p className="text-lg text-gray-600 dark:text-neutral-400">
+              <p className="text-sm sm:text-lg text-gray-600 dark:text-neutral-400">
                 Tudo que você precisa para começar
               </p>
             </div>
 
             {/* Main Content Grid */}
-            <div className="flex-1 grid grid-cols-2 gap-6">
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {/* Left Column - Featured Carousel */}
               <div
-                className={`relative group overflow-hidden rounded-2xl bg-gradient-to-br ${slides[currentSlide].gradient} p-8 flex flex-col justify-between shadow-xl hover:shadow-2xl transition-all duration-700 hover:scale-[1.02] cursor-pointer border-2 border-white/20`}
+                className={`relative group overflow-hidden rounded-2xl bg-gradient-to-br ${slides[currentSlide].gradient} p-6 sm:p-8 flex flex-col justify-between shadow-xl hover:shadow-2xl transition-all duration-700 sm:hover:scale-[1.02] cursor-pointer border-2 border-white/20`}
                 onClick={handleGroupClick}
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
@@ -183,60 +183,60 @@ export default function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
               </div>
 
               {/* Right Column - 3 Cards */}
-              <div className="grid grid-rows-3 gap-4">
+              <div className="grid grid-rows-3 gap-3 sm:gap-4">
                 {/* Tutoriais */}
-                <div className="group bg-white dark:bg-neutral-800 rounded-xl p-5 border border-gray-200 dark:border-neutral-700 hover:border-purple-300 dark:hover:border-purple-600 transition-all hover:shadow-lg flex items-center gap-4 cursor-pointer"
+                <div className="group bg-white dark:bg-neutral-800 rounded-xl p-4 sm:p-5 border border-gray-200 dark:border-neutral-700 hover:border-purple-300 dark:hover:border-purple-600 transition-all hover:shadow-lg flex items-center gap-3 sm:gap-4 cursor-pointer"
                      onClick={handleTutorialsClick}>
-                  <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                    <PlayCircle className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                    <PlayCircle className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-0.5">
+                    <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white mb-0.5">
                       Tutoriais em Vídeo
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-neutral-400">
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-neutral-400">
                       Aprenda a usar todas as funcionalidades
                     </p>
                   </div>
-                  <svg className="w-5 h-5 text-gray-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
 
                 {/* Suporte */}
-                <div className="group bg-white dark:bg-neutral-800 rounded-xl p-5 border border-gray-200 dark:border-neutral-700 hover:border-green-300 dark:hover:border-green-600 transition-all hover:shadow-lg flex items-center gap-4 cursor-pointer"
+                <div className="group bg-white dark:bg-neutral-800 rounded-xl p-4 sm:p-5 border border-gray-200 dark:border-neutral-700 hover:border-green-300 dark:hover:border-green-600 transition-all hover:shadow-lg flex items-center gap-3 sm:gap-4 cursor-pointer"
                      onClick={handleSupportClick}>
-                  <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                    <MessageCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                    <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-0.5">
+                    <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white mb-0.5">
                       Suporte WhatsApp
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-neutral-400">
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-neutral-400">
                       Tire suas dúvidas com nossa equipe
                     </p>
                   </div>
-                  <svg className="w-5 h-5 text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
 
                 {/* Agendar */}
-                <div className="group bg-white dark:bg-neutral-800 rounded-xl p-5 border border-gray-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-600 transition-all hover:shadow-lg flex items-center gap-4 cursor-pointer"
+                <div className="group bg-white dark:bg-neutral-800 rounded-xl p-4 sm:p-5 border border-gray-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-600 transition-all hover:shadow-lg flex items-center gap-3 sm:gap-4 cursor-pointer"
                      onClick={handleScheduleClick}>
-                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                    <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                    <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-0.5">
+                    <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white mb-0.5">
                       Agendar Reunião
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-neutral-400">
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-neutral-400">
                       Marque um horário com nosso time
                     </p>
                   </div>
-                  <svg className="w-5 h-5 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
