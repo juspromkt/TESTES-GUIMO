@@ -226,8 +226,12 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
   const [toasts, setToasts] = useState<Array<{ id: number; message: string; type: 'error' | 'success' }>>([]);
 
   useEffect(() => {
-    fetchFunctions();
-    fetchUsuarios();
+    const initializeData = async () => {
+      await fetchUsuarios();
+      await migrateMessagesWithHeader();
+      await fetchFunctions(); // Recarrega as funções após a migração
+    };
+    initializeData();
   }, []);
 
   useEffect(() => {
@@ -370,6 +374,57 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
     }, 5000);
   };
 
+  const migrateMessagesWithHeader = async () => {
+    try {
+      const res = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/funcao/get', {
+        headers: { token }
+      });
+
+      if (!res.ok) return;
+
+      const data = await res.json();
+
+      if (!Array.isArray(data)) return;
+
+      const notificationFunctions = data.filter(func => func && func.tipo === 'NOTIFICACAO');
+
+      // Identifica notificações que precisam de migração
+      const functionsToMigrate = notificationFunctions.filter(func => {
+        const mensagem = func.mensagem || '';
+        // Verifica se a mensagem já tem o cabeçalho ou está vazia
+        return mensagem.length > 0 && !mensagem.startsWith('> Guimoo\n\n');
+      });
+
+      if (functionsToMigrate.length === 0) return;
+
+      // Migra cada notificação
+      for (const func of functionsToMigrate) {
+        const formattedMessage = `> Guimoo\n\n${func.mensagem}`;
+
+        await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/funcao/update', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            token
+          },
+          body: JSON.stringify({
+            id: func.id,
+            nome: func.nome,
+            url: func.url,
+            descricao: func.descricao,
+            isAtivo: func.isAtivo,
+            tipo: func.tipo,
+            mensagem: formattedMessage
+          })
+        });
+      }
+
+      console.log(`Migração concluída: ${functionsToMigrate.length} notificações atualizadas com o cabeçalho "Guimoo"`);
+    } catch (err) {
+      console.error('Erro na migração automática:', err);
+    }
+  };
+
   const handleCreateFunction = async () => {
     if (!newFunctionName.trim()) {
       showMessage('Nome da notificação é obrigatório', 'error');
@@ -491,7 +546,9 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
 
   const handleOpenConfigModal = (func: AgentFunction, isTemplate: boolean = false) => {
     setSelectedFunction(func);
-    setEditingMessage(func.mensagem || '');
+    // Remove o cabeçalho "> Guimoo\n\n" se existir, para mostrar apenas a mensagem base
+    const mensagemSemCabecalho = func.mensagem?.replace(/^> Guimoo\n\n/, '') || '';
+    setEditingMessage(mensagemSemCabecalho);
     setEditingGuide(func.descricao || '');
     setConfigTab(isTemplate ? 'recipients' : 'message');
     setShowConfigModal(true);
@@ -507,6 +564,10 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
 
     setSaving(true);
     try {
+      // Adiciona automaticamente o cabeçalho "> Guimoo" antes de salvar
+      const baseMessage = editingMessage.trim();
+      const formattedMessage = `> Guimoo\n\n${baseMessage}`;
+
       const res = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/funcao/update', {
         method: 'PUT',
         headers: {
@@ -520,16 +581,15 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
           descricao: selectedFunction.descricao,
           isAtivo: selectedFunction.isAtivo,
           tipo: selectedFunction.tipo,
-          mensagem: editingMessage.trim()
+          mensagem: formattedMessage
         })
       });
 
       if (!res.ok) throw new Error(`Erro HTTP: ${res.status}`);
 
-      const novaMensagem = editingMessage.trim();
-      setSelectedFunction(prev => prev ? { ...prev, mensagem: novaMensagem } : null);
+      setSelectedFunction(prev => prev ? { ...prev, mensagem: formattedMessage } : null);
       setFunctions(prev => prev.map(f =>
-        f.id === selectedFunction.id ? { ...f, mensagem: novaMensagem } : f
+        f.id === selectedFunction.id ? { ...f, mensagem: formattedMessage } : f
       ));
 
       showMessage('Mensagem salva com sucesso!', 'success');
