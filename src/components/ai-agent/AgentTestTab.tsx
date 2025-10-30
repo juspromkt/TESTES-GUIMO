@@ -35,6 +35,7 @@ export default function AgentTestTab({ token }: { token: string }) {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -103,7 +104,7 @@ export default function AgentTestTab({ token }: { token: string }) {
 
 const handleSendMessage = async () => {
   if (!inputMessage.trim() && !isRecording) return;
-  
+
   if (isRecording) {
     stopRecording();
     return;
@@ -111,7 +112,7 @@ const handleSendMessage = async () => {
 
   const userMessage = inputMessage.trim();
   setInputMessage('');
-  
+
   const newUserMessage: Message = {
     id: Date.now().toString(),
     text: userMessage,
@@ -119,11 +120,11 @@ const handleSendMessage = async () => {
     timestamp: new Date().toISOString(),
     type: 'text'
   };
-  
+
   setMessages(prev => [...prev, newUserMessage]);
   setIsLoading(true);
   setError('');
-  
+
   try {
     const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/agente/chat', {
       method: 'POST',
@@ -136,13 +137,13 @@ const handleSendMessage = async () => {
         mensagem: userMessage
       })
     });
-    
+
     if (!response.ok) {
       throw new Error('Erro ao enviar mensagem');
     }
-    
+
     const data = await response.json();
-    
+
     // Handle both array and object response formats
     const responseText = Array.isArray(data) ? data[0]?.text : data.text;
     const responseDateTime = Array.isArray(data) ? data[0]?.dateTime : data.dateTime;
@@ -151,16 +152,16 @@ const handleSendMessage = async () => {
       setIsTyping(true);
       await new Promise(resolve => setTimeout(resolve, 3000));
       setIsTyping(false);
-      
+
       const messageParts = responseText.split('\n\n').filter(part => part.trim());
-      
+
       for (let i = 0; i < messageParts.length; i++) {
         if (i > 0) {
           setIsTyping(true);
           await new Promise(resolve => setTimeout(resolve, 3000));
           setIsTyping(false);
         }
-        
+
         const botMessage: Message = {
           id: `${Date.now()}_${i}`,
           text: messageParts[i].trim(),
@@ -168,9 +169,9 @@ const handleSendMessage = async () => {
           timestamp: responseDateTime || new Date().toISOString(),
           type: 'text'
         };
-        
+
         setMessages(prev => [...prev, botMessage]);
-        
+
         if (i < messageParts.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
@@ -184,6 +185,8 @@ const handleSendMessage = async () => {
   } finally {
     setIsLoading(false);
     setIsTyping(false);
+    // Retorna o foco para o textarea
+    textareaRef.current?.focus();
   }
 };
 
@@ -340,6 +343,8 @@ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    // Retorna o foco para o textarea
+    textareaRef.current?.focus();
   }
 };
 
@@ -467,6 +472,8 @@ const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
           setError('Erro ao enviar áudio. Tente novamente.');
         } finally {
           setIsLoading(false);
+          // Retorna o foco para o textarea
+          textareaRef.current?.focus();
         }
       }
 
@@ -656,6 +663,7 @@ const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
                   </button>
                   <div className="flex-1 relative">
                     <textarea
+                      ref={textareaRef}
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
