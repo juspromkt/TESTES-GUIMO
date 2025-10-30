@@ -392,14 +392,16 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
       const functionsToMigrate = notificationFunctions.filter(func => {
         const mensagem = func.mensagem || '';
         // Verifica se a mensagem já tem o cabeçalho ou está vazia
-        return mensagem.length > 0 && !mensagem.startsWith('> Guimoo\n\n');
+        return mensagem.length > 0 && !mensagem.startsWith('> Guimoo\n');
       });
 
       if (functionsToMigrate.length === 0) return;
 
       // Migra cada notificação
       for (const func of functionsToMigrate) {
-        const formattedMessage = `> Guimoo\n\n${func.mensagem}`;
+        // Remove o cabeçalho antigo com \n\n se existir
+        let cleanMessage = func.mensagem.replace(/^> Guimoo\n\n/, '');
+        const formattedMessage = `> Guimoo\n${cleanMessage}`;
 
         await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/funcao/update', {
           method: 'PUT',
@@ -546,8 +548,8 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
 
   const handleOpenConfigModal = (func: AgentFunction, isTemplate: boolean = false) => {
     setSelectedFunction(func);
-    // Remove o cabeçalho "> Guimoo\n\n" se existir, para mostrar apenas a mensagem base
-    const mensagemSemCabecalho = func.mensagem?.replace(/^> Guimoo\n\n/, '') || '';
+    // Remove o cabeçalho "> Guimoo\n" se existir, para mostrar apenas a mensagem base
+    const mensagemSemCabecalho = func.mensagem?.replace(/^> Guimoo\n/, '') || '';
     setEditingMessage(mensagemSemCabecalho);
     setEditingGuide(func.descricao || '');
     setConfigTab(isTemplate ? 'recipients' : 'message');
@@ -566,7 +568,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
     try {
       // Adiciona automaticamente o cabeçalho "> Guimoo" antes de salvar
       const baseMessage = editingMessage.trim();
-      const formattedMessage = `> Guimoo\n\n${baseMessage}`;
+      const formattedMessage = `> Guimoo\n${baseMessage}`;
 
       const res = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/funcao/update', {
         method: 'PUT',
