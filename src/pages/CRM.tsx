@@ -15,7 +15,7 @@ import ViewToggle from '../components/crm/ViewToggle';
 import TagFilter from '../components/crm/TagFilter';
 import SearchableSelect from '../components/crm/SearchableSelect';
 import AnuncioCard from '../components/crm/AnuncioCard';
-import AnuncioCarousel from '../components/crm/AnuncioCarousel';
+import AnuncioModal from '../components/crm/AnuncioModal';
 import Modal from '../components/Modal';
 import FilterDropdown from '../components/FilterDropdown';
 import { hasPermission } from '../utils/permissions';
@@ -48,6 +48,7 @@ export default function CRM() {
   const [selectedFonteId, setSelectedFonteId] = useState<number | null>(null);
   const [selectedAnuncioId, setSelectedAnuncioId] = useState<number | null>(null);
   const [showAnuncioModal, setShowAnuncioModal] = useState(false);
+  const [selectedAnuncioForModal, setSelectedAnuncioForModal] = useState<Anuncio | null>(null);
 
   // Departamentos (apenas para exibição, sem filtro)
   const [departamentosMap, setDepartamentosMap] = useState<Record<number, import('../types/departamento').Departamento[]>>({});
@@ -860,27 +861,25 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                 placeholder="Fontes"
               />
 
-            </div>
-
-            {/* Carrossel de Anúncios */}
-            <div className="mt-4">
-              <AnuncioCarousel
-                anuncios={anuncios}
-                selectedAnuncioId={selectedAnuncioId}
-                onAnuncioChange={(id) => setSelectedAnuncioId(id)}
-                dealsCount={filteredDeals.length}
-              />
+              {/* Botão Anúncios */}
+              <button
+                onClick={() => setShowAnuncioModal(true)}
+                className="w-full px-4 py-2.5 bg-neutral-800 dark:bg-neutral-700 text-white rounded-lg hover:bg-neutral-700 dark:hover:bg-neutral-600 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+              >
+                <Play className="w-4 h-4" />
+                Anúncios
+              </button>
             </div>
           </div>
 
-          {/* Modal de Anúncios */}
+          {/* Modal de Lista de Anúncios */}
           <Modal
             isOpen={showAnuncioModal}
             onClose={() => setShowAnuncioModal(false)}
             title="Anúncios"
-            maxWidth="6xl"
+            maxWidth="4xl"
           >
-            <div className="bg-gradient-to-br from-gray-50 to-white dark:from-neutral-900 dark:to-neutral-800 p-6 rounded-xl">
+            <div className="p-6">
               {anuncios.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 bg-gray-100 dark:bg-neutral-700 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -889,14 +888,129 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                   <p className="text-gray-600 dark:text-neutral-400 font-medium">Nenhum anúncio cadastrado</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {anuncios.map(anuncio => (
-                    <AnuncioCard key={anuncio.Id} anuncio={anuncio} expanded={true} />
-                  ))}
+                <div className="space-y-2">
+                  {anuncios
+                    .map(anuncio => ({
+                      anuncio,
+                      dealsCount: deals.filter(deal => deal.id_anuncio === anuncio.Id).length
+                    }))
+                    .sort((a, b) => b.dealsCount - a.dealsCount)
+                    .map(({ anuncio, dealsCount }, index) => {
+                      const isTop3 = index < 3;
+                      const rankColors = [
+                        'from-amber-500 to-yellow-600',
+                        'from-slate-400 to-gray-500',
+                        'from-orange-500 to-amber-600'
+                      ];
+                      const medals = ['🥇', '🥈', '🥉'];
+
+                      return (
+                        <div
+                          key={anuncio.Id}
+                          onClick={() => {
+                            setSelectedAnuncioForModal(anuncio);
+                            setShowAnuncioModal(false);
+                          }}
+                          className="group relative flex items-center gap-4 p-5 bg-white dark:bg-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-750 border border-gray-100 dark:border-neutral-700 rounded-xl hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
+                        >
+                          {/* Gradient Border Left para Top 3 */}
+                          {isTop3 && (
+                            <div className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${rankColors[index]}`} />
+                          )}
+
+                          {/* Rank Number */}
+                          <div className="flex-shrink-0 w-8 text-center">
+                            {isTop3 ? (
+                              <span className="text-2xl">{medals[index]}</span>
+                            ) : (
+                              <span className="text-sm font-bold text-gray-400 dark:text-neutral-500">
+                                #{index + 1}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Thumbnail */}
+                          <div className="flex-shrink-0 w-20 h-14 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-neutral-700 dark:to-neutral-600 rounded-lg overflow-hidden shadow-sm">
+                            {anuncio.thumbnailUrl || anuncio.mediaUrl ? (
+                              <img
+                                src={anuncio.thumbnailUrl || anuncio.mediaUrl}
+                                alt={anuncio.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Play className="w-5 h-5 text-gray-400 dark:text-neutral-500" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-semibold text-gray-900 dark:text-neutral-100 truncate text-sm">
+                                {anuncio.title}
+                              </h3>
+                              <span className={`flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide ${
+                                anuncio.mediaType === 'VIDEO'
+                                  ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
+                                  : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                              }`}>
+                                {anuncio.mediaType === 'VIDEO' ? 'Video' : 'Img'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-neutral-400 line-clamp-1">
+                              {anuncio.body || 'Sem descrição'}
+                            </p>
+                          </div>
+
+                          {/* Stats */}
+                          <div className="flex-shrink-0 text-right">
+                            <p className="text-2xl font-bold text-gray-900 dark:text-neutral-100 tabular-nums">
+                              {dealsCount}
+                            </p>
+                            <p className="text-[10px] text-gray-500 dark:text-neutral-400 uppercase tracking-wide">
+                              Leads
+                            </p>
+                          </div>
+
+                          {/* Hover Arrow */}
+                          <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <ChevronDown className="w-5 h-5 text-gray-400 dark:text-neutral-500 -rotate-90" />
+                          </div>
+                        </div>
+                      );
+                    })}
                 </div>
               )}
             </div>
           </Modal>
+
+          {/* Modal de Detalhes do Anúncio */}
+          {selectedAnuncioForModal && (() => {
+            // Ordena anúncios por número de deals (ordem decrescente)
+            const sortedAnuncios = [...anuncios]
+              .map(anuncio => ({
+                anuncio,
+                dealsCount: deals.filter(deal => deal.id_anuncio === anuncio.Id).length
+              }))
+              .sort((a, b) => b.dealsCount - a.dealsCount)
+              .map(({ anuncio }) => anuncio);
+
+            return (
+              <AnuncioModal
+                anuncio={selectedAnuncioForModal}
+                deals={deals}
+                funil={selectedFunil}
+                onClose={() => setSelectedAnuncioForModal(null)}
+                onSelectAnuncio={(anuncioId) => setSelectedAnuncioId(anuncioId)}
+                allAnuncios={sortedAnuncios}
+                onNavigate={(anuncio) => setSelectedAnuncioForModal(anuncio)}
+              />
+            );
+          })()}
         </div>
 
         <div className="flex-1">
