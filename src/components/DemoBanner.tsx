@@ -3,6 +3,9 @@ import { Clock, AlertCircle } from 'lucide-react';
 
 /**
  * Verifica se o usuário atual é uma conta demo
+ * Uma conta é considerada demo se:
+ * 1. Tem o campo ativoAte E
+ * 2. A data de expiração é menor ou igual a 30 dias a partir de agora
  */
 export const isDemoAccount = (): boolean => {
   const userStr = localStorage.getItem('user');
@@ -10,7 +13,19 @@ export const isDemoAccount = (): boolean => {
 
   try {
     const { ativoAte } = JSON.parse(userStr);
-    return !!ativoAte; // Se tem ativoAte, é demo
+    if (!ativoAte) return false;
+
+    // Converte a data de expiração
+    const expirationDate = new Date(`${ativoAte}T23:59:59`);
+    const now = new Date();
+
+    // Calcula diferença em dias
+    const diffInMs = expirationDate.getTime() - now.getTime();
+    const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+
+    // Se expira em 30 dias ou menos, é conta demo
+    // Contas ativas têm validade de meses/anos
+    return diffInDays <= 30;
   } catch {
     return false;
   }
