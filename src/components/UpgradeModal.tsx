@@ -1,8 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { X, Crown, Check, Zap, Shield, Sparkles, MessageCircle, Users, TrendingUp, Headphones, Star } from 'lucide-react';
-import logoReduzida from '../imgs/guimoo/logo-reduzida.png';
-import logoDarkMode from '../imgs/guimoo/logo-dark-mode.png';
+import iconDarkMode from '../imgs/guimoo/icon-dark-mode.png';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -69,14 +68,9 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             <div className="mb-6 sm:mb-8">
               <div className="flex items-center gap-3 sm:gap-4 mb-3">
                 <img
-                  src={logoReduzida}
+                  src={iconDarkMode}
                   alt="Guimoo"
-                  className="w-10 h-10 sm:w-14 sm:h-14 flex-shrink-0 dark:hidden"
-                />
-                <img
-                  src={logoDarkMode}
-                  alt="Guimoo"
-                  className="w-10 h-10 sm:w-14 sm:h-14 flex-shrink-0 hidden dark:block"
+                  className="w-10 h-10 sm:w-14 sm:h-14 flex-shrink-0"
                 />
                 <h2 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-orange-600 to-purple-600 dark:from-orange-400 dark:to-purple-400 bg-clip-text text-transparent leading-tight">
                   Desbloqueie Todo o Potencial da Guimoo

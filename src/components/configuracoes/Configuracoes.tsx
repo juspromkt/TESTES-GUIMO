@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { GitBranch, Globe2, ListChecks, Tag, Users2, Link2, Building2 } from "lucide-react";
+import { GitBranch, Globe2, ListChecks, Tag, Users2, Link2, Building2, Activity } from "lucide-react";
 import ConfigLayout from "./ConfigLayout";
 
 import FontesSection from "./FontesSection";
@@ -9,13 +9,14 @@ import TagsSection from "./TagsSection";
 import UsersSection from "./UsersSection";
 import DepartamentosSection from "./DepartamentosSection";
 import Conexao from "../../pages/Conexao";
+import DiagnosticSection from "../ai-agent/DiagnosticSection";
 
 
 import { hasPermission } from "../../utils/permissions";
 import type { UserType } from "../../types/user";
 
 // adiciona "conexao" e "departamentos" ao tipo
-type SectionId = "funis" | "fontes" | "campos" | "etiquetas" | "departamentos" | "usuarios" | "conexao";
+type SectionId = "funis" | "fontes" | "campos" | "etiquetas" | "departamentos" | "usuarios" | "conexao" | "diagnostico";
 
 export default function Configuracoes() {
   const [activeSection, setActiveSection] = useState<SectionId>("funis");
@@ -53,6 +54,7 @@ export default function Configuracoes() {
     { id: "departamentos", label: "Departamentos", icon: Building2, show: true },
     { id: "conexao", label: "Conexões", icon: Link2, show: true },
     { id: "usuarios", label: "Gestão de Usuários", icon: Users2, show: showUsers },
+    { id: "diagnostico", label: "Diagnóstico", icon: Activity, show: true },
   ];
 
   const renderSection = () => {
@@ -71,6 +73,8 @@ export default function Configuracoes() {
         return <Conexao isActive={true} canEdit={canEditConfigs} />;
       case "usuarios":
         return <UsersSection isActive={true} canEdit={canEditConfigs} />;
+      case "diagnostico":
+        return <DiagnosticSection token={token} />;
       default:
         return null;
     }

@@ -41,6 +41,7 @@ export default function ConfigLayout({
                 const Icon = section.icon;
                 const isActive = activeSection === section.id;
                 const isAcademy = section.id === 'academy';
+                const isDiagnostico = section.id === 'diagnostico';
 
                 // Estilos especiais para Guimoo Academy
                 if (isAcademy) {
@@ -64,6 +65,28 @@ export default function ConfigLayout({
                         }`}
                       />
                       <span className="truncate relative z-10">{section.label}</span>
+                    </button>
+                  );
+                }
+
+                // Estilos especiais para Diagnóstico
+                if (isDiagnostico) {
+                  return (
+                    <button
+                      key={section.id}
+                      onClick={() => setActiveSection(section.id)}
+                      className={`w-full flex items-center gap-3 px-5 py-3 rounded-xl text-[15px] font-medium transition-all ${
+                        isActive
+                          ? "bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shadow-sm"
+                          : "bg-emerald-50/50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-200 dark:hover:border-emerald-800"
+                      }`}
+                    >
+                      <Icon
+                        className={`w-5 h-5 flex-shrink-0 ${
+                          isActive ? "text-emerald-600 dark:text-emerald-400" : "text-emerald-500 dark:text-emerald-500"
+                        }`}
+                      />
+                      <span className="truncate">{section.label}</span>
                     </button>
                   );
                 }

@@ -25,6 +25,7 @@ import { VideoPlayerProvider } from './context/VideoPlayerContext';
 import WelcomeModal from './components/WelcomeModal';
 import UpgradeModal from './components/UpgradeModal';
 import { isDemoAccount } from './components/DemoBanner';
+import WhatsAppAlert from './components/WhatsAppAlert';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = localStorage.getItem('user');
@@ -45,6 +46,16 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
 function App() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  // Pega o token do usuário para o WhatsAppAlert
+  const getUserToken = () => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      return user.token || '';
+    }
+    return '';
+  };
 
   // Escuta evento de login bem-sucedido
   useEffect(() => {
@@ -141,6 +152,7 @@ function App() {
     <BrowserRouter>
       <WelcomeModal isOpen={showWelcomeModal} onClose={handleCloseWelcomeModal} />
       <UpgradeModal isOpen={showUpgradeModal} onClose={handleCloseUpgradeModal} />
+      <WhatsAppAlert token={getUserToken()} />
       <Routes>
         <Route path="/" element={<Login />} />
         <Route

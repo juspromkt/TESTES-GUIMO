@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Play, BookOpen, ExternalLink, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import logoReduzida from '../imgs/guimoo/logo-reduzida.png';
-import logoDarkMode from '../imgs/guimoo/logo-dark-mode.png';
+import iconDarkMode from '../imgs/guimoo/icon-dark-mode.png';
 
 interface TutorialModalProps {
   isOpen: boolean;
@@ -123,14 +122,9 @@ export default function TutorialModal({ isOpen, onClose }: TutorialModalProps) {
                 <div className="mb-6 sm:mb-8">
                   <div className="flex items-center gap-3 sm:gap-4 mb-3">
                     <img
-                      src={logoReduzida}
+                      src={iconDarkMode}
                       alt="Guimoo"
-                      className="w-10 h-10 sm:w-14 sm:h-14 flex-shrink-0 dark:hidden"
-                    />
-                    <img
-                      src={logoDarkMode}
-                      alt="Guimoo"
-                      className="w-10 h-10 sm:w-14 sm:h-14 flex-shrink-0 hidden dark:block"
+                      className="w-10 h-10 sm:w-14 sm:h-14 flex-shrink-0"
                     />
                     <h2 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent leading-tight">
                       Tutoriais para você começar
