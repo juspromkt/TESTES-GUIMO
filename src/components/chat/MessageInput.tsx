@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Send, Paperclip, Mic, StopCircle, FileText, Smile } from "lucide-react";
 import { apiClient } from "./utils/api";
 import type { Message } from "./utils/api";
@@ -302,6 +302,15 @@ reader.readAsDataURL(audioBlob);
     setMessage(prev => prev + emoji);
     textareaRef.current?.focus();
   };
+
+  // Auto-resize do textarea
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+    }
+  }, [message]);
  return (
     <div className="bg-[#f0f2f5] dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 relative z-[9998] transition-colors duration-200" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
       {/* Preview de arquivo selecionado */}
@@ -467,10 +476,11 @@ reader.readAsDataURL(audioBlob);
               onKeyPress={handleKeyPress}
               placeholder="Digite uma mensagem"
               rows={1}
-              className="w-full resize-none rounded-lg bg-transparent px-3 py-2.5 text-base md:text-[15px] text-[#111b21] dark:text-gray-100 placeholder:text-[#667781] dark:placeholder:text-gray-400 focus:outline-none max-h-[100px] overflow-y-auto touch-manipulation"
+              className="w-full resize-none rounded-lg bg-transparent px-3 py-2.5 text-base md:text-[15px] text-[#111b21] dark:text-gray-100 placeholder:text-[#667781] dark:placeholder:text-gray-400 focus:outline-none overflow-y-auto touch-manipulation"
               style={{
                 minHeight: '44px',
-                maxHeight: '100px',
+                maxHeight: '120px',
+                height: 'auto',
                 WebkitOverflowScrolling: 'touch'
               }}
             />
