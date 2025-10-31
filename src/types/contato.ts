@@ -3,4 +3,5 @@ export interface Contato {
   nome: string;
   Email: string;
   telefone: string;
+  createdAt?: string;
 }

@@ -688,7 +688,7 @@ const Sidebar = () => {
       { path: '/dashboard', text: 'Dashboard', icon: LayoutDashboard, permission: true },
       { path: '/conversas', text: 'Conversas', icon: MessageSquare, permission: hasPermission('can_view_menu_chat') },
       { path: '/ai-agent', text: 'Agente de IA', icon: Bot, permission: hasPermission('can_view_menu_agent') },
-      { path: '/crm', text: 'CRM', icon: GitBranch, permission: hasPermission('can_view_menu_crm') },
+      { path: '/crm/kanban', text: 'CRM', icon: GitBranch, permission: hasPermission('can_view_menu_crm') },
       { path: '/agendamentos', text: 'Agendamentos', icon: CalendarDays, permission: hasPermission('can_view_menu_crm') },
       { path: '/prospectar', text: 'Envios em Massa', icon: Rocket, permission: hasPermission('can_view_menu_prospect') },
 

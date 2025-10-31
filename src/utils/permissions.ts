@@ -66,7 +66,21 @@ export const fetchUserPermissions = async (token: string): Promise<UserPermissio
       throw new Error('Failed to fetch user permissions');
     }
 
-    const data = await response.json();
+    const text = await response.text();
+
+    // Verifica se a resposta está vazia
+    if (!text || text.trim() === '') {
+      console.warn('Empty response from permissions API');
+      return null;
+    }
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (parseError) {
+      console.error('Failed to parse permissions response:', text.substring(0, 100));
+      throw new Error('Invalid JSON response from permissions API');
+    }
 
     if (Array.isArray(data) && data.length > 0) {
       const permissions = data[0];

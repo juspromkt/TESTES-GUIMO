@@ -1,7 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { X, Crown, Check, Zap, Shield, Sparkles, MessageCircle, Users, TrendingUp, Headphones, Star } from 'lucide-react';
-import iconDarkMode from '../imgs/guimoo/icon-dark-mode.png';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -43,19 +42,22 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   ];
 
   return createPortal(
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-8 z-[10001] animate-fadeIn">
+    <div
+      className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-8 z-[10001] animate-fadeIn"
+      onClick={onClose}
+    >
       <div
         className="bg-gradient-to-br from-white via-white to-orange-50/50 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-900 rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-[1400px] overflow-y-auto max-h-[95vh] sm:max-h-none sm:aspect-video sm:overflow-hidden border border-orange-300/50 dark:border-orange-600/50 transition-theme relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-orange-500/20 to-purple-500/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-tr from-orange-500/20 to-purple-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-orange-500/20 to-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-tr from-orange-500/20 to-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 sm:top-5 sm:right-5 p-2.5 text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-white/80 dark:hover:bg-neutral-800/80 rounded-xl transition-all z-10 backdrop-blur-sm border border-gray-200 dark:border-neutral-700"
+          className="absolute top-3 right-3 sm:top-5 sm:right-5 p-2.5 text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-white/80 dark:hover:bg-neutral-800/80 rounded-xl transition-all z-50 backdrop-blur-sm border border-gray-200 dark:border-neutral-700"
         >
           <X className="w-5 h-5" />
         </button>
@@ -67,11 +69,9 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             {/* Header */}
             <div className="mb-6 sm:mb-8">
               <div className="flex items-center gap-3 sm:gap-4 mb-3">
-                <img
-                  src={iconDarkMode}
-                  alt="Guimoo"
-                  className="w-10 h-10 sm:w-14 sm:h-14 flex-shrink-0"
-                />
+                <div className="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-orange-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Crown className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                </div>
                 <h2 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-orange-600 to-purple-600 dark:from-orange-400 dark:to-purple-400 bg-clip-text text-transparent leading-tight">
                   Desbloqueie Todo o Potencial da Guimoo
                 </h2>

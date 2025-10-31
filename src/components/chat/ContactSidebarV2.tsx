@@ -28,6 +28,7 @@ import { apiClient, clearApiCache, getCacheKey } from "./utils/api";
 import type { Tag } from "../../types/tag";
 import type { Departamento } from "../../types/departamento";
 import { isDepartamento } from "../../types/departamento";
+import { Contato } from '../../types/contato';
 import DealSummaryWidget from "../crm/DealSummaryWidget";
 import { useChat } from "../../context/ChatContext";
 import { toast } from "sonner";
@@ -41,12 +42,9 @@ interface ContactSidebarV2Props {
   whatsappType?: string;
 }
 
-interface ContactData {
-  Id: number;
-  nome: string;
-  telefone: string;
-  Email: string | null;
-}
+type ContactData = Contato & {
+  Email: string | null; // Override para aceitar null explicitamente
+};
 
 interface DealData {
   Id: number;
@@ -1279,7 +1277,7 @@ export default function ContactSidebarV2({
   return (
     <div
       className={`
-        fixed md:absolute right-0 top-[112px] md:top-0 bottom-0 md:h-full
+        fixed md:absolute right-0 top-0 bottom-0 md:h-full
         bg-gradient-to-br from-white via-gray-50/50 to-white dark:from-gray-900 dark:via-gray-900/95 dark:to-gray-900
         backdrop-blur-xl border-l border-gray-200/60 dark:border-gray-700/50
         shadow-2xl shadow-gray-900/5 dark:shadow-black/20
@@ -1289,7 +1287,7 @@ export default function ContactSidebarV2({
       `}
     >
       {/* Header Premium com gradiente sutil */}
-      <div className="relative border-b border-gray-200/40 dark:border-gray-700/30 bg-gradient-to-r from-white/80 via-gray-50/60 to-white/80 dark:from-gray-900/80 dark:via-gray-800/50 dark:to-gray-900/80 backdrop-blur-md">
+      <div className="relative border-b border-gray-200/40 dark:border-gray-700/30 bg-gradient-to-r from-white/80 via-gray-50/60 to-white/80 dark:from-gray-900/80 dark:via-gray-800/50 dark:to-gray-900/80 backdrop-blur-md mt-[60px] md:mt-0">
         {/* Subtle gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/5 dark:to-gray-900/10 pointer-events-none"></div>
 
@@ -1535,7 +1533,7 @@ export default function ContactSidebarV2({
                   }`}
                 >
                   <option value="" disabled>Selecione um responsável</option>
-                  {users.map((user) => (
+                  {users.filter(user => user.isAtivo).map((user) => (
                     <option key={user.Id} value={user.Id}>
                       {user.nome}
                     </option>
@@ -1712,16 +1710,6 @@ export default function ContactSidebarV2({
               />
             )}
 
-            {/* Botão Abrir no CRM */}
-            {dealData && (
-              <button
-                onClick={handleOpenCRM}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 dark:bg-indigo-700 text-white rounded-lg text-xs font-medium hover:bg-indigo-700 dark:hover:bg-indigo-800 transition-colors"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>Abrir no CRM</span>
-              </button>
-            )}
           </>
         )
         ) : (

@@ -1778,7 +1778,8 @@ function ensureKey(m: any, fallbackJid: string): any {
       clearApiCache(cacheKeys);
     }
 
-    setMessages([]);
+    // NÃO limpar mensagens - apenas atualizar
+    // setMessages([]);  ❌ REMOVIDO - causava desaparecimento de mensagens
     setPage(1);
     setHasMore(true);
     noMorePagesRef.current = false;
@@ -1815,18 +1816,19 @@ useEffect(() => {
   }
 }, [isBusiness]);
 
-  // ✅ NOVO: Revalidar mensagens a cada 3 segundos quando o chat está ativo
-  useEffect(() => {
-    if (!token || !selectedChat?.remoteJid || activeChatJids.length === 0) return;
+  // ❌ DESABILITADO: Refresh automático causava desaparecimento de mensagens
+  // As mensagens são atualizadas via evento "new_message" quando há novas mensagens
+  // useEffect(() => {
+  //   if (!token || !selectedChat?.remoteJid || activeChatJids.length === 0) return;
 
-    const intervalId = setInterval(() => {
-      fetchMessages(1, false);
-    }, 3000);
+  //   const intervalId = setInterval(() => {
+  //     fetchMessages(1, false);
+  //   }, 10000);
 
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [token, selectedChat?.remoteJid, activeChatJids, fetchMessages]);
+  //   return () => {
+  //     clearInterval(intervalId);
+  //   };
+  // }, [token, selectedChat?.remoteJid, activeChatJids, fetchMessages]);
 
   // ✅ NOVO: Listener global "new_message" para atualização instantânea
   useEffect(() => {
@@ -1854,6 +1856,25 @@ useEffect(() => {
       window.removeEventListener("new_message", handleNewMessage);
     };
   }, [handleReloadMessages]);
+
+  // ✅ NOVO: Listener para forçar reload quando abre nova conversa
+  useEffect(() => {
+    const handleForceReload = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const chatId = customEvent.detail?.chatId;
+
+      // Só recarrega se for a conversa atual
+      if (chatId && chatId === selectedChat?.id) {
+        handleReloadMessages();
+      }
+    };
+
+    window.addEventListener("force_reload_messages", handleForceReload);
+
+    return () => {
+      window.removeEventListener("force_reload_messages", handleForceReload);
+    };
+  }, [handleReloadMessages, selectedChat?.id]);
 
   // ✅ Scroll automático para o final quando a conversa é aberta pela primeira vez
   useEffect(() => {
@@ -2317,10 +2338,22 @@ function normalizeMessages(rawMessages: Message[]): Message[] {
 const applyNormalizedMessages = (newData: Message[], append: boolean): Message[] => {
   let updated: Message[] = [];
   setMessages(prev => {
-    // 🔹 Quando append=true (carregando msgs antigas), coloca newData ANTES de prev
-    const combined = append ? [...newData, ...prev] : [...newData];
-    updated = normalizeMessages(combined);
-    return updated;
+    if (append) {
+      // Carregando msgs antigas: adiciona newData ANTES de prev
+      const combined = [...newData, ...prev];
+      updated = normalizeMessages(combined);
+      return updated;
+    } else {
+      // Refresh/primeira carga: mescla inteligente preservando mensagens temporárias e pendentes
+      const tempMessages = prev.filter(m =>
+        m.id?.startsWith('temp-') || m.status === 'pending' || m.status === 'error'
+      );
+      // Normaliza APENAS as mensagens da API, depois adiciona as temp sem normalizar
+      const normalizedApiMessages = normalizeMessages(newData);
+      // Combina: API messages + temp messages (mantém temp no final para aparecerem por último)
+      updated = [...normalizedApiMessages, ...tempMessages].sort((a, b) => a.messageTimestamp - b.messageTimestamp);
+      return updated;
+    }
   });
   return updated;
 };
@@ -3899,7 +3932,7 @@ return (
       }}
     >
 {/* Header Premium */}
-<div className="fixed md:relative top-[60px] md:top-0 left-0 right-0 md:left-auto md:right-auto z-30 md:z-20 flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-white dark:bg-gray-800 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
+<div className="fixed md:relative top-0 left-0 right-0 md:left-auto md:right-auto z-30 md:z-20 flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-white dark:bg-gray-800 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
   <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0">
     <button
       onClick={onBack}
@@ -4322,7 +4355,7 @@ return (
     {showScrollToBottom && (
       <button
         onClick={() => scrollToBottom(true)}
-        className={`fixed bottom-24 z-40 bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 ${
+        className={`fixed bottom-40 z-40 bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 ${
           sidebarOpen || searchOpen ? 'right-[440px]' : 'right-6 md:right-8'
         }`}
         title="Rolar para o final"
@@ -4766,7 +4799,7 @@ return (
 
       {/* Selection Actions Bar */}
       {selectionMode && selectedMessages.size > 0 && (
-        <div className="fixed md:relative bottom-[72px] md:bottom-auto left-0 right-0 md:left-auto md:right-auto z-10 px-4 md:px-6 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 border-t border-b border-emerald-200 dark:border-emerald-800 shadow-lg transition-all duration-200">
+        <div className="fixed md:relative bottom-[96px] md:bottom-auto left-0 right-0 md:left-auto md:right-auto z-10 px-4 md:px-6 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 border-t border-b border-emerald-200 dark:border-emerald-800 shadow-lg transition-all duration-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center">

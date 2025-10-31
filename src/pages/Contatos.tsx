@@ -4,14 +4,7 @@ import Papa from 'papaparse';
 import Pagination from '../components/Pagination';
 import Modal from '../components/Modal';
 import { hasPermission } from '../utils/permissions';
-
-interface Contato {
-  Id: number;
-  nome: string;
-  Email: string;
-  telefone: string;
-  createdAt?: string;
-}
+import { Contato } from '../types/contato';
 
 type SortField = 'nome' | 'Email' | 'telefone' | 'createdAt';
 type SortDirection = 'asc' | 'desc';
@@ -56,6 +49,7 @@ const canEditContacts = hasPermission('can_edit_contacts');
     Email: '',
     telefone: ''
   });
+  const [searchQuery, setSearchQuery] = useState('');
 
   const user = localStorage.getItem('user');
   const token = user ? JSON.parse(user).token : null;
@@ -425,6 +419,16 @@ useEffect(() => {
 
   const filteredAndSortedContacts = [...contatos]
     .filter(contato => {
+      // Mobile: busca unificada
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesNome = (contato.nome || '').toLowerCase().includes(query);
+        const matchesEmail = (contato.Email || '').toLowerCase().includes(query);
+        const matchesTelefone = (contato.telefone || '').includes(searchQuery);
+        return matchesNome || matchesEmail || matchesTelefone;
+      }
+
+      // Desktop: filtros separados
       const matchesNome = (contato.nome || '').toLowerCase().includes((filters.nome || '').toLowerCase());
       const matchesEmail = !filters.Email || ((contato.Email || '').toLowerCase().includes((filters.Email || '').toLowerCase()));
       const matchesTelefone = !filters.telefone || ((contato.telefone || '').includes(filters.telefone));
@@ -492,7 +496,7 @@ useEffect(() => {
           </div>
 
           {canEditContacts && (
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="hidden lg:flex flex-wrap items-center gap-2.5">
               <button
                 onClick={handleDeleteMultiple}
                 disabled={selectedIds.size === 0 || isDeletingMultiple}
@@ -587,43 +591,35 @@ useEffect(() => {
           </div>
         ) : (
           <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
-            {/* Filtros Minimalistas */}
-            <div className="p-4 border-b border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50">
+            {/* Filtro Mobile - Campo único de busca */}
+            <div className="p-4 border-b border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50 lg:hidden">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-4 h-4" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar contato..."
+                  className="pl-9 pr-3 py-2.5 w-full bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Filtro Desktop - Campo único unificado */}
+            <div className="hidden lg:block p-4 border-b border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50">
               <div className="flex items-center gap-2 mb-3">
                 <Filter className="w-4 h-4 text-gray-600 dark:text-neutral-400" />
-                <h3 className="text-xs font-semibold text-gray-700 dark:text-neutral-200 uppercase tracking-wide">Filtros</h3>
+                <h3 className="text-xs font-semibold text-gray-700 dark:text-neutral-200 uppercase tracking-wide">Filtro</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-4 h-4" />
-                  <input
-                    type="text"
-                    value={filters.nome}
-                    onChange={(e) => setFilters({ ...filters, nome: e.target.value })}
-                    placeholder="Buscar por nome..."
-                    className="pl-9 pr-3 py-2 w-full bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
-                  />
-                </div>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-4 h-4" />
-                  <input
-                    type="text"
-                    value={filters.Email}
-                    onChange={(e) => setFilters({ ...filters, Email: e.target.value })}
-                    placeholder="Buscar por email..."
-                    className="pl-9 pr-3 py-2 w-full bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
-                  />
-                </div>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-4 h-4" />
-                  <input
-                    type="text"
-                    value={filters.telefone}
-                    onChange={(e) => setFilters({ ...filters, telefone: e.target.value })}
-                    placeholder="Buscar por telefone..."
-                    className="pl-9 pr-3 py-2 w-full bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
-                  />
-                </div>
+              <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-4 h-4" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar por nome, email ou telefone..."
+                  className="pl-9 pr-3 py-2 w-full bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
+                />
               </div>
             </div>
 
@@ -667,7 +663,7 @@ useEffect(() => {
                 <thead>
                   <tr className="bg-gray-50 dark:bg-neutral-700/50">
                     {canEditContacts && (
-                      <th className="px-3 py-2.5 text-left w-12">
+                      <th className="hidden lg:table-cell px-3 py-2.5 text-left w-12">
                         <input
                           type="checkbox"
                           checked={selectedIds.size === paginatedContatos.length && paginatedContatos.length > 0}
@@ -686,7 +682,7 @@ useEffect(() => {
                       </div>
                     </th>
                     <th
-                      className="px-3 py-2.5 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                      className="hidden lg:table-cell px-3 py-2.5 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
                       onClick={() => handleSort('Email')}
                     >
                       <div className="flex items-center gap-1.5">
@@ -695,7 +691,7 @@ useEffect(() => {
                       </div>
                     </th>
                     <th
-                      className="px-3 py-2.5 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                      className="hidden lg:table-cell px-3 py-2.5 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
                       onClick={() => handleSort('telefone')}
                     >
                       <div className="flex items-center gap-1.5">
@@ -704,7 +700,7 @@ useEffect(() => {
                       </div>
                     </th>
                     <th
-                      className="px-3 py-2.5 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                      className="hidden lg:table-cell px-3 py-2.5 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
                       onClick={() => handleSort('createdAt')}
                     >
                       <div className="flex items-center gap-1.5">
@@ -713,7 +709,7 @@ useEffect(() => {
                       </div>
                     </th>
                     {canEditContacts && (
-                      <th className="px-3 py-2.5 text-right">
+                      <th className="hidden lg:table-cell px-3 py-2.5 text-right">
                         <span className="text-xs font-semibold text-gray-700 dark:text-neutral-200 uppercase tracking-wide">Ações</span>
                       </th>
                     )}
@@ -726,7 +722,7 @@ useEffect(() => {
                       className={`hover:bg-gray-50 dark:hover:bg-neutral-700/30 transition-colors ${selectedIds.has(contato.Id) ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
                     >
                       {canEditContacts && (
-                        <td className="px-3 py-2.5 whitespace-nowrap w-12">
+                        <td className="hidden lg:table-cell px-3 py-2.5 whitespace-nowrap w-12">
                           <input
                             type="checkbox"
                             checked={selectedIds.has(contato.Id)}
@@ -764,7 +760,7 @@ useEffect(() => {
                         </div>
                       </td>
                       <td
-                        className="px-3 py-2.5 whitespace-nowrap cursor-pointer"
+                        className="hidden lg:table-cell px-3 py-2.5 whitespace-nowrap cursor-pointer"
                         onClick={() => {
                           setSelectedContato(contato);
                           const { code, number } = extractCountryCode(contato.telefone || '');
@@ -784,7 +780,7 @@ useEffect(() => {
                         </div>
                       </td>
                       <td
-                        className="px-3 py-2.5 whitespace-nowrap cursor-pointer"
+                        className="hidden lg:table-cell px-3 py-2.5 whitespace-nowrap cursor-pointer"
                         onClick={() => {
                           setSelectedContato(contato);
                           const { code, number } = extractCountryCode(contato.telefone || '');
@@ -804,7 +800,7 @@ useEffect(() => {
                         </div>
                       </td>
                       <td
-                        className="px-3 py-2.5 whitespace-nowrap cursor-pointer"
+                        className="hidden lg:table-cell px-3 py-2.5 whitespace-nowrap cursor-pointer"
                         onClick={() => {
                           setSelectedContato(contato);
                           const { code, number } = extractCountryCode(contato.telefone || '');
@@ -824,7 +820,7 @@ useEffect(() => {
                         </div>
                       </td>
                       {canEditContacts && (
-                        <td className="px-3 py-2.5 whitespace-nowrap text-right text-sm">
+                        <td className="hidden lg:table-cell px-3 py-2.5 whitespace-nowrap text-right text-sm">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();

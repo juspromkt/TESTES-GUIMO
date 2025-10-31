@@ -217,6 +217,20 @@ reader.readAsDataURL(audioBlob);
         console.log('[MessageInput] Mensagens enviadas com sucesso:', sentMessages);
         onReplaceTempMessage?.(tempId, sentMessages);
         onMessageSent(sentMessages);
+
+        // Atualizar lastMessage no ChatList
+        if (sentMessages && sentMessages.length > 0) {
+          const lastMsg = sentMessages[sentMessages.length - 1];
+          const { updateChatLastMessage } = await import('../../utils/chatUpdateEvents');
+          updateChatLastMessage(jid, {
+            messageType: lastMsg.messageType,
+            fromMe: true,
+            conversation: lastMsg.message?.conversation || '',
+            messageTimestamp: lastMsg.messageTimestamp,
+            ...lastMsg.message
+          });
+        }
+
         toast.success('✨', { duration: 1000 });
       } catch (error) {
         console.error('[MessageInput] Erro ao enviar:', error);
@@ -311,8 +325,8 @@ reader.readAsDataURL(audioBlob);
       textarea.style.height = '44px';
 
       // Se há conteúdo e precisa de mais espaço, expande até no máximo ~2.5 linhas
-      if (textarea.scrollHeight > 44) {
-        textarea.style.height = `${Math.min(textarea.scrollHeight, 100)}px`;
+      if (message.trim() && textarea.scrollHeight > 44) {
+        textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
       }
     }
   }, [message]);
@@ -483,8 +497,8 @@ reader.readAsDataURL(audioBlob);
               rows={1}
               className="w-full resize-none rounded-lg bg-transparent px-3 py-2.5 text-base md:text-[15px] text-[#111b21] dark:text-gray-100 placeholder:text-[#667781] dark:placeholder:text-gray-400 focus:outline-none overflow-y-auto touch-manipulation"
               style={{
-                height: '44px',
-                maxHeight: '100px',
+                minHeight: '44px',
+                maxHeight: '120px',
                 WebkitOverflowScrolling: 'touch'
               }}
             />

@@ -18,6 +18,7 @@ export type ChatUpdateEventType =
   | 'chat:stage_changed'
   | 'chat:name_changed'
   | 'chat:responsible_changed'
+  | 'chat:last_message_updated'
   | 'chat:refresh_all';
 
 export interface ChatUpdateEventData {
@@ -28,6 +29,13 @@ export interface ChatUpdateEventData {
   stage?: string;
   name?: string;
   responsibleId?: number;
+  lastMessage?: {
+    messageType: string;
+    fromMe: boolean;
+    conversation?: string;
+    messageTimestamp: number;
+    [key: string]: any;
+  };
   [key: string]: any;
 }
 
@@ -109,6 +117,14 @@ export function updateChatResponsible(remoteJid: string, responsibleId: number) 
 }
 
 /**
+ * Atualiza última mensagem do chat
+ */
+export function updateChatLastMessage(remoteJid: string, lastMessage: any) {
+  dispatchChatUpdate('chat:last_message_updated', { remoteJid, lastMessage });
+  dispatchChatUpdate('chat:update', { remoteJid, lastMessage });
+}
+
+/**
  * Força refresh completo da lista
  */
 export function refreshAllChats() {
@@ -136,5 +152,8 @@ export function updateChat(remoteJid: string, updates: Partial<ChatUpdateEventDa
   }
   if (updates.responsibleId !== undefined) {
     dispatchChatUpdate('chat:responsible_changed', { remoteJid, responsibleId: updates.responsibleId });
+  }
+  if (updates.lastMessage !== undefined) {
+    dispatchChatUpdate('chat:last_message_updated', { remoteJid, lastMessage: updates.lastMessage });
   }
 }

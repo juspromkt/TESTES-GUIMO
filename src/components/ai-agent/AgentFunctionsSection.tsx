@@ -49,6 +49,7 @@ interface CRMUser {
   Id: number;
   nome: string;
   telefone?: string;
+  isAtivo: boolean;
 }
 
 interface AgentFunctionsSectionProps {
@@ -337,7 +338,8 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
             telefone:
               typeof user.telefone === 'string' && user.telefone.trim().length > 0
                 ? user.telefone.trim()
-                : undefined
+                : undefined,
+            isAtivo: typeof user.isAtivo === 'boolean' ? user.isAtivo : true
           }));
         setUsuarios(validUsers);
       } else {
@@ -1322,7 +1324,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, ca
                             disabled={loadingUsuarios || usuarios.length === 0}
                           >
                             <option value="">Selecione um usuário</option>
-                            {usuarios.map(user => (
+                            {usuarios.filter(user => user.isAtivo).map(user => (
                               <option key={user.Id} value={user.Id}>
                                 {user.nome}
                               </option>

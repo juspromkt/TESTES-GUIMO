@@ -69,9 +69,40 @@ const ChatProprio = () => {
   const user = localStorage.getItem('user');
   const token = user ? JSON.parse(user).token : null;
 
+  // Força reload sempre que entrar na página - executado no mount
   useEffect(() => {
+    console.log('[ChatProprio] Montado - pathname:', location.pathname);
+
+    // Limpa o cache e força reload
     setChatListLoaded(false);
-  }, []);
+
+    // Limpa chat selecionado ao entrar
+    setSelectedChat(null);
+    setShowMobileChat(false);
+    setIsInConversation(false);
+
+    // Dispara evento para forçar reload do ChatList
+    const timer = setTimeout(() => {
+      console.log('[ChatProprio] Disparando chat_list_force_reload');
+      window.dispatchEvent(new Event('chat_list_force_reload'));
+    }, 150);
+
+    return () => {
+      clearTimeout(timer);
+      console.log('[ChatProprio] Desmontado');
+    };
+  }, []); // Dependências vazias - executa só no mount/unmount
+
+  // Monitora mudanças de rota para recarregar quando voltar
+  useEffect(() => {
+    if (location.pathname === '/conversas') {
+      console.log('[ChatProprio] Rota /conversas detectada - recarregando');
+      setChatListLoaded(false);
+      setTimeout(() => {
+        window.dispatchEvent(new Event('chat_list_force_reload'));
+      }, 100);
+    }
+  }, [location.pathname]);
 
   // Verificar se é a primeira vez que acessa a aba de conversas
   useEffect(() => {
@@ -174,6 +205,11 @@ const ChatProprio = () => {
     setSelectedChat(chat);
     setShowMobileChat(true);
     setIsInConversation(true); // Notifica o Context que está em conversa
+
+    // Força reload completo das mensagens ao abrir nova conversa
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('force_reload_messages', { detail: { chatId: chat.id } }));
+    }, 50);
   };
 
   const handleBackToList = () => {

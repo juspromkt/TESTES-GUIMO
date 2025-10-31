@@ -10,12 +10,18 @@ import Configuracoes from './pages/Configuracoes';
 import AIAgent from './pages/AIAgent';
 import Contatos from './pages/Contatos';
 import CRMLayoutPage from './pages/CRMLayoutPage'; // ✅ usa o layout com abas
+import CRM from './pages/CRM';
 import Conexao from './pages/Conexao';
 import DealDetails from './pages/DealDetails';
 import Appointments from './pages/Appointments';
 import ChatProprio from './pages/ChatProprio';
 import ParceirosSidebar from './components/sidebar/ParceirosSidebar';
 import TutorialInterno from './pages/TutorialInterno';
+import MenuMobile from './pages/MenuMobile';
+import ContatosMobile from './pages/ContatosMobile';
+import InicioMobile from './pages/InicioMobile';
+import LoginMobile from './pages/LoginMobile';
+import ConversasMobile from './pages/ConversasMobile';
 import { fetchUserPermissions } from './utils/permissions';
 import { MessageEventsProvider } from './pages/MessageEventsContext';
 import { NotificationManager } from './components/NotificationManager';
@@ -155,6 +161,53 @@ function App() {
       <WhatsAppAlert token={getUserToken()} />
       <Routes>
         <Route path="/" element={<Login />} />
+
+        {/* Login Mobile */}
+        <Route path="/app/login" element={<LoginMobile />} />
+
+        {/* Rotas do App Mobile - sem layout principal */}
+        <Route
+          path="/app/menu"
+          element={
+            <PrivateRoute>
+              <MenuMobile />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/app/contatos"
+          element={
+            <PrivateRoute>
+              <ContatosMobile />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/app/inicio"
+          element={
+            <PrivateRoute>
+              <InicioMobile />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/app/conversas"
+          element={
+            <PrivateRoute>
+              <ChatProvider>
+                <ConversationProvider>
+                  <MessageEventsProvider>
+                    <ConversasMobile />
+                  </MessageEventsProvider>
+                </ConversationProvider>
+              </ChatProvider>
+            </PrivateRoute>
+          }
+        />
+
         <Route
           path="/"
           element={
@@ -178,11 +231,13 @@ function App() {
           <Route path="prospectar/:id" element={<ProspeccaoDetalhes />} />
           <Route path="prospectar/dd/:id" element={<DirectDispatchDetails />} />
           <Route path="ai-agent" element={<AIAgent />} />
-          <Route path="contatos" element={<Contatos />} />
-          
-          {/* 👇 Substituí o CRM antigo pelo layout com abas */}
-          <Route path="crm" element={<CRMLayoutPage />} />
-          <Route path="crm/:id" element={<DealDetails />} />
+          {/* 👇 Rotas aninhadas do CRM com URLs separadas */}
+          <Route path="crm" element={<CRMLayoutPage />}>
+            <Route index element={<Navigate to="kanban" replace />} />
+            <Route path="kanban" element={<CRM />} />
+            <Route path="contatos" element={<Contatos />} />
+          </Route>
+          <Route path="crm/deal/:id" element={<DealDetails />} />
           
           <Route path="agendamentos" element={<Appointments />} />
           <Route path="configuracoes" element={<Configuracoes />} />

@@ -1601,7 +1601,7 @@ export default function DealDetails({ dealId: dealIdProp, hideConversations = fa
                         className="mt-1 w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-theme"
                       >
                         <option value="">Sem responsável</option>
-                        {users.map((user) => (
+                        {users.filter(user => user.isAtivo).map((user) => (
                           <option key={user.Id} value={user.Id}>
                             {user.nome}
                           </option>

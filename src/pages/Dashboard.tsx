@@ -438,9 +438,27 @@ export default function Dashboard() {
         return;
       }
 
-      // Agrupa contatos por estado baseado no DDD do telefone
+      // Filtra contatos por data de criação
+      const filteredContacts = contacts.filter(contact => {
+        // Se não tem createdAt, considera como criado em 31/10/2025 (contatos antigos)
+        const contactDate = contact.createdAt
+          ? new Date(contact.createdAt)
+          : new Date('2025-10-31');
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        // Ajusta as horas para comparação apenas de data
+        contactDate.setHours(0, 0, 0, 0);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+
+        return contactDate >= start && contactDate <= end;
+      });
+
+      // Agrupa contatos filtrados por estado baseado no DDD do telefone
       const { groupContactsByState } = await import("../utils/dddToState");
-      const stateData = groupContactsByState(contacts);
+      const stateData = groupContactsByState(filteredContacts);
 
       setStateData(stateData);
     } catch (err) {
@@ -675,7 +693,7 @@ export default function Dashboard() {
 
   // ==================== RENDER ====================
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 pt-14 md:pt-0 pb-4 transition-theme">
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 pb-4 transition-theme">
       {/* Header Compacto */}
       <div className="px-3 md:px-4 pt-3 md:pt-4 pb-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 bg-white dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700 transition-theme">
         <div className="flex items-center gap-2 w-full md:w-auto">

@@ -74,7 +74,7 @@ export default function CreateDealPanel({
   const funilOptions = funis.map(f => ({ id: f.id, label: f.nome }));
   const contatoOptions = contatos.map(c => ({ id: c.Id, label: c.nome }));
   const fonteOptions = fontes.map(f => ({ id: f.Id, label: f.source ? `${f.nome} (${f.source})` : f.nome }));
-  const userOptions = users.map(u => ({ id: u.Id, label: u.nome }));
+  const userOptions = users.filter(u => u.isAtivo).map(u => ({ id: u.Id, label: u.nome }));
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();

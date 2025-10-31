@@ -417,6 +417,21 @@ export function ChatList({
     }
   }, [token]);
 
+  // Atualiza mensagens não lidas a cada 3 segundos
+  useEffect(() => {
+    if (!token) return;
+
+    // Carrega imediatamente
+    loadUnreadMessages();
+
+    // Atualiza a cada 3 segundos
+    const intervalId = setInterval(() => {
+      loadUnreadMessages();
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [token, loadUnreadMessages]);
+
   useEffect(() => {
     if (!token) return;
 
@@ -2007,6 +2022,9 @@ useEffect(() => {
   const onPageShow = () => {
     scheduleResumeRefresh('pageshow');
   };
+  const onForceReload = () => {
+    scheduleResumeRefresh('force_reload');
+  };
 
   if (typeof document !== 'undefined') {
     document.addEventListener('visibilitychange', onVisibilityChange);
@@ -2014,6 +2032,7 @@ useEffect(() => {
   window.addEventListener('focus', onFocus);
   window.addEventListener('online', onOnline);
   window.addEventListener('pageshow', onPageShow);
+  window.addEventListener('chat_list_force_reload', onForceReload);
 
   return () => {
     if (typeof document !== 'undefined') {
@@ -2022,6 +2041,7 @@ useEffect(() => {
     window.removeEventListener('focus', onFocus);
     window.removeEventListener('online', onOnline);
     window.removeEventListener('pageshow', onPageShow);
+    window.removeEventListener('chat_list_force_reload', onForceReload);
     if (resumeRefreshTimeoutRef.current !== null) {
       window.clearTimeout(resumeRefreshTimeoutRef.current);
       resumeRefreshTimeoutRef.current = null;
@@ -2153,32 +2173,47 @@ useEffect(() => {
     const normalized = normalizeRemoteJid(remoteJid);
 
     setChats(prev => {
-      return prev.map(chat => {
+      const updated = prev.map(chat => {
         if (chat.id !== normalized && chat.remoteJid !== remoteJid) {
           return chat;
         }
 
         // Aplicar todas as atualizações
-        const updated = { ...chat };
+        const updatedChat = { ...chat };
 
         if (updates.tags !== undefined) {
-          (updated as any).tags = updates.tags;
+          (updatedChat as any).tags = updates.tags;
         }
         if (updates.iaStatus !== undefined) {
-          (updated as any).iaStatus = updates.iaStatus;
+          (updatedChat as any).iaStatus = updates.iaStatus;
         }
         if (updates.stage !== undefined) {
-          (updated as any).stage = updates.stage;
+          (updatedChat as any).stage = updates.stage;
         }
         if (updates.name !== undefined) {
-          updated.pushName = sanitizePushName(updates.name, chat.remoteJid) || chat.remoteJid.split('@')[0];
+          updatedChat.pushName = sanitizePushName(updates.name, chat.remoteJid) || chat.remoteJid.split('@')[0];
         }
         if (updates.responsibleId !== undefined) {
-          (updated as any).responsibleId = updates.responsibleId;
+          (updatedChat as any).responsibleId = updates.responsibleId;
+        }
+        if (updates.lastMessage !== undefined) {
+          updatedChat.lastMessage = {
+            ...updatedChat.lastMessage,
+            ...updates.lastMessage
+          };
         }
 
-        return updated;
+        return updatedChat;
       });
+
+      // Se lastMessage foi atualizado, reordenar a lista
+      if (updates.lastMessage !== undefined) {
+        return updated.sort(
+          (a, b) => (b.lastMessage?.messageTimestamp ?? 0) - (a.lastMessage?.messageTimestamp ?? 0)
+        );
+      }
+
+      return updated;
     });
 
     console.log('✅ Chat atualizado em tempo real:', remoteJid, updates);
@@ -2608,6 +2643,9 @@ const getLastMessageText = (chat) => {
               let containerTone = 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700';
               if (isSelected) {
                 containerTone = 'bg-gray-100 dark:bg-gray-700';
+              } else if (unreadCount > 0) {
+                // Card com mensagem não lida tem fundo levemente esverdeado
+                containerTone = 'bg-teal-100 dark:bg-teal-900/40 hover:bg-teal-200 dark:hover:bg-teal-900/50';
               }
 
               const nameColorClass = unreadCount > 0 ? 'text-gray-900 dark:text-white font-semibold' : 'text-gray-900 dark:text-white';

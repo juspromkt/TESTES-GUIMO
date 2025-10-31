@@ -20,9 +20,9 @@ export default function CRMLayout({
   children,
 }: CRMLayoutProps) {
   return (
-    <div className="flex gap-6">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white dark:bg-neutral-800 rounded-2xl border border-gray-300 dark:border-neutral-700 p-4 shadow-sm">
+    <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+      {/* Sidebar - Escondida no mobile, visível no desktop */}
+      <aside className="hidden lg:block w-64 bg-white dark:bg-neutral-800 rounded-2xl border border-gray-300 dark:border-neutral-700 p-4 shadow-sm">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-4">
           CRM e Relacionamento
         </h2>
@@ -53,7 +53,7 @@ export default function CRMLayout({
       </aside>
 
       {/* Conteúdo */}
-      <div className="flex-1">{children}</div>
+      <div className="flex-1 min-w-0">{children}</div>
     </div>
   );
 }

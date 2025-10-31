@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Play, BookOpen, ExternalLink, MessageCircle } from 'lucide-react';
+import { X, Play, BookOpen, ExternalLink, MessageCircle, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import iconDarkMode from '../imgs/guimoo/icon-dark-mode.png';
 
 interface TutorialModalProps {
   isOpen: boolean;
@@ -109,7 +108,7 @@ export default function TutorialModal({ isOpen, onClose }: TutorialModalProps) {
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="absolute top-3 right-3 sm:top-5 sm:right-5 p-2.5 text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-white/80 dark:hover:bg-neutral-800/80 rounded-xl transition-all z-10 backdrop-blur-sm border border-gray-200 dark:border-neutral-700"
+              className="absolute top-3 right-3 sm:top-5 sm:right-5 p-2.5 text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-white/80 dark:hover:bg-neutral-800/80 rounded-xl transition-all z-50 backdrop-blur-sm border border-gray-200 dark:border-neutral-700"
             >
               <X className="w-5 h-5" />
             </button>
@@ -121,11 +120,9 @@ export default function TutorialModal({ isOpen, onClose }: TutorialModalProps) {
                 {/* Header */}
                 <div className="mb-6 sm:mb-8">
                   <div className="flex items-center gap-3 sm:gap-4 mb-3">
-                    <img
-                      src={iconDarkMode}
-                      alt="Guimoo"
-                      className="w-10 h-10 sm:w-14 sm:h-14 flex-shrink-0"
-                    />
+                    <div className="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                    </div>
                     <h2 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent leading-tight">
                       Tutoriais para você começar
                     </h2>
