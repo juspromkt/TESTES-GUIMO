@@ -22,7 +22,14 @@ import {
   Info,
   Download,
   Building2,
+  StickyNote,
+  Plus,
+  Pencil,
+  Trash2,
+  Save,
 } from "lucide-react";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import type { Chat } from "./utils/api";
 import { apiClient, clearApiCache, getCacheKey } from "./utils/api";
 import type { Tag } from "../../types/tag";
@@ -69,6 +76,15 @@ interface Funil {
     nome: string;
     ordem: number;
   }>;
+}
+
+interface Note {
+  Id: number;
+  id_negociacao: number;
+  id_usuario: number;
+  descricao: string;
+  CreatedAt: string;
+  UpdatedAt: string | null;
 }
 
 // 🔧 Helpers reutilizáveis
@@ -316,7 +332,7 @@ export default function ContactSidebarV2({
   const [interventionInfo, setInterventionInfo] = useState<any | null>(null);
 
   // Estados para a aba de mídias
-  const [activeView, setActiveView] = useState<'info' | 'media'>('info');
+  const [activeView, setActiveView] = useState<'info' | 'media' | 'notas'>('info');
   const [activeMediaTab, setActiveMediaTab] = useState<'images' | 'videos' | 'docs' | 'cloud'>('images');
   const [mediaFiles, setMediaFiles] = useState<{
     images: any[];
@@ -332,11 +348,161 @@ export default function ContactSidebarV2({
   const [previewType, setPreviewType] = useState<'image' | 'video'>('image');
   const [previewIndex, setPreviewIndex] = useState(0);
 
+  // Estados para notas
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [loadingNotes, setLoadingNotes] = useState(false);
+  const [newNote, setNewNote] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [deletingNoteId, setDeletingNoteId] = useState<number | null>(null);
+  const quillRef = useRef<ReactQuill>(null);
+  const [isQuillReady, setIsQuillReady] = useState(false);
+
   const user = localStorage.getItem("user");
   const token = user ? JSON.parse(user).token : null;
   const selectedChatDigits = selectedChat?.remoteJid.replace(/\D/g, "");
   const isBusiness = whatsappType === 'WHATSAPP-BUSINESS';
 
+  // Configuração do ReactQuill
+  // Desabilitar toolbar do ReactQuill para deixar apenas o campo de texto
+  const modules = {
+    toolbar: false,
+  };
+
+  const formats = [];
+
+  // Funções para gerenciar notas (atividades)
+  const fetchNotes = async () => {
+    if (!dealData?.Id) return;
+
+    setLoadingNotes(true);
+    try {
+      const response = await fetch(
+        `https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/atividades/get?id=${dealData.Id}`,
+        { headers: { token } }
+      );
+
+      if (!response.ok) throw new Error('Erro ao carregar notas');
+
+      const data = await response.json();
+      setNotes(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Erro ao carregar notas:', err);
+      toast.error('Erro ao carregar notas');
+    } finally {
+      setLoadingNotes(false);
+    }
+  };
+
+  const handleCreateNote = async () => {
+    if (!newNote.trim() || !dealData?.Id) return;
+
+    setSavingNote(true);
+    try {
+      const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/atividades/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          token
+        },
+        body: JSON.stringify({
+          id_negociacao: dealData.Id,
+          descricao: newNote
+        })
+      });
+
+      if (!response.ok) throw new Error('Erro ao criar nota');
+
+      await fetchNotes();
+      setNewNote('');
+
+      // Disparar evento para atualizar as mensagens no MessageView
+      window.dispatchEvent(new CustomEvent('note_created', {
+        detail: { dealId: dealData.Id }
+      }));
+
+      toast.success('Nota criada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao criar nota:', error);
+      toast.error('Erro ao criar nota');
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const handleUpdateNote = async () => {
+    if (!editingNote) return;
+
+    setSavingNote(true);
+    try {
+      const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/atividades/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          token
+        },
+        body: JSON.stringify({
+          Id: editingNote.Id,
+          descricao: editingNote.descricao
+        })
+      });
+
+      if (!response.ok) throw new Error('Erro ao atualizar nota');
+
+      await fetchNotes();
+      setEditingNote(null);
+      toast.success('Nota atualizada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao atualizar nota:', error);
+      toast.error('Erro ao atualizar nota');
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: number) => {
+    setSavingNote(true);
+    try {
+      const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/atividades/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          token
+        },
+        body: JSON.stringify({
+          Id: noteId
+        })
+      });
+
+      if (!response.ok) throw new Error('Erro ao excluir nota');
+
+      await fetchNotes();
+      toast.success('Nota excluída com sucesso!');
+      setDeletingNoteId(null);
+    } catch (error) {
+      console.error('Erro ao excluir nota:', error);
+      toast.error('Erro ao excluir nota');
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   const openPreview = (url: string, type: 'image' | 'video', index: number) => {
     setPreviewUrl(url);
@@ -370,6 +536,18 @@ export default function ContactSidebarV2({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [previewOpen, previewIndex, previewType, mediaFiles]);
+
+  // Carregar notas quando o dealData muda ou quando a aba de notas é aberta
+  useEffect(() => {
+    if (activeView === 'notas' && dealData?.Id) {
+      fetchNotes();
+    }
+  }, [activeView, dealData?.Id]);
+
+  // Inicializar Quill
+  useEffect(() => {
+    setIsQuillReady(true);
+  }, []);
 
   const handleDownloadCurrent = () => {
     if (!previewUrl) return;
@@ -1322,6 +1500,21 @@ export default function ContactSidebarV2({
             <ImageIcon className="relative w-4 h-4" />
             <span className="relative">Mídias</span>
           </button>
+
+          <button
+            onClick={() => setActiveView('notas')}
+            className={`group relative flex-1 flex items-center justify-center gap-2.5 px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+              activeView === 'notas'
+                ? 'text-white dark:text-white bg-gradient-to-br from-indigo-600 to-purple-600 shadow-lg shadow-indigo-500/30 dark:shadow-indigo-500/20'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-white/80 dark:hover:bg-gray-800/60 backdrop-blur-sm'
+            }`}
+          >
+            {activeView === 'notas' && (
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl blur-md opacity-50 group-hover:opacity-60 transition-opacity duration-300"></div>
+            )}
+            <StickyNote className="relative w-4 h-4" />
+            <span className="relative">Notas</span>
+          </button>
         </div>
       </div>
 
@@ -1711,8 +1904,8 @@ export default function ContactSidebarV2({
             )}
 
           </>
-        )
-        ) : (
+          )
+        ) : activeView === 'media' ? (
           /* View de Mídias */
           <div className="space-y-4">
 
@@ -1886,7 +2079,151 @@ export default function ContactSidebarV2({
               </div>
             )}
           </div>
-        )}
+        ) : activeView === 'notas' ? (
+          /* View de Notas */
+          <div className="space-y-4">
+            {/* Formulário para nova nota */}
+            <div className="bg-white dark:bg-gray-800/80 rounded-xl border border-gray-200/60 dark:border-gray-700/40 p-4 shadow-sm">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Nova Nota</h3>
+
+              <div className="relative mb-3">
+                <textarea
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  placeholder="Escreva uma nova nota..."
+                  className="w-full min-h-[100px] p-3 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-600 rounded-lg text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 resize-y"
+                  rows={4}
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={handleCreateNote}
+                  disabled={!newNote.trim() || savingNote}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/30"
+                >
+                  {savingNote ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Salvando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      <span>Adicionar Nota</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Lista de Notas */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Histórico de Notas</h3>
+
+              {loadingNotes ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+                </div>
+              ) : notes.length === 0 ? (
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200/60 dark:border-gray-700/40">
+                  <StickyNote className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>Nenhuma nota registrada</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {notes.map((note) => {
+                    const noteUser = users.find(u => u.Id === note.id_usuario);
+
+                    return (
+                      <div key={note.Id} className="bg-white dark:bg-gray-800/80 rounded-xl border border-gray-200/60 dark:border-gray-700/40 p-4 shadow-sm hover:shadow-md transition-all">
+                        {editingNote?.Id === note.Id ? (
+                          <div className="space-y-3">
+                            <div className="relative">
+                              {isQuillReady && (
+                                <ReactQuill
+                                  theme="snow"
+                                  value={editingNote.descricao}
+                                  onChange={(value) => setEditingNote({...editingNote, descricao: value})}
+                                  modules={modules}
+                                  formats={formats}
+                                  className="bg-white dark:bg-neutral-800 rounded-lg [&_.ql-toolbar]:dark:bg-neutral-700 [&_.ql-toolbar]:dark:border-neutral-600 [&_.ql-container]:dark:bg-neutral-800 [&_.ql-container]:dark:border-neutral-600 [&_.ql-editor]:dark:text-white [&_.ql-editor.ql-blank::before]:dark:text-neutral-400 [&_.ql-stroke]:dark:stroke-neutral-200 [&_.ql-fill]:dark:fill-neutral-200 [&_.ql-picker-label]:dark:text-neutral-200"
+                                />
+                              )}
+                            </div>
+
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={() => setEditingNote(null)}
+                                className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all"
+                              >
+                                Cancelar
+                              </button>
+                              <button
+                                onClick={handleUpdateNote}
+                                disabled={savingNote}
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all"
+                              >
+                                {savingNote ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <Save className="w-3 h-3" />
+                                )}
+                                <span>Salvar</span>
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                                  <User className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-gray-900 dark:text-white">{noteUser?.nome || 'Usuário'}</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {formatDate(note.CreatedAt)} às {formatTime(note.CreatedAt)}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => setEditingNote(note)}
+                                  className="p-2 text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-all"
+                                  title="Editar"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (window.confirm('Tem certeza que deseja excluir esta nota?')) {
+                                      handleDeleteNote(note.Id);
+                                    }
+                                  }}
+                                  className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all"
+                                  title="Excluir"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div
+                              className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300"
+                              dangerouslySetInnerHTML={{ __html: note.descricao }}
+                            />
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {/* Modal de Criar Negociação - Aparece quando não há deal */}

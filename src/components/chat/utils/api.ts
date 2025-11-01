@@ -323,6 +323,13 @@ export interface Message {
     mensagem: string;
   };
   status?: 'pending' | 'sent' | 'error' | 'FAILED' | 'SENT';
+  // Campos para notas internas
+  isNote?: boolean;
+  noteData?: {
+    id_usuario: number;
+    descricao: string;
+    userName?: string;
+  };
 }
 
 export interface Contact {

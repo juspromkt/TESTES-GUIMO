@@ -41,6 +41,7 @@ import {
   Trash2,
   CheckSquare,
   Square,
+  StickyNote,
 } from "lucide-react";
 import { MessageInput } from "./MessageInput";
 import { toast } from "sonner";
@@ -693,6 +694,9 @@ function formatPhoneNumber(remoteJid: string): string {
 
 export function MessageView({ selectedChat, onBack, whatsappType }: MessageViewProps) {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [dealId, setDealId] = useState<number | null>(null);
+  const [notes, setNotes] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
@@ -1538,6 +1542,71 @@ function ensureKey(m: any, fallbackJid: string): any {
   };
 }
 
+  // Buscar deal ID do contato
+  const fetchDealId = useCallback(async () => {
+    if (!token || !selectedChat) return;
+
+    try {
+      const response = await fetch(
+        'https://n8n.lumendigital.com.br/webhook/prospecta/chat/findDealsByContact',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', token },
+          body: JSON.stringify({ remoteJid: selectedChat.remoteJid })
+        }
+      );
+
+      if (response.ok) {
+        const deals = await response.json();
+        if (deals && deals.length > 0) {
+          setDealId(deals[0].Id);
+          return deals[0].Id;
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar deal:', error);
+    }
+    return null;
+  }, [token, selectedChat]);
+
+  // Buscar usuários
+  const fetchUsers = useCallback(async () => {
+    if (!token) return;
+
+    try {
+      const response = await fetch(
+        'https://n8n.lumendigital.com.br/webhook/prospectai/usuario/get',
+        { headers: { token } }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar usuários:', error);
+    }
+  }, [token]);
+
+  // Buscar notas/atividades da negociação
+  const fetchNotes = useCallback(async (currentDealId?: number) => {
+    const idToUse = currentDealId || dealId;
+    if (!token || !idToUse) return;
+
+    try {
+      const response = await fetch(
+        `https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/atividades/get?id=${idToUse}`,
+        { headers: { token } }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setNotes(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar notas:', error);
+    }
+  }, [token, dealId]);
 
   const fetchMessages = useCallback(
     async (
@@ -2973,6 +3042,37 @@ useEffect(() => {
   fetchMessages(1, false);
 }, [selectedChat?.id, fetchMessages]);
 
+// Carregar usuários uma vez
+useEffect(() => {
+  fetchUsers();
+}, [fetchUsers]);
+
+// Carregar dealId e notas quando o chat mudar
+useEffect(() => {
+  const loadDealAndNotes = async () => {
+    const currentDealId = await fetchDealId();
+    if (currentDealId) {
+      await fetchNotes(currentDealId);
+    }
+  };
+  loadDealAndNotes();
+}, [selectedChat?.remoteJid, fetchDealId, fetchNotes]);
+
+// Listener para atualizar notas quando uma nova nota for criada
+useEffect(() => {
+  const handleNoteCreated = (event: CustomEvent) => {
+    console.log('📝 Note created event received:', event.detail);
+    if (dealId) {
+      fetchNotes(dealId);
+    }
+  };
+
+  window.addEventListener('note_created', handleNoteCreated as EventListener);
+  return () => {
+    window.removeEventListener('note_created', handleNoteCreated as EventListener);
+  };
+}, [dealId, fetchNotes]);
+
 useEffect(() => {
   if (!selectedChat?.id || nonEssentialReady) return;
 
@@ -3833,6 +3933,39 @@ case "stickerMessage": {
       // Essas mensagens são renderizadas junto com a mensagem pai
       return null;
 
+    case "note":
+      // Renderizar nota com HTML do ReactQuill
+      const noteData = message.noteData;
+      const noteUser = noteData?.userName || 'Usuário';
+      // messageTimestamp está em SEGUNDOS, converter para milissegundos
+      const noteDate = new Date(message.messageTimestamp * 1000);
+      const formattedDate = noteDate.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      const formattedTime = noteDate.toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      content = (
+        <div className="space-y-2">
+          {/* Cabeçalho da nota com autor e data/hora */}
+          <div className="flex items-center justify-between gap-4 text-xs text-yellow-900 dark:text-yellow-200 pb-2 border-b border-yellow-400 dark:border-yellow-600">
+            <span className="font-semibold">{noteUser}</span>
+            <span className="whitespace-nowrap">{formattedDate} às {formattedTime}</span>
+          </div>
+
+          {/* Conteúdo HTML da nota */}
+          <div
+            className="prose prose-sm dark:prose-invert max-w-none text-gray-900 dark:text-gray-100"
+            dangerouslySetInnerHTML={{ __html: noteData?.descricao || msgContent.conversation || '' }}
+          />
+        </div>
+      );
+      break;
+
     default:
       content = (
         <div className="text-sm text-gray-500 dark:text-gray-400 italic">
@@ -4076,8 +4209,51 @@ return (
         )}
 
         {(() => {
+          // Converter notas em formato de Message e mesclar com mensagens
+          const notesAsMessages: Message[] = notes.map((note) => {
+            // Buscar nome do usuário pelo id_usuario
+            const user = users.find(u => u.Id === note.id_usuario);
+            const userName = user?.nome || 'Usuário';
+
+            // Converter CreatedAt para timestamp em SEGUNDOS (padrão WhatsApp)
+            // CreatedAt vem como string ISO do banco (ex: "2025-01-11T19:04:00.000Z")
+            const noteTimestamp = Math.floor(new Date(note.CreatedAt).getTime() / 1000);
+
+            console.log('📝 Note timestamp:', {
+              CreatedAt: note.CreatedAt,
+              timestamp: noteTimestamp,
+              date: new Date(noteTimestamp * 1000).toLocaleString('pt-BR')
+            });
+
+            return {
+              id: `note-${note.Id}`,
+              key: {
+                id: `note-${note.Id}`,
+                fromMe: true,
+                remoteJid: selectedChat.remoteJid,
+              },
+              pushName: userName,
+              messageType: 'note',
+              message: {
+                conversation: note.descricao,
+              },
+              messageTimestamp: noteTimestamp,
+              isNote: true,
+              noteData: {
+                id_usuario: note.id_usuario,
+                descricao: note.descricao,
+                userName: userName,
+              },
+            };
+          });
+
+          // Mesclar mensagens e notas, ordenando por timestamp
+          const allMessages = [...messages, ...notesAsMessages].sort(
+            (a, b) => a.messageTimestamp - b.messageTimestamp
+          );
+
           const skip = new Set<number>();
-          return messages.map((message, index) => {
+          return allMessages.map((message, index) => {
             if (skip.has(index)) return null;
 
             let album: Message[] | null = null;
@@ -4182,7 +4358,9 @@ return (
                     max-w-[80%] md:max-w-[65%] rounded-lg shadow-md transition-all duration-200
                     ${isFromMe ? 'order-1' : 'order-2'}
                     ${
-                      isFromMe
+                      message.isNote
+                        ? "bg-yellow-200 dark:bg-yellow-700 text-gray-900 dark:text-gray-100 mr-1 md:mr-2 ring-2 ring-yellow-400 dark:ring-yellow-500"
+                        : isFromMe
                         ? "bg-[#dcf8c6] dark:bg-[#005c4b] text-[#111b21] dark:text-gray-100 mr-1 md:mr-2"
                         : "bg-white dark:bg-[#202c33] text-[#111b21] dark:text-gray-100 ml-1 md:ml-2 border border-gray-200/50 dark:border-transparent"
                     }
@@ -4292,6 +4470,13 @@ return (
                       </div>
                     )}
 
+                    {message.isNote && (
+                      <div className="text-xs mb-2 flex items-center space-x-1.5 font-semibold text-yellow-800 dark:text-yellow-300">
+                        <StickyNote className="w-3.5 h-3.5" />
+                        <span>Nota Interna</span>
+                      </div>
+                    )}
+
                     <div className="text-[15px] md:text-[14.2px] leading-[20px] md:leading-[19px] text-[#111b21] dark:text-gray-100 break-words">
                       {album ? (
                         <AlbumCarousel items={album} type={type!} />
@@ -4300,28 +4485,30 @@ return (
                       )}
                     </div>
 
-                    {/* Hora e status na mesma linha, ao final da mensagem */}
-                    <div className="flex items-center justify-end gap-1 mt-1 float-right ml-2">
-                      {message.wasEdited && (
-                        <span className="text-[11px] text-gray-600 dark:text-gray-400 italic">editado</span>
-                      )}
-                      <span className="text-[11px] text-gray-600 dark:text-gray-400">
-                        {formatMessageTime(message.messageTimestamp)}
-                      </span>
-                      {isFromMe && whatsappType !== 'WHATSAPP-BUSINESS' && (
-                        <>
-                          {message.status === 'pending' && (
-                            <Loader2 className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 animate-spin" />
-                          )}
-                          {message.status === 'error' && (
-                            <AlertCircle className="w-3.5 h-3.5 text-red-500" />
-                          )}
-                          {(!message.status || message.status === 'sent') && (
-                            <CheckCheck className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                          )}
-                        </>
-                      )}
-                    </div>
+                    {/* Hora e status na mesma linha, ao final da mensagem - NÃO mostrar em notas */}
+                    {!message.isNote && (
+                      <div className="flex items-center justify-end gap-1 mt-1 float-right ml-2">
+                        {message.wasEdited && (
+                          <span className="text-[11px] text-gray-600 dark:text-gray-400 italic">editado</span>
+                        )}
+                        <span className="text-[11px] text-gray-600 dark:text-gray-400">
+                          {formatMessageTime(message.messageTimestamp)}
+                        </span>
+                        {isFromMe && whatsappType !== 'WHATSAPP-BUSINESS' && (
+                          <>
+                            {message.status === 'pending' && (
+                              <Loader2 className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 animate-spin" />
+                            )}
+                            {message.status === 'error' && (
+                              <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                            )}
+                            {(!message.status || message.status === 'sent') && (
+                              <CheckCheck className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
