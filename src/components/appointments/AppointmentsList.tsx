@@ -529,7 +529,7 @@ return (
                       <div
                         className="cursor-pointer mb-2"
                         onClick={() => {
-                          if (appointment.id_negociacao) navigate(`/crm/${appointment.id_negociacao}`);
+                          if (appointment.id_negociacao) navigate(`/crm/deal/${appointment.id_negociacao}`);
                         }}
                       >
                         <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100 mb-1">

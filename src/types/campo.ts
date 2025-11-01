@@ -6,6 +6,7 @@ export interface CampoPersonalizado {
 }
 
 export interface CampoPersonalizadoValor {
+  Id?: number;
   id_campo_personalizado: number;
   valor: string;
 }

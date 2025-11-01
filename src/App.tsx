@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import Login from './pages/Login';
 import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
@@ -12,7 +12,6 @@ import Contatos from './pages/Contatos';
 import CRMLayoutPage from './pages/CRMLayoutPage'; // ✅ usa o layout com abas
 import CRM from './pages/CRM';
 import Conexao from './pages/Conexao';
-import DealDetails from './pages/DealDetails';
 import Appointments from './pages/Appointments';
 import ChatProprio from './pages/ChatProprio';
 import ParceirosSidebar from './components/sidebar/ParceirosSidebar';
@@ -35,7 +34,7 @@ import WhatsAppAlert from './components/WhatsAppAlert';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = localStorage.getItem('user');
-  
+
   useEffect(() => {
     const loadPermissions = async () => {
       if (isAuthenticated) {
@@ -45,8 +44,27 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     };
     loadPermissions();
   }, [isAuthenticated]);
-  
+
   return isAuthenticated ? <>{children}</> : <Navigate to="/" />;
+};
+
+// Componente para renderizar WhatsAppAlert apenas fora das telas de login
+const ConditionalWhatsAppAlert = ({ token }: { token: string }) => {
+  const location = useLocation();
+
+  // Não mostrar nas rotas de login
+  if (location.pathname === '/' || location.pathname === '/app/login') {
+    return null;
+  }
+
+  return <WhatsAppAlert token={token} />;
+};
+
+// Componente para redirecionar URLs antigas /crm/:id para /crm/deal/:id
+const RedirectOldDealUrl = () => {
+  const params = useParams();
+  const id = params.id;
+  return <Navigate to={`/crm/deal/${id}`} replace />;
 };
 
 function App() {
@@ -158,7 +176,7 @@ function App() {
     <BrowserRouter>
       <WelcomeModal isOpen={showWelcomeModal} onClose={handleCloseWelcomeModal} />
       <UpgradeModal isOpen={showUpgradeModal} onClose={handleCloseUpgradeModal} />
-      <WhatsAppAlert token={getUserToken()} />
+      <ConditionalWhatsAppAlert token={getUserToken()} />
       <Routes>
         <Route path="/" element={<Login />} />
 
@@ -236,8 +254,11 @@ function App() {
             <Route index element={<Navigate to="kanban" replace />} />
             <Route path="kanban" element={<CRM />} />
             <Route path="contatos" element={<Contatos />} />
+            {/* Rota para detalhes de deal - exibe como painel lateral por cima */}
+            <Route path="deal/:id" element={<CRM />} />
           </Route>
-          <Route path="crm/deal/:id" element={<DealDetails />} />
+          {/* Redirecionamento de URLs antigas /crm/:id para /crm/deal/:id */}
+          <Route path="crm/:id" element={<RedirectOldDealUrl />} />
           
           <Route path="agendamentos" element={<Appointments />} />
           <Route path="configuracoes" element={<Configuracoes />} />

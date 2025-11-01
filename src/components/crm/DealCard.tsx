@@ -43,14 +43,14 @@ export default function DealCard({
   return (
     <div
       onClick={onClick}
-      className={`group bg-white dark:bg-neutral-800 rounded-lg p-3 border transition-all duration-200 overflow-hidden ${
+      className={`group bg-white dark:bg-neutral-800 rounded-lg p-2 border transition-all duration-200 overflow-hidden ${
         isDragging
           ? 'shadow-lg ring-2 ring-blue-400 border-blue-400'
           : 'border-gray-200 dark:border-neutral-700 hover:border-gray-300 dark:hover:border-neutral-600 hover:shadow-sm'
       } cursor-grab active:cursor-grabbing`}
     >
-      {/* Header com Avatar e Nome */}
-      <div className="flex items-start gap-2.5 mb-2.5">
+      {/* Header com Avatar e Nome do Lead */}
+      <div className="flex items-start gap-2 mb-2">
         <div className="flex-shrink-0">
           <div className="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center">
             <span className="text-white font-medium text-sm">
@@ -71,29 +71,23 @@ export default function DealCard({
         </div>
       </div>
 
-      {/* Informações Principais */}
-      <div className="space-y-1.5 mb-2">
-        {/* DATA DO PRIMEIRO CONTATO */}
-        <div className="flex items-center gap-1.5 text-gray-600 dark:text-neutral-400 text-xs">
-          <Calendar className="w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 flex-shrink-0" />
-          <span>{formatDate(deal.CreatedAt)}</span>
-        </div>
-
-        {/* RESPONSÁVEL */}
-        <div className="flex items-center gap-1.5 text-xs">
-          <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-          <span className="text-gray-700 dark:text-neutral-300 truncate">
-            {responsavel}
-          </span>
-        </div>
-
-        {/* NOME COMPLETO (se diferente do primeiro nome) */}
-        {rawName && rawName !== leadName && (
-          <div className="flex items-center gap-1.5 text-gray-500 dark:text-neutral-400 text-xs">
-            <UserCircle2 className="w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 flex-shrink-0" />
-            <span className="truncate">{rawName}</span>
+      {/* Informações - Data e Responsável na mesma linha */}
+      <div className="mb-2">
+        <div className="flex items-center gap-2 text-xs">
+          {/* DATA */}
+          <div className="flex items-center gap-1.5 text-gray-600 dark:text-neutral-400">
+            <Calendar className="w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 flex-shrink-0" />
+            <span className="truncate">{formatDate(deal.CreatedAt)}</span>
           </div>
-        )}
+
+          {/* RESPONSÁVEL */}
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+            <span className="text-gray-700 dark:text-neutral-300 truncate">
+              {responsavel}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* TAGS E DEPARTAMENTOS */}

@@ -129,46 +129,46 @@ export default function KanbanBoard({
 
   return (
     <div className="flex-1 overflow-hidden flex flex-col min-w-0 relative bg-gray-50 dark:bg-neutral-900 transition-theme">
-      {/* Header Minimalista */}
-      <div className="bg-white dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700 mb-4 transition-theme">
-        <div className="px-6 py-4">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      {/* Header Ultra Compacto */}
+      <div className="bg-white dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700 mb-2 transition-theme">
+        <div className="px-3 py-2">
+          <div className="flex items-center justify-between gap-3">
             {/* Título e Info */}
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-600 dark:bg-blue-500 p-2 rounded-lg">
-                <Layers className="w-5 h-5 text-white" />
+            <div className="flex items-center gap-2">
+              <div className="bg-blue-600 dark:bg-blue-500 p-1.5 rounded">
+                <Layers className="w-4 h-4 text-white" />
               </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">
-                  Pipeline de Vendas
+              <div className="flex items-center gap-3">
+                <h2 className="text-base font-semibold text-gray-900 dark:text-neutral-100">
+                  Quadro de Negociações - {funil.nome}
                 </h2>
-                <div className="flex items-center gap-2 mt-0.5 text-sm text-gray-600 dark:text-neutral-400">
-                  <span className="font-medium text-gray-900 dark:text-neutral-100">{deals.length}</span>
-                  <span>negociações ativas</span>
+                <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-neutral-400">
+                  <span className="font-semibold text-gray-900 dark:text-neutral-100 min-w-[3ch]">{deals.length > 99999 ? '99999+' : deals.length}</span>
+                  <span>negociações</span>
                 </div>
               </div>
             </div>
 
             {/* Controles */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowExportModal(true)}
-                className="flex items-center gap-2 bg-white dark:bg-neutral-800 px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+                className="flex items-center gap-1.5 bg-white dark:bg-neutral-800 px-2 py-1 rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
               >
-                <Download className="w-4 h-4 text-gray-500 dark:text-neutral-400" />
-                <span className="text-sm text-gray-700 dark:text-neutral-300">Exportar</span>
+                <Download className="w-3.5 h-3.5 text-gray-500 dark:text-neutral-400" />
+                <span className="text-xs text-gray-700 dark:text-neutral-300">Exportar</span>
               </button>
               <button
                 ref={itemsButtonRef}
                 onClick={() => setShowItemsDropdown(!showItemsDropdown)}
-                className="flex items-center gap-2 bg-white dark:bg-neutral-800 px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 bg-white dark:bg-neutral-800 px-2 py-1 rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
               >
-                <Settings2 className="w-4 h-4 text-gray-500 dark:text-neutral-400" />
-                <span className="text-sm text-gray-700 dark:text-neutral-300">Exibir:</span>
-                <span className="text-sm font-medium text-gray-900 dark:text-neutral-100">
+                <Settings2 className="w-3.5 h-3.5 text-gray-500 dark:text-neutral-400" />
+                <span className="text-xs text-gray-700 dark:text-neutral-300">Exibir:</span>
+                <span className="text-xs font-medium text-gray-900 dark:text-neutral-100">
                   {itemOptions.find(opt => opt.value === itemsPerPage)?.label || '50 itens'}
                 </span>
-                <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-neutral-400 transition-transform ${showItemsDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-gray-500 dark:text-neutral-400 transition-transform ${showItemsDropdown ? 'rotate-180' : ''}`} />
               </button>
 
               {showItemsDropdown && createPortal(

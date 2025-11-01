@@ -1255,24 +1255,22 @@ const Sidebar = () => {
             </div>
 
             {/* Botão de toggle de tema */}
-            <button
-              onClick={toggleTheme}
+            <div
               className={`group relative flex items-center h-[44px] px-1 py-2.5 mx-1 my-1 w-[calc(100%-8px)] rounded-lg ${
                 isExpanded ? 'justify-start' : 'justify-center'
               } text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 hover:shadow-md`}
-              title={!isExpanded ? 'Alternar tema' : undefined}
             >
               <div className="relative z-10 p-1.5 rounded-lg flex-shrink-0">
                 <ThemeToggleButton />
               </div>
               {isExpanded && (
-                <div className="relative z-10 flex items-center gap-2 ml-2 overflow-hidden">
+                <div className="relative z-10 flex items-center gap-2 ml-2 overflow-hidden pointer-events-none">
                   <span className="text-sm font-semibold tracking-wide whitespace-nowrap">
                     Tema
                   </span>
                 </div>
               )}
-            </button>
+            </div>
           </div>
         )}
         </div>
