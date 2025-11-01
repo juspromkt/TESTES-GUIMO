@@ -67,120 +67,135 @@ export default function AIPromptGenerator({ token, onApplyModel, canEdit }: AIPr
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header Section */}
-      <div className="text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl mb-4 shadow-lg">
-          <Sparkles className="w-8 h-8 text-white" />
-        </div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Gerar Prompt com IA</h2>
-        <p className="text-gray-600 dark:text-neutral-400 max-w-2xl mx-auto">
-          Crie um prompt personalizado para seu agente com ajuda da IA
-        </p>
-      </div>
+    <div className="-mt-4">
+      {/* Layout 16:9 com 2 colunas */}
+      <div className="h-[550px] flex overflow-hidden bg-white dark:bg-neutral-900 rounded-2xl">
+        {/* Coluna Esquerda - Hero */}
+        <div className="w-2/5 relative overflow-hidden rounded-l-2xl flex flex-col items-center justify-center p-8 bg-gradient-to-br from-purple-500 via-indigo-600 to-purple-700">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/10"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full blur-2xl"></div>
 
-      {/* Como funciona - Card */}
-      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-6 border border-indigo-100 dark:border-indigo-800/30">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <span className="text-xl">💡</span>
-          </div>
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Como funciona?</h3>
-        </div>
-        <p className="text-gray-700 dark:text-neutral-300 mb-4 leading-relaxed">
-          Descreva o que você quer que o seu agente faça, em detalhes. Nossa IA irá gerar um prompt personalizado
-          para seu agente, incluindo personalidade, regras, etapas de atendimento e perguntas frequentes.
-        </p>
-
-        {/* Dicas - Card interno */}
-        <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border-l-4 border-amber-500 dark:border-amber-600 rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">✨</span>
-            <p className="font-bold text-amber-900 dark:text-amber-300">Dicas para obter melhores resultados:</p>
-          </div>
-          <ul className="space-y-2.5">
-            <li className="flex items-start gap-3 text-sm text-amber-800 dark:text-amber-200">
-              <span className="flex-shrink-0 w-5 h-5 bg-amber-500 dark:bg-amber-600 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5">1</span>
-              <span>Especifique sua área de atuação (ex: BPC/Loas, Trabalhista, Bancário)</span>
-            </li>
-            <li className="flex items-start gap-3 text-sm text-amber-800 dark:text-amber-200">
-              <span className="flex-shrink-0 w-5 h-5 bg-amber-500 dark:bg-amber-600 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5">2</span>
-              <span>Mencione se precisa de agendamento ou não</span>
-            </li>
-            <li className="flex items-start gap-3 text-sm text-amber-800 dark:text-amber-200">
-              <span className="flex-shrink-0 w-5 h-5 bg-amber-500 dark:bg-amber-600 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5">3</span>
-              <span>Descreva o tom de voz desejado (formal, casual, amigável)</span>
-            </li>
-            <li className="flex items-start gap-3 text-sm text-amber-800 dark:text-amber-200">
-              <span className="flex-shrink-0 w-5 h-5 bg-amber-500 dark:bg-amber-600 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5">4</span>
-              <span>Mencione qualquer fluxo de atendimento específico que deseja implementar</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      {/* Input Section */}
-      <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 border border-gray-200 dark:border-neutral-700 shadow-sm">
-        <label className="flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-white mb-3">
-          <span className="text-lg">📝</span>
-          Descrição do seu escritório e necessidades
-        </label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-4 py-4 text-gray-900 dark:text-neutral-100 bg-gray-50 dark:bg-neutral-700 border-2 border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-purple-500 dark:focus:border-purple-400 min-h-[180px] placeholder:text-gray-400 dark:placeholder:text-neutral-500 transition-all resize-none"
-          placeholder="Ex: Gere um prompt para meu escritório de advocacia especializado em BPC/Loas, com recepção, análise de viabilidade, oferta do contrato, envio do link para assinatura e agendamento de reunião..."
-          disabled={!canEdit}
-          autoFocus
-        />
-
-        {/* Character counter */}
-        <div className="mt-2 flex items-center justify-between">
-          <p className="text-xs text-gray-500 dark:text-neutral-500">
-            {description.length} caracteres
-          </p>
-          {description.length > 0 && (
-            <p className="text-xs text-green-600 dark:text-green-400 font-medium">
-              ✓ Descrição fornecida
+          <div className="relative z-10 text-center">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-white/20 backdrop-blur-sm rounded-2xl mb-6 shadow-xl">
+              <Sparkles className="w-14 h-14 text-white drop-shadow-lg" />
+            </div>
+            <h2 className="text-3xl font-bold text-white mb-4 leading-tight drop-shadow-md">
+              Gerar Prompt com IA
+            </h2>
+            <p className="text-white/95 text-base leading-relaxed max-w-sm mx-auto font-light mb-8">
+              Crie um prompt personalizado para seu agente com ajuda da IA
             </p>
+
+            {/* Como funciona - Card compacto */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 text-left">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">💡</span>
+                <h3 className="text-base font-bold text-white">Como funciona?</h3>
+              </div>
+              <p className="text-white/90 text-sm leading-relaxed">
+                Descreva o que você quer que o seu agente faça. Nossa IA irá gerar um prompt completo incluindo personalidade, regras, etapas e FAQ.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Coluna Direita - Formulário */}
+        <div className="w-3/5 overflow-hidden bg-gradient-to-br from-gray-50/50 to-white dark:from-neutral-900 dark:to-neutral-900 flex flex-col rounded-r-2xl">
+          {/* Conteúdo scrollável */}
+          <div className="flex-1 overflow-y-auto p-8">
+            {/* Dicas */}
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-l-4 border-amber-500 dark:border-amber-600 rounded-xl p-4 mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">✨</span>
+                <p className="font-bold text-amber-900 dark:text-amber-300 text-sm">Dicas para melhores resultados:</p>
+              </div>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200">
+                  <span className="flex-shrink-0 w-5 h-5 bg-amber-500 dark:bg-amber-600 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5">1</span>
+                  <span>Especifique sua área de atuação (ex: BPC/Loas, Trabalhista, Bancário)</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200">
+                  <span className="flex-shrink-0 w-5 h-5 bg-amber-500 dark:bg-amber-600 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5">2</span>
+                  <span>Mencione se precisa de agendamento ou não</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200">
+                  <span className="flex-shrink-0 w-5 h-5 bg-amber-500 dark:bg-amber-600 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5">3</span>
+                  <span>Descreva o tom de voz desejado (formal, casual, amigável)</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200">
+                  <span className="flex-shrink-0 w-5 h-5 bg-amber-500 dark:bg-amber-600 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5">4</span>
+                  <span>Mencione qualquer fluxo de atendimento específico que deseja implementar</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Input Section */}
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-white">
+                <span className="text-lg">📝</span>
+                Descrição do seu escritório e necessidades
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-4 py-4 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-800 border-2 border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-purple-500 dark:focus:border-purple-400 min-h-[140px] placeholder:text-gray-400 dark:placeholder:text-neutral-500 transition-all resize-none text-sm"
+                placeholder="Ex: Gere um prompt para meu escritório de advocacia especializado em BPC/Loas, com recepção, análise de viabilidade, oferta do contrato, envio do link para assinatura e agendamento de reunião..."
+                disabled={!canEdit}
+                autoFocus
+              />
+
+              {/* Character counter */}
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-500 dark:text-neutral-500">
+                  {description.length} caracteres
+                </p>
+                {description.length > 0 && (
+                  <p className="text-xs text-green-600 dark:text-green-400 font-medium">
+                    ✓ Descrição fornecida
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {error && (
+              <div className="bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/30 dark:to-rose-900/30 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 mt-4">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+                  <p className="text-sm text-red-700 dark:text-red-300 font-medium">{error}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Botão fixo */}
+          {canEdit && (
+            <div className="flex-shrink-0 px-8 py-4 border-t border-gray-100 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+              <button
+                onClick={handleGenerate}
+                disabled={isGenerating || !description.trim()}
+                className={`w-full flex items-center justify-center gap-2 px-8 py-3 text-white rounded-xl font-semibold shadow-lg transition-all ${
+                  isGenerating || !description.trim()
+                    ? 'bg-gray-400 dark:bg-neutral-600 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 hover:shadow-xl hover:scale-105'
+                }`}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Gerando Prompt com IA...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    <span>Gerar com IA</span>
+                  </>
+                )}
+              </button>
+            </div>
           )}
         </div>
       </div>
-
-      {error && (
-        <div className="bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/30 dark:to-rose-900/30 border-2 border-red-200 dark:border-red-800 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-            <p className="text-sm text-red-700 dark:text-red-300 font-medium">{error}</p>
-          </div>
-        </div>
-      )}
-
-      {canEdit && (
-        <div className="flex justify-end pt-2">
-          <button
-            onClick={handleGenerate}
-            disabled={isGenerating || !description.trim()}
-            className={`flex items-center gap-2 px-8 py-4 text-white rounded-xl font-semibold shadow-lg transition-all ${
-              isGenerating || !description.trim()
-                ? 'bg-gray-400 dark:bg-neutral-600 cursor-not-allowed'
-                : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 hover:shadow-xl hover:scale-105'
-            }`}
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Gerando Prompt com IA...</span>
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-5 h-5" />
-                <span>Gerar com IA</span>
-              </>
-            )}
-          </button>
-        </div>
-      )}
 
       {/* Result Modal */}
       <Modal

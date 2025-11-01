@@ -356,10 +356,11 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
                           e.stopPropagation();
                           handleEditFunil(funil);
                         }}
-                        className="p-1.5 text-gray-400 dark:text-neutral-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
-                        title="Configurar funil"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors border border-blue-200 dark:border-blue-800"
+                        title="Editar funil"
                       >
-                        <Settings className="w-4 h-4" />
+                        <Plus className="w-3.5 h-3.5" />
+                        Editar Funil
                       </button>
                     )}
                   </div>
