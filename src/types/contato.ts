@@ -4,4 +4,5 @@ export interface Contato {
   Email: string;
   telefone: string;
   createdAt?: string;
+  CreatedAt?: string; // Backend retorna com C maiúsculo
 }

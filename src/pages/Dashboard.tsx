@@ -438,22 +438,24 @@ export default function Dashboard() {
         return;
       }
 
+      // Normaliza CreatedAt para createdAt (backend retorna com C maiúsculo)
+      const normalizedContacts = contacts.map(contact => ({
+        ...contact,
+        createdAt: contact.createdAt || contact.CreatedAt
+      }));
+
       // Filtra contatos por data de criação
-      const filteredContacts = contacts.filter(contact => {
-        // Se não tem createdAt, considera como criado em 31/10/2025 (contatos antigos)
-        const contactDate = contact.createdAt
-          ? new Date(contact.createdAt)
-          : new Date('2025-10-31');
+      const filteredContacts = normalizedContacts.filter(contact => {
+        if (!contact.createdAt) {
+          return false;
+        }
 
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+        // Extrai apenas a data (YYYY-MM-DD) independente do formato
+        // Suporta: "2025-11-02T21:27:50.374Z" ou "2025-09-14 22:14:25+00:00"
+        const contactDateStr = contact.createdAt.split('T')[0].split(' ')[0];
 
-        // Ajusta as horas para comparação apenas de data
-        contactDate.setHours(0, 0, 0, 0);
-        start.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999);
-
-        return contactDate >= start && contactDate <= end;
+        // Compara strings de data diretamente (sem conversão de timezone)
+        return contactDateStr >= startDate && contactDateStr <= endDate;
       });
 
       // Agrupa contatos filtrados por estado baseado no DDD do telefone

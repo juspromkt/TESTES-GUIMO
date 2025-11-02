@@ -105,13 +105,22 @@ useEffect(() => {
       const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/contato/get', {
         headers: { token }
       });
-      
+
       if (!response.ok) {
         throw new Error('Erro ao carregar contatos');
       }
 
       const data = await response.json();
-      setContatos(Array.isArray(data) ? data : []);
+
+      // Normaliza CreatedAt para createdAt (backend retorna com C maiúsculo)
+      const normalizedData = Array.isArray(data)
+        ? data.map(contato => ({
+            ...contato,
+            createdAt: contato.createdAt || contato.CreatedAt
+          }))
+        : [];
+
+      setContatos(normalizedData);
     } catch (err) {
       console.error('Erro ao carregar contatos:', err);
       setError('Erro ao carregar contatos');
