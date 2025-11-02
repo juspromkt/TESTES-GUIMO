@@ -9,6 +9,7 @@ import {
   Maximize2,
   Minimize2,
   GripVertical,
+  Users,
 } from "lucide-react";
 import ReactQuill from "react-quill";
 import { registerMediaBlot } from "./mediaBlot";
@@ -262,7 +263,7 @@ export default function ServiceStepsSection({
 
       return prev;
     });
-  }, [serviceSteps.length, serviceSteps]);
+  }, [serviceSteps.length]);
 
   useEffect(() => {
     fetchUsuarios();
@@ -644,8 +645,10 @@ export default function ServiceStepsSection({
                               )}
                             </div>
                           </div>
+
                           {canEdit && (
-                              <div className="flex items-center justify-between pt-2">
+                            <div className="space-y-3 pt-4">
+                              <div className="flex items-center justify-between">
                                 <label className="flex items-center gap-3 cursor-pointer">
                                   <div className="relative">
                                     <input
@@ -677,136 +680,152 @@ export default function ServiceStepsSection({
                                   </span>
                                 </label>
                               </div>
-                            )}
 
-                          {step.atribuir_lead && canEdit && (
-                            <div className="bg-white dark:bg-neutral-700/50 border border-orange-200 dark:border-orange-800/50 rounded-lg p-4 mt-4">
-                              <h3 className="text-sm font-semibold text-gray-800 dark:text-neutral-200 mb-2">
-                                Lista de usuários que participam do rodízio de leads
-                              </h3>
+                          {step.atribuir_lead && (
+                            <div className="space-y-4">
+                              {/* Header minimalista */}
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+                                    <Users className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                                  </div>
+                                  <span className="text-sm font-semibold text-gray-700 dark:text-neutral-300">
+                                    Rodízio de Atribuição
+                                  </span>
+                                </div>
+                                {Array.isArray(atribuicoes) && atribuicoes.length > 0 && (
+                                  <span className="text-xs px-2 py-1 bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 rounded-md font-medium">
+                                    {atribuicoes.filter(a => a.isAtivo).length} de {atribuicoes.length}
+                                  </span>
+                                )}
+                              </div>
 
                               {isLoadingAtrib ? (
-                                <div className="flex items-center justify-center py-4">
-                                  <Loader2 className="w-4 h-4 animate-spin text-orange-500 dark:text-orange-400" />
-                                  <span className="ml-2 text-sm text-gray-600 dark:text-neutral-400">
-                                    Carregando usuários...
-                                  </span>
+                                <div className="flex items-center justify-center py-8">
+                                  <Loader2 className="w-5 h-5 animate-spin text-orange-500 dark:text-orange-400" />
                                 </div>
                               ) : (
                                 <>
-                                  {Array.isArray(atribuicoes) && atribuicoes.length > 0 ? (
-                                  <ul className="space-y-2 mb-4">
-                                    {atribuicoes.map((atr) => {
-                                      const user = usuariosAtivos.find(
-                                        (u) => u.Id === atr.id_usuario
-                                      );
-                                      return (
-                                        <li
-                                          key={atr.id_usuario}
-                                          className="flex justify-between items-center border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 p-2 rounded"
-                                        >
-                                          <span className="text-sm text-gray-900 dark:text-neutral-100">
-                                            {user?.nome ||
-                                              `Usuário ${atr.id_usuario}`}
-                                          </span>
-                                          <label className="flex items-center gap-2 cursor-pointer">
-                                            <div className="relative">
-                                              <input
-                                                type="checkbox"
-                                                className="sr-only peer"
-                                                checked={atr.isAtivo}
-                                                onChange={(e) => {
-                                                  const updated =
-                                                    atribuicoes.map((a) =>
-                                                      a.id_usuario ===
-                                                      atr.id_usuario
-                                                        ? {
-                                                            ...a,
-                                                            isAtivo:
-                                                              e.target.checked,
-                                                          }
-                                                        : a
-                                                    );
-                                                  setAtribuicoes(updated);
-                                                }}
-                                              />
-                                              <div className="w-11 h-6 bg-gray-300 dark:bg-neutral-600 rounded-full peer-checked:bg-orange-500 dark:peer-checked:bg-orange-600 transition-colors"></div>
-                                              <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></div>
+                                  {/* Grid horizontal de cartões */}
+                                  <div className="flex flex-wrap gap-2">
+                                    {Array.isArray(atribuicoes) && atribuicoes.length > 0 ? (
+                                      atribuicoes.map((atr, idx) => {
+                                        const user = usuariosAtivos.find((u) => u.Id === atr.id_usuario);
+                                        return (
+                                          <button
+                                            key={atr.id_usuario}
+                                            onClick={() => {
+                                              const updated = atribuicoes.map((a) =>
+                                                a.id_usuario === atr.id_usuario
+                                                  ? { ...a, isAtivo: !a.isAtivo }
+                                                  : a
+                                              );
+                                              setAtribuicoes(updated);
+                                            }}
+                                            className={`group flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all ${
+                                              atr.isAtivo
+                                                ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-500 dark:border-orange-600'
+                                                : 'bg-gray-50 dark:bg-neutral-800 border-gray-200 dark:border-neutral-700 opacity-50 hover:opacity-100'
+                                            }`}
+                                          >
+                                            <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold ${
+                                              atr.isAtivo
+                                                ? 'bg-orange-500 text-white'
+                                                : 'bg-gray-300 dark:bg-neutral-600 text-gray-600 dark:text-neutral-400'
+                                            }`}>
+                                              {idx + 1}
                                             </div>
-                                          </label>
-                                        </li>
-                                      );
-                                    })}
-                                  </ul>
-) : (
-  <div className="text-sm text-gray-500 dark:text-neutral-400 mb-4">
-    Nenhum usuário adicionado à atribuição automática.
-  </div>
-)}
- <select
-  onChange={(e) => {
-    const id = parseInt(e.target.value);
+                                            <span className={`text-sm font-medium ${
+                                              atr.isAtivo
+                                                ? 'text-orange-900 dark:text-orange-200'
+                                                : 'text-gray-600 dark:text-neutral-400'
+                                            }`}>
+                                              {user?.nome || `Usuário ${atr.id_usuario}`}
+                                            </span>
+                                            {atr.isAtivo && (
+                                              <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+                                            )}
+                                          </button>
+                                        );
+                                      })
+                                    ) : (
+                                      <div className="w-full text-center py-6 border-2 border-dashed border-gray-200 dark:border-neutral-700 rounded-lg">
+                                        <p className="text-sm text-gray-400 dark:text-neutral-500">
+                                          Nenhum usuário adicionado
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
 
-    if (!id) return;
+                                  {/* Select inline para adicionar */}
+                                  <div className="flex gap-2">
+                                    <select
+                                      onChange={(e) => {
+                                        const id = parseInt(e.target.value);
+                                        if (!id) return;
 
-    const existe =
-      Array.isArray(atribuicoes) &&
-      atribuicoes.find((a) => a.id_usuario === id);
+                                        const existe = Array.isArray(atribuicoes) &&
+                                          atribuicoes.find((a) => a.id_usuario === id);
 
-    if (!existe) {
-      setAtribuicoes([
-        ...(Array.isArray(atribuicoes) ? atribuicoes : []),
-        { id_usuario: id, isAtivo: true },
-      ]);
-    }
-  }}
-  className="w-full text-sm border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded p-2 mb-3"
->
-  <option value="">Adicionar usuário à atribuição</option>
-  {usuariosAtivos.map((user) => (
-    <option key={user.Id} value={user.Id}>
-      {user.nome}
-    </option>
-  ))}
-</select>
-
-
-                                  <button
-                                    onClick={saveAtribuicoes}
-                                    disabled={isSavingAtrib}
-                                    className="text-sm px-4 py-2 bg-orange-600 dark:bg-orange-700 text-white rounded hover:bg-orange-700 dark:hover:bg-orange-600 transition disabled:opacity-50"
-                                  >
-                                    {isSavingAtrib
-                                      ? "Salvando..."
-                                      : "Salvar Atribuições"}
-                                  </button>
+                                        if (!existe) {
+                                          setAtribuicoes([
+                                            ...(Array.isArray(atribuicoes) ? atribuicoes : []),
+                                            { id_usuario: id, isAtivo: true },
+                                          ]);
+                                        }
+                                        e.target.value = "";
+                                      }}
+                                      className="flex-1 text-sm border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400"
+                                    >
+                                      <option value="">Adicionar usuário...</option>
+                                      {usuariosAtivos
+                                        .filter(user => !atribuicoes.find(a => a.id_usuario === user.Id))
+                                        .map((user) => (
+                                          <option key={user.Id} value={user.Id}>
+                                            {user.nome}
+                                          </option>
+                                        ))}
+                                    </select>
+                                    <button
+                                      onClick={saveAtribuicoes}
+                                      disabled={isSavingAtrib}
+                                      className="px-4 py-2 bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                                    >
+                                      {isSavingAtrib ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                      ) : (
+                                        <Save className="w-4 h-4" />
+                                      )}
+                                      Salvar
+                                    </button>
+                                  </div>
                                 </>
                               )}
                             </div>
                           )}
 
-                          {canEdit && (
-                            <div className="flex items-center justify-between pt-2">
-                              <label className="flex items-center gap-3 cursor-pointer">
-                                <div className="relative">
-                                  <input
-                                    type="checkbox"
-                                    checked={!!step.desativar_agente}
-                                    disabled={!canEdit}
-                                    onChange={() =>
-                                      handleUpdateStep(
-                                        step.ordem,
-                                        "desativar_agente",
-                                        !step.desativar_agente
-                                      )
-                                    }
-                                    className="sr-only peer"
-                                  />
-                                  <div className="w-11 h-6 bg-gray-300 dark:bg-neutral-600 rounded-full peer peer-checked:bg-orange-500 dark:peer-checked:bg-orange-600 transition-colors"></div>
-                                  <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></div>
-                                </div>
-                                <span className="text-sm text-gray-700 dark:text-neutral-300">Desativar a IA nessa etapa</span>
-                              </label>
+                              <div className="flex items-center justify-between">
+                                <label className="flex items-center gap-3 cursor-pointer">
+                                  <div className="relative">
+                                    <input
+                                      type="checkbox"
+                                      checked={!!step.desativar_agente}
+                                      disabled={!canEdit}
+                                      onChange={() =>
+                                        handleUpdateStep(
+                                          step.ordem,
+                                          "desativar_agente",
+                                          !step.desativar_agente
+                                        )
+                                      }
+                                      className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-gray-300 dark:bg-neutral-600 rounded-full peer peer-checked:bg-orange-500 dark:peer-checked:bg-orange-600 transition-colors"></div>
+                                    <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></div>
+                                  </div>
+                                  <span className="text-sm text-gray-700 dark:text-neutral-300">Desativar a IA nessa etapa</span>
+                                </label>
+                              </div>
                             </div>
                           )}
 

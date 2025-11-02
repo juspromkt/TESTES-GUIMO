@@ -19,7 +19,8 @@
       "Bash(curl:*)",
       "Bash(powershell -Command:*)",
       "Bash(findstr:*)",
-      "Bash(del \"src\\pages\\ConversasMobile.tsx\")"
+      "Bash(del \"src\\pages\\ConversasMobile.tsx\")",
+      "Bash(nul)"
     ],
     "deny": [],
     "ask": []

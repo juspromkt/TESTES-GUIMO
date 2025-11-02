@@ -232,22 +232,23 @@ const handleSavePersonality = async () => {
     field: 'nome' | 'descricao' | 'atribuir_lead' | 'desativar_agente',
     value: string | boolean
   ) => {
-    setServiceSteps(prev =>
-      prev.map(step => {
-        if (step.ordem === ordem) {
-          // Se está ativando atribuir_lead nesta etapa, desativa nas outras
-          if (field === 'atribuir_lead' && value === true) {
-            return prev.map(s =>
-              s.ordem === ordem
-                ? { ...s, [field]: value }
-                : { ...s, atribuir_lead: false }
-            );
-          }
-          return { ...step, [field]: value };
-        }
-        return step;
-      }).flat()
-    );
+    setServiceSteps(prev => {
+      // Se está ativando atribuir_lead nesta etapa, desativa nas outras
+      if (field === 'atribuir_lead' && value === true) {
+        return prev.map(step =>
+          step.ordem === ordem
+            ? { ...step, atribuir_lead: true }
+            : { ...step, atribuir_lead: false }
+        );
+      }
+
+      // Para outros campos, atualiza normalmente
+      return prev.map(step =>
+        step.ordem === ordem
+          ? { ...step, [field]: value }
+          : step
+      );
+    });
   };
 
   const handleReorderSteps = (steps: ServiceStep[]) => {

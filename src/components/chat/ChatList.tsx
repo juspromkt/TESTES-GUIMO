@@ -19,7 +19,9 @@ import {
   Video,
   MessageSquarePlus,
   RefreshCw,
-  ChevronDown
+  ChevronDown,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMessageEvents } from '../../pages/MessageEventsContext';
@@ -119,6 +121,12 @@ export function ChatList({
   const [internalShowUnanswered, setInternalShowUnanswered] = useState(false);
   const [internalActiveTab, setInternalActiveTab] = useState<'all' | 'ia' | 'transfers' | 'unread' | 'unanswered'>('all');
 
+  // Estado para controlar som de notificação
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    const saved = localStorage.getItem('chat_sound_enabled');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
   // Usa valores externos se fornecidos, senão usa internos
   const searchTerm = externalSearchTerm !== undefined ? externalSearchTerm : internalSearchTerm;
   const setSearchTerm = externalSearchTerm !== undefined ? () => {} : setInternalSearchTerm;
@@ -163,7 +171,51 @@ export function ChatList({
   const [contactSearch, setContactSearch] = useState('');
   const [contactPopoverOpen, setContactPopoverOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>({});
+  const [manuallyMarkedUnread, setManuallyMarkedUnread] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem('manually_marked_unread');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
   const [showControls, setShowControls] = useState(false);
+
+  // Função para tocar som de notificação
+  const playNotificationSound = () => {
+    if (soundEnabled) {
+      try {
+        // Criar contexto de áudio
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+        // Criar oscilador para tom
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        // Configurar som de notificação (tom duplo agradável)
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
+
+        // Configurar volume com fade out
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+        // Tocar som
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+      } catch (err) {
+        console.log('Erro ao tocar som:', err);
+      }
+    }
+  };
+
+  // Função para alternar som e salvar no localStorage
+  const toggleSound = () => {
+    const newValue = !soundEnabled;
+    setSoundEnabled(newValue);
+    localStorage.setItem('chat_sound_enabled', JSON.stringify(newValue));
+  };
+
   const normalizedSelectedChatId = useMemo(
     () => (selectedChatId ? normalizeRemoteJid(selectedChatId) : null),
     [selectedChatId]
@@ -411,11 +463,20 @@ export function ChatList({
       unread.forEach((item: any) => {
         unreadMap[normalizeRemoteJid(item.remoteJid)] = item.qtdMensagens;
       });
+
+      // Aplica override para conversas marcadas manualmente como não lidas
+      manuallyMarkedUnread.forEach(jid => {
+        // Se não tem mensagens não lidas do servidor, marca com -1
+        if (!unreadMap[jid] || unreadMap[jid] === 0) {
+          unreadMap[jid] = -1;
+        }
+      });
+
       setUnreadMessages(unreadMap);
     } catch (err) {
       console.error('Erro ao carregar mensagens não lidas:', err);
     }
-  }, [token]);
+  }, [token, manuallyMarkedUnread]);
 
   // Atualiza mensagens não lidas a cada 3 segundos
   useEffect(() => {
@@ -2062,6 +2123,11 @@ useMessageEvents((msg) => {
       ? normalizeTimestamp((msg as any).messageTimestamp)
       : Math.floor(Date.now() / 1000);
 
+  // Tocar som se for mensagem recebida (não enviada por mim)
+  if (isInbound) {
+    playNotificationSound();
+  }
+
   // 2. Pega os chats atualizados do cache (já ordenados)
   const cachedChats = getCache().chats || [];
 
@@ -2378,6 +2444,64 @@ const getLastMessageText = (chat) => {
                 >
                   <RefreshCw className="h-4 w-4" />
                 </button>
+                {/* Toggle de Som de Notificação */}
+                <button
+                  onClick={toggleSound}
+                  className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${
+                    soundEnabled
+                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30'
+                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  }`}
+                  title={soundEnabled ? 'Som de notificação ativado' : 'Som de notificação desativado'}
+                >
+                  {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                </button>
+                {/* Nova conversa */}
+                <Popover.Root open={contactPopoverOpen} onOpenChange={setContactPopoverOpen}>
+                  <Popover.Trigger asChild>
+                    <button
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
+                      title="Nova conversa"
+                    >
+                      <MessageSquarePlus className="h-4 w-4" />
+                    </button>
+                  </Popover.Trigger>
+                  <Popover.Portal>
+                    <Popover.Content sideOffset={6} className="z-50 w-60 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-3 shadow-2xl transition-colors duration-200">
+                      <input
+                        type="text"
+                        value={contactSearch}
+                        onChange={e => {
+                          lastUserInteractionRef.current = Date.now();
+                          setContactSearch(e.target.value);
+                        }}
+                        placeholder="Buscar contato"
+                        className="mb-2 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 p-2 text-sm focus:border-emerald-400 focus:outline-none transition-colors duration-200"
+                      />
+                      <div className="max-h-60 overflow-y-auto">
+                        {filteredContacts.map(c => (
+                          <button
+                            key={c.id}
+                            onClick={() => handleStartChat(c)}
+                            className="flex w-full items-center rounded px-2 py-1.5 text-left text-sm text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
+                          >
+                            {c.profilePicUrl ? (
+                              <img src={c.profilePicUrl} className="mr-2 h-7 w-7 rounded-full" />
+                            ) : (
+                              <div className="mr-2 flex h-7 w-7 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-600 text-xs font-medium text-gray-600 dark:text-gray-300">
+                                {c.pushName?.[0] || c.id[0]}
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <div className="font-medium">{c.pushName || c.id}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">{c.id}</div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </Popover.Content>
+                  </Popover.Portal>
+                </Popover.Root>
               </div>
             </div>
 
@@ -2402,49 +2526,6 @@ const getLastMessageText = (chat) => {
                 style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(148, 163, 184, 0.35) transparent' }}
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <Popover.Root open={contactPopoverOpen} onOpenChange={setContactPopoverOpen}>
-                    <Popover.Trigger asChild>
-                      <button
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
-                        title="Nova conversa"
-                      >
-                        <MessageSquarePlus className="h-4 w-4" />
-                      </button>
-                    </Popover.Trigger>
-                    <Popover.Portal>
-                      <Popover.Content sideOffset={6} className="z-50 w-60 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-3 shadow-2xl transition-colors duration-200">
-                        <input
-                          type="text"
-                          value={contactSearch}
-                          onChange={e => {
-                            lastUserInteractionRef.current = Date.now();
-                            setContactSearch(e.target.value);
-                          }}
-                          placeholder="Buscar contato"
-                          className="mb-2 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 p-2 text-sm focus:border-emerald-400 focus:outline-none transition-colors duration-200"
-                        />
-                        <div className="max-h-60 overflow-y-auto">
-                          {filteredContacts.map(c => (
-                            <button
-                              key={c.id}
-                              onClick={() => handleStartChat(c)}
-                              className="flex w-full items-center rounded px-2 py-1.5 text-left text-sm text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
-                            >
-                              {c.profilePicUrl ? (
-                                <img src={c.profilePicUrl} alt="avatar" className="h-8 w-8 rounded-full object-cover" />
-                              ) : (
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-500 dark:bg-gray-600 text-xs font-medium text-white transition-colors duration-200">
-                                  {getInitials(c.pushName)}
-                                </div>
-                              )}
-                              <span className="ml-2 truncate">{c.pushName}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </Popover.Content>
-                    </Popover.Portal>
-                  </Popover.Root>
-
                   <Popover.Root>
                     <Popover.Trigger asChild>
                       <button
@@ -2640,17 +2721,19 @@ const getLastMessageText = (chat) => {
               const baseContainerClasses =
                 'group relative flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-all duration-150 border-b border-gray-100 dark:border-gray-700';
 
+              const isUnread = unreadCount > 0 || unreadCount === -1;
+
               let containerTone = 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700';
               if (isSelected) {
                 containerTone = 'bg-gray-100 dark:bg-gray-700';
-              } else if (unreadCount > 0) {
+              } else if (isUnread) {
                 // Card com mensagem não lida tem fundo levemente esverdeado
                 containerTone = 'bg-teal-100 dark:bg-teal-900/40 hover:bg-teal-200 dark:hover:bg-teal-900/50';
               }
 
-              const nameColorClass = unreadCount > 0 ? 'text-gray-900 dark:text-white font-semibold' : 'text-gray-900 dark:text-white';
-              const metaTextClass = unreadCount > 0 ? 'text-teal-600 dark:text-teal-400 font-semibold' : 'text-gray-500 dark:text-gray-400';
-              const messageTextClass = unreadCount > 0 ? 'text-gray-900 dark:text-gray-300 font-medium' : 'text-gray-600 dark:text-gray-400';
+              const nameColorClass = isUnread ? 'text-gray-900 dark:text-white font-semibold' : 'text-gray-900 dark:text-white';
+              const metaTextClass = isUnread ? 'text-teal-600 dark:text-teal-400 font-semibold' : 'text-gray-500 dark:text-gray-400';
+              const messageTextClass = isUnread ? 'text-gray-900 dark:text-gray-300 font-medium' : 'text-gray-600 dark:text-gray-400';
 
               const containerClasses = [
                 baseContainerClasses,
@@ -2662,23 +2745,60 @@ const getLastMessageText = (chat) => {
               return (
                 <div
                   key={chat.id}
-                  onClick={() => {
-                    lastUserInteractionRef.current = Date.now();
-                    const jid = normalizeRemoteJid(chat.remoteJid);
-
-                    setUnreadMessages(prev => ({ ...prev, [jid]: 0 }));
-                    setChats(prev =>
-                      prev.map(c => (c.id === chat.id ? { ...c, hasNewMessage: false } : c))
-                    );
-
-                    if (token) {
-                      apiClient.visualizarMensagens(token, jid).catch(() => {});
-                    }
-
-                    onChatSelect({ ...chat, id: jid, remoteJid: jid });
-                  }}
-                  className={containerClasses}
+                  className={`${containerClasses} relative`}
                 >
+                  {/* Botão de marcar como não lida */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const jid = normalizeRemoteJid(chat.remoteJid);
+
+                      // Adiciona ao Set de marcadas manualmente
+                      setManuallyMarkedUnread(prev => {
+                        const newSet = new Set(prev);
+                        newSet.add(jid);
+                        // Salva no localStorage
+                        localStorage.setItem('manually_marked_unread', JSON.stringify(Array.from(newSet)));
+                        return newSet;
+                      });
+
+                      // Marca como não lida imediatamente (bolinha verde sem número)
+                      setUnreadMessages(prev => ({ ...prev, [jid]: -1 }));
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-full bg-white dark:bg-gray-700 shadow-md hover:bg-gray-100 dark:hover:bg-gray-600 z-10"
+                    title="Marcar como não lida"
+                  >
+                    <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                  </button>
+
+                  {/* Container clicável */}
+                  <div
+                    onClick={() => {
+                      lastUserInteractionRef.current = Date.now();
+                      const jid = normalizeRemoteJid(chat.remoteJid);
+
+                      // Remove do Set de marcadas manualmente
+                      setManuallyMarkedUnread(prev => {
+                        const newSet = new Set(prev);
+                        newSet.delete(jid);
+                        // Atualiza localStorage
+                        localStorage.setItem('manually_marked_unread', JSON.stringify(Array.from(newSet)));
+                        return newSet;
+                      });
+
+                      setUnreadMessages(prev => ({ ...prev, [jid]: 0 }));
+                      setChats(prev =>
+                        prev.map(c => (c.id === chat.id ? { ...c, hasNewMessage: false } : c))
+                      );
+
+                      if (token) {
+                        apiClient.visualizarMensagens(token, jid).catch(() => {});
+                      }
+
+                      onChatSelect({ ...chat, id: jid, remoteJid: jid });
+                    }}
+                    className="flex items-center gap-3 w-full cursor-pointer"
+                  >
                   {/* Foto do usuário */}
                   <div className="flex-shrink-0">
                     {chat.profilePicUrl ? (
@@ -2724,6 +2844,9 @@ const getLastMessageText = (chat) => {
                           <span className="inline-flex min-w-[20px] h-5 items-center justify-center rounded-full bg-teal-500 text-white px-1.5 text-xs font-semibold">
                             {unreadCount > 99 ? '99+' : unreadCount}
                           </span>
+                        )}
+                        {unreadCount === -1 && (
+                          <span className="inline-flex w-2.5 h-2.5 rounded-full bg-teal-500" title="Não lida"></span>
                         )}
 
                         {/* Transfer Badge */}
@@ -2781,7 +2904,7 @@ const getLastMessageText = (chat) => {
                       )}
                     </div>
                   </div>
-
+                  </div>
                 </div>
               );
             })}

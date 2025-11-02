@@ -8,7 +8,7 @@ import { useChat } from '../context/ChatContext';
 import { MultiSelectDropdown } from '../components/chat/MultiSelectDropdown';
 import { NewChatModal } from '../components/chat/NewChatModal';
 import { Chat as ChatType } from '../components/chat/utils/api';
-import { MessageCircle, Search, Filter, Plus, Users, GitBranch, Tag as TagIcon, Calendar, X } from 'lucide-react';
+import { MessageCircle, Search, Filter, Plus, Users, GitBranch, Tag as TagIcon, Calendar, X, Volume2, VolumeX } from 'lucide-react';
 import { setChatListLoaded } from '../utils/chatCache';
 import type { Tag } from '../types/tag';
 import DatePicker from 'react-datepicker';
@@ -66,8 +66,53 @@ const ChatProprio = () => {
   const [unansweredCount, setUnansweredCount] = useState(0);
   const [transfersCount, setTransfersCount] = useState(0);
 
+  // Estado para som de notificação
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    const saved = localStorage.getItem('chat_sound_enabled');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
   const user = localStorage.getItem('user');
   const token = user ? JSON.parse(user).token : null;
+
+  // Função para tocar som de notificação
+  const playNotificationSound = useCallback(() => {
+    if (soundEnabled) {
+      try {
+        // Criar contexto de áudio
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+        // Criar oscilador para tom
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        // Configurar som de notificação (tom duplo agradável)
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
+
+        // Configurar volume com fade out
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+        // Tocar som
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+      } catch (err) {
+        console.log('Erro ao tocar som:', err);
+      }
+    }
+  }, [soundEnabled]);
+
+  // Função para alternar som e salvar no localStorage
+  const toggleSound = () => {
+    const newValue = !soundEnabled;
+    setSoundEnabled(newValue);
+    localStorage.setItem('chat_sound_enabled', JSON.stringify(newValue));
+  };
 
   // Força reload sempre que entrar na página - executado no mount
   useEffect(() => {
@@ -433,10 +478,24 @@ const ChatProprio = () => {
               </div>
             </div>
 
+            {/* Botão de Som de Notificação */}
+            <button
+              onClick={toggleSound}
+              className={`flex items-center justify-center p-2 md:py-1.5 md:px-2.5 rounded-lg transition-all shadow-sm hover:shadow-md active:scale-95 touch-manipulation flex-shrink-0 ${
+                soundEnabled
+                  ? 'bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-500 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30'
+                  : 'bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+              title={soundEnabled ? 'Som de notificação ativado' : 'Som de notificação desativado'}
+              aria-label={soundEnabled ? 'Desativar som de notificação' : 'Ativar som de notificação'}
+            >
+              {soundEnabled ? <Volume2 className="w-4 h-4 flex-shrink-0" /> : <VolumeX className="w-4 h-4 flex-shrink-0" />}
+            </button>
+
             {/* Botão Nova Conversa - Canto Direito */}
             <button
               onClick={() => setNewChatModalOpen(true)}
-              className="flex items-center gap-1 md:gap-1.5 px-2 md:px-4 py-2 md:py-1.5 rounded-lg text-xs md:text-sm font-medium bg-gradient-to-r from-emerald-500 to-green-600 dark:from-emerald-600 dark:to-green-700 text-white hover:from-emerald-600 hover:to-green-700 dark:hover:from-emerald-700 dark:hover:to-green-800 active:from-emerald-700 active:to-green-800 transition-all shadow-md hover:shadow-lg active:scale-95 whitespace-nowrap touch-manipulation flex-shrink-0 ml-auto"
+              className="flex items-center gap-1 md:gap-1.5 px-2 md:px-4 py-2 md:py-1.5 rounded-lg text-xs md:text-sm font-medium bg-gradient-to-r from-emerald-500 to-green-600 dark:from-emerald-600 dark:to-green-700 text-white hover:from-emerald-600 hover:to-green-700 dark:hover:from-emerald-700 dark:hover:to-green-800 active:from-emerald-700 active:to-green-800 transition-all shadow-md hover:shadow-lg active:scale-95 whitespace-nowrap touch-manipulation flex-shrink-0"
               title="Nova conversa"
               aria-label="Nova conversa"
             >

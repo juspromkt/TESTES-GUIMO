@@ -482,10 +482,10 @@ export default function AutoMovementTab({ token, canViewAgent }: AutoMovementTab
                 <>
                   <button
                     onClick={() => setIsResetModalOpen(true)}
-                    className="p-1.5 text-gray-500 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                    className="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-neutral-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all border border-gray-300 dark:border-neutral-600"
                     title="Resetar configurações"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    Resetar
                   </button>
                   <button
                     onClick={handleToggleStatus}
