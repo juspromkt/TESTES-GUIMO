@@ -159,7 +159,8 @@ useEffect(() => {
         .map((row: any) => ({
           nome: row.nome.trim(),
           Email: (row.email || '').trim(),
-          telefone: (row.telefone || '').trim()
+          telefone: (row.telefone || '').trim(),
+          createdAt: new Date().toISOString()
         }));
 
       if (contacts.length === 0) {
@@ -203,7 +204,7 @@ useEffect(() => {
       const method = selectedContato ? 'PUT' : 'POST';
       const body = selectedContato
         ? { ...formData, id: selectedContato.Id }
-        : formData;
+        : { ...formData, createdAt: new Date().toISOString() };
 
       const response = await fetch(url, {
         method,
