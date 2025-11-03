@@ -96,6 +96,10 @@ export default function DirectDispatchDetails() {
   const [importingCRM, setImportingCRM] = useState(false);
   const [crmError, setCrmError] = useState("");
 
+  // History modal
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [historyTab, setHistoryTab] = useState<'sent' | 'pending'>('sent');
+
 const canEditProspect = hasPermission('can_edit_prospect');
 
 const handleManualImport = async () => {
@@ -732,25 +736,46 @@ const filteredAndSortedLeads = [...leads]
         )}
       </div>
 
-      <div className="px-8">
+      <div className="px-8 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-neutral-700">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 rounded-xl shadow-md p-6 border-2 border-blue-200 dark:border-blue-800">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-neutral-400">Total de Leads na lista</p>
-                <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-neutral-100">{dispatch.qtdLeads}</p>
+                <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">Total de Leads</p>
+                <p className="mt-3 text-4xl font-extrabold text-blue-900 dark:text-blue-100">{dispatch.qtdLeads}</p>
               </div>
-              <Users className="w-8 h-8 text-blue-500 dark:text-blue-400" />
+              <div className="bg-blue-200 dark:bg-blue-800 p-3 rounded-full">
+                <Users className="w-10 h-10 text-blue-700 dark:text-blue-300" />
+              </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-neutral-700">
-            <div className="flex items-center justify-between">
+          <div
+            onClick={() => setIsHistoryModalOpen(true)}
+            className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950 dark:to-emerald-900 rounded-xl shadow-md p-6 border-2 border-green-200 dark:border-green-800 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer group relative overflow-hidden"
+          >
+            {/* Badge "Clique para ver detalhes" sempre visível */}
+            <div className="absolute top-3 right-3">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900 px-2.5 py-1 rounded-full border border-green-300 dark:border-green-700 shadow-sm">
+                <Search className="w-3 h-3" />
+                Ver detalhes
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between mt-6">
               <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-neutral-400">Envios Realizados</p>
-                <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-neutral-100">{dispatch.qtdDisparosRealizados}</p>
+                <p className="text-sm font-semibold text-green-700 dark:text-green-300 uppercase tracking-wide">
+                  Envios Realizados
+                </p>
+                <p className="mt-3 text-4xl font-extrabold text-green-900 dark:text-green-100">{dispatch.qtdDisparosRealizados}</p>
+                <p className="mt-2 text-xs text-green-600 dark:text-green-400 font-medium">
+                  Clique para visualizar histórico
+                </p>
               </div>
-              <Send className="w-8 h-8 text-green-500 dark:text-green-400" />
+              <div className="bg-green-200 dark:bg-green-800 p-3 rounded-full relative">
+                <Send className="w-10 h-10 text-green-700 dark:text-green-300" />
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 dark:bg-green-400 rounded-full animate-pulse ring-2 ring-white dark:ring-neutral-900" />
+              </div>
             </div>
           </div>
         </div>
@@ -783,91 +808,66 @@ const filteredAndSortedLeads = [...leads]
             </div>
           </div>
         ) : (
-          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm overflow-hidden border border-gray-200 dark:border-neutral-700">
-            <div className="p-6 border-b border-gray-300 dark:border-neutral-700">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Leads Importados</h2>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setIsUploadModalOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
-                    >
-                      <Upload className="w-5 h-5" />
-                      Importar leads via CSV
-                    </button>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Coluna Esquerda - Tabela */}
+            <div className="lg:col-span-8">
+              <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm overflow-hidden border border-gray-200 dark:border-neutral-700">
+                <div className="p-6 border-b border-gray-300 dark:border-neutral-700">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 mb-4">Leads Importados</h2>
 
-                    <button
-                      onClick={() => setIsManualModalOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors"
-                    >
-                      <Send className="w-5 h-5" />
-                      Importar Manualmente
-                    </button>
-
-                    <button
-                      onClick={() => setIsCRMModalOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 dark:bg-indigo-700 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
-                    >
-                      <GitBranch className="w-5 h-5" />
-                      Importar do CRM
-                    </button>
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-5 h-5" />
+                        <input
+                          type="text"
+                          placeholder="Buscar por nome ou telefone..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600 dark:text-neutral-400">Itens:</span>
+                      <select
+                        value={itemsPerPage}
+                        onChange={(e) => {
+                          setItemsPerPage(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                        className="border border-gray-300 dark:border-neutral-600 rounded-md text-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 p-2 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
+                      >
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                        <option value={999}>Todos</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
-
-
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-5 h-5" />
-                    <input
-                      type="text"
-                      placeholder="Buscar por nome ou telefone..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600 dark:text-neutral-400">Itens por página:</span>
-                  <select
-                    value={itemsPerPage}
-                    onChange={(e) => {
-                      setItemsPerPage(Number(e.target.value));
-                      setCurrentPage(1);
-                    }}
-                    className="border border-gray-300 dark:border-neutral-600 rounded-md text-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 p-2 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={999}>Todos</option>
-                  </select>
-                </div>
-              </div>
-            </div>
 
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-neutral-900/50">
+                <thead className="bg-gradient-to-r from-gray-100 to-gray-50 dark:from-neutral-900 dark:to-neutral-800 border-b-2 border-gray-200 dark:border-neutral-700">
                   <tr>
                     <th
-                      className="px-6 py-3 text-left cursor-pointer group"
+                      className="px-8 py-4 text-left cursor-pointer group"
                       onClick={() => handleSort('nome')}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
-                          Nome
+                        <span className="text-sm font-bold text-gray-700 dark:text-neutral-300 uppercase tracking-wide">
+                          Nome do Lead
                         </span>
                         <SortIcon field="nome" />
                       </div>
                     </th>
                     <th
-                      className="px-6 py-3 text-left cursor-pointer group"
+                      className="px-8 py-4 text-left cursor-pointer group"
                       onClick={() => handleSort('telefone')}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                        <span className="text-sm font-bold text-gray-700 dark:text-neutral-300 uppercase tracking-wide">
                           Telefone
                         </span>
                         <SortIcon field="telefone" />
@@ -875,13 +875,15 @@ const filteredAndSortedLeads = [...leads]
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
-                  {paginatedLeads.map((lead) => (
-                    <tr key={lead.Id} className="hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-neutral-100">
-                        {lead.nome}
+                <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-100 dark:divide-neutral-700">
+                  {paginatedLeads.map((lead, index) => (
+                    <tr key={lead.Id} className={`hover:bg-blue-50 dark:hover:bg-neutral-700/50 transition-all duration-200 ${
+                      index % 2 === 0 ? 'bg-white dark:bg-neutral-800' : 'bg-gray-50/50 dark:bg-neutral-800/50'
+                    }`}>
+                      <td className="px-8 py-5 text-sm font-medium text-gray-900 dark:text-neutral-100">
+                        {lead.nome || '...'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-neutral-100">
+                      <td className="px-8 py-5 text-sm text-gray-600 dark:text-neutral-300 font-mono">
                         {lead.telefone}
                       </td>
                     </tr>
@@ -890,38 +892,74 @@ const filteredAndSortedLeads = [...leads]
               </table>
             </div>
 
-            <Pagination
-              totalItems={filteredAndSortedLeads.length}
-              itemsPerPage={itemsPerPage}
-              currentPage={currentPage}
-              onPageChange={setCurrentPage}
-              onItemsPerPageChange={setItemsPerPage}
-            />
+                <Pagination
+                  totalItems={filteredAndSortedLeads.length}
+                  itemsPerPage={itemsPerPage}
+                  currentPage={currentPage}
+                  onPageChange={setCurrentPage}
+                  onItemsPerPageChange={setItemsPerPage}
+                />
+              </div>
+            </div>
 
-{canEditProspect && (
-            <div className="p-6 border-t border-gray-300 dark:border-neutral-700">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Controle de Envios</h2>
+            {/* Coluna Direita - Botões */}
+            <div className="lg:col-span-4 space-y-4">
+              {/* Card de Botões de Importação */}
+              <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-gray-200 dark:border-neutral-700 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
+                  <Upload className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  Importar Leads
+                </h3>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setIsUploadModalOpen(true)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-medium"
+                  >
+                    <Upload className="w-5 h-5" />
+                    Via CSV
+                  </button>
+
+                  <button
+                    onClick={() => setIsManualModalOpen(true)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors font-medium"
+                  >
+                    <Send className="w-5 h-5" />
+                    Manualmente
+                  </button>
+
+                  <button
+                    onClick={() => setIsCRMModalOpen(true)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 dark:bg-indigo-700 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors font-medium"
+                  >
+                    <GitBranch className="w-5 h-5" />
+                    Do CRM
+                  </button>
+                </div>
+              </div>
+
+              {/* Card de Controle de Envios */}
+              {canEditProspect && (
+                <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-gray-200 dark:border-neutral-700 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-2">Controle de Envios</h3>
                   {ordemDisparo && (
-                    <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">
+                    <p className="text-sm text-gray-500 dark:text-neutral-400 mb-4">
                       Último disparo: {formatDate(ordemDisparo.data)}
                     </p>
                   )}
+                  <button
+                    onClick={handleDisparo}
+                    disabled={disparoButton.disabled}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-3 text-white rounded-lg transition-colors font-medium ${disparoButton.color}`}
+                  >
+                    {disparoButton.text}
+                  </button>
+                  {error && (
+                    <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>
+                  )}
                 </div>
-                <button
-                  onClick={handleDisparo}
-                  disabled={disparoButton.disabled}
-                  className={`flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors ${disparoButton.color}`}
-                >
-                  {disparoButton.text}
-                </button>
-              </div>
-              {error && (
-                <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>
               )}
             </div>
-            )}
           </div>
         )}
       </div>
@@ -1247,6 +1285,154 @@ const filteredAndSortedLeads = [...leads]
                     Importar Leads
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Histórico de Envios */}
+      {isHistoryModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg w-full max-w-3xl max-h-[80vh] overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-neutral-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Histórico de Envios</h3>
+              <button
+                onClick={() => setIsHistoryModalOpen(false)}
+                className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex border-b border-gray-200 dark:border-neutral-700">
+              <button
+                onClick={() => setHistoryTab('sent')}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  historyTab === 'sent'
+                    ? 'text-green-600 dark:text-green-400 border-b-2 border-green-600 dark:border-green-400 bg-green-50 dark:bg-green-900/20'
+                    : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300'
+                }`}
+              >
+                Enviados ({disparos?.length || 0})
+              </button>
+              <button
+                onClick={() => setHistoryTab('pending')}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  historyTab === 'pending'
+                    ? 'text-yellow-600 dark:text-yellow-400 border-b-2 border-yellow-600 dark:border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20'
+                    : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300'
+                }`}
+              >
+                Pendentes ({Math.max(0, (leads?.length || 0) - (disparos?.length || 0))})
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(80vh-180px)]">
+              {historyTab === 'sent' ? (
+                <div className="space-y-2">
+                  {!disparos || disparos.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 dark:text-neutral-400">
+                      Nenhum envio realizado ainda
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {disparos.map((disparo, index) => {
+                        try {
+                          return (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg"
+                            >
+                              <div className="flex items-center gap-3">
+                                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                                <span className="text-sm font-medium text-gray-900 dark:text-neutral-100">
+                                  {disparo?.nome_lead || 'Nome não disponível'}
+                                </span>
+                              </div>
+                              <span className="text-xs text-gray-500 dark:text-neutral-400">
+                                {disparo?.data ? formatDate(disparo.data) : 'Data não disponível'}
+                              </span>
+                            </div>
+                          );
+                        } catch (error) {
+                          console.error('Erro ao renderizar disparo:', error);
+                          return null;
+                        }
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {(() => {
+                    try {
+                      if (!leads || !disparos) {
+                        return (
+                          <div className="text-center py-8 text-gray-500 dark:text-neutral-400">
+                            Carregando...
+                          </div>
+                        );
+                      }
+
+                      // Calcular leads pendentes (leads que não estão em disparos)
+                      const sentNames = new Set(
+                        disparos
+                          .filter(d => d?.nome_lead)
+                          .map(d => d.nome_lead.toLowerCase().trim())
+                      );
+
+                      const pendingLeads = leads.filter(lead =>
+                        lead?.nome && !sentNames.has(lead.nome.toLowerCase().trim())
+                      );
+
+                      if (pendingLeads.length === 0) {
+                        return (
+                          <div className="text-center py-8 text-gray-500 dark:text-neutral-400">
+                            Todos os leads já foram enviados!
+                          </div>
+                        );
+                      }
+
+                      return pendingLeads.map((lead) => (
+                        <div
+                          key={lead.Id}
+                          className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800 rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                            <div>
+                              <span className="text-sm font-medium text-gray-900 dark:text-neutral-100 block">
+                                {lead.nome || 'Nome não disponível'}
+                              </span>
+                              <span className="text-xs text-gray-500 dark:text-neutral-400">
+                                {lead.telefone || 'Telefone não disponível'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ));
+                    } catch (error) {
+                      console.error('Erro ao calcular leads pendentes:', error);
+                      return (
+                        <div className="text-center py-8 text-red-500 dark:text-red-400">
+                          Erro ao carregar leads pendentes
+                        </div>
+                      );
+                    }
+                  })()}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end p-6 border-t border-gray-200 dark:border-neutral-700">
+              <button
+                onClick={() => setIsHistoryModalOpen(false)}
+                className="px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-600"
+              >
+                Fechar
               </button>
             </div>
           </div>

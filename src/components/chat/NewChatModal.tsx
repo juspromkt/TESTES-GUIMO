@@ -93,6 +93,7 @@ export function NewChatModal({ isOpen, onClose, onSuccess }: NewChatModalProps) 
           body: JSON.stringify({
             nome: nome.trim(),
             telefone: formattedPhone,
+            createdAt: new Date().toISOString(),
           }),
         }
       );

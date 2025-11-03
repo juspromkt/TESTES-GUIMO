@@ -481,7 +481,10 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
             'Content-Type': 'application/json',
             token
           },
-          body: JSON.stringify(contactData)
+          body: JSON.stringify({
+            ...contactData,
+            createdAt: new Date().toISOString(),
+          })
         }
       );
 

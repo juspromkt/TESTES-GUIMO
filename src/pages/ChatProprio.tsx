@@ -318,7 +318,11 @@ const ChatProprio = () => {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', token },
-          body: JSON.stringify({ nome: name, telefone }),
+          body: JSON.stringify({
+            nome: name,
+            telefone,
+            createdAt: new Date().toISOString(),
+          }),
         }
       );
 
@@ -527,7 +531,7 @@ const ChatProprio = () => {
                           : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 active:bg-gray-100 dark:active:bg-gray-500 border border-gray-200 dark:border-gray-600'
                         }`}
                     >
-                      <span className="text-[11px] md:text-xs font-semibold tracking-wide">IA</span>
+                      <span className="text-[11px] md:text-xs font-semibold tracking-wide">IA ativa</span>
                       {iaCount > 0 && (
                         <span className={`text-[10px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1 ${chatListActiveTab === 'ia' ? 'bg-white text-purple-600 dark:text-purple-700' : 'bg-purple-600 dark:bg-purple-700 text-white'
                           }`}>
@@ -544,7 +548,7 @@ const ChatProprio = () => {
                           : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 active:bg-gray-100 dark:active:bg-gray-500 border border-gray-200 dark:border-gray-600'
                         }`}
                     >
-                      <span className="text-[11px] md:text-xs font-semibold tracking-wide truncate">NÃO RESP.</span>
+                      <span className="text-[11px] md:text-xs font-semibold tracking-wide truncate">Não lidas</span>
                       {unansweredCount > 0 && (
                         <span className={`text-[10px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1 flex-shrink-0 ${chatListActiveTab === 'unanswered' ? 'bg-white text-orange-600 dark:text-orange-700' : 'bg-orange-600 dark:bg-orange-700 text-white'
                           }`}>
@@ -561,7 +565,7 @@ const ChatProprio = () => {
                           : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 active:bg-gray-100 dark:active:bg-gray-500 border border-gray-200 dark:border-gray-600'
                         }`}
                     >
-                      <span className="text-[11px] md:text-xs font-semibold tracking-wide truncate">TRANSF.</span>
+                      <span className="text-[11px] md:text-xs font-semibold tracking-wide truncate">Transferidas</span>
                       {transfersCount > 0 && (
                         <span className={`text-[10px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1 flex-shrink-0 ${chatListActiveTab === 'transfers' ? 'bg-white text-yellow-600 dark:text-yellow-700' : 'bg-yellow-600 dark:bg-yellow-700 text-white'
                           }`}>

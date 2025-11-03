@@ -299,7 +299,11 @@ const ConversasMobile = () => {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', token },
-          body: JSON.stringify({ nome: name, telefone }),
+          body: JSON.stringify({
+            nome: name,
+            telefone,
+            createdAt: new Date().toISOString(),
+          }),
         }
       );
 

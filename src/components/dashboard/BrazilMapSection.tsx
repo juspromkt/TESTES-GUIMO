@@ -122,7 +122,7 @@ export default function BrazilMapSection({ stateData = [] }: BrazilMapSectionPro
             <div className="w-6 h-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 rounded-lg flex items-center justify-center flex-shrink-0">
               <MapPin className="w-4 h-4 text-green-600 dark:text-green-400" />
             </div>
-            <h3 className="text-sm font-bold text-gray-900 dark:text-neutral-100">Total de conversas por estado</h3>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-neutral-100">Total de contatos por estado</h3>
           </div>
           <div className="flex items-center gap-1.5 px-2.5 py-1 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
             <span className="text-xs font-semibold text-green-700 dark:text-green-300">Total:</span>
@@ -145,7 +145,7 @@ export default function BrazilMapSection({ stateData = [] }: BrazilMapSectionPro
           <div className="w-6 h-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 rounded-lg flex items-center justify-center flex-shrink-0">
             <MapPin className="w-4 h-4 text-green-600 dark:text-green-400" />
           </div>
-          <h3 className="text-sm font-bold text-gray-900 dark:text-neutral-100">Total de conversas por estado</h3>
+          <h3 className="text-sm font-bold text-gray-900 dark:text-neutral-100">Total de contatos por estado</h3>
         </div>
         <div className="flex items-center gap-1.5 px-2.5 py-1 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
           <span className="text-xs font-semibold text-green-700 dark:text-green-300">Total:</span>
