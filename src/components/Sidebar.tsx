@@ -30,7 +30,8 @@ import {
   Star,
   Clock,
   ArrowUpDown,
-  AlertCircle
+  AlertCircle,
+  HelpCircle
 } from 'lucide-react';
 import { DomainConfig } from '../utils/DomainConfig';
 import Modal from './Modal';
@@ -685,31 +686,27 @@ const Sidebar = () => {
     if (!permissionsLoaded) return [];
 
     const menuItems = [
-      { path: '/dashboard', text: 'Dashboard', icon: LayoutDashboard, permission: true },
-      { path: '/conversas', text: 'Conversas', icon: MessageSquare, permission: hasPermission('can_view_menu_chat') },
-      { path: '/ai-agent', text: 'Agente de IA', icon: Bot, permission: hasPermission('can_view_menu_agent') },
-      { path: '/crm/kanban', text: 'CRM', icon: GitBranch, permission: hasPermission('can_view_menu_crm') },
-      { path: '/agendamentos', text: 'Agendamentos', icon: CalendarDays, permission: hasPermission('can_view_menu_crm') },
-      { path: '/prospectar', text: 'Envios em Massa', icon: Rocket, permission: hasPermission('can_view_menu_prospect') },
+      { path: '/dashboard', text: 'Dashboard', icon: LayoutDashboard, permission: true, isBeta: false },
+      { path: '/conversas', text: 'Conversas', icon: MessageSquare, permission: hasPermission('can_view_menu_chat'), isBeta: false },
+      { path: '/ai-agent', text: 'Agente de IA', icon: Bot, permission: hasPermission('can_view_menu_agent'), isBeta: false },
+      { path: '/crm/kanban', text: 'CRM', icon: GitBranch, permission: hasPermission('can_view_menu_crm'), isBeta: false },
+      { path: '/agendamentos', text: 'Agendamentos', icon: CalendarDays, permission: hasPermission('can_view_menu_crm'), isBeta: false },
+      { path: '/prospectar', text: 'Envios em Massa', icon: Rocket, permission: hasPermission('can_view_menu_prospect'), isBeta: false },
 
-      { path: '/configuracoes', text: 'Configurações', icon: Settings, permission: hasPermission('can_view_menu_settings') },
+      { path: '/configuracoes', text: 'Configurações', icon: Settings, permission: hasPermission('can_view_menu_settings'), isBeta: false },
       {
         text: 'Tutoriais',
         icon: Video,
         path: '/tutorial-interno',
         permission: true,
+        isBeta: false,
       },
-      // {
-      //   text: 'Parceiros',
-      //   icon: Handshake,
-      //   path: '/parceiros',
-      //   permission: true,
-      // },
       {
         text: 'Suporte',
-        icon: MessageCircle,
+        icon: HelpCircle,
         path: '/suporte',
         permission: true,
+        isBeta: false,
       },
     ];
 
@@ -825,6 +822,28 @@ const Sidebar = () => {
                       <span className="text-sm font-semibold">{item.text}</span>
                     </button>
                     </div>
+                  ) : item.text === 'Suporte' ? (
+                    <button
+                      key={item.path}
+                      onClick={() => {
+                        navigate(item.path);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 active:scale-[0.98] touch-manipulation ${
+                        currentPath.startsWith(item.path)
+                          ? `${domainConfig.getActiveBg()} ${domainConfig.getActiveColor()} shadow-lg scale-[1.02]`
+                          : `${domainConfig.getDefaultColor()} ${domainConfig.getHoverBg()} hover:shadow-md active:shadow-lg`
+                      }`}
+                    >
+                      <div className={`p-2 rounded-lg transition-all ${
+                        currentPath.startsWith(item.path)
+                          ? 'bg-white/20'
+                          : 'bg-white/10 group-hover:bg-white/20'
+                      }`}>
+                        <item.icon className="w-6 h-6" />
+                      </div>
+                      <span className="text-sm font-semibold">{item.text}</span>
+                    </button>
                   ) : item.text === 'Parceiros' ? (
                     <button
                       key={item.path}
@@ -1092,6 +1111,18 @@ const Sidebar = () => {
       isBeta={item.isBeta}
     />
     </>
+  ) : item.text === 'Suporte' ? (
+    <MenuItem
+      key={item.path}
+      path={item.path}
+      text={item.text}
+      icon={item.icon}
+      isActive={currentPath.startsWith(item.path)}
+      isCollapsed={!isExpanded}
+      isMobile={isMobile}
+      domainConfig={domainConfig}
+      isBeta={item.isBeta}
+    />
   ) : item.text === 'Parceiros' ? (
     <MenuItem
       key={item.path}
