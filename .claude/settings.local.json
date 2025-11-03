@@ -20,7 +20,15 @@
       "Bash(powershell -Command:*)",
       "Bash(findstr:*)",
       "Bash(del \"src\\pages\\ConversasMobile.tsx\")",
-      "Bash(nul)"
+      "Bash(nul)",
+      "Bash(python extract_articles.py:*)",
+      "Bash(for i in {1..22})",
+      "Bash(do echo -n \"artigo-$i: \")",
+      "Bash(done)",
+      "Bash(node extract-articles.js:*)",
+      "Bash(node extract-articles.cjs:*)",
+      "Bash(cat:*)",
+      "Bash(\"C:\\GUIMOO - VERSÃO ON\\lumen-guimoo\\src\\pages\\TutorialInterno.tsx.new\")"
     ],
     "deny": [],
     "ask": []

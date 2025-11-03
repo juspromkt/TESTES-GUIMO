@@ -4,7 +4,8 @@ import {
   Video,
   ArrowRight,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  BookOpen
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -49,6 +50,18 @@ export default function Suporte() {
       badge: 'Novo',
       badgeColor: 'bg-purple-500',
     },
+    {
+      id: 'articles',
+      title: 'Artigos e Guias',
+      description: 'Base de conhecimento completa',
+      icon: BookOpen,
+      gradient: 'from-orange-500 to-red-600',
+      iconBg: 'bg-orange-100 dark:bg-orange-900/30',
+      iconColor: 'text-orange-600 dark:text-orange-400',
+      action: () => navigate('/tutorial-interno/artigos'),
+      badge: 'Útil',
+      badgeColor: 'bg-orange-500',
+    },
   ];
 
 
@@ -80,7 +93,7 @@ export default function Suporte() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 
           {/* Coluna da Esquerda - Cards de Ação (2 colunas no lg) */}
-          <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
             {quickActions.map((action) => (
               <div
                 key={action.id}

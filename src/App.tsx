@@ -265,7 +265,13 @@ function App() {
           <Route path="configuracoes" element={<Configuracoes />} />
           <Route path="conversas" element={<ChatProprio />} />
           <Route path="parceiros" element={<ParceirosSidebar />} />
-          <Route path="tutorial-interno" element={<TutorialInterno />} />
+          {/* Rotas do Tutorial com URLs específicas para cada aba */}
+          <Route path="tutorial-interno">
+            <Route index element={<Navigate to="videos" replace />} />
+            <Route path="videos" element={<TutorialInterno />} />
+            <Route path="artigos" element={<TutorialInterno />} />
+            <Route path="guimoo-academy" element={<TutorialInterno />} />
+          </Route>
           <Route path="suporte" element={<Suporte />} />
         </Route>
       </Routes>

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { Video, Search, GraduationCap } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Video, Search, GraduationCap, BookOpen, Clock, ChevronRight, FileText, X } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ConfigLayout from '../components/configuracoes/ConfigLayout';
 import capaDefault from '/src/imgs/tutoriais/Capa Tutoriais.png';
 import { useVideoPlayer } from '../context/VideoPlayerContext';
+import { allArticles as articles, Article } from '../data/articles';
 
 // Importando capas dos tutoriais
 import capaVisaoGeral from '../components/capaTutoriais/Visão Geral do Sistema.jpg';
@@ -40,7 +42,7 @@ import capaIAFollowUp from '../components/capaTutoriais/Agente de IA - Follow-Up
 import capaCampanhaTrabalhista from '../components/capaTutoriais/Criando uma campanha trabalhista no Google Ads.jpg';
 import capaCaixaPreta from '../components/capaTutoriais/Caixa Preta dos Anúncios BPC-LOAS que convertem.jpg';
 
-type SectionId = 'iniciante' | 'intermediario' | 'avancado' | 'academy';
+type SectionId = 'videos' | 'artigos' | 'academy';
 
 interface VideoLesson {
   id: string;
@@ -50,6 +52,7 @@ interface VideoLesson {
   thumbnail?: string;
   category: SectionId;
   duration?: string;
+  level?: 'iniciante' | 'intermediario' | 'avancado'; // Nível do vídeo
 }
 
 // Dados de exemplo - você pode substituir pelos seus vídeos reais
@@ -63,7 +66,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Conheça a visão geral do sistema e entenda todas as principais áreas, menus e funcionalidades para começar a usar com confiança.',
   videoUrl: 'https://www.youtube.com/embed/9bvB2s3yYY4',
   thumbnail: capaVisaoGeral,
-  category: 'iniciante'
+  category: 'videos',
+  level: 'iniciante'
 },
 {
   id: 'iniciante-1a',
@@ -71,7 +75,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Aprenda como dar os primeiros passos no sistema e configurar sua conta inicial.',
   videoUrl: 'https://www.youtube.com/embed/JA1XbU0m7dg',
   thumbnail: capaPrimeirosPassos,
-  category: 'iniciante'
+  category: 'videos',
+  level: 'iniciante'
 },
 {
   id: 'iniciante-2',
@@ -79,7 +84,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Aprenda como conectar seu número de WhatsApp no sistema de forma segura e estável.',
   videoUrl: 'https://www.youtube.com/embed/opEk2CZXPbQ',
   thumbnail: capaConexoesWhatsApp,
-  category: 'iniciante'
+  category: 'videos',
+  level: 'iniciante'
 },
 {
   id: 'iniciante-3',
@@ -87,7 +93,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Entenda como funciona a aba de conversas e gerencie seus atendimentos com eficiência.',
   videoUrl: 'https://www.youtube.com/embed/zJ5uU6T7mXU',
   thumbnail: capaAbaConversas,
-  category: 'iniciante'
+  category: 'videos',
+  level: 'iniciante'
 },
 {
   id: 'iniciante-4',
@@ -95,7 +102,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Veja como ativar, pausar e configurar o comportamento da inteligência artificial no atendimento.',
   videoUrl: 'https://www.youtube.com/embed/2dmfLEFO_M4',
   thumbnail: capaControleIA,
-  category: 'iniciante'
+  category: 'videos',
+  level: 'iniciante'
 },
 {
   id: 'iniciante-5',
@@ -103,7 +111,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Aprenda a identificar e organizar as origens dos seus leads para melhorar seus resultados.',
   videoUrl: 'https://www.youtube.com/embed/CvIO6rpdxyE',
   thumbnail: capaOrigemLead,
-  category: 'iniciante'
+  category: 'videos',
+  level: 'iniciante'
 },
 {
   id: 'iniciante-6',
@@ -111,7 +120,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Veja como criar e usar campos personalizados para armazenar informações específicas dos seus contatos.',
   videoUrl: 'https://www.youtube.com/embed/BpqRa2z5C70',
   thumbnail: capaCamposPersonalizados,
-  category: 'iniciante'
+  category: 'videos',
+  level: 'iniciante'
 },
 {
   id: 'iniciante-7',
@@ -119,7 +129,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Veja como adicionar, editar e gerenciar usuários e suas permissões no sistema.',
   videoUrl: 'https://www.youtube.com/embed/rwpc7-RhnZY',
   thumbnail: capaGestaoUsuarios,
-  category: 'iniciante'
+  category: 'videos',
+  level: 'iniciante'
 },
 {
   id: 'iniciante-8',
@@ -127,7 +138,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Entenda como funciona o funil de vendas e organize suas etapas de negociação.',
   videoUrl: 'https://www.youtube.com/embed/ZB7dnxzPtVQ',
   thumbnail: capaFunilVendas,
-  category: 'iniciante'
+  category: 'videos',
+  level: 'iniciante'
 },
 {
   id: 'iniciante-9',
@@ -135,7 +147,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Aprenda a criar e usar etiquetas para classificar e filtrar seus contatos e atendimentos.',
   videoUrl: 'https://www.youtube.com/embed/MlfyAv0T-yM',
   thumbnail: capaEtiquetas,
-  category: 'iniciante'
+  category: 'videos',
+  level: 'iniciante'
 },
 {
   id: 'iniciante-10',
@@ -143,7 +156,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Descubra como enviar mensagens para vários contatos ao mesmo tempo de forma rápida e segura.',
   videoUrl: 'https://www.youtube.com/embed/g-LnY0tsRys',
   thumbnail: capaEnvioMassa,
-  category: 'iniciante'
+  category: 'videos',
+  level: 'iniciante'
 },
 {
   id: 'iniciante-11',
@@ -151,7 +165,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Aprenda a criar e gerenciar agendamentos automáticos ou manuais dentro do sistema.',
   videoUrl: 'https://www.youtube.com/embed/sxfOVulE5bY',
   thumbnail: capaAgendamentos,
-  category: 'iniciante'
+  category: 'videos',
+  level: 'iniciante'
 },
 {
   id: 'iniciante-12',
@@ -159,7 +174,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Veja como interpretar e acompanhar seus resultados através do painel de controle do sistema.',
   videoUrl: 'https://www.youtube.com/embed/CXEojhawVVA',
   thumbnail: capaDashboard,
-  category: 'iniciante'
+  category: 'videos',
+  level: 'iniciante'
 },
 
 // ==========================
@@ -171,7 +187,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Saiba como utilizar o comando #SAIR para reiniciar uma conversa com a IA e evitar erros de contexto durante os testes.',
   videoUrl: 'https://www.youtube.com/embed/ac5xdr3eRvA',
   thumbnail: capaFuncaoSair,
-  category: 'intermediario'
+  category: 'videos',
+  level: 'intermediario'
 },
 {
   id: 'intermediario-2',
@@ -179,7 +196,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Aprenda como criar modelos na ZapSign e integrar seus documentos de forma rápida e eficiente.',
   videoUrl: 'https://www.youtube.com/embed/yQHe_uflWH4',
   thumbnail: capaZapSign,
-  category: 'intermediario'
+  category: 'videos',
+  level: 'intermediario'
 },
 {
   id: 'intermediario-4',
@@ -187,7 +205,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Aprenda como visualizar e gerenciar o histórico de follow-up dos seus contatos e negociações.',
   videoUrl: 'https://www.youtube.com/embed/HIkErNJj_Oc',
   thumbnail: capaHistoricoFollowUp,
-  category: 'intermediario'
+  category: 'videos',
+  level: 'intermediario'
 },
 {
   id: 'intermediario-6',
@@ -195,7 +214,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Veja como o sistema de Workspaces permite gerenciar múltiplas contas e equipes de forma organizada.',
   videoUrl: 'https://www.youtube.com/embed/sdcHHttDuNc',
   thumbnail: capaSistemaWorkspace,
-  category: 'intermediario'
+  category: 'videos',
+  level: 'intermediario'
 },
 {
   id: 'intermediario-7',
@@ -203,7 +223,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Aprenda a integrar o Google Agenda com a Guimoo para automatizar seus compromissos.',
   videoUrl: 'https://www.youtube.com/embed/O00atxrkStY',
   thumbnail: capaGoogleAgenda,
-  category: 'intermediario'
+  category: 'videos',
+  level: 'intermediario'
 },
 {
   id: 'intermediario-8',
@@ -211,7 +232,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Tutorial detalhado para integrar o Google Workspace com o sistema e sincronizar agendas de todos os usuários.',
   videoUrl: 'https://www.youtube.com/embed/MxRlIa5I45A',
   thumbnail: capaGoogleAgendaWorkspace,
-  category: 'intermediario'
+  category: 'videos',
+  level: 'intermediario'
 },
 
 // ==========================
@@ -223,7 +245,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Entenda como configurar a movimentação automática da IA para agilizar atendimentos e distribuir tarefas entre etapas.',
   videoUrl: 'https://www.youtube.com/embed/RfMSykWNiSU',
   thumbnail: capaIAMovimentacao,
-  category: 'avancado'
+  category: 'videos',
+  level: 'avancado'
 },
 {
   id: 'avancado-2',
@@ -231,7 +254,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Aprenda a criar e ajustar as etapas do atendimento do agente de IA, otimizando fluxos de conversa e qualificação de leads.',
   videoUrl: 'https://www.youtube.com/embed/ziAEnz_TtNU',
   thumbnail: capaIAEtapas,
-  category: 'avancado'
+  category: 'videos',
+  level: 'avancado'
 },
 {
   id: 'avancado-3',
@@ -239,7 +263,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Configure perguntas frequentes para que a IA responda automaticamente dúvidas recorrentes dos clientes.',
   videoUrl: 'https://www.youtube.com/embed/QJtyEIlIOdg',
   thumbnail: capaIAPerguntasFrequentes,
-  category: 'avancado'
+  category: 'videos',
+  level: 'avancado'
 },
 {
   id: 'avancado-4',
@@ -247,7 +272,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Veja como definir regras gerais que orientam o comportamento da IA durante todo o atendimento.',
   videoUrl: 'https://www.youtube.com/embed/Ob57-CzgtKY',
   thumbnail: capaIARegrasGerais,
-  category: 'avancado'
+  category: 'videos',
+  level: 'avancado'
 },
 {
   id: 'avancado-5',
@@ -255,7 +281,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Crie a personalidade da sua IA para deixá-la mais próxima do tom de voz do seu escritório e público-alvo.',
   videoUrl: 'https://www.youtube.com/embed/7oyC6BeB5mU',
   thumbnail: capaIAPersonalidade,
-  category: 'avancado'
+  category: 'videos',
+  level: 'avancado'
 },
 {
   id: 'avancado-6',
@@ -263,7 +290,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Aprenda a configurar o reconhecimento e envio de áudios pela IA, tornando o atendimento mais natural.',
   videoUrl: 'https://www.youtube.com/embed/IHMhKjGWRxc',
   thumbnail: capaIAAudio,
-  category: 'avancado'
+  category: 'videos',
+  level: 'avancado'
 },
 {
   id: 'avancado-7',
@@ -271,7 +299,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Veja como criar gatilhos automáticos para ativar respostas e ações da IA de forma inteligente.',
   videoUrl: 'https://www.youtube.com/embed/ngpRqvil5dg',
   thumbnail: capaIAGatilhos,
-  category: 'avancado'
+  category: 'videos',
+  level: 'avancado'
 },
 {
   id: 'avancado-8',
@@ -279,7 +308,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Configure o horário de funcionamento da IA para que ela atenda apenas dentro do período desejado.',
   videoUrl: 'https://www.youtube.com/embed/4-5hr5hhmU4',
   thumbnail: capaIAHorarios,
-  category: 'avancado'
+  category: 'videos',
+  level: 'avancado'
 },
 {
   id: 'avancado-9',
@@ -287,7 +317,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Aprenda a salvar, duplicar e reaproveitar modelos de agentes para diferentes tipos de atendimento.',
   videoUrl: 'https://www.youtube.com/embed/PEgQzrvM2c0',
   thumbnail: capaIAModelos,
-  category: 'avancado'
+  category: 'videos',
+  level: 'avancado'
 },
 {
   id: 'avancado-10',
@@ -295,7 +326,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Saiba como configurar notificações automáticas via WhatsApp para acompanhar a atuação da IA em tempo real.',
   videoUrl: 'https://www.youtube.com/embed/LSK2t4GJACw',
   thumbnail: capaIANotificacoes,
-  category: 'avancado'
+  category: 'videos',
+  level: 'avancado'
 },
 {
   id: 'avancado-11',
@@ -303,7 +335,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Entenda cada parâmetro do agente e aprenda a ajustar tempo de resposta, reativação e comportamento da IA.',
   videoUrl: 'https://www.youtube.com/embed/PMKp2fuN-QQ',
   thumbnail: capaIAParametros,
-  category: 'avancado'
+  category: 'videos',
+  level: 'avancado'
 },
 {
   id: 'avancado-12',
@@ -311,7 +344,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Veja como testar corretamente seu agente de IA e validar o comportamento em diferentes cenários.',
   videoUrl: 'https://www.youtube.com/embed/rVQ0lfx-TBU',
   thumbnail: capaIATeste,
-  category: 'avancado'
+  category: 'videos',
+  level: 'avancado'
 },
 {
   id: 'avancado-13',
@@ -319,7 +353,8 @@ const videoLessons: VideoLesson[] = [
   description: 'Aprenda a configurar o follow-up automático para que a IA retome conversas e aumente a taxa de conversão.',
   videoUrl: 'https://www.youtube.com/embed/uk_K6VqrFOY',
   thumbnail: capaIAFollowUp,
-  category: 'avancado'
+  category: 'videos',
+  level: 'avancado'
 },
 
 // ==========================
@@ -343,20 +378,55 @@ const videoLessons: VideoLesson[] = [
 },
 
 
-  
+
 ];
 
+// Artigos importados de src/data/articles
+
 const TutorialInterno: React.FC = () => {
-  const [activeSection, setActiveSection] = useState<SectionId>('iniciante');
-  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
+  const location = useLocation();
   const { openVideo } = useVideoPlayer();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Mapeia URLs para IDs de seção
+  const urlToSection: Record<string, SectionId> = {
+    '/tutorial-interno/videos': 'videos',
+    '/tutorial-interno/artigos': 'artigos',
+    '/tutorial-interno/guimoo-academy': 'academy',
+  };
+
+  // Mapeia IDs de seção para URLs
+  const sectionToUrl: Record<SectionId, string> = {
+    videos: '/tutorial-interno/videos',
+    artigos: '/tutorial-interno/artigos',
+    academy: '/tutorial-interno/guimoo-academy',
+  };
+
+  // Detecta a seção ativa baseado na URL
+  const getActiveSectionFromUrl = (): SectionId => {
+    return urlToSection[location.pathname] || 'videos';
+  };
+
+  const [activeSection, setActiveSection] = useState<SectionId>(getActiveSectionFromUrl());
+
+  // Sincroniza a seção ativa quando a URL muda
+  useEffect(() => {
+    const section = getActiveSectionFromUrl();
+    setActiveSection(section);
+  }, [location.pathname]);
 
   const sections = [
-    { id: 'iniciante', label: 'Iniciante', icon: Video, show: true },
-    { id: 'intermediario', label: 'Intermediário', icon: Video, show: true },
-    { id: 'avancado', label: 'Avançado', icon: Video, show: true },
+    { id: 'videos', label: 'Vídeos', icon: Video, show: true },
+    { id: 'artigos', label: 'Artigos', icon: BookOpen, show: true },
     { id: 'academy', label: 'Guimoo Academy', icon: GraduationCap, show: true },
   ];
+
+  // Função para mudar de seção e atualizar a URL
+  const handleSectionChange = (sectionId: string) => {
+    const section = sectionId as SectionId;
+    navigate(sectionToUrl[section]);
+  };
 
   // Filtrar vídeos por categoria e busca
   const filteredVideos = videoLessons.filter(video => {
@@ -378,17 +448,146 @@ const TutorialInterno: React.FC = () => {
     openVideo(video);
   };
 
+  // State para controlar artigo aberto no painel lateral
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+
+  // Filtrar artigos por busca
+  const filteredArticles = articles.filter(article => {
+    const hasSearch = searchQuery.trim() !== '';
+    if (hasSearch) {
+      return (
+        article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        article.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        article.content.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    return true;
+  });
+
+  const handleArticleClick = (article: Article) => {
+    setSelectedArticle(article);
+  };
+
+  const closeArticlePanel = () => {
+    setSelectedArticle(null);
+  };
+
   const renderContent = () => {
+    // Se a seção de artigos está ativa
+    if (activeSection === 'artigos') {
+      return (
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">
+                Artigos e Guias
+              </h1>
+              <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-sm font-semibold rounded-full">
+                {articles.length} {articles.length === 1 ? 'artigo' : 'artigos'}
+              </span>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-neutral-400">
+              Base de conhecimento em texto
+            </p>
+          </div>
+
+          {/* Campo de busca */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-neutral-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar artigos..."
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 transition-all"
+            />
+          </div>
+
+          {/* Lista de artigos */}
+          {filteredArticles.length > 0 ? (
+            <div className="space-y-4">
+              {filteredArticles.map((article) => (
+                <button
+                  key={article.id}
+                  onClick={() => handleArticleClick(article)}
+                  className="w-full bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-6 text-left transition-all duration-300 hover:shadow-lg hover:border-blue-500 dark:hover:border-blue-400"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                          {article.title}
+                        </h3>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-neutral-400 mb-3">
+                        {article.description}
+                      </p>
+                      <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-neutral-500">
+                        {article.readTime && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            {article.readTime}
+                          </span>
+                        )}
+                        {article.tags && article.tags.length > 0 && (
+                          <div className="flex gap-2">
+                            {article.tags.map((tag, index) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <BookOpen className="w-16 h-16 text-gray-400 dark:text-neutral-500 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                {searchQuery ? 'Nenhum artigo encontrado' : 'Em breve'}
+              </h3>
+              <p className="text-gray-600 dark:text-neutral-400">
+                {searchQuery
+                  ? 'Tente buscar com outros termos'
+                  : 'Estamos preparando artigos e guias completos para você'}
+              </p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-6">
         {/* Cabeçalho com busca */}
         <div className="flex flex-col gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">
-              Tutorial Interno
-            </h1>
-            <p className="text-sm text-gray-600 dark:text-neutral-400 mt-1">
-              Aprenda a usar todas as funcionalidades do sistema
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">
+                {activeSection === 'videos' ? 'Tutorial Interno' :
+                 activeSection === 'academy' ? 'Guimoo Academy' : 'Tutorial Interno'}
+              </h1>
+              <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-sm font-semibold rounded-full">
+                {activeSection === 'videos'
+                  ? `${videoLessons.filter(v => v.category === 'videos').length} vídeos`
+                  : activeSection === 'academy'
+                  ? `${videoLessons.filter(v => v.category === 'academy').length} aulas`
+                  : '0 itens'}
+              </span>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-neutral-400">
+              {activeSection === 'videos' ? 'Aprenda a usar todas as funcionalidades do sistema' :
+               activeSection === 'academy' ? 'Treinamentos exclusivos e estratégias avançadas' :
+               'Aprenda a usar todas as funcionalidades do sistema'}
             </p>
           </div>
 
@@ -438,19 +637,25 @@ const TutorialInterno: React.FC = () => {
 
                 {/* Conteúdo */}
                 <div className="p-4">
-                  {/* Badge de categoria quando em modo busca */}
-                  {searchQuery.trim() !== '' && (
+                  {/* Badge de nível quando em modo busca ou na aba videos */}
+                  {(searchQuery.trim() !== '' || activeSection === 'videos') && video.level && (
                     <div className="mb-2">
                       <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${
-                        video.category === 'iniciante' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
-                        video.category === 'intermediario' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
-                        video.category === 'avancado' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
-                        'bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30 text-amber-700 dark:text-amber-400'
+                        video.level === 'iniciante' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
+                        video.level === 'intermediario' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
+                        'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                       }`}>
-                        {video.category === 'iniciante' ? 'Iniciante' :
-                         video.category === 'intermediario' ? 'Intermediário' :
-                         video.category === 'avancado' ? 'Avançado' :
-                         'Guimoo Academy'}
+                        {video.level === 'iniciante' ? 'Iniciante' :
+                         video.level === 'intermediario' ? 'Intermediário' :
+                         'Avançado'}
+                      </span>
+                    </div>
+                  )}
+                  {/* Badge de categoria quando em modo busca e não é vídeo com nível */}
+                  {searchQuery.trim() !== '' && video.category === 'academy' && (
+                    <div className="mb-2">
+                      <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30 text-amber-700 dark:text-amber-400">
+                        Guimoo Academy
                       </span>
                     </div>
                   )}
@@ -486,10 +691,81 @@ const TutorialInterno: React.FC = () => {
         description="Aprenda a usar o sistema"
         sections={sections}
         activeSection={activeSection}
-        setActiveSection={(id) => setActiveSection(id as SectionId)}
+        setActiveSection={handleSectionChange}
       >
         {renderContent()}
       </ConfigLayout>
+
+      {/* Painel lateral do artigo */}
+      {selectedArticle && (
+        <>
+          {/* Overlay de fundo */}
+          <div
+            className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+            onClick={closeArticlePanel}
+          />
+
+          {/* Painel lateral */}
+          <div className="fixed top-0 right-0 h-full w-full md:w-[40%] bg-white dark:bg-neutral-900 shadow-2xl z-50 overflow-hidden flex flex-col animate-slide-in-right">
+            {/* Header do painel */}
+            <div className="flex items-start justify-between p-6 border-b border-gray-200 dark:border-neutral-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+              <div className="flex-1 pr-4">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  {selectedArticle.title}
+                </h2>
+                <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-neutral-400">
+                  {selectedArticle.readTime && (
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      {selectedArticle.readTime}
+                    </span>
+                  )}
+                  {selectedArticle.tags && selectedArticle.tags.length > 0 && (
+                    <div className="flex gap-2">
+                      {selectedArticle.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-xs font-semibold"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={closeArticlePanel}
+                className="flex-shrink-0 p-2 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6 text-gray-600 dark:text-neutral-400" />
+              </button>
+            </div>
+
+            {/* Conteúdo do artigo com scroll */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div
+                className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-neutral-300"
+                dangerouslySetInnerHTML={{ __html: selectedArticle.content }}
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      <style>{`
+        @keyframes slide-in-right {
+          from {
+            transform: translateX(100%);
+          }
+          to {
+            transform: translateX(0);
+          }
+        }
+        .animate-slide-in-right {
+          animation: slide-in-right 0.3s ease-out;
+        }
+      `}</style>
     </>
   );
 };
