@@ -67,6 +67,8 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
   const [selectedCountry, setSelectedCountry] = useState({ code: '+55', country: 'BR', name: 'Brasil', flag: '🇧🇷' });
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const countryDropdownRef = useRef<HTMLDivElement | null>(null);
+  const [assinaturaAtiva, setAssinaturaAtiva] = useState(false);
+  const [loadingAssinatura, setLoadingAssinatura] = useState(false);
 
   const countries = [
     { code: '+55', country: 'BR', name: 'Brasil', flag: '🇧🇷' },
@@ -86,6 +88,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
   useEffect(() => {
     if (isActive) {
       fetchUsers();
+      fetchAssinatura();
     }
   }, [isActive]);
 
@@ -105,7 +108,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
       const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospectai/usuario/get', {
         headers: { token }
       });
-      
+
       if (!response.ok) {
         throw new Error('Erro ao carregar usuários');
       }
@@ -117,6 +120,56 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
       setError('Erro ao carregar usuários');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAssinatura = async () => {
+    try {
+      const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/configuracoes/chat/assinatura/get', {
+        headers: { token }
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao carregar configuração de assinatura');
+      }
+
+      const data = await response.json();
+      if (Array.isArray(data) && data.length > 0) {
+        setAssinaturaAtiva(Boolean(data[0].isAssinatura));
+      }
+    } catch (err) {
+      console.error('Erro ao carregar configuração de assinatura:', err);
+    }
+  };
+
+  const toggleAssinatura = async () => {
+    if (!canEdit) return;
+
+    setLoadingAssinatura(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/configuracoes/chat/assinatura', {
+        method: 'POST',
+        headers: { token }
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao atualizar configuração');
+      }
+
+      const data = await response.json();
+      if (Array.isArray(data) && data.length > 0) {
+        setAssinaturaAtiva(Boolean(data[0].isAssinatura));
+        setSuccess('Configuração de assinatura atualizada com sucesso!');
+        setTimeout(() => setSuccess(''), 3000);
+      }
+    } catch (err) {
+      console.error('Erro ao atualizar configuração:', err);
+      setError('Erro ao atualizar configuração de assinatura');
+    } finally {
+      setLoadingAssinatura(false);
     }
   };
 
@@ -524,6 +577,81 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
             Novo Usuário
           </button>
         )}
+      </div>
+
+      {/* Seção de Assinatura de Mensagens */}
+      <div className="mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border-2 border-blue-200 dark:border-blue-800 p-6 shadow-sm">
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-neutral-100">
+                  Assinatura de Mensagens
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-0.5">
+                  Configuração global para todas as mensagens enviadas
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-neutral-800 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
+              <p className="text-sm text-gray-700 dark:text-neutral-300 leading-relaxed mb-3">
+                Quando <strong className="text-blue-700 dark:text-blue-400">ativada</strong>, o sistema adiciona automaticamente o <strong>nome do usuário</strong> que está enviando a mensagem no <strong>início de cada mensagem</strong>.
+              </p>
+              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
+                <p className="text-xs font-semibold text-blue-900 dark:text-blue-300 mb-2">📋 Exemplo prático:</p>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-blue-800 dark:text-blue-400 font-medium mb-1">✅ Com assinatura ativada:</p>
+                    <div className="bg-white dark:bg-neutral-700 rounded p-2 text-xs text-gray-700 dark:text-neutral-300 font-mono border border-blue-200 dark:border-blue-600">
+                      <em className="text-blue-600 dark:text-blue-400">João Silva</em><br/>
+                      <br/>
+                      Olá! Como posso ajudá-lo?
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mb-1">❌ Sem assinatura:</p>
+                    <div className="bg-white dark:bg-neutral-700 rounded p-2 text-xs text-gray-700 dark:text-neutral-300 font-mono border border-gray-300 dark:border-neutral-600">
+                      Olá! Como posso ajudá-lo?
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-neutral-400 mt-3 italic">
+                💡 <strong>Dica:</strong> Essa funcionalidade é útil quando múltiplos atendentes usam o mesmo número de WhatsApp, permitindo que o cliente saiba quem está respondendo.
+              </p>
+            </div>
+          </div>
+
+          {/* Toggle Switch */}
+          <div className="flex flex-col items-end gap-2 flex-shrink-0">
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={assinaturaAtiva}
+                onChange={canEdit ? toggleAssinatura : undefined}
+                disabled={!canEdit || loadingAssinatura}
+              />
+              <div className={`w-14 h-7 bg-gray-300 dark:bg-neutral-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-500 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-500 ${(!canEdit || loadingAssinatura) ? 'opacity-50 cursor-not-allowed' : ''}`}></div>
+            </label>
+            <span className={`text-sm font-semibold ${assinaturaAtiva ? 'text-blue-700 dark:text-blue-400' : 'text-gray-600 dark:text-neutral-400'}`}>
+              {loadingAssinatura ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Atualizando...
+                </span>
+              ) : (
+                assinaturaAtiva ? '✓ Ativada' : '○ Desativada'
+              )}
+            </span>
+          </div>
+        </div>
       </div>
 
       {error && (
