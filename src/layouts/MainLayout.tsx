@@ -97,7 +97,7 @@ const MainLayout = () => {
       )}
 
       {/* 🎨 Estilos extras */}
-      <style jsx>{`
+      <style>{`
         body {
           overflow-x: hidden;
         }
