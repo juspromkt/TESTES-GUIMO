@@ -21,28 +21,24 @@ const Conexao = () => {
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="flex items-center gap-3 mb-8">
-        <LinkIcon className="w-8 h-8 text-gray-500 dark:text-neutral-400" />
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-neutral-100">Conexões</h1>
-      </div>
-
-        {/* Aba única de Conexão WhatsApp */}
-        <div className="space-y-8">
-          <div className="flex gap-1 border-b border-gray-300 dark:border-neutral-700 mb-8">
-            <button
-              className="flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors bg-gray-50 dark:bg-neutral-900 text-gray-700 dark:text-neutral-300 font-medium border-b-2 border-gray-300 dark:border-neutral-700"
-            >
-              <Smartphone className="w-4 h-4" />
-              Conexão WhatsApp
-            </button>
+    <div className="max-w-5xl mx-auto px-4 py-6">
+      {/* Header moderno */}
+      <div className="mb-8">
+        <div className="flex items-center gap-4 mb-2">
+          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 dark:from-emerald-600 dark:to-green-700 rounded-xl flex items-center justify-center shadow-lg">
+            <LinkIcon className="w-6 h-6 text-white" />
           </div>
-
-          {/* Conteúdo da Conexão Principal */}
-          <WhatsAppConnection canEditConnection={canEditConnection} />
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-neutral-100">Conexões</h1>
+            <p className="text-sm text-gray-600 dark:text-neutral-400 mt-0.5">Gerencie suas conexões do WhatsApp</p>
+          </div>
         </div>
       </div>
-    );
-  };
+
+      {/* Conteúdo da Conexão Principal */}
+      <WhatsAppConnection canEditConnection={canEditConnection} />
+    </div>
+  );
+};
 
 export default Conexao;

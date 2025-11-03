@@ -28,7 +28,6 @@ import { NotificationManager } from './components/NotificationManager';
 import { ChatProvider } from './context/ChatContext';
 import { ConversationProvider } from './context/ConversationContext';
 import { VideoPlayerProvider } from './context/VideoPlayerContext';
-import WelcomeModal from './components/WelcomeModal';
 import UpgradeModal from './components/UpgradeModal';
 import { isDemoAccount } from './components/DemoBanner';
 import WhatsAppAlert from './components/WhatsAppAlert';
@@ -69,7 +68,6 @@ const RedirectOldDealUrl = () => {
 };
 
 function App() {
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Pega o token do usuário para o WhatsAppAlert
@@ -85,11 +83,6 @@ function App() {
   // Escuta evento de login bem-sucedido
   useEffect(() => {
     const handleLoginSuccess = () => {
-      // Pequeno delay para garantir que a página carregou
-      setTimeout(() => {
-        setShowWelcomeModal(true);
-      }, 800);
-
       // Se for conta demo, inicia timer para mostrar modal de upgrade
       if (isDemoAccount()) {
         // Timer de 5 minutos
@@ -155,10 +148,6 @@ function App() {
     checkUpgradeTimer();
   }, []);
 
-  const handleCloseWelcomeModal = () => {
-    setShowWelcomeModal(false);
-  };
-
   const handleCloseUpgradeModal = () => {
     setShowUpgradeModal(false);
     // Atualiza timestamp para contar 5 minutos a partir de agora
@@ -175,7 +164,6 @@ function App() {
 
   return (
     <BrowserRouter>
-      <WelcomeModal isOpen={showWelcomeModal} onClose={handleCloseWelcomeModal} />
       <UpgradeModal isOpen={showUpgradeModal} onClose={handleCloseUpgradeModal} />
       <ConditionalWhatsAppAlert token={getUserToken()} />
       <Routes>

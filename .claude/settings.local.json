@@ -28,7 +28,8 @@
       "Bash(node extract-articles.js:*)",
       "Bash(node extract-articles.cjs:*)",
       "Bash(cat:*)",
-      "Bash(\"C:\\GUIMOO - VERSÃO ON\\lumen-guimoo\\src\\pages\\TutorialInterno.tsx.new\")"
+      "Bash(\"C:\\GUIMOO - VERSÃO ON\\lumen-guimoo\\src\\pages\\TutorialInterno.tsx.new\")",
+      "Bash(del \"C:\\GUIMOO - VERSÃO ON\\lumen-guimoo\\src\\components\\WelcomeModal.tsx\")"
     ],
     "deny": [],
     "ask": []

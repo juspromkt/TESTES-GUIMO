@@ -17,7 +17,6 @@ import { registerLocale } from 'react-datepicker';
 import ptBR from 'date-fns/locale/pt-BR';
 import { fetchWithCache, CacheTTL, CacheKeys } from '../utils/cacheManager';
 import { useDebounce } from 'use-debounce';
-import TutorialModal from '../components/TutorialModal';
 
 registerLocale('pt-BR', ptBR);
 
@@ -29,7 +28,6 @@ const ChatProprio = () => {
   const [activeTab, setActiveTab] = useState('chat');
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [whatsappType, setWhatsappType] = useState<string | null>(null);
-  const [showTutorialModal, setShowTutorialModal] = useState(false);
 
   // Estados para a barra superior
   const [searchTerm, setSearchTerm] = useState('');
@@ -148,24 +146,6 @@ const ChatProprio = () => {
       }, 100);
     }
   }, [location.pathname]);
-
-  // Verificar se é a primeira vez que acessa a aba de conversas
-  useEffect(() => {
-    // Garantir que o usuário está autenticado antes de mostrar o modal
-    const user = localStorage.getItem('user');
-    if (!user) return;
-
-    const hasSeenTutorial = localStorage.getItem('hasSeenChatTutorial');
-    if (!hasSeenTutorial) {
-      // Delay maior para garantir que a página carregou completamente
-      const timer = setTimeout(() => {
-        setShowTutorialModal(true);
-        localStorage.setItem('hasSeenChatTutorial', 'true');
-      }, 2000);
-
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   useEffect(() => {
     const user = localStorage.getItem('user');
@@ -800,12 +780,6 @@ const ChatProprio = () => {
           </div>
         </div>
       )}
-
-      {/* Tutorial Modal */}
-      <TutorialModal
-        isOpen={showTutorialModal}
-        onClose={() => setShowTutorialModal(false)}
-      />
     </div>
   );
 };

@@ -17,6 +17,8 @@ import ptBrLocale from '@fullcalendar/core/locales/pt-br';
 import { addMinutes, format, parseISO } from 'date-fns';
 
 import Modal from '../Modal';
+import SidePanel from '../SidePanel';
+import DealDetails from '../../pages/DealDetails';
 import type { Deal } from '../../types/deal';
 
 interface Appointment {
@@ -61,6 +63,8 @@ export default function AppointmentsCalendar() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   const [summaryAppointment, setSummaryAppointment] = useState<Appointment | null>(null);
+  const [isDealPanelOpen, setIsDealPanelOpen] = useState(false);
+  const [selectedDealForPanel, setSelectedDealForPanel] = useState<number | null>(null);
 
   const user = localStorage.getItem('user');
   const token = user ? JSON.parse(user).token : null;
@@ -725,11 +729,15 @@ return (
               {summaryAppointment.id_negociacao && (
                 <div className="flex justify-end pt-3 border-t border-gray-200 dark:border-neutral-700">
                   <button
-                    onClick={() => navigate(`/crm/deal/${summaryAppointment.id_negociacao}`)}
+                    onClick={() => {
+                      setSelectedDealForPanel(summaryAppointment.id_negociacao);
+                      setIsDealPanelOpen(true);
+                      setIsSummaryModalOpen(false);
+                    }}
                     className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Ir para Negociação</span>
+                    <span>Abrir no CRM</span>
                   </button>
                 </div>
               )}
@@ -967,6 +975,28 @@ return (
           </div>
         </div>
       </Modal>
+
+      {/* Deal Detail Panel */}
+      <SidePanel
+        isOpen={isDealPanelOpen}
+        onClose={() => {
+          setIsDealPanelOpen(false);
+          setSelectedDealForPanel(null);
+        }}
+        title="Detalhes da Negociação"
+        width="40%"
+      >
+        {selectedDealForPanel && (
+          <DealDetails
+            dealId={selectedDealForPanel}
+            hideConversations
+            onClose={() => {
+              setIsDealPanelOpen(false);
+              setSelectedDealForPanel(null);
+            }}
+          />
+        )}
+      </SidePanel>
   </>
 );
 }

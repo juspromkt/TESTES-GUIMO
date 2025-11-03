@@ -388,6 +388,9 @@ const TutorialInterno: React.FC = () => {
   const location = useLocation();
   const { openVideo } = useVideoPlayer();
   const [searchQuery, setSearchQuery] = useState('');
+  const [articleType, setArticleType] = useState<'guias' | 'conteudos'>('guias');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Mapeia URLs para IDs de seção
   const urlToSection: Record<string, SectionId> = {
@@ -414,7 +417,13 @@ const TutorialInterno: React.FC = () => {
   useEffect(() => {
     const section = getActiveSectionFromUrl();
     setActiveSection(section);
+    setCurrentPage(1); // Reset página ao mudar de seção
   }, [location.pathname]);
+
+  // Reset página ao mudar busca ou tipo de artigo
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, articleType]);
 
   const sections = [
     { id: 'videos', label: 'Vídeos', icon: Video, show: true },
@@ -451,17 +460,28 @@ const TutorialInterno: React.FC = () => {
   // State para controlar artigo aberto no painel lateral
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
-  // Filtrar artigos por busca
+  // Filtrar artigos por tipo e busca
   const filteredArticles = articles.filter(article => {
+    // Determina o tipo do artigo baseado no ID
+    const articleId = parseInt(article.id.replace('artigo-', ''));
+    const isGuia = articleId >= 1 && articleId <= 22;
+    const isConteudo = articleId >= 23;
+
+    // Filtra por tipo selecionado
+    const matchesType = articleType === 'guias' ? isGuia : isConteudo;
+
+    // Filtra por busca
     const hasSearch = searchQuery.trim() !== '';
     if (hasSearch) {
-      return (
+      const matchesSearch = (
         article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         article.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         article.content.toLowerCase().includes(searchQuery.toLowerCase())
       );
+      return matchesType && matchesSearch;
     }
-    return true;
+
+    return matchesType;
   });
 
   const handleArticleClick = (article: Article) => {
@@ -472,22 +492,115 @@ const TutorialInterno: React.FC = () => {
     setSelectedArticle(null);
   };
 
+  // Componente de paginação
+  const Pagination = ({ totalItems, currentPage, onPageChange }: { totalItems: number; currentPage: number; onPageChange: (page: number) => void }) => {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    if (totalPages <= 1) return null;
+
+    const getPageNumbers = () => {
+      const pages: (number | string)[] = [];
+
+      if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        if (currentPage <= 3) {
+          pages.push(1, 2, 3, 4, '...', totalPages);
+        } else if (currentPage >= totalPages - 2) {
+          pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+        } else {
+          pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+        }
+      }
+
+      return pages;
+    };
+
+    return (
+      <div className="flex items-center justify-center gap-2 mt-8">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-3 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-neutral-800 text-gray-700 dark:text-neutral-300 border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700"
+        >
+          Anterior
+        </button>
+
+        {getPageNumbers().map((page, index) => (
+          typeof page === 'number' ? (
+            <button
+              key={index}
+              onClick={() => onPageChange(page)}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                currentPage === page
+                  ? 'bg-blue-600 dark:bg-blue-500 text-white'
+                  : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-neutral-300 border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700'
+              }`}
+            >
+              {page}
+            </button>
+          ) : (
+            <span key={index} className="px-2 text-gray-500 dark:text-neutral-400">
+              {page}
+            </span>
+          )
+        ))}
+
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-3 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-neutral-800 text-gray-700 dark:text-neutral-300 border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700"
+        >
+          Próxima
+        </button>
+      </div>
+    );
+  };
+
   const renderContent = () => {
     // Se a seção de artigos está ativa
     if (activeSection === 'artigos') {
       return (
         <div className="space-y-6">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">
-                Artigos e Guias
-              </h1>
-              <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-sm font-semibold rounded-full">
-                {articles.length} {articles.length === 1 ? 'artigo' : 'artigos'}
-              </span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">
+                  Artigos e Guias
+                </h1>
+                <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-sm font-semibold rounded-full">
+                  {filteredArticles.length} {filteredArticles.length === 1 ? 'artigo' : 'artigos'}
+                </span>
+              </div>
+
+              {/* Botões de filtro minimalistas */}
+              <div className="flex gap-2 bg-gray-100 dark:bg-neutral-800 p-1 rounded-lg">
+                <button
+                  onClick={() => setArticleType('guias')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+                    articleType === 'guias'
+                      ? 'bg-white dark:bg-neutral-700 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  Guias
+                </button>
+                <button
+                  onClick={() => setArticleType('conteudos')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+                    articleType === 'conteudos'
+                      ? 'bg-white dark:bg-neutral-700 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  Conteúdos
+                </button>
+              </div>
             </div>
             <p className="text-sm text-gray-600 dark:text-neutral-400">
-              Base de conhecimento em texto
+              Tutoriais práticos e conteúdos estratégicos para você dominar a plataforma
             </p>
           </div>
 
@@ -505,50 +618,59 @@ const TutorialInterno: React.FC = () => {
 
           {/* Lista de artigos */}
           {filteredArticles.length > 0 ? (
-            <div className="space-y-4">
-              {filteredArticles.map((article) => (
-                <button
-                  key={article.id}
-                  onClick={() => handleArticleClick(article)}
-                  className="w-full bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-6 text-left transition-all duration-300 hover:shadow-lg hover:border-blue-500 dark:hover:border-blue-400"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                          {article.title}
-                        </h3>
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-neutral-400 mb-3">
-                        {article.description}
-                      </p>
-                      <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-neutral-500">
-                        {article.readTime && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5" />
-                            {article.readTime}
-                          </span>
-                        )}
-                        {article.tags && article.tags.length > 0 && (
-                          <div className="flex gap-2">
-                            {article.tags.map((tag, index) => (
-                              <span
-                                key={index}
-                                className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full"
-                              >
-                                {tag}
-                              </span>
-                            ))}
+            <>
+              <div className="space-y-4">
+                {filteredArticles
+                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                  .map((article) => (
+                    <button
+                      key={article.id}
+                      onClick={() => handleArticleClick(article)}
+                      className="w-full bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-6 text-left transition-all duration-300 hover:shadow-lg hover:border-blue-500 dark:hover:border-blue-400"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                              {article.title}
+                            </h3>
                           </div>
-                        )}
+                          <p className="text-sm text-gray-600 dark:text-neutral-400 mb-3">
+                            {article.description}
+                          </p>
+                          <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-neutral-500">
+                            {article.readTime && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3.5 h-3.5" />
+                                {article.readTime}
+                              </span>
+                            )}
+                            {article.tags && article.tags.length > 0 && (
+                              <div className="flex gap-2">
+                                {article.tags.map((tag, index) => (
+                                  <span
+                                    key={index}
+                                    className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
                       </div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                  </div>
-                </button>
-              ))}
-            </div>
+                    </button>
+                  ))}
+              </div>
+              <Pagination
+                totalItems={filteredArticles.length}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
+            </>
           ) : (
             <div className="text-center py-16">
               <BookOpen className="w-16 h-16 text-gray-400 dark:text-neutral-500 mx-auto mb-4" />
@@ -606,69 +728,78 @@ const TutorialInterno: React.FC = () => {
 
         {/* Lista de vídeos */}
         {filteredVideos.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredVideos.map((video) => (
-              <button
-                key={video.id}
-                onClick={() => handleVideoClick(video)}
-                className="group relative bg-white dark:bg-neutral-900 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-neutral-700 hover:border-blue-500 dark:hover:border-blue-400 text-left"
-              >
-                {/* Thumbnail */}
-                {video.thumbnail && (
-                  <div className="relative w-full aspect-video overflow-hidden bg-gray-200 dark:bg-neutral-800">
-                    <img
-                      src={video.thumbnail}
-                      alt={video.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                    {video.duration && (
-                      <span className="absolute bottom-2 right-2 px-2 py-1 bg-black/80 text-white text-xs rounded">
-                        {video.duration}
-                      </span>
-                    )}
-                    {/* Play overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40">
-                      <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center">
-                        <div className="w-0 h-0 border-l-[20px] border-l-blue-600 border-t-[12px] border-t-transparent border-b-[12px] border-b-transparent ml-1" />
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredVideos
+                .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                .map((video) => (
+                  <button
+                    key={video.id}
+                    onClick={() => handleVideoClick(video)}
+                    className="group relative bg-white dark:bg-neutral-900 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-neutral-700 hover:border-blue-500 dark:hover:border-blue-400 text-left"
+                  >
+                    {/* Thumbnail */}
+                    {video.thumbnail && (
+                      <div className="relative w-full aspect-video overflow-hidden bg-gray-200 dark:bg-neutral-800">
+                        <img
+                          src={video.thumbnail}
+                          alt={video.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        {video.duration && (
+                          <span className="absolute bottom-2 right-2 px-2 py-1 bg-black/80 text-white text-xs rounded">
+                            {video.duration}
+                          </span>
+                        )}
+                        {/* Play overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40">
+                          <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center">
+                            <div className="w-0 h-0 border-l-[20px] border-l-blue-600 border-t-[12px] border-t-transparent border-b-[12px] border-b-transparent ml-1" />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                )}
+                    )}
 
-                {/* Conteúdo */}
-                <div className="p-4">
-                  {/* Badge de nível quando em modo busca ou na aba videos */}
-                  {(searchQuery.trim() !== '' || activeSection === 'videos') && video.level && (
-                    <div className="mb-2">
-                      <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${
-                        video.level === 'iniciante' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
-                        video.level === 'intermediario' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
-                        'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                      }`}>
-                        {video.level === 'iniciante' ? 'Iniciante' :
-                         video.level === 'intermediario' ? 'Intermediário' :
-                         'Avançado'}
-                      </span>
+                    {/* Conteúdo */}
+                    <div className="p-4">
+                      {/* Badge de nível quando em modo busca ou na aba videos */}
+                      {(searchQuery.trim() !== '' || activeSection === 'videos') && video.level && (
+                        <div className="mb-2">
+                          <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${
+                            video.level === 'iniciante' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
+                            video.level === 'intermediario' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
+                            'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                          }`}>
+                            {video.level === 'iniciante' ? 'Iniciante' :
+                             video.level === 'intermediario' ? 'Intermediário' :
+                             'Avançado'}
+                          </span>
+                        </div>
+                      )}
+                      {/* Badge de categoria quando em modo busca e não é vídeo com nível */}
+                      {searchQuery.trim() !== '' && video.category === 'academy' && (
+                        <div className="mb-2">
+                          <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30 text-amber-700 dark:text-amber-400">
+                            Guimoo Academy
+                          </span>
+                        </div>
+                      )}
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {video.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-neutral-400 line-clamp-2">
+                        {video.description}
+                      </p>
                     </div>
-                  )}
-                  {/* Badge de categoria quando em modo busca e não é vídeo com nível */}
-                  {searchQuery.trim() !== '' && video.category === 'academy' && (
-                    <div className="mb-2">
-                      <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30 text-amber-700 dark:text-amber-400">
-                        Guimoo Academy
-                      </span>
-                    </div>
-                  )}
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    {video.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-neutral-400 line-clamp-2">
-                    {video.description}
-                  </p>
-                </div>
-              </button>
-            ))}
-          </div>
+                  </button>
+                ))}
+            </div>
+            <Pagination
+              totalItems={filteredVideos.length}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
+          </>
         ) : (
           <div className="text-center py-16">
             <Video className="w-16 h-16 text-gray-400 dark:text-neutral-500 mx-auto mb-4" />
