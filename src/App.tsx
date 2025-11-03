@@ -16,6 +16,7 @@ import Appointments from './pages/Appointments';
 import ChatProprio from './pages/ChatProprio';
 import ParceirosSidebar from './components/sidebar/ParceirosSidebar';
 import TutorialInterno from './pages/TutorialInterno';
+import Suporte from './pages/Suporte';
 import MenuMobile from './pages/MenuMobile';
 import ContatosMobile from './pages/ContatosMobile';
 import InicioMobile from './pages/InicioMobile';
@@ -265,6 +266,7 @@ function App() {
           <Route path="conversas" element={<ChatProprio />} />
           <Route path="parceiros" element={<ParceirosSidebar />} />
           <Route path="tutorial-interno" element={<TutorialInterno />} />
+          <Route path="suporte" element={<Suporte />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -707,9 +707,8 @@ const Sidebar = () => {
       // },
       {
         text: 'Suporte',
-        icon: Video, // Apenas placeholder, será renderizado customizado
-        external: true,
-        path: 'https://wa.me/553892590370',
+        icon: MessageCircle,
+        path: '/suporte',
         permission: true,
       },
     ];
@@ -848,28 +847,6 @@ const Sidebar = () => {
                       </div>
                       <span className="text-sm font-semibold">{item.text}</span>
                     </button>
-                  ) : item.text === 'Suporte' ? (
-                    <a
-                      key="suporte"
-                      href="https://wa.me/553892590370"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="group flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 active:scale-[0.98] touch-manipulation text-emerald-700 hover:text-white hover:bg-emerald-500 active:bg-emerald-600 hover:shadow-md active:shadow-lg mt-1"
-                    >
-                      <div className="p-2 rounded-lg bg-emerald-50 group-hover:bg-emerald-600/90 group-hover:text-white transition-all">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                          className="w-5 h-5"
-                        >
-                          <path d="M16.61 14.18c-.27-.14-1.62-.8-1.87-.9-.25-.09-.43-.14-.61.14-.18.27-.7.9-.85 1.09-.16.18-.31.2-.58.07-.27-.14-1.15-.43-2.19-1.37-.81-.72-1.36-1.61-1.52-1.88-.16-.27-.02-.42.12-.56.13-.13.27-.31.4-.47.13-.16.18-.27.27-.45.09-.18.05-.34-.02-.48-.07-.14-.61-1.47-.84-2.02-.22-.53-.45-.45-.61-.45-.16 0-.34-.02-.52-.02s-.48.07-.73.34c-.25.27-.96.93-.96 2.27s.98 2.64 1.12 2.82c.13.18 1.93 2.95 4.68 4.14.65.28 1.16.45 1.56.58.65.21 1.24.18 1.71.11.52-.08 1.62-.66 1.85-1.3.23-.65.23-1.2.16-1.32-.06-.12-.25-.2-.52-.34z" />
-                          <path d="M12.04 2C6.51 2 2 6.5 2 12c0 2.06.68 3.97 1.83 5.52L2 22l4.61-1.77A9.93 9.93 0 0 0 12.04 22c5.53 0 10.04-4.5 10.04-10S17.57 2 12.04 2zm0 18.09a8.1 8.1 0 0 1-4.13-1.15l-.3-.18-2.73 1.05.73-2.64-.18-.27A8.07 8.07 0 1 1 12.04 20.1z" />
-                        </svg>
-                      </div>
-                      <span className="text-sm font-semibold">Suporte</span>
-                    </a>
                   ) : (
                     <button
                       key={item.path}
@@ -1127,35 +1104,6 @@ const Sidebar = () => {
       domainConfig={domainConfig}
       isBeta={item.isBeta}
     />
-  ) : item.text === 'Suporte' ? (
-    <a
-      key="suporte"
-      href="https://wa.me/553892590370"
-      target="_blank"
-      rel="noopener noreferrer"
-      className={`group relative h-[44px] px-0 py-2.5 mx-0 my-1 w-full rounded-lg text-emerald-700 hover:text-white hover:bg-emerald-500 hover:shadow-md`}
-      title={!isExpanded ? 'Suporte' : undefined}
-    >
-      <div className={`absolute left-[10px] top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-emerald-50 group-hover:bg-emerald-600/90 group-hover:text-white flex-shrink-0 z-10`}>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-          className="w-5 h-5"
-        >
-          <path d="M16.61 14.18c-.27-.14-1.62-.8-1.87-.9-.25-.09-.43-.14-.61.14-.18.27-.7.9-.85 1.09-.16.18-.31.2-.58.07-.27-.14-1.15-.43-2.19-1.37-.81-.72-1.36-1.61-1.52-1.88-.16-.27-.02-.42.12-.56.13-.13.27-.31.4-.47.13-.16.18-.27.27-.45.09-.18.05-.34-.02-.48-.07-.14-.61-1.47-.84-2.02-.22-.53-.45-.45-.61-.45-.16 0-.34-.02-.52-.02s-.48.07-.73.34c-.25.27-.96.93-.96 2.27s.98 2.64 1.12 2.82c.13.18 1.93 2.95 4.68 4.14.65.28 1.16.45 1.56.58.65.21 1.24.18 1.71.11.52-.08 1.62-.66 1.85-1.3.23-.65.23-1.2.16-1.32-.06-.12-.25-.2-.52-.34z" />
-          <path d="M12.04 2C6.51 2 2 6.5 2 12c0 2.06.68 3.97 1.83 5.52L2 22l4.61-1.77A9.93 9.93 0 0 0 12.04 22c5.53 0 10.04-4.5 10.04-10S17.57 2 12.04 2zm0 18.09a8.1 8.1 0 0 1-4.13-1.15l-.3-.18-2.73 1.05.73-2.64-.18-.27A8.07 8.07 0 1 1 12.04 20.1z" />
-        </svg>
-      </div>
-
-      {isExpanded && (
-        <div className="absolute left-[52px] top-1/2 -translate-y-1/2 flex items-center gap-2 overflow-hidden z-10 pr-2">
-          <span className="text-sm font-semibold tracking-wide whitespace-nowrap">
-            Suporte
-          </span>
-        </div>
-      )}
-    </a>
   ) : (
     <MenuItem
       key={item.path}
