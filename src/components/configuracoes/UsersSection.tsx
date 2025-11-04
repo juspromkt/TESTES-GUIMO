@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Users, Plus, Loader2, Pencil, Settings, Copy, Check, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
+import { Users, Plus, Loader2, Pencil, Settings, Copy, Check, ChevronDown, ChevronUp, Eye, EyeOff, User as UserIcon, Mail, Phone, Shield, Key, AlertCircle, CheckCircle2, Info, Users2, Activity, MessageSquare, Bot, BarChart3, Calendar, Contact, Link, Send, Cog, X } from 'lucide-react';
 import type { User, CreateUserPayload, UpdateUserPayload } from '../../types/user';
+import SidePanel from '../SidePanel';
 import Modal from '../Modal';
 import { hasPermission } from '../../utils/permissions';
 
@@ -69,6 +70,9 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
   const countryDropdownRef = useRef<HTMLDivElement | null>(null);
   const [assinaturaAtiva, setAssinaturaAtiva] = useState(false);
   const [loadingAssinatura, setLoadingAssinatura] = useState(false);
+  const [isUserPanelOpen, setIsUserPanelOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'edit' | 'reset'>('edit');
+  const [isAssinaturaPanelOpen, setIsAssinaturaPanelOpen] = useState(false);
 
   const countries = [
     { code: '+55', country: 'BR', name: 'Brasil', flag: '🇧🇷' },
@@ -82,8 +86,17 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
     { code: '+34', country: 'ES', name: 'Espanha', flag: '🇪🇸' },
   ];
 
-  const user = localStorage.getItem('user');
-  const token = user ? JSON.parse(user).token : null;
+  let token: string | null = null;
+  try {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      token = parsedUser?.token ?? null;
+    }
+  } catch (error) {
+    console.error("Erro ao ler o token do usuário:", error);
+    token = null;
+  }
 
   useEffect(() => {
     if (isActive) {
@@ -102,6 +115,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
 
   const fetchUsers = async () => {
     try {
@@ -266,20 +280,22 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
   const fetchUserPermissions = async (userId: number) => {
     setLoadingPermissions(true);
     try {
-      const response = await fetch(`https://n8n.lumendigital.com.br/webhook/prospecta/usuarios/permissoes/get?id=${userId}`, {
+      const url = `https://n8n.lumendigital.com.br/webhook/prospecta/usuarios/permissoes/get?id=${userId}`;
+      const response = await fetch(url, {
         headers: { token }
       });
-      
+
       if (!response.ok) {
         throw new Error('Erro ao carregar permissões do usuário');
       }
 
       const data = await response.json();
+
       if (Array.isArray(data) && data.length > 0) {
         setUserPermissions(data[0]);
       } else {
         // Create default permissions object if none exists
-        setUserPermissions({
+        const defaultPermissions = {
           id_usuario: userId,
           can_view_dashboard_crm: false,
           can_view_dashboard_prospeccao: false,
@@ -302,7 +318,8 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
           can_view_assigned_leads: false,
           can_view_prospeccao_busca: false,
           can_view_prospeccao_dd: false
-        });
+        };
+        setUserPermissions(defaultPermissions);
       }
     } catch (err) {
       console.error('Erro ao carregar permissões:', err);
@@ -360,22 +377,71 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
   };
 
   // Qual opção está ativa: 'all' ou 'assigned'
-const leadVisibility: 'all' | 'assigned' =
-  userPermissions?.can_view_all_leads
-    ? 'all'
-    : userPermissions?.can_view_assigned_leads
-    ? 'assigned'
-    : 'all'; // default seguro
+  const leadVisibility: 'all' | 'assigned' =
+    userPermissions?.can_view_all_leads
+      ? 'all'
+      : userPermissions?.can_view_assigned_leads
+      ? 'assigned'
+      : 'all'; // default seguro
 
-// Troca mutuamente exclusiva
-const setLeadVisibility = (value: 'all' | 'assigned') => {
-  if (!userPermissions) return;
-  setUserPermissions({
-    ...userPermissions,
-    can_view_all_leads: value === 'all',
-    can_view_assigned_leads: value === 'assigned',
-  });
-};
+  // Troca mutuamente exclusiva
+  const setLeadVisibility = (value: 'all' | 'assigned') => {
+    if (!userPermissions) return;
+    setUserPermissions({
+      ...userPermissions,
+      can_view_all_leads: value === 'all',
+      can_view_assigned_leads: value === 'assigned',
+    });
+  };
+
+  // Open unified user panel
+  const handleOpenUserPanel = (user: User, tab: 'edit' | 'reset' = 'edit') => {
+    setError('');
+    setSuccess('');
+    setSelectedUser(user);
+    setActiveTab(tab);
+
+    // Prepare edit form data
+    let phoneNumber = user.telefone ?? '';
+    let detectedCountry = countries[0];
+
+    if (phoneNumber) {
+      for (const country of countries) {
+        const codeWithoutPlus = country.code.replace('+', '');
+        if (phoneNumber.startsWith(codeWithoutPlus)) {
+          detectedCountry = country;
+          phoneNumber = phoneNumber.substring(codeWithoutPlus.length);
+          break;
+        }
+      }
+    }
+
+    setSelectedCountry(detectedCountry);
+    setEditFormData({
+      id: user.Id,
+      nome: user.nome,
+      telefone: phoneNumber,
+      tipo: user.tipo
+    });
+
+    // Reset password states
+    setResetPassword(null);
+    setResetModalError('');
+    setHasCopiedPassword(false);
+
+    setIsUserPanelOpen(true);
+  };
+
+  const handleCloseUserPanel = () => {
+    setIsUserPanelOpen(false);
+    setSelectedUser(null);
+    setEditFormData(null);
+    setUserPermissions(null);
+    setResetPassword(null);
+    setResetModalError('');
+    setHasCopiedPassword(false);
+    setActiveTab('edit');
+  };
 
   const handleOpenEditUser = (user: User) => {
     setError('');
@@ -471,7 +537,8 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
   };
 
   const handleConfirmResetPassword = async () => {
-    if (!resetModalUser) return;
+    const userToReset = resetModalUser || selectedUser;
+    if (!userToReset) return;
 
     setIsResetConfirming(true);
     setError('');
@@ -486,7 +553,7 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
           'Content-Type': 'application/json',
           token,
         },
-        body: JSON.stringify({ id_cliente: resetModalUser.Id }),
+        body: JSON.stringify({ id_cliente: userToReset.Id }),
       });
 
       if (!response.ok) {
@@ -551,107 +618,42 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
     <div className="mt-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-  <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Usuários</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Usuários</h2>
 
-  {/* Botão de informação */}
-  <div className="relative group">
-    <button
-      className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 dark:border-neutral-600 text-gray-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-400 dark:hover:border-blue-400 transition-colors"
-      title=""
-    >
-      ?
-    </button>
+          {/* Botão de informação */}
+          <div className="relative group">
+            <button
+              className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 dark:border-neutral-600 text-gray-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-400 dark:hover:border-blue-400 transition-colors"
+              title=""
+            >
+              ?
+            </button>
 
-    {/* Tooltip */}
-    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-800 dark:bg-neutral-700 text-white dark:text-neutral-100 text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10">
-      A <strong>gestão de usuários</strong> permite que você adicione, edite e gerencie os usuários que têm acesso ao sistema.
-    </div>
-  </div>
-</div>
-        {canEdit && (
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg px-4 py-2 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
-          >
-            <Plus size={20} />
-            Novo Usuário
-          </button>
-        )}
-      </div>
-
-      {/* Seção de Assinatura de Mensagens */}
-      <div className="mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border-2 border-blue-200 dark:border-blue-800 p-6 shadow-sm">
-        <div className="flex items-start justify-between gap-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-neutral-100">
-                  Assinatura de Mensagens
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-neutral-400 mt-0.5">
-                  Configuração global para todas as mensagens enviadas
-                </p>
-              </div>
+            {/* Tooltip */}
+            <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-800 dark:bg-neutral-700 text-white dark:text-neutral-100 text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10">
+              A <strong>gestão de usuários</strong> permite que você adicione, edite e gerencie os usuários que têm acesso ao sistema.
             </div>
-
-            <div className="bg-white dark:bg-neutral-800 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
-              <p className="text-sm text-gray-700 dark:text-neutral-300 leading-relaxed mb-3">
-                Quando <strong className="text-blue-700 dark:text-blue-400">ativada</strong>, o sistema adiciona automaticamente o <strong>nome do usuário</strong> que está enviando a mensagem no <strong>início de cada mensagem</strong>.
-              </p>
-              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
-                <p className="text-xs font-semibold text-blue-900 dark:text-blue-300 mb-2">📋 Exemplo prático:</p>
-                <div className="space-y-2">
-                  <div>
-                    <p className="text-xs text-blue-800 dark:text-blue-400 font-medium mb-1">✅ Com assinatura ativada:</p>
-                    <div className="bg-white dark:bg-neutral-700 rounded p-2 text-xs text-gray-700 dark:text-neutral-300 font-mono border border-blue-200 dark:border-blue-600">
-                      <em className="text-blue-600 dark:text-blue-400">João Silva</em><br/>
-                      <br/>
-                      Olá! Como posso ajudá-lo?
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mb-1">❌ Sem assinatura:</p>
-                    <div className="bg-white dark:bg-neutral-700 rounded p-2 text-xs text-gray-700 dark:text-neutral-300 font-mono border border-gray-300 dark:border-neutral-600">
-                      Olá! Como posso ajudá-lo?
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 dark:text-neutral-400 mt-3 italic">
-                💡 <strong>Dica:</strong> Essa funcionalidade é útil quando múltiplos atendentes usam o mesmo número de WhatsApp, permitindo que o cliente saiba quem está respondendo.
-              </p>
-            </div>
-          </div>
-
-          {/* Toggle Switch */}
-          <div className="flex flex-col items-end gap-2 flex-shrink-0">
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={assinaturaAtiva}
-                onChange={canEdit ? toggleAssinatura : undefined}
-                disabled={!canEdit || loadingAssinatura}
-              />
-              <div className={`w-14 h-7 bg-gray-300 dark:bg-neutral-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-500 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-500 ${(!canEdit || loadingAssinatura) ? 'opacity-50 cursor-not-allowed' : ''}`}></div>
-            </label>
-            <span className={`text-sm font-semibold ${assinaturaAtiva ? 'text-blue-700 dark:text-blue-400' : 'text-gray-600 dark:text-neutral-400'}`}>
-              {loadingAssinatura ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Atualizando...
-                </span>
-              ) : (
-                assinaturaAtiva ? '✓ Ativada' : '○ Desativada'
-              )}
-            </span>
           </div>
         </div>
+
+        {canEdit && (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsAssinaturaPanelOpen(true)}
+              className="flex items-center gap-2 bg-white dark:bg-neutral-800 text-gray-700 dark:text-neutral-300 border border-gray-300 dark:border-neutral-600 rounded-lg px-4 py-2 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+            >
+              <Pencil size={18} />
+              Assinatura de Mensagens
+            </button>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg px-4 py-2 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
+            >
+              <Plus size={20} />
+              Novo Usuário
+            </button>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -669,82 +671,70 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
       {/* Desktop Table View */}
       <div className="hidden md:block bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-neutral-700">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-          <thead className="bg-gray-50 dark:bg-neutral-900">
+          <thead className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-900 dark:to-neutral-800 border-b-2 border-gray-200 dark:border-neutral-700">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
                 Nome
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
                 Email
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
                 Telefone
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
                 Tipo
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
-                Status
-              </th>
               {canEdit && (
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
                   Ações
                 </th>
               )}
             </tr>
           </thead>
-          <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
+          <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-100 dark:divide-neutral-700">
             {activeUsers.map((user) => (
-              <tr key={user.Id} className="hover:bg-gray-50 dark:hover:bg-neutral-700">
+              <tr
+                key={user.Id}
+                className="hover:bg-blue-50/50 dark:hover:bg-neutral-700/50 transition-all duration-200"
+              >
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{user.nome}</div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      {user.nome.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-neutral-100">{user.nome}</div>
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-neutral-400">{user.email}</div>
+                  <div className="text-sm text-gray-600 dark:text-neutral-400">{user.email}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-neutral-400">{user.telefone || '-'}</div>
+                  <div className="text-sm text-gray-600 dark:text-neutral-400">{user.telefone || '-'}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeStyle(user.tipo)}`}>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getTypeStyle(user.tipo)} shadow-sm`}>
                     {user.tipo}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={user.isAtivo}
-                      onChange={canEdit ? () => handleToggleStatus(user.Id) : undefined}
-                      disabled={!canEdit || togglingUser === user.Id}
-                    />
-                    <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-700"></div>
-                  </label>
-                </td>
                 {canEdit && (
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end gap-3">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center justify-center gap-3">
                       <button
-                        onClick={() => handleOpenResetModal(user)}
-                        className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline"
-                        title="Resetar senha"
-                      >
-                        Resetar senha
-                      </button>
-                      <button
-                        onClick={() => handleOpenEditUser(user)}
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
+                        onClick={() => handleOpenUserPanel(user, 'edit')}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-all duration-200 shadow-sm"
                         title="Editar usuário"
                       >
-                        <Pencil className="w-5 h-5" />
+                        <Pencil className="w-4 h-4" />
+                        Editar
                       </button>
                       <button
                         onClick={() => handleEditPermissions(user)}
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
-                        title="Editar permissões"
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 rounded-lg transition-all duration-200 shadow-sm"
+                        title="Gerenciar permissões"
                       >
-                        <Settings className="w-5 h-5" />
+                        <Shield className="w-4 h-4" />
+                        Permissões
                       </button>
                     </div>
                   </td>
@@ -758,8 +748,12 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
       {/* Mobile Card View */}
       <div className="md:hidden space-y-4">
         {activeUsers.map((user) => (
-          <div key={user.Id} className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-4">
-            {/* Header with Name and Status */}
+          <div
+            key={user.Id}
+            onClick={() => handleOpenUserPanel(user)}
+            className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+          >
+            {/* Header with Name */}
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">{user.nome}</h3>
@@ -767,20 +761,10 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                   {user.tipo}
                 </span>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="sr-only peer"
-                  checked={user.isAtivo}
-                  onChange={canEdit ? () => handleToggleStatus(user.Id) : undefined}
-                  disabled={!canEdit || togglingUser === user.Id}
-                />
-                <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-700"></div>
-              </label>
             </div>
 
             {/* Info Fields */}
-            <div className="space-y-2 mb-3">
+            <div className="space-y-2">
               <div>
                 <span className="text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Email</span>
                 <p className="text-sm text-gray-900 dark:text-neutral-100 break-all">{user.email}</p>
@@ -790,32 +774,6 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                 <p className="text-sm text-gray-900 dark:text-neutral-100">{user.telefone || '-'}</p>
               </div>
             </div>
-
-            {/* Actions */}
-            {canEdit && (
-              <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200 dark:border-neutral-700">
-                <button
-                  onClick={() => handleOpenResetModal(user)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30"
-                >
-                  Resetar senha
-                </button>
-                <button
-                  onClick={() => handleOpenEditUser(user)}
-                  className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
-                  title="Editar usuário"
-                >
-                  <Pencil className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => handleEditPermissions(user)}
-                  className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
-                  title="Editar permissões"
-                >
-                  <Settings className="w-5 h-5" />
-                </button>
-              </div>
-            )}
           </div>
         ))}
       </div>
@@ -842,86 +800,48 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
               {/* Desktop Table View - Inactive Users */}
               <div className="hidden md:block mt-4 bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-neutral-700">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                  <thead className="bg-gray-50 dark:bg-neutral-900">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-900 dark:to-neutral-800 border-b-2 border-gray-200 dark:border-neutral-700">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
                         Nome
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
                         Email
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
                         Telefone
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
                         Tipo
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
-                        Status
-                      </th>
-                      {canEdit && (
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
-                          Ações
-                        </th>
-                      )}
                     </tr>
                   </thead>
-                  <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
+                  <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-100 dark:divide-neutral-700">
                     {inactiveUsers.map((user) => (
-                      <tr key={user.Id} className="hover:bg-gray-50 dark:hover:bg-neutral-700 opacity-60">
+                      <tr
+                        key={user.Id}
+                        onClick={() => handleOpenUserPanel(user)}
+                        className="hover:bg-blue-50/50 dark:hover:bg-neutral-700/50 opacity-60 cursor-pointer transition-all duration-200"
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{user.nome}</div>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                              {user.nome.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="text-sm font-semibold text-gray-900 dark:text-neutral-100">{user.nome}</div>
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500 dark:text-neutral-400">{user.email}</div>
+                          <div className="text-sm text-gray-600 dark:text-neutral-400">{user.email}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500 dark:text-neutral-400">{user.telefone || '-'}</div>
+                          <div className="text-sm text-gray-600 dark:text-neutral-400">{user.telefone || '-'}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeStyle(user.tipo)}`}>
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getTypeStyle(user.tipo)} shadow-sm`}>
                             {user.tipo}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="sr-only peer"
-                              checked={user.isAtivo}
-                              onChange={canEdit ? () => handleToggleStatus(user.Id) : undefined}
-                              disabled={!canEdit || togglingUser === user.Id}
-                            />
-                            <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-700"></div>
-                          </label>
-                        </td>
-                        {canEdit && (
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div className="flex items-center justify-end gap-3">
-                              <button
-                                onClick={() => handleOpenResetModal(user)}
-                                className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline"
-                                title="Resetar senha"
-                              >
-                                Resetar senha
-                              </button>
-                              <button
-                                onClick={() => handleOpenEditUser(user)}
-                                className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
-                                title="Editar usuário"
-                              >
-                                <Pencil className="w-5 h-5" />
-                              </button>
-                              <button
-                                onClick={() => handleEditPermissions(user)}
-                                className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
-                                title="Editar permissões"
-                              >
-                                <Settings className="w-5 h-5" />
-                              </button>
-                            </div>
-                          </td>
-                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -931,8 +851,12 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
               {/* Mobile Card View - Inactive Users */}
               <div className="md:hidden mt-4 space-y-4">
                 {inactiveUsers.map((user) => (
-                  <div key={user.Id} className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-4 opacity-60">
-                    {/* Header with Name and Status */}
+                  <div
+                    key={user.Id}
+                    onClick={() => handleOpenUserPanel(user)}
+                    className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-4 opacity-60 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+                  >
+                    {/* Header with Name */}
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">{user.nome}</h3>
@@ -940,20 +864,10 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                           {user.tipo}
                         </span>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={user.isAtivo}
-                          onChange={canEdit ? () => handleToggleStatus(user.Id) : undefined}
-                          disabled={!canEdit || togglingUser === user.Id}
-                        />
-                        <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-700"></div>
-                      </label>
                     </div>
 
                     {/* Info Fields */}
-                    <div className="space-y-2 mb-3">
+                    <div className="space-y-2">
                       <div>
                         <span className="text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Email</span>
                         <p className="text-sm text-gray-900 dark:text-neutral-100 break-all">{user.email}</p>
@@ -963,32 +877,6 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
                         <p className="text-sm text-gray-900 dark:text-neutral-100">{user.telefone || '-'}</p>
                       </div>
                     </div>
-
-                    {/* Actions */}
-                    {canEdit && (
-                      <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200 dark:border-neutral-700">
-                        <button
-                          onClick={() => handleOpenResetModal(user)}
-                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30"
-                        >
-                          Resetar senha
-                        </button>
-                        <button
-                          onClick={() => handleOpenEditUser(user)}
-                          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
-                          title="Editar usuário"
-                        >
-                          <Pencil className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleEditPermissions(user)}
-                          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
-                          title="Editar permissões"
-                        >
-                          <Settings className="w-5 h-5" />
-                        </button>
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
@@ -997,100 +885,617 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
         </div>
       )}
 
-      {/* Reset Password Modal */}
-      <Modal
-        isOpen={!!resetModalUser}
-        onClose={handleCloseResetModal}
-        title={resetPassword ? `Senha resetada: ${resetModalUser?.nome}` : `Resetar senha: ${resetModalUser?.nome ?? ''}`}
-        maxWidth="sm"
+      {/* Unified User Management SidePanel with Tabs */}
+      <SidePanel
+        isOpen={isUserPanelOpen}
+        onClose={handleCloseUserPanel}
+        title={selectedUser ? `Gerenciar Usuário: ${selectedUser.nome}` : 'Gerenciar Usuário'}
+        width="40%"
       >
-        <div className="space-y-4">
-          {resetModalError && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg">
-              {resetModalError}
-            </div>
-          )}
+        <div className="px-6">
+          {/* Tab Navigation */}
+          <div className="flex gap-2 mb-6 p-1 bg-gray-100 dark:bg-neutral-800 rounded-lg">
+          <button
+            onClick={() => setActiveTab('edit')}
+            className={`flex items-center gap-2 px-5 py-2.5 font-medium text-sm transition-all rounded-md ${
+              activeTab === 'edit'
+                ? 'bg-white dark:bg-neutral-700 text-blue-600 dark:text-blue-400 shadow-md'
+                : 'text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-200 hover:bg-white/50 dark:hover:bg-neutral-700/50'
+            }`}
+          >
+            <UserIcon className="w-4 h-4" />
+            Editar Usuário
+          </button>
+          <button
+            onClick={() => setActiveTab('reset')}
+            className={`flex items-center gap-2 px-5 py-2.5 font-medium text-sm transition-all rounded-md ${
+              activeTab === 'reset'
+                ? 'bg-white dark:bg-neutral-700 text-orange-600 dark:text-orange-400 shadow-md'
+                : 'text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-200 hover:bg-white/50 dark:hover:bg-neutral-700/50'
+            }`}
+          >
+            <Key className="w-4 h-4" />
+            Reset de Senha
+          </button>
+        </div>
 
-          {!resetPassword ? (
-            <>
-              <p className="text-gray-700 dark:text-neutral-300">
-                Tem certeza de que deseja resetar a senha do usuário{' '}
-                <span className="font-semibold">{resetModalUser?.nome}</span>? Uma nova senha será gerada e você deverá
-                compartilhá-la com o usuário.
-              </p>
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={handleCloseResetModal}
-                  className="px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700"
-                  disabled={isResetConfirming}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmResetPassword}
-                  className="px-4 py-2 rounded-lg bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-60 flex items-center gap-2"
-                  disabled={isResetConfirming}
-                >
-                  {isResetConfirming ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Resetando...</span>
-                    </>
-                  ) : (
-                    'Confirmar reset'
-                  )}
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="space-y-3">
-                <p className="text-gray-700 dark:text-neutral-300">
-                  A senha foi resetada com sucesso. Envie a nova senha para o usuário ou peça para que ele altere após o login.
+        {/* Tab Content - Edit User */}
+        {activeTab === 'edit' && editFormData && (
+          <div className="space-y-6">
+            {/* Info Card */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3">
+              <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-blue-900 dark:text-blue-100 font-medium">Informações do Usuário</p>
+                <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                  Atualize os dados cadastrais do usuário. As alterações serão salvas imediatamente.
                 </p>
-                <div className="flex items-center justify-between gap-3 bg-gray-100 dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg px-4 py-3">
-                  <span className="font-mono text-lg text-gray-900 dark:text-neutral-100 break-all">{resetPassword}</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleUpdateUser} className="space-y-5">
+              {/* Status Toggle */}
+              <div className="bg-white dark:bg-neutral-800 rounded-lg p-4 border border-gray-200 dark:border-neutral-700">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                      <Activity className="w-4 h-4 text-green-600 dark:text-green-400" />
+                      Status do Usuário
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-neutral-400">
+                      {selectedUser?.isAtivo
+                        ? 'Este usuário está ativo e pode acessar o sistema'
+                        : 'Este usuário está inativo e não pode acessar o sistema'}
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={selectedUser?.isAtivo || false}
+                      onChange={canEdit ? () => selectedUser && handleToggleStatus(selectedUser.Id) : undefined}
+                      disabled={!canEdit || togglingUser === selectedUser?.Id}
+                    />
+                    <div className="w-14 h-7 bg-gray-200 dark:bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600 dark:peer-checked:bg-green-500"></div>
+                  </label>
+                </div>
+                {togglingUser === selectedUser?.Id && (
+                  <div className="mt-3 flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Atualizando status...</span>
+                  </div>
+                )}
+              </div>
+              {/* Nome Field */}
+              <div className="bg-white dark:bg-neutral-800 rounded-lg p-4 border border-gray-200 dark:border-neutral-700">
+                <label htmlFor="edit-nome" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">
+                  <UserIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  Nome do Usuário
+                </label>
+                <input
+                  type="text"
+                  id="edit-nome"
+                  value={editFormData.nome}
+                  onChange={(e) => setEditFormData({ ...editFormData, nome: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
+                  placeholder="Ex: Dr. João da Silva"
+                  required
+                  disabled={!canEdit}
+                />
+              </div>
+
+              {/* Telefone Field */}
+              <div className="bg-white dark:bg-neutral-800 rounded-lg p-4 border border-gray-200 dark:border-neutral-700">
+                <label htmlFor="edit-telefone" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">
+                  <Phone className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  Telefone
+                </label>
+                <div className="flex gap-2">
+                  <div className="relative" ref={countryDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => canEdit && setIsCountryDropdownOpen(!isCountryDropdownOpen)}
+                      className="h-[42px] w-[120px] pl-3 pr-2 py-2 flex items-center gap-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!canEdit}
+                    >
+                      <span className="text-2xl">{selectedCountry.flag}</span>
+                      <span className="text-sm text-gray-900 dark:text-neutral-100">{selectedCountry.code}</span>
+                      <ChevronDown className="w-4 h-4 ml-auto text-gray-400 dark:text-neutral-500" />
+                    </button>
+
+                    {isCountryDropdownOpen && canEdit && (
+                      <div className="absolute top-full left-0 mt-1 w-[240px] max-h-[300px] overflow-y-auto bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg shadow-lg z-50">
+                        {countries.map((country) => (
+                          <button
+                            key={country.country}
+                            type="button"
+                            onClick={() => {
+                              setSelectedCountry(country);
+                              setIsCountryDropdownOpen(false);
+                            }}
+                            className="w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-neutral-600 text-left transition-colors"
+                          >
+                            <span className="text-2xl">{country.flag}</span>
+                            <div className="flex-1">
+                              <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{country.name}</div>
+                              <div className="text-xs text-gray-500 dark:text-neutral-400">{country.code}</div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <input
+                    type="tel"
+                    id="edit-telefone"
+                    value={editFormData.telefone}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        telefone: e.target.value.replace(/\D/g, ""),
+                      })
+                    }
+                    placeholder="(11) 98888-8888"
+                    className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 transition-all"
+                    required
+                    disabled={!canEdit}
+                  />
+                </div>
+              </div>
+
+              {/* Tipo Field */}
+              <div className="bg-white dark:bg-neutral-800 rounded-lg p-4 border border-gray-200 dark:border-neutral-700">
+                <label htmlFor="edit-tipo" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">
+                  <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                  Tipo de Usuário
+                </label>
+                <select
+                  id="edit-tipo"
+                  value={editFormData.tipo}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, tipo: e.target.value as UpdateUserPayload['tipo'] })
+                  }
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
+                  required
+                  disabled={!canEdit}
+                >
+                  <option value="USER">Usuário Padrão</option>
+                  <option value="ADMIN">Administrador</option>
+                </select>
+                <p className="mt-2 text-xs text-gray-500 dark:text-neutral-400">
+                  {editFormData.tipo === 'ADMIN' ? '⚡ Administradores têm acesso total ao sistema' : '👤 Usuários padrão têm acesso limitado'}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              {canEdit && (
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-neutral-700">
                   <button
                     type="button"
-                    onClick={handleCopyPassword}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
+                    onClick={handleCloseUserPanel}
+                    className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-600 rounded-lg transition-colors"
                   >
-                    {hasCopiedPassword ? (
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updatingUser}
+                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  >
+                    {updatingUser ? (
                       <>
-                        <Check className="w-4 h-4" />
-                        <span>Copiado</span>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Salvando...</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="w-4 h-4" />
-                        <span>Copiar</span>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Salvar Alterações</span>
                       </>
                     )}
                   </button>
                 </div>
-                {hasCopiedPassword && (
-                  <p className="text-sm text-green-600 dark:text-green-400">Senha copiada para a área de transferência.</p>
-                )}
+              )}
+
+              {!canEdit && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 flex items-center gap-3">
+                  <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    Você não tem permissão para editar usuários.
+                  </p>
+                </div>
+              )}
+            </form>
+          </div>
+        )}
+
+        {/* Tab Content - Reset Password */}
+        {activeTab === 'reset' && selectedUser && (
+          <div className="space-y-6">
+            {resetModalError && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-800 dark:text-red-200">{resetModalError}</p>
               </div>
-              <div className="flex justify-end pt-4">
+            )}
+
+            {!resetPassword ? (
+              <>
+                {/* Warning Card */}
+                <div className="bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 border-2 border-orange-200 dark:border-orange-800 rounded-xl p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Key className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-2">
+                        Resetar Senha
+                      </h3>
+                      <p className="text-sm text-gray-700 dark:text-neutral-300 leading-relaxed">
+                        Você está prestes a resetar a senha do usuário{' '}
+                        <span className="font-bold text-orange-700 dark:text-orange-300">{selectedUser.nome}</span>.
+                      </p>
+                      <div className="mt-4 bg-white dark:bg-neutral-800 rounded-lg p-4 border border-orange-200 dark:border-orange-700">
+                        <p className="text-xs font-medium text-gray-900 dark:text-neutral-100 mb-2">⚠️ Atenção:</p>
+                        <ul className="text-xs text-gray-700 dark:text-neutral-300 space-y-1.5 list-disc list-inside">
+                          <li>Uma nova senha aleatória será gerada automaticamente</li>
+                          <li>A senha atual do usuário será invalidada imediatamente</li>
+                          <li>Você deverá compartilhar a nova senha com o usuário</li>
+                          <li>Recomende que o usuário altere a senha após o primeiro acesso</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                {canEdit ? (
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleCloseUserPanel}
+                      className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-600 rounded-lg transition-colors"
+                      disabled={isResetConfirming}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConfirmResetPassword}
+                      className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-orange-600 to-red-600 dark:from-orange-700 dark:to-red-700 text-white hover:from-orange-700 hover:to-red-700 dark:hover:from-orange-600 dark:hover:to-red-600 disabled:opacity-60 flex items-center gap-2 font-medium shadow-sm transition-all"
+                      disabled={isResetConfirming}
+                    >
+                      {isResetConfirming ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Resetando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Key className="w-4 h-4" />
+                          <span>Confirmar Reset</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                      Você não tem permissão para resetar senhas.
+                    </p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Success State */}
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-200 dark:border-green-800 rounded-xl p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
+                      <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-green-900 dark:text-green-100 mb-2">
+                        Senha Resetada com Sucesso!
+                      </h3>
+                      <p className="text-sm text-green-700 dark:text-green-300 leading-relaxed mb-4">
+                        A nova senha foi gerada. Compartilhe-a com o usuário e recomende que seja alterada no primeiro acesso.
+                      </p>
+
+                      {/* Password Display */}
+                      <div className="bg-white dark:bg-neutral-800 rounded-lg border-2 border-green-200 dark:border-green-700 overflow-hidden">
+                        <div className="bg-green-100 dark:bg-green-900/50 px-4 py-2 border-b border-green-200 dark:border-green-700">
+                          <p className="text-xs font-medium text-green-900 dark:text-green-100 flex items-center gap-2">
+                            <Key className="w-3.5 h-3.5" />
+                            Nova Senha Temporária
+                          </p>
+                        </div>
+                        <div className="p-4">
+                          <div className="flex items-center gap-3">
+                            <code className="flex-1 font-mono text-xl font-bold text-gray-900 dark:text-neutral-100 tracking-wider break-all bg-gray-50 dark:bg-neutral-700 px-4 py-3 rounded-lg border border-gray-200 dark:border-neutral-600">
+                              {resetPassword}
+                            </code>
+                            <button
+                              type="button"
+                              onClick={handleCopyPassword}
+                              className="flex flex-col items-center gap-1 px-4 py-3 rounded-lg bg-gradient-to-b from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 text-white hover:from-blue-700 hover:to-blue-800 dark:hover:from-blue-600 dark:hover:to-blue-700 transition-all shadow-sm"
+                            >
+                              {hasCopiedPassword ? (
+                                <>
+                                  <Check className="w-5 h-5" />
+                                  <span className="text-xs font-medium">Copiado</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-5 h-5" />
+                                  <span className="text-xs font-medium">Copiar</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          {hasCopiedPassword && (
+                            <div className="mt-3 flex items-center gap-2 text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/30 px-3 py-2 rounded-lg">
+                              <CheckCircle2 className="w-4 h-4" />
+                              <p className="text-xs font-medium">Senha copiada para a área de transferência</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Close Button */}
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={handleCloseUserPanel}
+                    className="px-5 py-2.5 rounded-lg bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-600 font-medium shadow-sm transition-colors"
+                  >
+                    Fechar
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+        </div>
+      </SidePanel>
+
+      {/* Permissions SidePanel - Separate panel for permissions */}
+      <SidePanel
+        isOpen={isPermissionsModalOpen}
+        onClose={() => {
+          setIsPermissionsModalOpen(false);
+          setSelectedUser(null);
+          setUserPermissions(null);
+        }}
+        title={selectedUser ? `Permissões: ${selectedUser.nome}` : 'Permissões'}
+        width="45%"
+      >
+        {loadingPermissions ? (
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400" />
+          </div>
+        ) : userPermissions && (
+          <div className="px-6 py-4 space-y-6">
+            {/* Info Card */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3">
+              <div className="w-10 h-10 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Shield className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                  Gerenciamento de Permissões
+                </h3>
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  Configure as permissões de acesso e visualização para <strong>{selectedUser?.nome}</strong>.
+                </p>
+              </div>
+            </div>
+
+            {/* === VISIBILIDADE DE MENUS === */}
+            <section className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
+              <div className="px-4 py-3 border-b border-gray-200 dark:border-neutral-700">
+                <div className="flex items-center gap-2">
+                  <Eye className="w-4 h-4 text-gray-600 dark:text-neutral-400" />
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">Visibilidade de Menus</h3>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">Controle quais menus este usuário pode visualizar</p>
+              </div>
+              <div className="p-4 space-y-2">
+                {[
+                  ['can_view_menu_chat', 'Conversas', MessageSquare],
+                  ['can_view_menu_agent', 'Agente de IA', Bot],
+                  ['can_view_menu_crm', 'CRM', BarChart3],
+                  ['can_view_menu_schedule', 'Agendamentos', Calendar],
+                  ['can_view_menu_contacts', 'Contatos', Contact],
+                  ['can_view_menu_connection', 'Conexão', Link],
+                  ['can_view_menu_prospect', 'Envios em Massa', Send],
+                  ['can_view_menu_settings', 'Configurações', Cog],
+                ].map(([key, label, Icon]) => (
+                  <div key={key} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-700/30 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-4 h-4 text-gray-600 dark:text-neutral-400" />
+                      <span className="text-sm font-medium text-gray-900 dark:text-neutral-100">{label}</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={(userPermissions as any)?.[key] || false}
+                        onChange={(e) =>
+                          handlePermissionChange(key as keyof UserPermissions, e.target.checked)
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-500"></div>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* === PERMISSÕES DE EDIÇÃO === */}
+            <section className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
+              <div className="px-4 py-3 border-b border-gray-200 dark:border-neutral-700">
+                <div className="flex items-center gap-2">
+                  <Pencil className="w-4 h-4 text-gray-600 dark:text-neutral-400" />
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">Permissões de Edição</h3>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">Defina quais seções este usuário pode editar</p>
+              </div>
+              <div className="p-4 space-y-2">
+                {[
+                  ['can_edit_agent', 'Editar Agente de IA', Bot],
+                  ['can_edit_crm', 'Editar CRM', BarChart3],
+                  ['can_edit_schedule', 'Editar Agendamentos', Calendar],
+                  ['can_edit_contacts', 'Editar Contatos', Contact],
+                  ['can_edit_connection', 'Editar Conexão', Link],
+                  ['can_edit_settings', 'Editar Configurações', Cog],
+                ].map(([key, label, Icon]) => (
+                  <div key={key} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-700/30 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-4 h-4 text-gray-600 dark:text-neutral-400" />
+                      <span className="text-sm font-medium text-gray-900 dark:text-neutral-100">{label}</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={(userPermissions as any)?.[key] || false}
+                        onChange={(e) =>
+                          handlePermissionChange(key as keyof UserPermissions, e.target.checked)
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-500"></div>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* === VISIBILIDADE DE LEADS === */}
+            <section className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
+              <div className="px-4 py-3 border-b border-gray-200 dark:border-neutral-700">
+                <div className="flex items-center gap-2">
+                  <Users2 className="w-4 h-4 text-gray-600 dark:text-neutral-400" />
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">Visibilidade de Leads</h3>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">Escolha quais leads este usuário pode visualizar</p>
+              </div>
+              <div className="p-4 space-y-2">
                 <button
                   type="button"
-                  onClick={handleCloseResetModal}
-                  className="px-4 py-2 rounded-lg bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
+                  onClick={() => setLeadVisibility('all')}
+                  className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all ${
+                    leadVisibility === 'all'
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
+                      : 'border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-700/30 hover:bg-gray-100 dark:hover:bg-neutral-700/50'
+                  }`}
                 >
-                  Fechar
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      leadVisibility === 'all'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 dark:bg-neutral-600 text-gray-500 dark:text-neutral-400'
+                    }`}>
+                      <Users2 className="w-4 h-4" />
+                    </div>
+                    <div className="text-left">
+                      <p className={`text-sm font-medium ${
+                        leadVisibility === 'all'
+                          ? 'text-blue-900 dark:text-blue-100'
+                          : 'text-gray-700 dark:text-neutral-300'
+                      }`}>
+                        Ver Todos os Leads
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-neutral-400">
+                        Acesso completo a todos os leads do sistema
+                      </p>
+                    </div>
+                  </div>
+                  {leadVisibility === 'all' && (
+                    <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setLeadVisibility('assigned')}
+                  className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all ${
+                    leadVisibility === 'assigned'
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
+                      : 'border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-700/30 hover:bg-gray-100 dark:hover:bg-neutral-700/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      leadVisibility === 'assigned'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 dark:bg-neutral-600 text-gray-500 dark:text-neutral-400'
+                    }`}>
+                      <UserIcon className="w-4 h-4" />
+                    </div>
+                    <div className="text-left">
+                      <p className={`text-sm font-medium ${
+                        leadVisibility === 'assigned'
+                          ? 'text-blue-900 dark:text-blue-100'
+                          : 'text-gray-700 dark:text-neutral-300'
+                      }`}>
+                        Ver Apenas Leads Atribuídos
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-neutral-400">
+                        Visualiza somente os leads que foram atribuídos a ele
+                      </p>
+                    </div>
+                  </div>
+                  {leadVisibility === 'assigned' && (
+                    <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  )}
                 </button>
               </div>
-            </>
-          )}
-        </div>
-      </Modal>
+            </section>
 
-      {/* Create User Modal */}
+            {/* === BOTÕES === */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-neutral-700">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPermissionsModalOpen(false);
+                  setSelectedUser(null);
+                  setUserPermissions(null);
+                }}
+                className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-600 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSavePermissions}
+                disabled={savingPermissions}
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                {savingPermissions ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Salvando...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Salvar Permissões</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+      </SidePanel>
+
+      {/* Create User Modal - Separate from user management */}
       {canEdit && (
-        <Modal
+        <SidePanel
           isOpen={isModalOpen}
           onClose={() => {
             setIsModalOpen(false);
@@ -1104,6 +1509,7 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
             setError('');
           }}
           title="Criar Novo Usuário"
+          width="40%"
         >
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -1258,294 +1664,156 @@ const setLeadVisibility = (value: 'all' | 'assigned') => {
               </button>
             </div>
           </form>
-        </Modal>
+        </SidePanel>
       )}
 
-      {/* Edit User Modal */}
-      {canEdit && (
-        <Modal
-          isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            setEditFormData(null);
-          }}
-          title={`Editar Usuário${editFormData ? `: ${editFormData.nome}` : ''}`}
+      {/* SidePanel para Assinatura de Mensagens */}
+      {isAssinaturaPanelOpen && (
+        <SidePanel
+          isOpen={isAssinaturaPanelOpen}
+          onClose={() => setIsAssinaturaPanelOpen(false)}
+          title="Assinatura de Mensagens"
+          width="40%"
         >
-          {editFormData && (
-            <form onSubmit={handleUpdateUser} className="space-y-4">
-              <div>
-                <label htmlFor="edit-nome" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-                  Nome
+          <div className="px-6 py-4 space-y-6">
+            {/* Info Card */}
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 border border-blue-200 dark:border-blue-800 rounded-xl p-5 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center shadow-md">
+                  <Pencil className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                    O que é a Assinatura de Mensagens?
+                  </h3>
+                  <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">
+                    Quando ativada, o nome do usuário será automaticamente exibido no início de cada mensagem enviada, identificando quem está atendendo o cliente.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Status Card */}
+            <div className="bg-white dark:bg-neutral-800 rounded-xl border-2 border-gray-200 dark:border-neutral-700 p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h4 className="text-base font-semibold text-gray-900 dark:text-neutral-100 mb-2">
+                    Status Atual
+                  </h4>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${assinaturaAtiva ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                    <p className={`text-sm font-medium ${assinaturaAtiva ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-neutral-400'}`}>
+                      {assinaturaAtiva ? 'Ativada para todos os usuários' : 'Desativada'}
+                    </p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer ml-4">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={assinaturaAtiva}
+                    onChange={toggleAssinatura}
+                    disabled={!canEdit || loadingAssinatura}
+                  />
+                  <div className={`w-16 h-8 bg-gray-200 dark:bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-[26px] after:w-[26px] after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-500 shadow-sm ${(!canEdit || loadingAssinatura) ? 'opacity-50 cursor-not-allowed' : ''}`}></div>
                 </label>
-                <input
-                  type="text"
-                  id="edit-nome"
-                  value={editFormData.nome}
-                  onChange={(e) => setEditFormData({ ...editFormData, nome: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
-                  required
-                />
               </div>
 
-              <div>
-                <label htmlFor="edit-telefone" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-                  Telefone
-                </label>
-                <div className="flex gap-2">
-                  <div className="relative" ref={countryDropdownRef}>
-                    <button
-                      type="button"
-                      onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                      className="h-[42px] w-[120px] pl-3 pr-2 py-2 flex items-center gap-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors"
-                    >
-                      <span className="text-2xl">{selectedCountry.flag}</span>
-                      <span className="text-sm text-gray-900 dark:text-neutral-100">{selectedCountry.code}</span>
-                      <ChevronDown className="w-4 h-4 ml-auto text-gray-400 dark:text-neutral-500" />
-                    </button>
+              {loadingAssinatura && (
+                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-neutral-700 text-sm text-gray-600 dark:text-neutral-400">
+                  <Loader2 className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
+                  <span>Atualizando configuração...</span>
+                </div>
+              )}
+            </div>
 
-                    {isCountryDropdownOpen && (
-                      <div className="absolute top-full left-0 mt-1 w-[240px] max-h-[300px] overflow-y-auto bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg shadow-lg z-50">
-                        {countries.map((country) => (
-                          <button
-                            key={country.country}
-                            type="button"
-                            onClick={() => {
-                              setSelectedCountry(country);
-                              setIsCountryDropdownOpen(false);
-                            }}
-                            className="w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-neutral-600 text-left transition-colors"
-                          >
-                            <span className="text-2xl">{country.flag}</span>
-                            <div className="flex-1">
-                              <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{country.name}</div>
-                              <div className="text-xs text-gray-500 dark:text-neutral-400">{country.code}</div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
+            {/* Examples Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-neutral-700 to-transparent"></div>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wide">
+                  Exemplos
+                </h4>
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-neutral-700 to-transparent"></div>
+              </div>
+
+              {/* With Signature */}
+              <div className="bg-white dark:bg-neutral-800 rounded-xl border-2 border-green-200 dark:border-green-800/50 overflow-hidden shadow-sm">
+                <div className="bg-green-50 dark:bg-green-900/20 px-4 py-3 border-b border-green-200 dark:border-green-800/50">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-green-500 dark:bg-green-600 flex items-center justify-center shadow-sm">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="text-sm font-bold text-green-700 dark:text-green-300 uppercase tracking-wide">Com Assinatura</span>
                   </div>
-
-                  <input
-                    type="tel"
-                    id="edit-telefone"
-                    value={editFormData.telefone}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        telefone: e.target.value.replace(/\D/g, ""),
-                      })
-                    }
-                    placeholder="(11) 98888-8888"
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 text-sm"
-                    required
-                  />
+                </div>
+                <div className="p-4">
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-neutral-900/50 dark:to-neutral-900/30 rounded-lg p-4 border border-gray-200 dark:border-neutral-700">
+                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-300 dark:border-neutral-600">
+                      <div className="w-1 h-8 bg-blue-600 dark:bg-blue-500 rounded-full"></div>
+                      <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                        João Silva
+                      </p>
+                    </div>
+                    <p className="text-sm text-gray-900 dark:text-neutral-100 leading-relaxed">
+                      Olá! Como posso ajudá-lo?
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label htmlFor="edit-tipo" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-                  Tipo
-                </label>
-                <select
-                  id="edit-tipo"
-                  value={editFormData.tipo}
-                  onChange={(e) =>
-                    setEditFormData({ ...editFormData, tipo: e.target.value as UpdateUserPayload['tipo'] })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
-                  required
-                >
-                  <option value="USER">Usuário</option>
-                  <option value="ADMIN">Administrador</option>
-                </select>
+              {/* Without Signature */}
+              <div className="bg-white dark:bg-neutral-800 rounded-xl border-2 border-gray-200 dark:border-neutral-700 overflow-hidden shadow-sm">
+                <div className="bg-gray-50 dark:bg-neutral-900/30 px-4 py-3 border-b border-gray-200 dark:border-neutral-700">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-gray-400 dark:bg-neutral-600 flex items-center justify-center shadow-sm">
+                      <X className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="text-sm font-bold text-gray-600 dark:text-neutral-400 uppercase tracking-wide">Sem Assinatura</span>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-neutral-900/50 dark:to-neutral-900/30 rounded-lg p-4 border border-gray-200 dark:border-neutral-700">
+                    <p className="text-sm text-gray-900 dark:text-neutral-100 leading-relaxed">
+                      Olá! Como posso ajudá-lo?
+                    </p>
+                  </div>
+                </div>
               </div>
+            </div>
 
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsEditModalOpen(false);
-                    setEditFormData(null);
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={updatingUser}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 rounded-md disabled:opacity-50"
-                >
-                  {updatingUser ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Salvando...</span>
-                    </>
-                  ) : (
-                    'Salvar Alterações'
-                  )}
-                </button>
+            {/* Important Note */}
+            <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-800/10 border-2 border-amber-300 dark:border-amber-800 rounded-xl p-5 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-amber-500 dark:bg-amber-600 rounded-lg flex items-center justify-center shadow-md">
+                  <Info className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-base font-semibold text-amber-900 dark:text-amber-100 mb-2">
+                    Importante
+                  </h4>
+                  <p className="text-sm text-amber-800 dark:text-amber-200 leading-relaxed mb-2">
+                    Esta configuração é aplicada <span className="font-semibold">globalmente para todos os usuários</span> do sistema. Quando ativada, todas as mensagens enviadas incluirão a assinatura do usuário.
+                  </p>
+                  <p className="text-xs text-amber-700 dark:text-amber-300 italic">
+                    A possibilidade de ativar/desativar por usuário individual será implementada em breve.
+                  </p>
+                </div>
               </div>
-            </form>
-          )}
-        </Modal>
-      )}
+            </div>
 
-      {/* Edit Permissions Modal */}
-      <Modal
-        isOpen={isPermissionsModalOpen}
-        onClose={() => {
-          setIsPermissionsModalOpen(false);
-          setSelectedUser(null);
-          setUserPermissions(null);
-        }}
-        title={`Editar Permissões: ${selectedUser?.nome}`}
-        maxWidth="lg"
-      >
-        {loadingPermissions ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400" />
+            {/* Close Button */}
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => setIsAssinaturaPanelOpen(false)}
+                className="px-6 py-2.5 text-sm font-semibold text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border-2 border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 hover:border-gray-400 dark:hover:border-neutral-500 transition-all shadow-sm"
+              >
+                Fechar
+              </button>
+            </div>
           </div>
-        ) : (
-<div className="p-6 space-y-8 bg-gray-50 dark:bg-neutral-900 rounded-b-xl max-h-[75vh] overflow-y-auto">
-
-
-  {/* === VISIBILIDADE DE MENUS === */}
-  <section className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-300 dark:border-neutral-700 p-5">
-    <div className="flex items-center gap-2 mb-4">
-      <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400 rounded-lg flex items-center justify-center">
-        🧭
-      </div>
-      <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">Visibilidade de Menus</h3>
-    </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {[
-        ['can_view_menu_chat', 'Conversas'],
-        ['can_view_menu_agent', 'Agente de IA'],
-        ['can_view_menu_crm', 'CRM'],
-        ['can_view_menu_schedule', 'Agendamentos'],
-        ['can_view_menu_contacts', 'Contatos'],
-        ['can_view_menu_connection', 'Conexão'],
-        ['can_view_menu_prospect', 'Envios em Massa'],
-        ['can_view_menu_settings', 'Configurações'],
-      ].map(([key, label]) => (
-        <label key={key} className="flex items-center gap-2 text-sm text-gray-700 dark:text-neutral-300">
-          <input
-            type="checkbox"
-            checked={(userPermissions as any)?.[key] || false}
-            onChange={(e) =>
-              handlePermissionChange(key as keyof UserPermissions, e.target.checked)
-            }
-            className="accent-purple-600 dark:accent-purple-500 w-4 h-4"
-          />
-          {label}
-        </label>
-      ))}
-    </div>
-  </section>
-
-  {/* === PERMISSÕES DE EDIÇÃO === */}
-  <section className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-300 dark:border-neutral-700 p-5">
-    <div className="flex items-center gap-2 mb-4">
-      <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center">
-        ✏️
-      </div>
-      <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">Permissões de Edição</h3>
-    </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {[
-        ['can_edit_agent', 'Editar Agente de IA'],
-        ['can_edit_crm', 'Editar CRM'],
-        ['can_edit_schedule', 'Editar Agendamentos'],
-        ['can_edit_contacts', 'Editar Contatos'],
-        ['can_edit_connection', 'Editar Conexão'],
-        ['can_edit_settings', 'Editar Configurações'],
-      ].map(([key, label]) => (
-        <label key={key} className="flex items-center gap-2 text-sm text-gray-700 dark:text-neutral-300">
-          <input
-            type="checkbox"
-            checked={(userPermissions as any)?.[key] || false}
-            onChange={(e) =>
-              handlePermissionChange(key as keyof UserPermissions, e.target.checked)
-            }
-            className="accent-emerald-600 dark:accent-emerald-500 w-4 h-4"
-          />
-          {label}
-        </label>
-      ))}
-    </div>
-  </section>
-
-  {/* === VISIBILIDADE DE LEADS === */}
-  <section className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-300 dark:border-neutral-700 p-5">
-  <div className="flex items-center gap-2 mb-4">
-    <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-400 rounded-lg flex items-center justify-center">
-      👥
-    </div>
-    <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">Visibilidade de Leads</h3>
-  </div>
-
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-    <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-neutral-300">
-      <input
-        type="radio"
-        name="leadVisibility"
-        className="accent-amber-600 dark:accent-amber-500 w-4 h-4"
-        checked={leadVisibility === 'all'}
-        onChange={() => setLeadVisibility('all')}
-      />
-      Ver Todos os Leads
-    </label>
-
-    <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-neutral-300">
-      <input
-        type="radio"
-        name="leadVisibility"
-        className="accent-amber-600 dark:accent-amber-500 w-4 h-4"
-        checked={leadVisibility === 'assigned'}
-        onChange={() => setLeadVisibility('assigned')}
-      />
-      Ver Apenas Leads Atribuídos
-    </label>
-  </div>
-</section>
-
-
-  {/* === BOTÕES === */}
-  <div className="flex justify-end gap-3 pt-4 border-t border-gray-300 dark:border-neutral-700">
-    <button
-      type="button"
-      onClick={() => {
-        setIsPermissionsModalOpen(false);
-        setSelectedUser(null);
-        setUserPermissions(null);
-      }}
-      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md"
-    >
-      Cancelar
-    </button>
-    <button
-      onClick={handleSavePermissions}
-      disabled={savingPermissions}
-      className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 rounded-md disabled:opacity-50"
-    >
-      {savingPermissions ? (
-        <>
-          <Loader2 className="w-4 h-4 animate-spin" />
-          <span>Salvando...</span>
-        </>
-      ) : (
-        'Salvar Permissões'
+        </SidePanel>
       )}
-    </button>
-  </div>
-</div>
-
-
-
-        )}
-      </Modal>
     </div>
   );
 }

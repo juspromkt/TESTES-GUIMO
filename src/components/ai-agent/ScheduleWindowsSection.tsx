@@ -60,6 +60,8 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<{ day: Day; window: TimeWindow } | null>(null);
   const [error, setError] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: number; day: string } | null>(null);
+  const [replicateConfirm, setReplicateConfirm] = useState<Day | null>(null);
   const fetched = useRef(false);
 
   const fetchWindows = async () => {
@@ -188,7 +190,8 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Deseja excluir esta janela?')) return;
+    setDeleteConfirm(null);
+    setLoading(true);
     try {
       const res = await fetch(
         `https://n8n.lumendigital.com.br/webhook/prospecta/agente/agendamento/horario/delete?id=${id}`,
@@ -202,6 +205,8 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
     } catch (err) {
       console.error('Erro ao excluir janela:', err);
       alert('Erro ao excluir janela');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -270,20 +275,15 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
   }
 
   const handleReplicateDay = async (sourceDay: Day) => {
-    if (windows[sourceDay].length === 0) {
-      alert('Não há horários neste dia para replicar');
-      return;
-    }
+    setReplicateConfirm(null);
+    setLoading(true);
 
-    if (!window.confirm('Isso irá substituir os horários existentes de terça a sexta-feira pelos horários deste dia. Deseja continuar?')) {
-      return;
-    }
+    // Determinar os dias de destino (todos exceto o dia de origem)
+    const targetDays: Day[] = days.filter(d => d !== sourceDay);
 
     try {
-      const otherDays: Day[] = ['tuesday', 'wednesday', 'thursday', 'friday'];
-
-      // Para cada dia, excluir todos os horários existentes
-      for (const day of otherDays) {
+      // Para cada dia de destino, excluir todos os horários existentes
+      for (const day of targetDays) {
         const dayWindows = windows[day];
         for (const window of dayWindows) {
           if (window.Id) {
@@ -298,8 +298,11 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
         }
       }
 
+      // Aguardar um pouco para garantir que as exclusões foram processadas
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       // Criar os mesmos horários do dia de origem para os outros dias
-      for (const day of otherDays) {
+      for (const day of targetDays) {
         for (const sourceDayWindow of windows[sourceDay]) {
           const body = {
             dia_semana: day,
@@ -318,11 +321,16 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
         }
       }
 
+      // Aguardar antes de recarregar
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       await fetchWindows();
-      alert('Horários replicados com sucesso para terça a sexta-feira!');
+      alert('Horários replicados com sucesso para todos os dias!');
     } catch (err) {
       console.error('Erro ao replicar horários:', err);
       alert('Erro ao replicar horários');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -341,9 +349,9 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
                 <span className="font-semibold text-sm text-gray-900 dark:text-neutral-100">{dayLabels[day]}</span>
                 {canEdit && windows[day].length > 0 && (
                   <button
-                    onClick={() => handleReplicateDay(day)}
+                    onClick={() => setReplicateConfirm(day)}
                     className="text-xs px-2 py-0.5 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors border border-blue-200 dark:border-blue-800"
-                    title="Replicar horários deste dia para terça a sexta-feira"
+                    title="Replicar horários deste dia para todos os outros dias"
                   >
                     Replicar para todos os dias
                   </button>
@@ -376,7 +384,7 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
                           <Pencil className="w-3 h-3" />
                         </button>
                         <button
-                          onClick={() => handleDelete(w.Id!)}
+                          onClick={() => setDeleteConfirm({ id: w.Id!, day: dayLabels[day] })}
                           className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -397,6 +405,81 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
           </div>
         ))}
       </div>
+
+      {/* Modal de Confirmação de Exclusão */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-2">
+                  Excluir Horário
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-neutral-400 leading-relaxed">
+                  Tem certeza que deseja excluir este horário de <span className="font-semibold text-gray-900 dark:text-neutral-100">{deleteConfirm.day}</span>? Esta ação não pode ser desfeita.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleDelete(deleteConfirm.id)}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-600 rounded-lg transition-colors"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Replicação */}
+      {replicateConfirm && (
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                <Check className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-2">
+                  Replicar Horários
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-neutral-400 leading-relaxed mb-3">
+                  Os horários de <span className="font-semibold text-gray-900 dark:text-neutral-100">{dayLabels[replicateConfirm]}</span> serão replicados para todos os outros dias da semana.
+                </p>
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                  <p className="text-xs text-amber-800 dark:text-amber-200 font-medium">
+                    ⚠️ Os horários existentes nos outros dias serão substituídos.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setReplicateConfirm(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleReplicateDay(replicateConfirm)}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 rounded-lg transition-colors"
+              >
+                Replicar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
