@@ -29,7 +29,9 @@
       "Bash(node extract-articles.cjs:*)",
       "Bash(cat:*)",
       "Bash(\"C:\\GUIMOO - VERSÃO ON\\lumen-guimoo\\src\\pages\\TutorialInterno.tsx.new\")",
-      "Bash(del \"C:\\GUIMOO - VERSÃO ON\\lumen-guimoo\\src\\components\\WelcomeModal.tsx\")"
+      "Bash(del \"C:\\GUIMOO - VERSÃO ON\\lumen-guimoo\\src\\components\\WelcomeModal.tsx\")",
+      "Bash(\"C:\\GUIMOO - VERSÃO ON\\lumen-guimoo\\src\\components\\configuracoes\\UsersSection.tsx.new\")",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []

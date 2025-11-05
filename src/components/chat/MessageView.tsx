@@ -49,6 +49,7 @@ import { useMessageEvents } from "../../pages/MessageEventsContext";
 import { AudioPlayer } from "./AudioPlayer";
 import * as Popover from "@radix-ui/react-popover";
 import type { Tag } from "../../types/tag";
+import { PDFExporter } from "./PDFExporter";
 
 const TRANSFER_STORAGE_KEY = 'chat_transfer_remote_jids';
 const TRANSFER_UPDATED_EVENT = 'chat_transfers_updated';
@@ -4155,6 +4156,13 @@ return (
         </div>
       )}
     </div>
+
+    {/* PDF Export Button */}
+    <PDFExporter
+      messages={messages}
+      contactName={displayName}
+      contactPhone={formatPhoneNumber(selectedChat.remoteJid)}
+    />
 
     {/* Search Button */}
     <button
