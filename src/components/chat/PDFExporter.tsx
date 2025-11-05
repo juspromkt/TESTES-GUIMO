@@ -170,7 +170,7 @@ export function PDFExporter({
         bubble.style.maxWidth = '70%';
         bubble.style.padding = '10px 15px';
         bubble.style.borderRadius = '10px';
-        bubble.style.wordWrap = 'break-word';
+        bubble.style.overflowWrap = 'break-word';
 
         // Estilo baseado em quem enviou
         if (msg.key.fromMe) {
@@ -308,11 +308,10 @@ export function PDFExporter({
 
       // Converter para canvas
       const canvas = await html2canvas(exportContainer, {
-        scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff'
-      });
+      } as any);
 
       setProgress(90);
 
@@ -368,26 +367,49 @@ export function PDFExporter({
 
   try {
     return (
-      <button
-        onClick={exportToPDF}
-        disabled={isExporting || messages.length === 0}
-        className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed relative"
-        title={isExporting ? `Exportando... ${Math.round(progress)}%` : 'Exportar conversa para PDF'}
-        aria-label="Exportar conversa para PDF"
-      >
-        {isExporting ? (
-          <>
-            <Loader2 className="w-5 h-5 text-gray-600 dark:text-gray-300 animate-spin" />
-            {progress > 0 && (
-              <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                {Math.round(progress)}%
+      <div className="relative">
+        <button
+          onClick={exportToPDF}
+          disabled={isExporting || messages.length === 0}
+          className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed relative"
+          title={isExporting ? `Exportando... ${Math.round(progress)}%` : 'Exportar conversa para PDF'}
+          aria-label="Exportar conversa para PDF"
+        >
+          {isExporting ? (
+            <div className="relative">
+              <Loader2 className="w-5 h-5 text-[#00a884] dark:text-[#00a884] animate-spin" />
+            </div>
+          ) : (
+            <FileDown className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-[#00a884] dark:group-hover:text-[#00a884] transition-colors duration-200" />
+          )}
+        </button>
+
+        {/* Indicador de progresso animado */}
+        {isExporting && progress > 0 && (
+          <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 px-3 py-2 min-w-[120px]">
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                      Exportando
+                    </span>
+                    <span className="text-xs font-semibold text-[#00a884]">
+                      {Math.round(progress)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="h-full bg-[#00a884] rounded-full transition-all duration-300 ease-out"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
               </div>
-            )}
-          </>
-        ) : (
-          <FileDown className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-white" />
+            </div>
+          </div>
         )}
-      </button>
+      </div>
     );
   } catch (error) {
     console.error('Erro ao renderizar PDFExporter:', error);
