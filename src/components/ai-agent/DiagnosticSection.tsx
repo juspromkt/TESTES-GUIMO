@@ -38,6 +38,7 @@ interface FollowUpConfig {
 
 interface AutoMovement {
   Id: number;
+  isAtivo: boolean;
 }
 
 interface OperatingHours {
@@ -186,22 +187,29 @@ export default function DiagnosticSection({ token }: DiagnosticSectionProps) {
 
     // 3. Trigger Status
     try {
+      console.log('Verificando Gatilho...');
       const response = await fetch(
         'https://n8n.lumendigital.com.br/webhook/prospecta/agente/gatilho/get',
         { headers: { token } }
       );
+      console.log('Gatilho response status:', response.status);
 
       if (!response.ok) {
         throw new Error('API error');
       }
 
-      const data = await response.json();
+      const text = await response.text();
+      const data = text && text.trim() ? JSON.parse(text) : null;
+      console.log('Gatilho data:', data);
+
+      // A API retorna um array, pega o primeiro elemento
+      const triggerConfig = Array.isArray(data) && data.length > 0 ? data[0] : data;
 
       setDiagnosticData(prev => ({
         ...prev,
         trigger: {
-          status: data?.isAtivo ? 'active' : 'inactive',
-          message: data?.isAtivo ? 'Gatilho ativo' : 'Gatilho inativo'
+          status: triggerConfig?.isAtivo ? 'active' : 'inactive',
+          message: triggerConfig?.isAtivo ? 'Gatilho ativo' : 'Gatilho inativo'
         }
       }));
     } catch (err) {
@@ -256,27 +264,40 @@ export default function DiagnosticSection({ token }: DiagnosticSectionProps) {
 
     // 5. Auto Movement Status
     try {
+      console.log('Verificando Movimentação Automática...');
       const response = await fetch(
         'https://n8n.lumendigital.com.br/webhook/prospecta/agente/movimentacao/get',
         { headers: { token } }
       );
-      const data: AutoMovement[] = await response.json();
+      console.log('Movimentação response status:', response.status);
 
-      if (Array.isArray(data) && data.length > 0) {
+      if (!response.ok) {
+        throw new Error('API error');
+      }
+
+      const text = await response.text();
+      const data: AutoMovement[] = text && text.trim() ? JSON.parse(text) : [];
+      console.log('Movimentação data:', data);
+
+      // Verifica se há pelo menos uma regra ativa
+      const activeRules = Array.isArray(data) ? data.filter(rule => rule.isAtivo) : [];
+
+      if (activeRules.length > 0) {
         setDiagnosticData(prev => ({
           ...prev,
           autoMovement: {
             status: 'active',
-            message: `Movimentação automática ativa: ${data.length} regra${data.length !== 1 ? 's' : ''} configurada${data.length !== 1 ? 's' : ''}`
+            message: `${activeRules.length} regra${activeRules.length !== 1 ? 's' : ''} ativa${activeRules.length !== 1 ? 's' : ''}`
           }
         }));
       } else {
         setDiagnosticData(prev => ({
           ...prev,
-          autoMovement: { status: 'inactive', message: 'Nenhuma regra configurada' }
+          autoMovement: { status: 'inactive', message: data.length > 0 ? 'Todas as regras estão desativadas' : 'Nenhuma regra configurada' }
         }));
       }
     } catch (err) {
+      console.error('Erro ao verificar movimentação:', err);
       setDiagnosticData(prev => ({
         ...prev,
         autoMovement: { status: 'inactive', message: 'Erro ao verificar regras' }
