@@ -101,7 +101,7 @@ const FAQItem: React.FC<FAQItemProps> = ({
   const formats = ['header', 'bold', 'italic', 'underline', 'list', 'bullet', 'media'];
 
   return (
-    <div className="border border-gray-300 rounded-lg p-4">
+    <div className="border border-gray-200 rounded-lg p-4">
       <div className="flex items-start gap-4">
         <div className="flex-1 space-y-4">
           <div>

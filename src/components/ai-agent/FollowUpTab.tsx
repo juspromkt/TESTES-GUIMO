@@ -1,405 +1,312 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Loader2, Save, RefreshCw, Upload } from 'lucide-react';
-import type { Fonte } from '../../types/fonte';
-import type { Funil } from '../../types/funil';
-import Pagination from '../Pagination';
-import { registerMediaBlot } from './mediaBlot';
-import 'react-quill/dist/quill.snow.css';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  Repeat2,
+  Plus,
+  Trash2,
+  Loader2,
+  Save,
+  GripVertical,
+  Maximize2,
+  Minimize2,
+  Upload,
+} from 'lucide-react';
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from '@hello-pangea/dnd';
 import ReactQuill from 'react-quill';
-
+import 'react-quill/dist/quill.snow.css';
 
 interface MediaItem {
   url: string;
   type: string;
-  name?: string;
+  name: string;
 }
 
-interface FollowUpConfig {
-  quantidade: number;
-  tempo_entre_mensagens: string;
+interface FollowUp {
+  Id?: number;
+  ordem: number;
   prompt: string;
-  isAtivo: boolean;
-}
-
-interface FollowUpHistory {
-  Id: number;
-  data: string;
-  numero: string;
-  id_funil: number;
-  id_estagio: number;
-  funil?: string;
-  estagio?: string;
+  horario: string;
 }
 
 interface FollowUpTabProps {
   token: string;
   canViewAgent: boolean;
-  activeSubTab: 'config' | 'history';
 }
 
-const CACHE_KEY = 'followup_history';
-const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
-
-export default function FollowUpTab({ token, canViewAgent, activeSubTab }: FollowUpTabProps) {
-  const [config, setConfig] = useState<FollowUpConfig>({
-    quantidade: 0,
-    tempo_entre_mensagens: '30 minutos',
-    prompt: '',
-    isAtivo: false
-  });
-  const [history, setHistory] = useState<FollowUpHistory[]>([]);
+export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
+  const [followUps, setFollowUps] = useState<FollowUp[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingConfig, setLoadingConfig] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [togglingStatus, setTogglingStatus] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [funnels, setFunnels] = useState<Funil[]>([]);
+  const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
+  const [collapsedFollowUps, setCollapsedFollowUps] = useState<boolean[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const quillRef = useRef<ReactQuill>(null);
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  // Filter states
-  const [phoneFilter, setPhoneFilter] = useState('');
-  const [dateFromFilter, setDateFromFilter] = useState('');
-  const [dateToFilter, setDateToFilter] = useState('');
-  const [funnelFilter, setFunnelFilter] = useState('');
-  const [stageFilter, setStageFilter] = useState('');
+  const [activeFollowUp, setActiveFollowUp] = useState<number | null>(null);
+  const [isQuillReady, setIsQuillReady] = useState(false);
+  const quillRefs = useRef<{ [key: number]: ReactQuill | null }>({});
 
   const timeOptions = [
-    { value: '10 minutos', label: '10 minutos' },
-    { value: '20 minutos', label: '20 minutos' },
-    { value: '30 minutos', label: '30 minutos' },
-    { value: '1 hora', label: '1 hora' },
-    { value: '2 horas', label: '2 horas' },
-    { value: '6 horas', label: '6 horas' },
-    { value: '24 horas', label: '24 horas' },
-    { value: '48 horas', label: '48 horas' },
-    { value: '72 horas', label: '72 horas' }
+    { value: '10 minutos', label: '10 minutos', minutes: 10 },
+    { value: '20 minutos', label: '20 minutos', minutes: 20 },
+    { value: '30 minutos', label: '30 minutos', minutes: 30 },
+    { value: '1 hora', label: '1 hora', minutes: 60 },
+    { value: '2 horas', label: '2 horas', minutes: 120 },
+    { value: '6 horas', label: '6 horas', minutes: 360 },
+    { value: '12 horas', label: '12 horas', minutes: 720 },
+    { value: '24 horas', label: '24 horas', minutes: 1440 },
+    { value: '2 dias', label: '2 dias', minutes: 2880 },
+    { value: '3 dias', label: '3 dias', minutes: 4320 },
+    { value: '7 dias', label: '7 dias', minutes: 10080 },
+    { value: '15 dias', label: '15 dias', minutes: 21600 },
+    { value: '30 dias', label: '30 dias', minutes: 43200 },
   ];
 
-  useEffect(() => {
-    fetchConfig();
-    fetchHistory();
-    registerMediaBlot();
-  }, []);
-
-async function registerMediaBlot() {
-  if (typeof window !== 'undefined') {
-    const { Quill } = await import('react-quill');
-    const BlockEmbed = Quill.import('blots/block/embed');
-
-    class MediaBlot extends BlockEmbed {
-      static create(value: MediaItem | string) {
-        const node = super.create();
-        node.setAttribute('contenteditable', 'false');
-
-        if (typeof value === 'string') {
-          node.innerHTML = value;
-          return node;
-        }
-
-        // Adiciona os atributos data-*
-        node.setAttribute('data-url', value.url);
-        node.setAttribute('data-type', value.type);
-        if (value.name) {
-          node.setAttribute('data-name', value.name);
-        }
-
-        if (value.type.startsWith('image')) {
-          node.innerHTML = `<img src="${value.url}" alt="${value.name || ''}" style="max-width: 300px; border-radius: 8px;" />`;
-        } else if (value.type.startsWith('video')) {
-          node.innerHTML = `<video src="${value.url}" controls style="max-width: 200px; border-radius: 8px;"></video>`;
-        } else if (value.type.startsWith('audio')) {
-          node.innerHTML = `<audio src="${value.url}" controls style="width: 300px;"></audio>`;
-        } else if (value.type === 'application/pdf') {
-          node.innerHTML = `
-            <div style="display: flex; align-items: center; background: #eff6ff; padding: 12px; border-radius: 8px; max-width: 80%; margin: 0 auto;">
-              <div style="width: 40px; height: 40px; background: #dc2626; display: flex; justify-content: center; align-items: center; border-radius: 8px; color: white; font-size: 20px;">📄</div>
-              <a href="${value.url}" target="_blank" style="margin-left: 12px; color: #2563eb; font-weight: 500; text-decoration: none;">${value.name || 'Abrir PDF'}</a>
-            </div>`;
-        }
-
-        return node;
-      }
-
-      static value(node: HTMLElement) {
-        return {
-          url: node.getAttribute('data-url'),
-          type: node.getAttribute('data-type'),
-          name: node.getAttribute('data-name'),
-          html: node.innerHTML
-        };
-      }
-    }
-
-    MediaBlot.blotName = 'media';
-    MediaBlot.tagName = 'div';
-    MediaBlot.className = 'ql-media';
-    Quill.register(MediaBlot);
-  }
-}
-
-  // Load cached history
-  const loadCachedHistory = () => {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      const { data, timestamp } = JSON.parse(cached);
-      if (Date.now() - timestamp < CACHE_EXPIRY) {
-        setHistory(data);
-        return true;
-      }
-    }
-    return false;
+  // Função para converter horário em minutos
+  const getTimeInMinutes = (horario: string): number => {
+    const option = timeOptions.find(opt => opt.value === horario);
+    return option?.minutes || 0;
   };
 
-  // Cache history data
-  const cacheHistory = (data: FollowUpHistory[]) => {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({
-      data,
-      timestamp: Date.now()
-    }));
-  };
-
-  // Fetch follow-up configuration
-  const fetchConfig = async () => {
-    setLoadingConfig(true);
+  const fetchFollowUps = useCallback(async () => {
+    setLoading(true);
     try {
-      const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/agente/follow/get', {
-        headers: { token }
-      });
-
-      const configText = await response.text();
-      
-      if (configText && configText.trim()) {
-        const configData = JSON.parse(configText);
-        if (Array.isArray(configData) && configData.length > 0) {
-          setConfig(configData[0]);
+      const response = await fetch(
+        'https://n8n.lumendigital.com.br/webhook/follow/get',
+        {
+          headers: { token },
         }
-      }
-    } catch (err) {
-      console.error('Erro ao carregar configurações:', err);
-      setError('Erro ao carregar configurações do follow-up');
-    } finally {
-      setLoadingConfig(false);
-    }
-  };
-
-  // Fetch funnel data once
-  const fetchFunnels = async () => {
-    try {
-      const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/funil/get', {
-        headers: { token }
-      });
+      );
 
       if (!response.ok) {
-        throw new Error('Erro ao carregar funis');
+        throw new Error('Erro ao carregar follow-ups');
       }
 
       const data = await response.json();
-      setFunnels(Array.isArray(data) ? data : []);
-      return data;
-    } catch (err) {
-      console.error('Erro ao carregar funis:', err);
-      return [];
-    }
-  };
 
-// Fetch history data
-const fetchHistory = async (isRefreshing = false) => {
-  if (!isRefreshing && loadCachedHistory()) {
-    setLoading(false);
-    return;
-  }
-
-  try {
-    if (isRefreshing) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
-
-    // Fetch history and funnels in parallel
-    const [historyResponse, funnelsData] = await Promise.all([
-      fetch('https://n8n.lumendigital.com.br/webhook/prospecta/agente/follow/historico/get', {
-        headers: { token }
-      }).then(res => res.json()),
-      fetchFunnels()
-    ]);
-
-    // Verifica se o histórico está vazio ou contém apenas um objeto vazio
-    const isEmpty = 
-      !Array.isArray(historyResponse) || 
-      historyResponse.length === 0 || 
-      (historyResponse.length === 1 && Object.keys(historyResponse[0]).length === 0);
-
-    if (isEmpty) {
-      setHistory([]);
-      cacheHistory([]);
-      return;
-    }
-
-    // Map funnel and stage names to history items
-    const historyWithNames = historyResponse.map((item: FollowUpHistory) => {
-      const funnel = funnelsData.find((f: Funil) => f.id === item.id_funil);
-      let stageName = '';
-
-      if (funnel?.estagios) {
-        const stage = funnel.estagios.find(s => s.Id === item.id_estagio.toString());
-        if (stage) {
-          stageName = stage.nome;
-        }
+      if (Array.isArray(data) && data.length > 0) {
+        setFollowUps(data);
+        setCollapsedFollowUps(data.map(() => true));
+      } else {
+        setFollowUps([]);
+        setCollapsedFollowUps([]);
       }
-
-      return {
-        ...item,
-        funil: funnel ? funnel.nome : 'N/A',
-        estagio: stageName || 'N/A'
-      };
-    });
-
-    setHistory(historyWithNames);
-    cacheHistory(historyWithNames);
-
-  } catch (err) {
-    console.error('Erro ao carregar histórico:', err);
-    setError('Erro ao carregar histórico');
-  } finally {
-    setLoading(false);
-    setRefreshing(false);
-  }
-};
-
-  const handleToggleStatus = async () => {
-    setTogglingStatus(true);
-    try {
-      const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/agente/follow/toggle', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          token
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao alternar status do follow-up');
-      }
-
-      await fetchConfig();
-      setSuccess('Status do follow-up alterado com sucesso!');
-      setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError('Erro ao alternar status do follow-up');
-      setTimeout(() => setError(''), 3000);
+      console.error('Erro ao carregar follow-ups:', err);
+      setError('Erro ao carregar configurações de follow-up');
     } finally {
-      setTogglingStatus(false);
+      setLoading(false);
     }
-  };
+  }, [token]);
 
-  // Função para lidar com o upload de arquivos
-  async function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
+  useEffect(() => {
+    fetchFollowUps();
+  }, [fetchFollowUps]);
+
+  useEffect(() => {
+    const initializeQuill = async () => {
+      await registerMediaBlot();
+      setIsQuillReady(true);
+    };
+    initializeQuill();
+  }, []);
+
+  useEffect(() => {
+    setCollapsedFollowUps((prev) => {
+      if (prev.length === 0) {
+        return followUps.map(() => true);
+      }
+
+      if (followUps.length > prev.length) {
+        return [...prev, ...Array(followUps.length - prev.length).fill(true)];
+      }
+
+      if (followUps.length < prev.length) {
+        return prev.slice(0, followUps.length);
+      }
+
+      return prev;
+    });
+  }, [followUps.length]);
+
+  // Registrar MediaBlot para suporte a mídias
+  async function registerMediaBlot() {
+    if (typeof window !== 'undefined') {
+      const { Quill } = await import('react-quill');
+      const BlockEmbed = Quill.import('blots/block/embed');
+
+      class MediaBlot extends BlockEmbed {
+        static create(value: MediaItem | string) {
+          const node = super.create();
+          node.setAttribute('contenteditable', 'false');
+
+          if (typeof value === 'string') {
+            node.innerHTML = value;
+            return node;
+          }
+
+          node.setAttribute('data-url', value.url);
+          node.setAttribute('data-type', value.type);
+          if (value.name) {
+            node.setAttribute('data-name', value.name);
+          }
+
+          if (value.type.startsWith('image')) {
+            node.innerHTML = `<img src="${value.url}" alt="${
+              value.name || ''
+            }" style="max-width: 300px; border-radius: 8px;" />`;
+          } else if (value.type.startsWith('video')) {
+            node.innerHTML = `<video src="${value.url}" controls style="max-width: 200px; border-radius: 8px;"></video>`;
+          } else if (value.type.startsWith('audio')) {
+            node.innerHTML = `<audio src="${value.url}" controls style="width: 300px;"></audio>`;
+          } else if (value.type === 'application/pdf') {
+            node.innerHTML = `
+              <div style="display: flex; align-items: center; justify-content: flex-start; background: #eff6ff; padding: 4px; border-radius: 8px; max-width: 80%; margin: 2px; line-height: 1;">
+                <div style="width: 40px; height: 40px; background: #dc2626; display: flex; justify-content: center; align-items: center; border-radius: 8px; color: white; font-size: 24px; line-height: 1; transform: translateY(1px);">📄</div>
+                <a href="${value.url}" target="_blank" style="color: #2563eb; font-weight: 500; text-decoration: none; margin-left: 8px;">${
+              value.name || 'Abrir PDF'
+            }</a>
+              </div>`;
+          }
+
+          return node;
+        }
+
+        static value(node: HTMLElement) {
+          return {
+            url: node.getAttribute('data-url'),
+            type: node.getAttribute('data-type'),
+            name: node.getAttribute('data-name'),
+            html: node.innerHTML,
+          };
+        }
+      }
+
+      MediaBlot.blotName = 'media';
+      MediaBlot.tagName = 'div';
+      MediaBlot.className = 'ql-media';
+      Quill.register(MediaBlot);
+    }
+  }
+
+  // Upload de arquivo
+  const handleFileUpload = async (
+    ordem: number,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    setActiveFollowUp(ordem);
     setIsUploading(true);
 
     try {
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/agente/upload', {
-        method: 'POST',
-        headers: { token },
-        body: formData,
-      });
+      const res = await fetch(
+        'https://n8n.lumendigital.com.br/webhook/prospecta/agente/upload',
+        {
+          method: 'POST',
+          headers: { token },
+          body: formData,
+        }
+      );
 
       if (!res.ok) throw new Error('Erro no upload');
 
       const { url } = await res.json();
-      const editor = quillRef.current?.getEditor();
+      const editor = quillRefs.current[ordem]?.getEditor();
 
       if (editor) {
         const range = editor.getSelection(true);
-
-        editor.insertEmbed(range.index, 'media', { 
-          url, 
-          type: file.type, 
-          name: file.name 
+        editor.insertEmbed(range.index, 'media', {
+          url,
+          type: file.type,
+          name: file.name,
         });
-
         editor.setSelection(range.index + 1, 0);
       }
     } catch (error) {
-      console.error(error);
-      setError('Erro ao fazer upload');
+      console.error('Error uploading media:', error);
+      setError('Erro ao fazer upload da mídia');
       setTimeout(() => setError(''), 3000);
     } finally {
       setIsUploading(false);
+      setActiveFollowUp(null);
       event.target.value = '';
-    }
-  }
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/agente/follow/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          token
-        },
-        body: JSON.stringify(config)
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao atualizar configurações do follow-up');
-      }
-
-      setSuccess('Configurações salvas com sucesso!');
-      setTimeout(() => {
-        setSuccess('');
-      }, 2000);
-    } catch (err) {
-      console.error('Erro ao atualizar configurações:', err);
-      setError('Erro ao salvar configurações do follow-up');
-    } finally {
-      setSaving(false);
     }
   };
 
+  const handleAddFollowUp = () => {
+    const newOrder = followUps.length + 1;
+    setFollowUps([
+      ...followUps,
+      {
+        ordem: newOrder,
+        prompt: '',
+        horario: '30 minutos',
+      },
+    ]);
+    setCollapsedFollowUps([...collapsedFollowUps, false]);
+  };
 
- const formatPhoneNumber = (phone: string | undefined) => {
-  if (!phone) return 'Não há registros'; // Retorna 'N/A' se o número for undefined, null ou string vazia
-  
-  try {
-    const cleaned = phone.replace(/\D/g, '');
-    const match = cleaned.match(/^(\d{2})(\d{2})(\d{4,5})(\d{4})$/);
-    if (match) {
-      return `+${match[1]} (${match[2]}) ${match[3]}-${match[4]}`;
-    }
-    return phone;
-  } catch (error) {
-    console.warn('Erro ao formatar número de telefone:', phone);
-    return phone || 'N/A';
-  }
-};
+  const handleRemoveFollowUp = (ordem: number) => {
+    const updatedFollowUps = followUps
+      .filter((followUp) => followUp.ordem !== ordem)
+      .map((followUp, index) => ({
+        ...followUp,
+        ordem: index + 1,
+      }));
+    setFollowUps(updatedFollowUps);
+  };
 
-  const formatDateTime = (dateString: string) => {
+  const handleUpdateFollowUp = (
+    ordem: number,
+    field: 'prompt' | 'horario',
+    value: string
+  ) => {
+    setFollowUps((prevFollowUps) =>
+      prevFollowUps.map((followUp) =>
+        followUp.ordem === ordem ? { ...followUp, [field]: value } : followUp
+      )
+    );
+  };
 
-    if (!dateString) return 'Não há registros'; // Retorna 'N/A' se o número for undefined, null ou string vazia
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
 
-    return new Date(dateString).toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
+    const newFollowUps = Array.from(followUps);
+    const [moved] = newFollowUps.splice(result.source.index, 1);
+    newFollowUps.splice(result.destination.index, 0, moved);
+
+    const reordered = newFollowUps.map((followUp, index) => ({
+      ...followUp,
+      ordem: index + 1,
+    }));
+
+    setFollowUps(reordered);
+
+    setCollapsedFollowUps((prev) => {
+      const updated = [...prev];
+      const [collapsed] = updated.splice(result.source.index, 1);
+      updated.splice(
+        result.destination!.index,
+        0,
+        collapsed !== undefined ? collapsed : true
+      );
+      return updated.slice(0, reordered.length);
+    });
+  };
+
+  const toggleFollowUpCollapse = (index: number) => {
+    setCollapsedFollowUps((prev) => {
+      const next = [...prev];
+      next[index] = !next[index];
+      return next;
     });
   };
 
@@ -417,497 +324,373 @@ const fetchHistory = async (isRefreshing = false) => {
 
   const formats = [
     'header',
-    'bold', 'italic', 'underline',
-    'list', 'bullet',
+    'bold',
+    'italic',
+    'underline',
+    'list',
+    'bullet',
     'media',
   ];
 
-  // Apply filters to history
-  const filteredHistory = history.filter(item => {
-    // Phone filter
-    if (phoneFilter && !item.numero?.includes(phoneFilter.replace(/\D/g, ''))) {
-      return false;
-    }
+  const handleSave = async () => {
+    setSaving(true);
+    setError('');
+    setSuccess('');
 
-    // Date from filter
-    if (dateFromFilter) {
-      const itemDate = new Date(item.data);
-      const filterDate = new Date(dateFromFilter);
-      if (itemDate < filterDate) {
-        return false;
+    try {
+      // Ordenar follow-ups por tempo de espera (menor para maior)
+      const sortedFollowUps = [...followUps].sort((a, b) => {
+        return getTimeInMinutes(a.horario) - getTimeInMinutes(b.horario);
+      });
+
+      // Reatribuir ordem após ordenação
+      const reorderedFollowUps = sortedFollowUps.map((followUp, index) => ({
+        ...followUp,
+        ordem: index + 1,
+      }));
+
+      const response = await fetch(
+        'https://n8n.lumendigital.com.br/webhook/follow/create',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            token,
+          },
+          body: JSON.stringify(reorderedFollowUps),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Erro ao salvar follow-ups');
       }
-    }
 
-    // Date to filter
-    if (dateToFilter) {
-      const itemDate = new Date(item.data);
-      const filterDate = new Date(dateToFilter);
-      filterDate.setHours(23, 59, 59, 999); // End of day
-      if (itemDate > filterDate) {
-        return false;
-      }
+      await fetchFollowUps();
+      setSuccess('Follow-ups salvos e ordenados com sucesso!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('Erro ao salvar follow-ups:', err);
+      setError('Erro ao salvar configurações de follow-up');
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setSaving(false);
     }
+  };
 
-    // Funnel filter
-    if (funnelFilter && item.id_funil.toString() !== funnelFilter) {
-      return false;
-    }
-
-    // Stage filter
-    if (stageFilter && item.id_estagio.toString() !== stageFilter) {
-      return false;
-    }
-
-    return true;
+  // Verificar se há inconsistência na ordem dos tempos
+  const hasTimeOrderIssue = followUps.some((followUp, index) => {
+    if (index === 0) return false;
+    const currentTime = getTimeInMinutes(followUp.horario);
+    const previousTime = getTimeInMinutes(followUps[index - 1].horario);
+    return currentTime < previousTime;
   });
 
-  // Pagination calculations
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedHistory = filteredHistory.slice(startIndex, endIndex);
-
-  // Get unique stages for the selected funnel
-  const availableStages = funnelFilter
-    ? funnels.find(f => f.id.toString() === funnelFilter)?.estagios || []
-    : [];
-
-  if (loading && loadingConfig) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Configurações de Follow-up */}
-      {activeSubTab === 'config' && (
-      <div className="space-y-4">
-        {loadingConfig ? (
-          <div className="flex items-center justify-center h-32">
-            <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 bg-neutral-100 rounded-lg flex items-center justify-center">
+            <Repeat2 className="w-4 h-4 text-neutral-700" />
           </div>
-        ) : (
-          <>
-            {/* Header com Toggle */}
-            <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-4 transition-theme">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Status do Follow-up</h2>
-                  <p className="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
-                    {config.isAtivo ? 'Follow-up automático está ativo' : 'Follow-up automático está desativado'}
-                  </p>
-                </div>
-                {canViewAgent && (
-                  <button
-                    onClick={handleToggleStatus}
-                    disabled={togglingStatus}
-                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 ${
-                      config.isAtivo ? 'bg-emerald-600 dark:bg-emerald-500' : 'bg-gray-300 dark:bg-neutral-600'
-                    } ${togglingStatus ? 'opacity-70 cursor-wait' : 'cursor-pointer'}`}
-                  >
-                    <span
-                      className={`inline-block h-5 w-5 transform bg-white rounded-full shadow-sm transition-transform duration-300 ${
-                        config.isAtivo ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Configurações Básicas */}
-            <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-4 transition-theme">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-neutral-100 mb-3">Configurações Básicas</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1.5">
-                    Quantidade de Follow-ups
-                  </label>
-                  <select
-                    disabled={!canViewAgent}
-                    value={config.quantidade}
-                    onChange={(e) => setConfig({ ...config, quantidade: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
-                  >
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                    <option value="7">7</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1.5">
-                    Intervalo entre Mensagens
-                  </label>
-                  <select
-                    value={config.tempo_entre_mensagens}
-                    onChange={(e) => setConfig({ ...config, tempo_entre_mensagens: e.target.value })}
-                    disabled={!canViewAgent}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
-                  >
-                    {timeOptions.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Prompt de Follow-up */}
-            <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-4 transition-theme">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">Prompt de Follow-up</h3>
-                  <p className="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">Defina quando e como o follow-up deve ser enviado</p>
-                </div>
-                {canViewAgent && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const defaultText = `Analise as últimas mensagens trocadas e continuar o atendimento a partir do ponto exato em que parou, sem repetir perguntas já feitas.
-
-Regras:
-Sempre leia o histórico recente da conversa antes de responder.
-Identifique o último ponto da interação:
-Se o cliente estava respondendo perguntas, continue da próxima pergunta do fluxo.
-Se o cliente ficou em dúvida, retome oferecendo esclarecimento ou simplificação.
-Se já havia sido feita uma oferta de contrato ou agendamento, faça o follow-up direto sobre esse ponto.
-Nunca pressione de forma agressiva. Use uma linguagem acolhedora e consultiva.
-Evite mensagens genéricas como "oi, tudo bem?". Sempre personalize de acordo com o contexto anterior.
-Nunca diga o nome do cliente. (obrigatório)
-Estrutura da Mensagem de Follow-up:
-Retomar o contexto: Lembrar rapidamente do que estava sendo tratado.
-Avançar no ponto parado: Continuar a partir da última interação.
-Chamada leve para ação: Convidar o cliente a responder ou confirmar o próximo passo.
-Exemplos:
-Se o cliente parou na etapa de análise:
-"Você tinha me contado sobre [resumo da resposta anterior]. Para avançarmos, preciso só confirmar [pergunta seguinte]."
-Se o cliente parou na etapa de contrato:
-"Na última mensagem falamos sobre o contrato. Deseja que eu reenvie o link para assinatura agora?"
-Se o cliente parou em dúvida:
-"Notei que você ficou em dúvida sobre [tema]. Posso explicar de forma mais simples ou prefere que eu mostre um exemplo prático?"
-
-
-REGRA INTERNA IMPORTANTE: Nunca responda nenhuma dúvida jurídica ou dê instruções de casos. Seu papel é única e exclusivamente analisar através de perguntas se o cliente tem direito ou não a abrir um processo contra a empresa, mantendo sempre tom acolhedor e direto.`;
-                        setConfig({ ...config, prompt: defaultText });
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-lg text-blue-700 dark:text-blue-300 transition-colors"
-                    >
-                      Aplicar texto padrão
-                    </button>
-                    <input
-                      id="followup-file-upload"
-                      type="file"
-                      accept="image/*,video/*,audio/*,application/pdf"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => document.getElementById('followup-file-upload')?.click()}
-                      disabled={isUploading}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg text-gray-700 dark:text-neutral-200 transition-colors"
-                    >
-                      <Upload className="w-3.5 h-3.5" />
-                      {isUploading ? 'Carregando...' : 'Adicionar Mídia'}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="relative">
-                <ReactQuill
-                  ref={quillRef}
-                  theme="snow"
-                  value={config.prompt}
-                  onChange={canViewAgent ? (content) => setConfig({ ...config, prompt: content }) : undefined}
-                  modules={modules}
-                  formats={formats}
-                  readOnly={!canViewAgent}
-                  placeholder="Digite o prompt para follow-up..."
-                  className="bg-white dark:bg-neutral-700 rounded-lg"
-                />
-                {isUploading && (
-                  <div className="absolute inset-0 bg-white/80 dark:bg-neutral-800/80 flex items-center justify-center rounded-lg">
-                    <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Mensagens de Feedback */}
-            {error && (
-              <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded-xl text-sm">
-                {error}
-              </div>
-            )}
-
-            {success && (
-              <div className="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-300 px-4 py-3 rounded-xl text-sm">
-                {success}
-              </div>
-            )}
-
-            {/* Botão Salvar */}
-            {canViewAgent && (
-              <div className="flex justify-end pt-2">
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-xl hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Salvando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      <span>Salvar Configurações</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-          </>
+          <div>
+            <h2 className="text-sm font-semibold text-neutral-900">
+              Follow-up Automático
+            </h2>
+            <p className="text-xs text-neutral-500">
+              Configuração global - funciona para todos os agentes
+            </p>
+          </div>
+        </div>
+        {canViewAgent && (
+          <button
+            onClick={handleAddFollowUp}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors font-medium"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Adicionar
+          </button>
         )}
       </div>
+
+      {/* Validation Warning */}
+      {hasTimeOrderIssue && (
+        <div className="px-3 py-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg">
+          <p className="text-xs font-medium">Atenção: Ordem de tempo inconsistente</p>
+          <p className="text-xs mt-0.5 text-amber-700">
+            Os follow-ups serão reordenados automaticamente ao salvar.
+          </p>
+        </div>
       )}
 
-      {/* Histórico de Follow-up */}
-      {activeSubTab === 'history' && (
+      {/* Success/Error Messages */}
+      {success && (
+        <div className="px-3 py-2.5 bg-neutral-50 border border-neutral-200 text-neutral-700 rounded-lg text-xs">
+          {success}
+        </div>
+      )}
+
+      {error && (
+        <div className="px-3 py-2.5 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs">
+          {error}
+        </div>
+      )}
+
+      {/* Follow-ups List */}
       <div className="space-y-4">
-        {/* Filtros */}
-        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-4 transition-theme">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-neutral-100 mb-3">Filtros</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-            {/* Busca por telefone */}
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1.5">
-                Telefone
-              </label>
-              <input
-                type="text"
-                placeholder="Digite o número..."
-                value={phoneFilter}
-                onChange={(e) => {
-                  setPhoneFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
-              />
-            </div>
-
-            {/* Data de */}
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1.5">
-                Data de
-              </label>
-              <input
-                type="date"
-                value={dateFromFilter}
-                onChange={(e) => {
-                  setDateFromFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
-              />
-            </div>
-
-            {/* Data até */}
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1.5">
-                Data até
-              </label>
-              <input
-                type="date"
-                value={dateToFilter}
-                onChange={(e) => {
-                  setDateToFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
-              />
-            </div>
-
-            {/* Funil */}
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1.5">
-                Funil
-              </label>
-              <select
-                value={funnelFilter}
-                onChange={(e) => {
-                  setFunnelFilter(e.target.value);
-                  setStageFilter(''); // Reset stage when funnel changes
-                  setCurrentPage(1);
-                }}
-                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="followups">
+            {(provided) => (
+              <div
+                className="space-y-4"
+                ref={provided.innerRef}
+                {...provided.droppableProps}
               >
-                <option value="">Todos os funis</option>
-                {funnels.map((funnel) => (
-                  <option key={funnel.id} value={funnel.id}>
-                    {funnel.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
+                {followUps.map((followUp, index) => {
+                  const isCollapsed = collapsedFollowUps[index] ?? true;
+                  return (
+                    <Draggable
+                      draggableId={followUp.ordem.toString()}
+                      index={index}
+                      key={followUp.ordem}
+                      isDragDisabled={!canViewAgent}
+                    >
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className="bg-neutral-50 border border-neutral-200 rounded-lg p-4"
+                        >
+                          {/* Header */}
+                          <div className="flex items-start justify-between gap-3 mb-3">
+                            <div className="flex items-center gap-2">
+                              {canViewAgent && (
+                                <div
+                                  {...provided.dragHandleProps}
+                                  className="cursor-grab active:cursor-grabbing text-neutral-400 hover:text-neutral-600"
+                                  title="Arraste para reordenar"
+                                >
+                                  <GripVertical className="w-4 h-4" />
+                                </div>
+                              )}
+                              <div className="w-7 h-7 bg-neutral-200 rounded flex items-center justify-center text-neutral-900 font-semibold text-xs">
+                                {followUp.ordem}
+                              </div>
+                              <div>
+                                <p className="text-xs font-medium text-neutral-900">
+                                  Follow-up #{followUp.ordem}
+                                </p>
+                                {isCollapsed && (
+                                  <p className="text-xs text-neutral-500">
+                                    {followUp.horario}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => toggleFollowUpCollapse(index)}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-neutral-700 bg-neutral-200 rounded hover:bg-neutral-300 transition-colors"
+                              >
+                                {isCollapsed ? (
+                                  <>
+                                    <Maximize2 className="w-3 h-3" />
+                                    Expandir
+                                  </>
+                                ) : (
+                                  <>
+                                    <Minimize2 className="w-3 h-3" />
+                                    Reduzir
+                                  </>
+                                )}
+                              </button>
+                              {canViewAgent && !isCollapsed && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleRemoveFollowUp(followUp.ordem)
+                                  }
+                                  className="text-red-600 hover:text-red-700 p-1"
+                                  title="Remover"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
 
-            {/* Etapa */}
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-neutral-400 mb-1.5">
-                Etapa
-              </label>
-              <select
-                value={stageFilter}
-                onChange={(e) => {
-                  setStageFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                disabled={!funnelFilter}
-                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <option value="">Todas as etapas</option>
-                {availableStages.map((stage) => (
-                  <option key={stage.Id} value={stage.Id}>
-                    {stage.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+                          {/* Content */}
+                          {!isCollapsed && (
+                            <div className="space-y-3">
+                              {/* Horário */}
+                              <div>
+                                <label className="block text-xs font-medium text-neutral-700 mb-1.5">
+                                  Tempo de Espera
+                                </label>
+                                <select
+                                  value={followUp.horario}
+                                  onChange={(e) =>
+                                    handleUpdateFollowUp(
+                                      followUp.ordem,
+                                      'horario',
+                                      e.target.value
+                                    )
+                                  }
+                                  disabled={!canViewAgent}
+                                  className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-lg focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 disabled:bg-neutral-100 disabled:text-neutral-500"
+                                >
+                                  {timeOptions.map((option) => (
+                                    <option
+                                      key={option.value}
+                                      value={option.value}
+                                    >
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
+                                <p className="text-xs text-neutral-500 mt-1">
+                                  Tempo após a última interação
+                                </p>
+                              </div>
 
-          {/* Limpar filtros */}
-          {(phoneFilter || dateFromFilter || dateToFilter || funnelFilter || stageFilter) && (
-            <div className="mt-3 flex justify-end">
-              <button
-                onClick={() => {
-                  setPhoneFilter('');
-                  setDateFromFilter('');
-                  setDateToFilter('');
-                  setFunnelFilter('');
-                  setStageFilter('');
-                  setCurrentPage(1);
-                }}
-                className="px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-100 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
-              >
-                Limpar filtros
-              </button>
-            </div>
-          )}
-        </div>
+                              {/* Prompt */}
+                              <div>
+                                <label className="block text-xs font-medium text-neutral-700 mb-1.5">
+                                  Mensagem de Follow-up
+                                </label>
+                                {canViewAgent && (
+                                  <>
+                                    <input
+                                      type="file"
+                                      id={`file-upload-followup-${followUp.ordem}`}
+                                      accept="image/*,video/*,audio/*,application/pdf"
+                                      onChange={(e) =>
+                                        handleFileUpload(followUp.ordem, e)
+                                      }
+                                      className="hidden"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        document
+                                          .getElementById(
+                                            `file-upload-followup-${followUp.ordem}`
+                                          )
+                                          ?.click()
+                                      }
+                                      disabled={
+                                        isUploading &&
+                                        activeFollowUp === followUp.ordem
+                                      }
+                                      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded transition-colors disabled:opacity-50 mb-2"
+                                    >
+                                      <Upload className="w-3.5 h-3.5" />
+                                      Adicionar Mídia
+                                    </button>
+                                  </>
+                                )}
 
-        {/* Tabela de histórico */}
-        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 overflow-hidden transition-theme">
-          {/* Header Minimalista */}
-          <div className="px-5 py-3.5 border-b border-gray-100 dark:border-neutral-700/50">
-            <div className="flex items-center justify-between">
-              <div className="flex items-baseline gap-3">
-                <h2 className="text-base font-semibold text-gray-900 dark:text-neutral-100">Histórico</h2>
-                <span className="text-xs font-medium text-gray-500 dark:text-neutral-500">
-                  {filteredHistory.length} {filteredHistory.length === 1 ? 'registro' : 'registros'}
-                  {filteredHistory.length !== history.length && (
-                    <span className="text-gray-400 dark:text-neutral-600"> de {history.length}</span>
-                  )}
-                </span>
+                                <div className="relative">
+                                  {isQuillReady && (
+                                    <ReactQuill
+                                      ref={(el) =>
+                                        (quillRefs.current[followUp.ordem] = el)
+                                      }
+                                      theme="snow"
+                                      value={followUp.prompt}
+                                      onChange={
+                                        canViewAgent
+                                          ? (content) =>
+                                              handleUpdateFollowUp(
+                                                followUp.ordem,
+                                                'prompt',
+                                                content
+                                              )
+                                          : undefined
+                                      }
+                                      modules={
+                                        canViewAgent ? modules : { toolbar: false }
+                                      }
+                                      formats={formats}
+                                      readOnly={!canViewAgent}
+                                      placeholder="Digite a mensagem que o agente deve enviar neste follow-up..."
+                                      className="bg-white rounded-lg"
+                                    />
+                                  )}
+                                  {isUploading &&
+                                    activeFollowUp === followUp.ordem && (
+                                      <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                                        <Loader2 className="w-6 h-6 animate-spin text-gray-500" />
+                                      </div>
+                                    )}
+                                </div>
+                                <p className="text-xs text-neutral-500 mt-1">
+                                  Instrução para reativar o lead
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </Draggable>
+                  );
+                })}
+                {provided.placeholder}
               </div>
-              {canViewAgent && (
-                <button
-                  onClick={() => fetchHistory(true)}
-                  disabled={refreshing}
-                  className="p-1.5 text-gray-500 dark:text-neutral-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-all disabled:opacity-50"
-                  title="Atualizar histórico"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-                </button>
-              )}
-            </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+
+        {/* Empty State */}
+        {followUps.length === 0 && (
+          <div className="text-center py-10 bg-neutral-50 rounded-lg border border-neutral-200">
+            <Repeat2 className="w-10 h-10 text-neutral-300 mx-auto mb-3" />
+            <p className="text-xs text-neutral-500 mb-3">
+              Nenhum follow-up configurado
+            </p>
+            {canViewAgent && (
+              <button
+                onClick={handleAddFollowUp}
+                className="inline-flex items-center gap-1.5 px-3 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors text-xs font-medium"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Adicionar Follow-up
+              </button>
+            )}
           </div>
+        )}
+      </div>
 
-        {/* Tabela Refinada */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-100 dark:border-neutral-700/50">
-                <th className="px-5 py-2 text-left text-[10px] font-semibold text-gray-500 dark:text-neutral-500 uppercase tracking-wider">
-                  Data e Hora
-                </th>
-                <th className="px-5 py-2 text-left text-[10px] font-semibold text-gray-500 dark:text-neutral-500 uppercase tracking-wider">
-                  Contato
-                </th>
-                <th className="px-5 py-2 text-left text-[10px] font-semibold text-gray-500 dark:text-neutral-500 uppercase tracking-wider">
-                  Funil
-                </th>
-                <th className="px-5 py-2 text-left text-[10px] font-semibold text-gray-500 dark:text-neutral-500 uppercase tracking-wider">
-                  Etapa
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 dark:divide-neutral-700/30">
-              {paginatedHistory.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-5 py-20 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-14 h-14 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-neutral-800 dark:to-neutral-700 rounded-2xl flex items-center justify-center border border-gray-200 dark:border-neutral-600">
-                        <RefreshCw className="w-6 h-6 text-gray-300 dark:text-neutral-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-neutral-100">Nenhum registro</p>
-                        <p className="text-xs text-gray-500 dark:text-neutral-500 mt-1">Os follow-ups enviados aparecerão aqui</p>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                paginatedHistory.map((item) => (
-                  <tr
-                    key={item.Id}
-                    className="group hover:bg-gray-50/50 dark:hover:bg-neutral-700/20 transition-colors"
-                  >
-                    <td className="px-5 py-3.5 text-xs text-gray-600 dark:text-neutral-400">
-                      {formatDateTime(item.data)}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <span className="text-xs font-semibold text-gray-900 dark:text-neutral-100">
-                        {formatPhoneNumber(item.numero)}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <span className="text-xs text-gray-600 dark:text-neutral-400">
-                        {item.funil}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/50">
-                        {item.estagio}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-
-          <Pagination
-            totalItems={filteredHistory.length}
-            itemsPerPage={itemsPerPage}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-            onItemsPerPageChange={setItemsPerPage}
-          />
+      {/* Save Button */}
+      {canViewAgent && followUps.length > 0 && (
+        <div className="flex justify-end pt-3">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-1.5 px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Salvando...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-3.5 h-3.5" />
+                <span>Salvar</span>
+              </>
+            )}
+          </button>
         </div>
-      </div>
-      </div>
       )}
     </div>
   );

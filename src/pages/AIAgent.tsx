@@ -1,39 +1,12 @@
-// src/pages/AIAgent.tsx
-import React, { useState, useEffect } from 'react';
-import {
-  Loader2,
-  Bot,
-  ChevronDown,
-  Settings,
-  MessageCircle,
-  RefreshCw,
-  FlaskConical,
-  Menu,
-  X,
-} from 'lucide-react';
-import { hasPermission } from '../utils/permissions';
-
-// Seções internas
-import PersonalitySection from '../components/ai-agent/PersonalitySection';
-import RulesSection from '../components/ai-agent/RulesSection';
-import ServiceStepsSection from '../components/ai-agent/ServiceStepsSection';
-import FAQSection from '../components/ai-agent/FAQSection';
-import AgentFunctionsSection from '../components/ai-agent/AgentFunctionsSection';
-import OperatingHoursSection from '../components/ai-agent/OperatingHoursSection';
-import DefaultModelsSection from '../components/ai-agent/DefaultModelsSection';
-import TriggerSection from '../components/ai-agent/TriggerSection';
-import AudioSettingsSection from '../components/ai-agent/AudioSettingsSection';
-import AgentParametersSection from '../components/ai-agent/AgentParametersSection';
+﻿import { useState, useEffect, useCallback, useRef } from 'react';
+import { Loader2, AlertCircle, Repeat2, Activity, FlaskConical, Plus } from 'lucide-react';
+import AgentConfigTab from '../components/ai-agent/AgentConfigTab';
 import FollowUpTab from '../components/ai-agent/FollowUpTab';
-import AutoMovementTab from '../components/ai-agent/AutoMovementTab';
+import SessionManagementTab from '../components/ai-agent/SessionManagementTab';
 import AgentTestTab from '../components/ai-agent/AgentTestTab';
-
-interface AgentPersonality {
-  descricao: string;
-  area: string;
-  tom: string;
-  valor_negociacao: number;
-}
+import AgentSelector from '../components/ai-agent/AgentSelector';
+import AgentFormModal from '../components/ai-agent/AgentFormModal';
+import { hasPermission } from '../utils/permissions';
 
 interface ServiceStep {
   ordem: number;
@@ -49,632 +22,706 @@ interface FAQ {
   resposta: string;
 }
 
-type MainSection = 'config' | 'follow' | 'movement' | 'test';
-type ConfigSub =
-  | 'personalidade'
-  | 'regras'
-  | 'etapas'
-  | 'faq'
-  | 'notificacoes'
-  | 'horarios'
-  | 'modelos'
-  | 'gatilhos'
-  | 'audio'
-  | 'parametros';
-type FollowUpSub = 'config' | 'history';
+interface AgentPersonality {
+  descricao: string;
+  area: string;
+  tom: string;
+  valor_negociacao: number;
+}
+
+interface Scheduling {
+  isAtivo: boolean;
+  id_agenda: string;
+  nome: string;
+  descricao: string;
+  prompt_consulta_horarios: string;
+  prompt_marcar_horario: string;
+  duracao_horario: string | null;
+  limite_agendamento_horario: number | null;
+  agenda_padrao: 'GOOGLE_MEET' | 'AGENDA_INTERNA' | 'SISTEMA_EXTERNO';
+  url_consulta_externa: string | null;
+  url_marcacao_externa: string | null;
+}
+
+type TabType = 'followup' | 'sessions' | 'test';
 
 const AIAgent = () => {
-  const [mainSection, setMainSection] = useState<MainSection>('config');
-  const [subSection, setSubSection] = useState<ConfigSub>('personalidade');
-  const [followUpSubSection, setFollowUpSubSection] = useState<FollowUpSub>('config');
-  const [configOpen, setConfigOpen] = useState(true);
-  const [followUpOpen, setFollowUpOpen] = useState(false);
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-
+  const [activeTab, setActiveTab] = useState<TabType | null>(null);
+  const [agents, setAgents] = useState<Array<{
+    Id: number;
+    nome: string;
+    isAtivo?: boolean;
+    isAgentePrincipal?: boolean;
+    isGatilho?: boolean;
+    gatilho?: string;
+  }>>([]);
+  const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null);
   const [isEnabled, setIsEnabled] = useState(false);
-  const [toggling, setToggling] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  const canEdit = hasPermission('can_edit_agent');
-  const user = localStorage.getItem('user');
-  const token = user ? JSON.parse(user).token : '';
-
-  const [personality, setPersonality] = useState<AgentPersonality>({
-    descricao: '',
-    area: '',
-    tom: 'professional',
-    valor_negociacao: 0,
-  });
-  const [serviceSteps, setServiceSteps] = useState<ServiceStep[]>([]);
-  const [faqs, setFaqs] = useState<FAQ[]>([]);
-
-  // Estados de loading para salvar
-  const [savingPersonality, setSavingPersonality] = useState(false);
-  const [savingSteps, setSavingSteps] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-
-  // Estados para mensagens de feedback
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isAgentFormOpen, setIsAgentFormOpen] = useState(false);
+  const [agentFormMode, setAgentFormMode] = useState<'create' | 'edit'>('create');
+
+  const [savingSteps, setSavingSteps] = useState(false);
+  const [savingFAQs] = useState(false);
+  const [savingScheduling] = useState(false);
+  const [togglingAgent, setTogglingAgent] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const [serviceStepsLoading, setServiceStepsLoading] = useState(true);
+  const [faqsLoading, setFaqsLoading] = useState(true);
+  const [schedulingLoading, setSchedulingLoading] = useState(true);
+  const canEdit = hasPermission('can_edit_agent');
+  const [agentsLoading, setAgentsLoading] = useState(true);
+
+  const setGenericError = useCallback(() => {
+    setError((prev) =>
+      prev || 'Não foi possível carregar todas as informações do agente.'
+    );
+  }, []);
+
+  const [serviceSteps, setServiceSteps] = useState<ServiceStep[]>([]);
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [scheduling, setScheduling] = useState<Scheduling>({
+    isAtivo: false,
+    id_agenda: '',
+    nome: '',
+    descricao: '',
+    prompt_consulta_horarios: '',
+    prompt_marcar_horario: '',
+    duracao_horario: null,
+    limite_agendamento_horario: 1,
+    agenda_padrao: 'GOOGLE_MEET',
+    url_consulta_externa: null,
+    url_marcacao_externa: null
+  });
+
+  const user = localStorage.getItem('user');
+  const token = user ? JSON.parse(user).token : null;
+
+  const fixedTabs: { id: TabType; label: string; description: string; icon: React.ElementType }[] = [
+    { id: 'followup', label: 'Follow-up', description: 'Configure mensagens de acompanhamento', icon: Repeat2 },
+    { id: 'sessions', label: 'Sessões', description: 'Gerencie sessões ativas', icon: Activity },
+    { id: 'test', label: 'Teste', description: 'Teste o comportamento do agente', icon: FlaskConical }
+  ];
+
+  const handleCreateAgent = () => {
+    setAgentFormMode('create');
+    setIsAgentFormOpen(true);
+  };
+
+  const handleUpdateAgent = () => {
+    setAgentFormMode('edit');
+    setIsAgentFormOpen(true);
+  };
+
+  const handleAgentFormSuccess = async () => {
+    await fetchMultiAgents();
+    setSuccess('Agente salvo com sucesso!');
+    setTimeout(() => setSuccess(''), 3000);
+  };
+
+  const fetchMultiAgents = useCallback(async () => {if (!token) return;
+    try {
+      setAgentsLoading(true);
+      const res = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/get', {
+        headers: { token }
+      });
+      if (!res.ok) throw new Error('Erro ao carregar multiagente');
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setAgents(data);
+        const principal = data.find((a: any) => a.isAgentePrincipal);
+        const sel = (principal?.Id ?? data[0]?.Id) ?? null;
+        setSelectedAgentId(sel);
+        const cur = data.find((a: any) => a.Id === sel);
+        setIsEnabled(Boolean(cur?.isAtivo));
+      }
+        } catch (err) {
+          console.error('Erro ao buscar multiagente:', err);
+        } finally {
+          setAgentsLoading(false);
+
+        }
+      }, [token]);
+
+  const withAgentId = (url: string) => {
+    if (!selectedAgentId) return url;
+    const hasQuery = url.includes('?');
+    return `${url}${hasQuery ? '&' : '?'}id_agente=${selectedAgentId}`;
+  };
+
+  const fetchServiceSteps = useCallback(async () => {
+    if (!token) {
+      setServiceStepsLoading(false);
+      return;
+    }
+
+    setServiceStepsLoading(true);
+    try {
+      const stepsResponse = await fetch(
+        withAgentId('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/etapas/get'),
+        {
+          headers: { token }
+        }
+      );
+      if (!stepsResponse.ok) {
+        throw new Error('Erro ao carregar etapas');
+      }
+      const stepsData = await stepsResponse.json();
+
+      if (Array.isArray(stepsData)) {
+        setServiceSteps(stepsData);
+      } else {
+        setServiceSteps([]);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar etapas:', err);
+      setGenericError();
+    } finally {
+      setServiceStepsLoading(false);
+    }
+  }, [token, setGenericError, selectedAgentId]);
+
+  const fetchFaqs = useCallback(async () => {
+    if (!token) {
+      setFaqsLoading(false);
+      return;
+    }
+
+    setFaqsLoading(true);
+    try {
+      const faqsResponse = await fetch(
+        withAgentId('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/faq/get'),
+        {
+          headers: { token }
+        }
+      );
+      if (!faqsResponse.ok) {
+        throw new Error('Erro ao carregar FAQs');
+      }
+      const faqsData = await faqsResponse.json();
+
+      if (Array.isArray(faqsData)) {
+        setFaqs(faqsData);
+      } else {
+        setFaqs([]);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar FAQs:', err);
+      setGenericError();
+    } finally {
+      setFaqsLoading(false);
+    }
+  }, [token, setGenericError, selectedAgentId]);
+
+  const fetchScheduling = useCallback(async () => {
+    if (!token) {
+      setSchedulingLoading(false);
+      return;
+    }
+
+    setSchedulingLoading(true);
+    try {
+      const schedulingResponse = await fetch(
+        withAgentId('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/agendamento/get'),
+        {
+          headers: { token: String(token) },
+        }
+      );
+      if (!schedulingResponse.ok) {
+        throw new Error('Erro ao carregar agendamento');
+      }
+
+      let schedulingData: unknown = [];
+      try {
+        const text = await schedulingResponse.text();
+        schedulingData = text ? JSON.parse(text) : [];
+      } catch {
+        schedulingData = [];
+      }
+
+      if (Array.isArray(schedulingData) && schedulingData.length > 0) {
+        const data = schedulingData[0] as Partial<Scheduling>;
+        setScheduling({
+          ...data,
+          limite_agendamento_horario: data.limite_agendamento_horario ?? 1,
+        } as Scheduling);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar agendamento:', err);
+      setGenericError();
+    } finally {
+      setSchedulingLoading(false);
+    }
+  }, [token, setGenericError, selectedAgentId]);
+
+  const fetchInitialData = useCallback(async () => {
+    setError('');
+    if (!selectedAgentId) return;
+    await Promise.all([
+      fetchServiceSteps(),
+      fetchFaqs(),
+      fetchScheduling(),
+    ]);
+  }, [
+    fetchFaqs,
+    fetchScheduling,
+    fetchServiceSteps,
+    selectedAgentId,
+  ]);
+
+  const handleSuccess = useCallback(async () => {
+    await Promise.all([
+      fetchServiceSteps(),
+      fetchFaqs(),
+      fetchScheduling(),
+    ]);
+  }, [fetchFaqs, fetchScheduling, fetchServiceSteps]);
+
+  const initialLoadedRef = useRef(false);
+  useEffect(() => {
+    if (!initialLoadedRef.current) {
+      initialLoadedRef.current = true;
+      fetchMultiAgents();
+    }
+  }, [fetchMultiAgents]);
 
   useEffect(() => {
     fetchInitialData();
-  }, []);
+  }, [fetchInitialData]);
 
-  const fetchInitialData = async () => {
+  const handleToggleAgent = async () => {
+    if (!token || !selectedAgentId) {
+      setError('Token ou agente nÃ£o selecionado.');
+      return;
+    }
+
+    setTogglingAgent(true);
     try {
-      setLoading(true);
-
-      // 🔹 Status
-      const statusResponse = await fetch(
-        'https://n8n.lumendigital.com.br/webhook/prospecta/agente/isAtivo',
-        { headers: { token } }
-      );
-      const statusData = await statusResponse.json();
-      setIsEnabled(!!statusData.isAgenteAtivo);
-
-      // 🔹 Personalidade
-      const personalityResponse = await fetch(
-        'https://n8n.lumendigital.com.br/webhook/prospecta/agente/personalidade/get',
+      const response = await fetch(
+        'https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/toggle',
         {
-          headers: { token },
-          cache: 'no-cache' // Força buscar dados frescos, sem cache
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            token: String(token),
+          },
+          body: JSON.stringify({ id_agente: selectedAgentId }),
         }
       );
-      const personalityData = await personalityResponse.json();
-      if (Array.isArray(personalityData) && personalityData.length > 0) {
-        setPersonality(personalityData[0]);
-      } else {
-        // Se não houver dados, mantém o estado inicial
-        console.warn('Nenhuma personalidade encontrada no servidor');
+
+      if (!response.ok) {
+        throw new Error('Erro ao alternar status do agente');
       }
 
-      // 🔹 Etapas
-      const stepsResponse = await fetch(
-        'https://n8n.lumendigital.com.br/webhook/prospecta/agente/etapas/get',
-        { headers: { token } }
-      );
-      const stepsData = await stepsResponse.json();
-      if (Array.isArray(stepsData)) setServiceSteps(stepsData);
-
-      // 🔹 FAQs
-      const faqResponse = await fetch(
-        'https://n8n.lumendigital.com.br/webhook/prospecta/agente/faq/get',
-        { headers: { token } }
-      );
-      const faqData = await faqResponse.json();
-      if (Array.isArray(faqData)) setFaqs(faqData);
-
+      setIsEnabled(prev => !prev);
+      await fetchMultiAgents();
     } catch (err) {
-      console.error('Erro ao carregar dados do agente:', err);
+      console.error('Erro ao alternar status do agente:', err);
+      setError('Erro ao alternar status do agente');
     } finally {
-      setLoading(false);
+      setTogglingAgent(false);
     }
   };
 
-const handleSavePersonality = async () => {
-    setSavingPersonality(true);
+  const handleAddStep = () => {
+    const newOrder = serviceSteps.length + 1;
+    setServiceSteps([
+      ...serviceSteps,
+      { ordem: newOrder, nome: '', descricao: '', atribuir_lead: false, desativar_agente: false },
+    ]);
+  };
+
+  const handleRemoveStep = (ordem: number) => {
+    const updatedSteps = serviceSteps
+      .filter(step => step.ordem !== ordem)
+      .map((step, index) => ({
+        ...step,
+        ordem: index + 1,
+      }));
+    setServiceSteps(updatedSteps);
+  };
+
+  const handleUpdateStep = useCallback(
+    (
+      ordem: number,
+      field: 'nome' | 'descricao' | 'atribuir_lead' | 'desativar_agente',
+      value: string | boolean
+    ) => {
+      setServiceSteps(prevSteps =>
+        prevSteps.map(step => (step.ordem === ordem ? { ...step, [field]: value } : step))
+      );
+    },
+    []
+  );
+
+  const handleReorderSteps = useCallback((updatedSteps: ServiceStep[]) => {
+    setServiceSteps(updatedSteps);
+  }, []);
+
+  const handleSaveSteps = async () => {
+    setSavingSteps(true);
     setError('');
     setSuccess('');
 
     try {
-      const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/agente/personalidade/create', {
+      const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/etapas/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           token
         },
-        body: JSON.stringify(personality)
+        body: JSON.stringify(serviceSteps.map(s => ({ ...s, id_agente: selectedAgentId })))
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao salvar personalidade do agente');
+        throw new Error('Erro ao salvar etapas de atendimento');
       }
 
-      setSuccess('Personalidade do agente salva com sucesso!');
+      const updatedResponse = await fetch(withAgentId('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/etapas/get'), {
+        headers: { token }
+      });
+
+      if (updatedResponse.ok) {
+        const updatedData = await updatedResponse.json();
+        if (Array.isArray(updatedData)) {
+          setServiceSteps(updatedData);
+        }
+      }
+
+      setSuccess('Etapas de atendimento salvas com sucesso!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      console.error('Erro ao salvar personalidade:', err);
-      setError('Erro ao salvar personalidade do agente');
-    } finally {
-      setSavingPersonality(false);
-    }
-  };
-
-
-
-  // Handlers para etapas de atendimento
-  const handleAddStep = () => {
-    const newOrder = serviceSteps.length > 0 ? Math.max(...serviceSteps.map(s => s.ordem)) + 1 : 1;
-    setServiceSteps([
-      ...serviceSteps,
-      {
-        ordem: newOrder,
-        nome: '',
-        descricao: '',
-        atribuir_lead: false,
-        desativar_agente: false,
-      },
-    ]);
-  };
-
-  const handleRemoveStep = (ordem: number) => {
-    const filtered = serviceSteps.filter(s => s.ordem !== ordem);
-    const reordered = filtered.map((step, index) => ({
-      ...step,
-      ordem: index + 1,
-    }));
-    setServiceSteps(reordered);
-  };
-
-  const handleUpdateStep = (
-    ordem: number,
-    field: 'nome' | 'descricao' | 'atribuir_lead' | 'desativar_agente',
-    value: string | boolean
-  ) => {
-    setServiceSteps(prev => {
-      // Se está ativando atribuir_lead nesta etapa, desativa nas outras
-      if (field === 'atribuir_lead' && value === true) {
-        return prev.map(step =>
-          step.ordem === ordem
-            ? { ...step, atribuir_lead: true }
-            : { ...step, atribuir_lead: false }
-        );
-      }
-
-      // Para outros campos, atualiza normalmente
-      return prev.map(step =>
-        step.ordem === ordem
-          ? { ...step, [field]: value }
-          : step
-      );
-    });
-  };
-
-  const handleReorderSteps = (steps: ServiceStep[]) => {
-    setServiceSteps(steps);
-  };
-
-  const handleSaveSteps = async () => {
-    setSavingSteps(true);
-    try {
-      const response = await fetch(
-        'https://n8n.lumendigital.com.br/webhook/prospecta/agente/etapas/create',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            token,
-          },
-          body: JSON.stringify(serviceSteps),
-        }
-      );
-
-      if (!response.ok) throw new Error('Erro ao salvar etapas');
-    } catch (err) {
       console.error('Erro ao salvar etapas:', err);
-      throw err;
+      setError('Erro ao salvar etapas de atendimento');
     } finally {
       setSavingSteps(false);
     }
   };
 
-  const onMediaUpload = async (file: File): Promise<string> => {
+  const handleMediaUpload = async (file: File): Promise<string> => {
     setIsUploading(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(
-        'https://n8n.lumendigital.com.br/webhook/prospecta/agente/upload',
-        {
-          method: 'POST',
-          headers: { token },
-          body: formData,
-        }
-      );
+      const response = await fetch(withAgentId('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/upload'), {
+        method: 'POST',
+        headers: { token },
+        body: (() => { formData.append('id_agente', String(selectedAgentId ?? '')); return formData; })()
+      });
 
-      if (!response.ok) throw new Error('Erro ao fazer upload da mídia');
+      if (!response.ok) {
+        throw new Error('Erro ao fazer upload da mÃ­dia');
+      }
 
-      const data = await response.json();
-      return data.url || data.fileUrl || '';
+      const { url } = await response.json();
+      return url;
     } catch (err) {
-      console.error('Erro ao fazer upload:', err);
+      console.error('Error uploading media:', err);
       throw err;
     } finally {
       setIsUploading(false);
     }
   };
 
-  // Helper para obter o label da seção atual
-  const getCurrentSectionLabel = () => {
-    if (mainSection === 'follow') {
-      const followLabels: Record<FollowUpSub, string> = {
-        config: 'Configurações de Follow-up',
-        history: 'Histórico de Follow-up',
-      };
-      return followLabels[followUpSubSection];
-    }
-    if (mainSection === 'movement') return 'Movimentação Automática';
-    if (mainSection === 'test') return 'Teste de Agente';
-
-    const configLabels: Record<ConfigSub, string> = {
-      personalidade: 'Personalidade',
-      regras: 'Regras Gerais',
-      etapas: 'Etapas de Atendimento',
-      faq: 'Perguntas Frequentes',
-      notificacoes: 'Notificações no WhatsApp',
-      horarios: 'Horário de Funcionamento',
-      modelos: 'Modelo de Agente',
-      gatilhos: 'Gatilhos',
-      audio: 'Áudio',
-      parametros: 'Parâmetros do Agente',
-    };
-
-    return configLabels[subSection];
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-6rem)]">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-neutral-500" />
-      </div>
-    );
-  }
+  const selectedAgent = agents.find(a => a.Id === selectedAgentId);
+  const hasAgents = agents.some(a => a && typeof a.Id === 'number');
 
   return (
-    <div className="flex flex-col md:grid md:grid-cols-[280px_1fr] gap-4 md:gap-6 pb-20 md:pb-0">
-      {/* Mobile Header com botão de menu */}
-      <div className="md:hidden sticky top-0 z-10 bg-white dark:bg-neutral-800 border-b border-gray-300 dark:border-neutral-700 px-4 py-3 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
-            <Bot className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {agentsLoading && (
+        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-16 text-center shadow-lg">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg">
+            <Loader2 className="h-8 w-8 animate-spin text-white" />
           </div>
-          <div>
-            <h1 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">Agente de IA</h1>
-            <p className="text-xs text-gray-500 dark:text-neutral-400">{getCurrentSectionLabel()}</p>
-          </div>
+          <p className="text-base font-semibold text-slate-900">Carregando agentes...</p>
+          <p className="text-sm text-slate-500 mt-2">Aguarde um momento</p>
         </div>
-        <button
-          onClick={() => setIsMobileSidebarOpen(true)}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 active:bg-gray-200 dark:active:bg-neutral-600 transition-colors touch-manipulation"
-          aria-label="Abrir menu"
-        >
-          <Menu className="w-5 h-5 text-gray-700 dark:text-neutral-300" />
-        </button>
-      </div>
-
-      {/* Overlay para mobile */}
-      {isMobileSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setIsMobileSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`bg-white dark:bg-neutral-800 rounded-2xl border border-gray-300 dark:border-neutral-700 shadow-sm p-4 flex flex-col h-[calc(100vh-6rem)]
-        md:relative md:translate-x-0
-        fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] z-50 transition-transform duration-300
-        ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-      `}>
-        {/* Header */}
-        <div className="flex flex-col gap-3 px-2 pb-3 border-b border-gray-300 dark:border-neutral-700">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-gray-100 dark:bg-neutral-700 rounded-lg flex items-center justify-center">
-                <Bot className="w-5 h-5 text-gray-600 dark:text-neutral-300" />
-              </div>
-              <div>
-                <h2 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">
-                  Agente de IA
-                </h2>
-                <p className="text-xs text-gray-500 dark:text-neutral-400">Configure o comportamento</p>
-              </div>
-            </div>
-            {/* Botão fechar apenas no mobile */}
-            <button
-              onClick={() => setIsMobileSidebarOpen(false)}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 active:bg-gray-200 dark:active:bg-neutral-600 transition-colors touch-manipulation"
-              aria-label="Fechar menu"
-            >
-              <X className="w-5 h-5 text-gray-600 dark:text-neutral-300" />
-            </button>
+        )}
+        {!agentsLoading && !hasAgents && (
+        <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-16 text-center shadow-lg">
+          <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg">
+            <AlertCircle className="h-10 w-10 text-white" />
           </div>
-
-          {/* IA Toggle */}
-          <div className="flex items-center justify-between bg-gray-50 dark:bg-neutral-700/50 border border-gray-300 dark:border-neutral-600 rounded-lg px-3 py-2 mt-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700 dark:text-neutral-300">
-                {toggling
-                  ? isEnabled
-                    ? 'Desativando IA...'
-                    : 'Ativando IA...'
-                  : isEnabled
-                  ? 'IA Ativada'
-                  : 'IA Desativada'}
-              </span>
-              {toggling && (
-                <Loader2 className="w-4 h-4 animate-spin text-gray-400 dark:text-neutral-500" />
-              )}
-            </div>
-
-            <button
-              onClick={async () => {
-                const previous = isEnabled;
-                setIsEnabled(!previous);
-                setToggling(true);
-
-                try {
-                  const res = await fetch(
-                    'https://n8n.lumendigital.com.br/webhook/prospecta/agente/toggle',
-                    {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json', token },
-                    }
-                  );
-
-                  if (!res.ok) throw new Error('Erro ao alternar IA');
-
-                  const verify = await fetch(
-                    'https://n8n.lumendigital.com.br/webhook/prospecta/agente/isAtivo',
-                    { headers: { token } }
-                  );
-
-                  if (verify.ok) {
-                    const data = await verify.json();
-                    setIsEnabled(!!data.isAgenteAtivo);
-                  } else {
-                    setIsEnabled(previous);
-                  }
-                } catch (err) {
-                  console.error(err);
-                  setIsEnabled(previous);
-                } finally {
-                  setToggling(false);
-                }
-              }}
-              disabled={toggling}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${
-                isEnabled ? 'bg-emerald-600 dark:bg-emerald-500' : 'bg-red-500 dark:bg-red-600'
-              } ${toggling ? 'opacity-70 cursor-wait' : 'cursor-pointer'}`}
-            >
-              <span
-                className={`inline-block h-5 w-5 transform bg-white rounded-full shadow-sm transition-transform duration-300 ${
-                  isEnabled ? 'translate-x-5' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
-
-          <p className="text-[11px] text-gray-500 dark:text-neutral-400 ml-1">
-            {toggling
-              ? 'Aguarde... aplicando alteração'
-              : isEnabled
-              ? 'Seu agente está ativo.'
-              : 'Seu agente está desativado.'}
+          <h2 className="text-2xl font-bold text-slate-900 mb-3">Nenhum agente configurado</h2>
+          <p className="text-base text-slate-600 mb-10 max-w-md mx-auto">
+            Crie seu primeiro agente de IA para começar a automatizar seu atendimento
           </p>
+          <button
+            onClick={handleCreateAgent}
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-8 py-4 text-base font-semibold text-white hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            <Plus className="h-5 w-5" />
+            Criar primeiro agente
+          </button>
         </div>
-
-        {/* Menus */}
-        <nav className="flex-1 overflow-y-auto mt-4 space-y-1">
-          <button
-            onClick={() => setConfigOpen(!configOpen)}
-            className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg ${
-              mainSection === 'config'
-                ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400'
-                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              Configurações do Agente
-            </span>
-            <ChevronDown
-              className={`w-4 h-4 transition-transform ${
-                configOpen ? 'rotate-180' : ''
-              }`}
-            />
-          </button>
-
-          {configOpen && (
-            <div className="ml-2 mt-1 space-y-1">
-              {[
-                ['personalidade', 'Personalidade'],
-                ['regras', 'Regras Gerais'],
-                ['etapas', 'Etapas de Atendimento'],
-                ['faq', 'Perguntas Frequentes'],
-                ['notificacoes', 'Notificações no WhatsApp'],
-                ['horarios', 'Horário de Funcionamento'],
-                ['modelos', 'Modelo de Agente'],
-                ['gatilhos', 'Gatilhos'],
-                ['audio', 'Áudio'],
-                ['parametros', 'Parâmetros do Agente'],
-              ].map(([key, label]) => (
-                <button
-                  key={key}
-                  onClick={() => {
-                    setMainSection('config');
-                    setSubSection(key as ConfigSub);
-                    setIsMobileSidebarOpen(false); // Fecha o drawer no mobile
-                  }}
-                  className={`w-full text-left px-3 py-1.5 text-sm rounded-lg touch-manipulation relative ${
-                    key === 'modelos'
-                      ? mainSection === 'config' && subSection === key
-                        ? 'bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/40 dark:to-blue-900/40 text-purple-700 dark:text-purple-300 font-semibold shadow-sm'
-                        : 'bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 hover:from-purple-100 hover:to-blue-100 dark:hover:from-purple-900/30 dark:hover:to-blue-900/30 text-purple-700 dark:text-purple-300 font-medium'
-                      : mainSection === 'config' && subSection === key
-                      ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 font-medium'
-                      : 'hover:bg-gray-50 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>{label}</span>
-                    {key === 'modelos' && (
-                      <span className="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold text-white bg-gradient-to-r from-purple-600 to-blue-600 rounded-full shadow-sm">
-                        ✨
-                      </span>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-
-          <div className="my-3 border-t border-gray-300 dark:border-neutral-700"></div>
-
-          <button
-            onClick={() => setFollowUpOpen(!followUpOpen)}
-            className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg ${
-              mainSection === 'follow'
-                ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
-                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <MessageCircle className="w-4 h-4" />
-              Follow-up
-            </span>
-            <ChevronDown
-              className={`w-4 h-4 transition-transform ${
-                followUpOpen ? 'rotate-180' : ''
-              }`}
-            />
-          </button>
-
-          {followUpOpen && (
-            <div className="ml-2 mt-1 space-y-1">
-              {[
-                ['config', 'Configurações de Follow-up'],
-                ['history', 'Histórico de Follow-up'],
-              ].map(([key, label]) => (
-                <button
-                  key={key}
-                  onClick={() => {
-                    setMainSection('follow');
-                    setFollowUpSubSection(key as FollowUpSub);
-                    setIsMobileSidebarOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-1.5 text-sm rounded-lg touch-manipulation ${
-                    mainSection === 'follow' && followUpSubSection === key
-                      ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-medium'
-                      : 'hover:bg-gray-50 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-300'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <button
-            onClick={() => {
-              setMainSection('movement');
-              setIsMobileSidebarOpen(false);
-            }}
-            className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg touch-manipulation ${
-              mainSection === 'movement'
-                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                : 'hover:bg-gray-50 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-300'
-            }`}
-          >
-            <RefreshCw className="w-4 h-4" />
-            Movimentação Automática
-          </button>
-
-          <button
-            onClick={() => {
-              setMainSection('test');
-              setIsMobileSidebarOpen(false);
-            }}
-            className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg touch-manipulation ${
-              mainSection === 'test'
-                ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-                : 'hover:bg-gray-50 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-300'
-            }`}
-          >
-            <FlaskConical className="w-4 h-4" />
-            Teste de Agente
-          </button>
-        </nav>
-      </aside>
-
-      {/* Painel direito */}
-      <main className="bg-white dark:bg-neutral-800 rounded-xl md:rounded-2xl shadow-sm border border-gray-300 dark:border-neutral-700 p-4 md:p-6 overflow-y-auto mx-2 md:mx-0">
-        {mainSection === 'config' && (
+        )}
+        {hasAgents && (
           <>
-            {subSection === 'personalidade' && (
-              <PersonalitySection
-                token={token}
-                canEdit={canEdit}
-                personality={personality}
-                setPersonality={setPersonality}
-                savingPersonality={savingPersonality}
-                handleSavePersonality={handleSavePersonality}
-              />
+            {/* Header Section - Agent Specific */}
+            <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl mb-8 overflow-hidden shadow-lg">
+              <div className="px-8 py-6 bg-gradient-to-r from-gray-50 to-dark-50 border-b border-slate-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h1 className="text-xl font-bold text-slate-900 mb-1 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center shadow-md">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      Configuração do Agente
+                    </h1>
+                    <p className="text-sm text-slate-600 ml-[52px]">
+                      Configurações individuais por agente
+                    </p>
+                  </div>
+
+                  {canEdit && (
+                    <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-xl border border-slate-200 shadow-md">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={isEnabled}
+                          onChange={handleToggleAgent}
+                          disabled={togglingAgent}
+                        />
+                        <div className="relative w-11 h-6 bg-slate-800 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-dark-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:shadow-md peer-checked:bg-gradient-to-r peer-checked:from-slate-600 peer-checked:to-slate-600"></div>
+                      </label>
+                      <span className="text-sm font-semibold text-slate-700 min-w-[75px]">
+                        {togglingAgent ? (
+                          <span className="flex items-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin text-slate-600" />
+                            <span className="text-slate-500">...</span>
+                          </span>
+                        ) : isEnabled ? (
+                          <span className="text-black-600">✓ Ativo</span>
+                        ) : (
+                          <span className="text-slate-400">Inativo</span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-8">
+                {/* Agent Selector */}
+                <AgentSelector
+                  agents={agents}
+                  selectedAgentId={selectedAgentId}
+                  onSelectAgent={(id) => {
+                    setSelectedAgentId(id);
+                    const agent = agents.find(a => a.Id === id);
+                    setIsEnabled(Boolean(agent?.isAtivo));
+                  }}
+                  onCreateAgent={handleCreateAgent}
+                  onUpdateAgent={handleUpdateAgent}
+                  canEdit={canEdit}
+                />
+
+                {/* Agent Info Banner */}
+                {selectedAgent && selectedAgent.isGatilho && selectedAgent.gatilho && (
+                  <div className="mt-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-xl px-5 py-4 shadow-sm">
+                    <div className="flex items-center gap-3 text-sm">
+                      <div className="w-8 h-8 rounded-lg bg-amber-400 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </div>
+                      <span className="font-semibold text-amber-900">Gatilho configurado:</span>
+                      <span className="text-amber-800 font-mono text-sm bg-white px-3 py-1.5 rounded-lg border border-amber-200 shadow-sm">
+                        "{selectedAgent.gatilho}"
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {error && (
+              <div className="mb-8 flex items-start gap-4 rounded-xl border border-red-300 bg-gradient-to-r from-red-50 to-rose-50 p-5 text-red-700 shadow-md">
+                <div className="mt-0.5 h-10 w-10 flex-shrink-0 rounded-xl bg-red-500 flex items-center justify-center shadow-sm">
+                  <AlertCircle className="h-6 w-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold mb-1">Erro ao carregar</p>
+                  <p className="text-sm">{error}</p>
+                  <button
+                    onClick={() => {
+                      fetchInitialData();
+                    }}
+                    className="mt-3 text-sm font-semibold text-red-700 hover:text-red-800 underline underline-offset-4"
+                  >
+                    Tentar novamente →
+                  </button>
+                </div>
+              </div>
             )}
-            {subSection === 'regras' && (
-              <RulesSection token={token} canEdit={canEdit} />
+
+            {success && (
+              <div className="mb-8 flex items-start gap-4 px-5 py-4 text-emerald-700 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-300 rounded-xl shadow-md">
+                <div className="mt-0.5 h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-sm">
+                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-sm font-semibold mt-2">{success}</p>
+              </div>
             )}
-            {subSection === 'etapas' && (
-              <ServiceStepsSection
-                token={token}
-                canEdit={canEdit}
-                serviceSteps={serviceSteps}
-                handleAddStep={handleAddStep}
-                handleRemoveStep={handleRemoveStep}
-                handleUpdateStep={handleUpdateStep}
-                handleReorderSteps={handleReorderSteps}
-                savingSteps={savingSteps}
-                handleSaveSteps={handleSaveSteps}
-                onMediaUpload={onMediaUpload}
-                isUploading={isUploading}
-              />
+
+            {/* Content Area - Agent Configuration */}
+            {activeTab === null && (
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 overflow-hidden shadow-lg">
+                <div className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 px-8 py-5">
+                  <h2 className="text-base font-bold text-slate-900">Configurações do Agente</h2>
+                  <p className="text-sm text-slate-600 mt-1">Personalize comportamento e funcionalidades</p>
+                </div>
+                <div className="p-8">
+                  <AgentConfigTab
+                    idAgente={selectedAgentId ?? 0}
+                    token={token}
+                    serviceSteps={serviceSteps}
+                    handleAddStep={handleAddStep}
+                    handleRemoveStep={handleRemoveStep}
+                    handleUpdateStep={handleUpdateStep}
+                    handleReorderSteps={handleReorderSteps}
+                    savingSteps={savingSteps}
+                    handleSaveSteps={handleSaveSteps}
+                    faqs={faqs}
+                    setFaqs={setFaqs}
+                    savingFAQs={savingFAQs}
+                    scheduling={scheduling}
+                    setScheduling={setScheduling}
+                    savingScheduling={savingScheduling}
+                    onMediaUpload={handleMediaUpload}
+                    isUploading={isUploading}
+                    onSuccess={handleSuccess}
+                    isServiceStepsLoading={serviceStepsLoading}
+                    isFaqsLoading={faqsLoading}
+                    isSchedulingLoading={schedulingLoading}
+                  />
+                </div>
+              </div>
             )}
-            {subSection === 'faq' && (
-              <FAQSection
-                faqs={faqs}
-                setFaqs={setFaqs}
-                savingFAQs={false}
-                token={token}
-                canEdit={canEdit}
-              />
+
+            {/* Global Tools Section */}
+            {activeTab !== null && (
+              <>
+                <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl mb-6 overflow-hidden shadow-lg">
+                  <div className="px-8 py-5 bg-gradient-to-r from-slate-600 to-slate-600">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-lg font-bold text-white flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                            </svg>
+                          </div>
+                          Ferramentas Globais
+                        </h2>
+                        <p className="text-sm text-indigo-100 mt-1 ml-12">
+                          Independente do agente selecionado
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab(null)}
+                        className="text-sm font-semibold text-white hover:text-indigo-100 transition-colors px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 backdrop-blur-sm"
+                      >
+                        ← Voltar para agente
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
+                    <nav className="flex gap-2">
+                      {fixedTabs.map((tab) => {
+                        const Icon = tab.icon;
+                        const isActive = activeTab === tab.id;
+                        return (
+                          <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex items-center justify-center gap-2 flex-1 px-4 py-3 text-sm font-semibold rounded-xl transition-all ${
+                              isActive
+                                ? 'bg-white text-indigo-600 shadow-md border border-indigo-200'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                            }`}
+                          >
+                            <Icon className="h-4 w-4" />
+                            {tab.label}
+                          </button>
+                        );
+                      })}
+                    </nav>
+                  </div>
+                </div>
+
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 overflow-hidden shadow-lg">
+                  <div className="p-8">
+                    {activeTab === 'followup' && <FollowUpTab token={token} canViewAgent={canEdit} />}
+                    {activeTab === 'sessions' && <SessionManagementTab token={token} canDelete={canEdit} />}
+                    {activeTab === 'test' && <AgentTestTab token={token} />}
+                  </div>
+                </div>
+              </>
             )}
-            {subSection === 'notificacoes' && (
-              <AgentFunctionsSection token={token} canEdit={canEdit} />
-            )}
-            {subSection === 'horarios' && (
-              <OperatingHoursSection token={token} canEdit={canEdit} />
-            )}
-            {subSection === 'modelos' && (
-              <DefaultModelsSection
-                token={token}
-                onSuccess={() => fetchInitialData()}
-                canEdit={canEdit}
-              />
-            )}
-            {subSection === 'gatilhos' && (
-              <TriggerSection token={token} canEdit={canEdit} />
-            )}
-            {subSection === 'audio' && (
-              <AudioSettingsSection token={token} canEdit={canEdit} />
-            )}
-            {subSection === 'parametros' && (
-              <AgentParametersSection token={token} canEdit={canEdit} />
+
+            {/* Access Global Tools */}
+            {activeTab === null && (
+              <div className="mt-8 bg-gradient-to-br from-slate-600 via-slate-600 to-slate-600 border border-indigo-400 rounded-2xl p-8 shadow-2xl">
+                <div className="flex items-start justify-between gap-6">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        </svg>
+                      </div>
+                      Ferramentas Globais
+                    </h3>
+                    <p className="text-sm text-indigo-100 mb-6 ml-[52px]">
+                      Recursos que funcionam para todos os agentes
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                      {fixedTabs.map((tab) => {
+                        const Icon = tab.icon;
+                        return (
+                          <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className="inline-flex items-center gap-2 px-5 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl text-sm font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                          >
+                            <Icon className="h-4 w-4" />
+                            {tab.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </>
         )}
-
-        {mainSection === 'follow' && (
-          <FollowUpTab token={token} canViewAgent={canEdit} activeSubTab={followUpSubSection} />
-        )}
-        {mainSection === 'movement' && (
-          <AutoMovementTab token={token} canViewAgent={canEdit} />
-        )}
-        {mainSection === 'test' && <AgentTestTab token={token} />}
-      </main>
+      <AgentFormModal
+        isOpen={isAgentFormOpen}
+        onClose={() => setIsAgentFormOpen(false)}
+        onSuccess={handleAgentFormSuccess}
+        token={token}
+        mode={agentFormMode}
+        existingAgent={agentFormMode === 'edit' ? selectedAgent : undefined}
+        agents={agents}
+      />
+      </div>
     </div>
   );
 };
 
 export default AIAgent;
+
+
+

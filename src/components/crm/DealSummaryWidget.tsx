@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Bot, Loader2, Copy, Download, FileText, Check, AlertCircle, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
+import { Loader2, Copy, Download, FileText, Check, AlertCircle, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { jsPDF } from 'jspdf';
+import GuimooIcon from '../GuimooIcon';
 
 interface DealSummaryWidgetProps {
   dealId: number;
@@ -197,7 +198,7 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
         className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <Bot className="w-4 h-4 text-violet-500 dark:text-violet-400" />
+          <GuimooIcon className="w-4 h-4" />
           <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Resumo do atendimento</h3>
         </div>
         {isCollapsed ? (
@@ -305,7 +306,7 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
                   </>
                 ) : (
                   <>
-                    <Bot className="w-4 h-4" />
+                    <GuimooIcon className="w-4 h-4" />
                     <span>Gerar resumo</span>
                   </>
                 )}

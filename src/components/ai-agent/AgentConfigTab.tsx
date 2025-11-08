@@ -1,15 +1,25 @@
-import React, { useState } from 'react';
-import PersonalitySection from './PersonalitySection';
+import React, { useMemo, useState } from 'react';
+import {
+  ShieldCheck,
+  ListChecks,
+  HelpCircle,
+  Calendar,
+  Blocks,
+  Volume2,
+  Clock,
+  SlidersHorizontal
+} from 'lucide-react';
 import RulesSection from './RulesSection';
 import ServiceStepsSection from './ServiceStepsSection';
 import FAQSection from './FAQSection';
-import TriggerSection from './TriggerSection';
+import SchedulingSection from './SchedulingSection';
 import DefaultModelsSection from './DefaultModelsSection';
 import AgentParametersSection from './AgentParametersSection';
 import { hasPermission } from '../../utils/permissions';
 import AudioSettingsSection from './AudioSettingsSection';
 import OperatingHoursSection from './OperatingHoursSection';
 import AgentFunctionsSection from './AgentFunctionsSection';
+// import AutoMovementTab from './AutoMovementTab';
 
 interface ServiceStep {
   ordem: number;
@@ -20,10 +30,7 @@ interface ServiceStep {
 }
 
 interface AgentConfigTabProps {
-  personality: any;
-  setPersonality: (personality: any) => void;
-  savingPersonality: boolean;
-  handleSavePersonality: () => Promise<void>;
+  idAgente: number;
   token: string;
   serviceSteps: any[];
   handleAddStep: () => void;
@@ -45,25 +52,24 @@ interface AgentConfigTabProps {
   onMediaUpload: (file: File) => Promise<string>;
   isUploading: boolean;
   onSuccess: () => void;
+  isServiceStepsLoading: boolean;
+  isFaqsLoading: boolean;
+  isSchedulingLoading: boolean;
 }
 
 type ConfigSubTab =
-  | 'personality'
   | 'rules'
   | 'steps'
   | 'faq'
+  | 'scheduling'
   | 'default-models'
-  | 'trigger'
   | 'audio'
   | 'operating-hours'
   | 'parameters'
   | 'functions';
 
 export default function AgentConfigTab({
-  personality,
-  setPersonality,
-  savingPersonality,
-  handleSavePersonality,
+  idAgente,
   token,
   serviceSteps,
   handleAddStep,
@@ -80,124 +86,143 @@ export default function AgentConfigTab({
   savingScheduling,
   onMediaUpload,
   isUploading,
-  onSuccess
+  onSuccess,
+  isServiceStepsLoading,
+  isFaqsLoading,
+  isSchedulingLoading
 }: AgentConfigTabProps) {
-  const [activeSubTab, setActiveSubTab] = useState<ConfigSubTab>('personality');
+  const [activeSubTab, setActiveSubTab] = useState<ConfigSubTab>('rules');
 
-  const subTabs = [
-    { id: 'personality', label: 'Personalidade do Agente (1)' },
-    { id: 'rules', label: 'Regras Gerais (2)' },
-    { id: 'steps', label: 'Etapas de Atendimento (3)' },
-    { id: 'faq', label: 'Perguntas Frequentes (4)' },
-    { id: 'functions', label: 'Notificações no Whatsapp' },
-    { id: 'default-models', label: 'Modelos de Agentes' },
-    { id: 'trigger', label: 'Gatilho de Acionamento' },
-    { id: 'audio', label: 'Configurações de Áudio' },
-    { id: 'operating-hours', label: 'Horário de Funcionamento' },
-    { id: 'parameters', label: 'Parâmetros do Agente' }
-  ];
+  const subTabs = useMemo(
+    () => [
+      { id: 'rules', label: 'Regras Gerais', icon: ShieldCheck },
+      { id: 'steps', label: 'Etapas de Atendimento', icon: ListChecks },
+      { id: 'faq', label: 'Perguntas Frequentes', icon: HelpCircle },
+      { id: 'functions', label: 'Funções do Agente', icon: Blocks },
+      { id: 'scheduling', label: 'Agendamento', icon: Calendar },
+            { id: 'default-models', label: 'Modelos', icon: Blocks },
+      { id: 'audio', label: 'Áudio', icon: Volume2 },
+      { id: 'operating-hours', label: 'Funcionamento', icon: Clock },
+      { id: 'parameters', label: 'Parâmetros', icon: SlidersHorizontal },
+    ],
+    []
+  );
 
   const canEditAgent = hasPermission('can_edit_agent');
 
   return (
-    <div className="space-y-8">
-      {/* Sub-tabs */}
-      <div className="border-b border-gray-300 dark:border-neutral-700">
-        <div className="flex gap-2 overflow-x-auto max-w-full whitespace-nowrap px-0 custom-scrollbar">
-          {subTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveSubTab(tab.id as ConfigSubTab)}
-              className={`flex items-center whitespace-nowrap px-4 py-2 text-xs font-medium border-b-2 transition-colors ${
-                activeSubTab === tab.id
-                  ? 'border-gray-3000 dark:border-neutral-400 text-gray-600 dark:text-neutral-300'
-                  : 'border-transparent text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300 hover:border-gray-300 dark:hover:border-neutral-600'
-              }`}
-            >
-<span className="flex items-center gap-1">
-  {tab.label}
-</span>
-            </button>
-          ))}
+    <div className="lg:grid lg:grid-cols-[180px,1fr] lg:gap-4">
+      {/* Sidebar */}
+      <aside className="mb-4 lg:mb-0">
+        <div className="sticky top-16">
+          <nav className="rounded-lg border border-gray-200 bg-white p-2 space-y-0.5">
+            {subTabs.map((tab) => {
+              const Icon = tab.icon;
+              const active = activeSubTab === (tab.id as ConfigSubTab);
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveSubTab(tab.id as ConfigSubTab)}
+                  className={`w-full text-left flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                    active
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                  aria-current={active ? 'page' : undefined}
+                >
+                  <Icon className={`h-3.5 w-3.5 flex-shrink-0 ${active ? 'text-white' : 'text-gray-500'}`} />
+                  <span className="truncate">{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
         </div>
-      </div>
+      </aside>
 
-      {activeSubTab === 'personality' && (
-        <PersonalitySection
-          personality={personality}
-          setPersonality={setPersonality}
-          savingPersonality={savingPersonality}
-          handleSavePersonality={handleSavePersonality}
-          canEdit={canEditAgent}
-        />
-      )}
-
-      {activeSubTab === 'rules' && (
-        <RulesSection
-          token={token}
-          canEdit={canEditAgent}
-        />
-      )}
-
-      {activeSubTab === 'steps' && (
-        <ServiceStepsSection
-          serviceSteps={serviceSteps}
-          handleAddStep={handleAddStep}
-          handleRemoveStep={handleRemoveStep}
-          handleUpdateStep={handleUpdateStep}
-          handleReorderSteps={handleReorderSteps}
-          savingSteps={savingSteps}
-          handleSaveSteps={handleSaveSteps}
-          onMediaUpload={onMediaUpload}
-          isUploading={isUploading}
-          canEdit={canEditAgent}
-          token={token}
-        />
-      )}
-
-      {activeSubTab === 'faq' && (
-        <FAQSection
-          faqs={faqs}
-          setFaqs={setFaqs}
-          savingFAQs={savingFAQs}
-          token={token}
-          canEdit={canEditAgent}
-        />
-      )}
-
-      {activeSubTab === 'default-models' && (
-        <DefaultModelsSection
-          token={token}
-          onSuccess={onSuccess}
-          canEdit={canEditAgent}
-        />
-      )}
-
-      {activeSubTab === 'trigger' && (
-        <TriggerSection
-          token={token}
-          canEdit={canEditAgent}
-        />
-      )}
-
-      {activeSubTab === 'functions' && (
-        <AgentFunctionsSection token={token} canEdit={canEditAgent} />
-      )}
- 
-      {activeSubTab === 'audio' && (
-        <AudioSettingsSection token={token} canEdit={canEditAgent} />
-      )}
-
-      {activeSubTab === 'operating-hours' && (
-        <OperatingHoursSection token={token} canEdit={canEditAgent} />
-      )}
-
-      {activeSubTab === 'parameters' && (
-        <AgentParametersSection
-          token={token}
-          canEdit={canEditAgent}
+      {/* Content */}
+      <div className="space-y-6 min-w-0">
+        {activeSubTab === 'rules' && (
+          <RulesSection
+            token={token}
+            idAgente={idAgente}
+            canEdit={canEditAgent}
           />
-      )}
+        )}
+
+        {activeSubTab === 'steps' && (
+          <ServiceStepsSection
+            serviceSteps={serviceSteps}
+            handleAddStep={handleAddStep}
+            handleRemoveStep={handleRemoveStep}
+            handleUpdateStep={handleUpdateStep}
+            handleReorderSteps={handleReorderSteps}
+            savingSteps={savingSteps}
+            handleSaveSteps={handleSaveSteps}
+            onMediaUpload={onMediaUpload}
+            isUploading={isUploading}
+            canEdit={canEditAgent}
+            token={token}
+            idAgente={idAgente}
+            isLoading={isServiceStepsLoading}
+          />
+        )}
+
+        {activeSubTab === 'faq' && (
+          <FAQSection
+            faqs={faqs}
+            setFaqs={setFaqs}
+            savingFAQs={savingFAQs}
+            token={token}
+            canEdit={canEditAgent}
+            idAgente={idAgente}
+            isLoading={isFaqsLoading}
+          />
+        )}
+
+        {activeSubTab === 'scheduling' && (
+          <SchedulingSection
+            scheduling={scheduling}
+            setScheduling={setScheduling}
+            savingScheduling={savingScheduling}
+            token={token}
+            canEdit={canEditAgent}
+            idAgente={idAgente}
+            isLoading={isSchedulingLoading}
+          />
+        )}
+
+        {activeSubTab === 'default-models' && (
+          <DefaultModelsSection
+            token={token}
+            onSuccess={onSuccess}
+            idAgente={idAgente}
+            canEdit={canEditAgent}
+          />
+        )}
+
+        {activeSubTab === 'functions' && (
+          <AgentFunctionsSection token={token} idAgente={idAgente} canEdit={canEditAgent} />
+        )}
+
+        {activeSubTab === 'audio' && (
+          <AudioSettingsSection token={token} idAgente={idAgente} canEdit={canEditAgent} />
+        )}
+
+        {activeSubTab === 'operating-hours' && (
+          <OperatingHoursSection token={token} idAgente={idAgente} canEdit={canEditAgent} />
+        )}
+
+        {activeSubTab === 'parameters' && (
+          <AgentParametersSection
+            token={token}
+            idAgente={idAgente}
+            canEdit={canEditAgent}
+          />
+        )}
+
+        {/* Aba Movimentação Automática removida */}
+      </div>
     </div>
   );
 }
+

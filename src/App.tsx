@@ -7,7 +7,7 @@ import Prospectar from './pages/Prospectar';
 import ProspeccaoDetalhes from './pages/ProspeccaoDetalhes';
 import DirectDispatchDetails from './pages/DirectDispatchDetails';
 import Configuracoes from './pages/Configuracoes';
-import AIAgent from './pages/AIAgent';
+import AIAgentGrid from './pages/AIAgentGrid';
 import Contatos from './pages/Contatos';
 import CRMLayoutPage from './pages/CRMLayoutPage'; // ✅ usa o layout com abas
 import CRM from './pages/CRM';
@@ -17,6 +17,7 @@ import ChatProprio from './pages/ChatProprio';
 import ParceirosSidebar from './components/sidebar/ParceirosSidebar';
 import TutorialInterno from './pages/TutorialInterno';
 import Suporte from './pages/Suporte';
+import FollowUp from './pages/FollowUp';
 import MenuMobile from './pages/MenuMobile';
 import ContatosMobile from './pages/ContatosMobile';
 import InicioMobile from './pages/InicioMobile';
@@ -28,6 +29,7 @@ import { NotificationManager } from './components/NotificationManager';
 import { ChatProvider } from './context/ChatContext';
 import { ConversationProvider } from './context/ConversationContext';
 import { VideoPlayerProvider } from './context/VideoPlayerContext';
+import { ToastProvider } from './contexts/ToastContext';
 import UpgradeModal from './components/UpgradeModal';
 import { isDemoAccount } from './components/DemoBanner';
 
@@ -141,22 +143,23 @@ function App() {
 
   return (
     <BrowserRouter>
-      <UpgradeModal isOpen={showUpgradeModal} onClose={handleCloseUpgradeModal} />
-      <Routes>
-        <Route path="/" element={<Login />} />
+      <ToastProvider>
+        <UpgradeModal isOpen={showUpgradeModal} onClose={handleCloseUpgradeModal} />
+        <Routes>
+          <Route path="/" element={<Login />} />
 
-        {/* Login Mobile */}
-        <Route path="/app/login" element={<LoginMobile />} />
+          {/* Login Mobile */}
+          <Route path="/app/login" element={<LoginMobile />} />
 
-        {/* Rotas do App Mobile - sem layout principal */}
-        <Route
-          path="/app/menu"
-          element={
-            <PrivateRoute>
-              <MenuMobile />
-            </PrivateRoute>
-          }
-        />
+          {/* Rotas do App Mobile - sem layout principal */}
+          <Route
+            path="/app/menu"
+            element={
+              <PrivateRoute>
+                <MenuMobile />
+              </PrivateRoute>
+            }
+          />
 
         <Route
           path="/app/contatos"
@@ -213,7 +216,8 @@ function App() {
           <Route path="prospectar" element={<Prospectar />} />
           <Route path="prospectar/:id" element={<ProspeccaoDetalhes />} />
           <Route path="prospectar/dd/:id" element={<DirectDispatchDetails />} />
-          <Route path="ai-agent" element={<AIAgent />} />
+          <Route path="ai-agent-grid" element={<AIAgentGrid />} />
+          <Route path="follow-up" element={<FollowUp />} />
           {/* 👇 Rotas aninhadas do CRM com URLs separadas */}
           <Route path="crm" element={<CRMLayoutPage />}>
             <Route index element={<Navigate to="kanban" replace />} />
@@ -239,6 +243,7 @@ function App() {
           <Route path="suporte" element={<Suporte />} />
         </Route>
       </Routes>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

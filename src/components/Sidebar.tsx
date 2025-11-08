@@ -8,7 +8,6 @@ import {
   ChevronDown,
   ChevronLeft,
   Key,
-  Bot,
   ContactIcon as ContactsIcon,
   GitBranch,
   Search,
@@ -41,6 +40,7 @@ import { clearChatCache } from '../utils/chatCache';
 import type { LoginResponse } from '../types/auth';
 import { Send, FileText, Sliders } from "lucide-react";
 import { ThemeToggleButton } from './ThemeToggleButton';
+import GuimooIcon from './GuimooIcon';
 
 
 interface LinkedAccount {
@@ -688,7 +688,7 @@ const Sidebar = () => {
     const menuItems = [
       { path: '/dashboard', text: 'Dashboard', icon: LayoutDashboard, permission: true, isBeta: false },
       { path: '/conversas', text: 'Conversas', icon: MessageSquare, permission: hasPermission('can_view_menu_chat'), isBeta: false },
-      { path: '/ai-agent', text: 'Agente de IA', icon: Bot, permission: hasPermission('can_view_menu_agent'), isBeta: false },
+      { path: '/ai-agent-grid', text: 'Agentes', icon: GuimooIcon, permission: hasPermission('can_view_menu_agent'), isBeta: false },
       { path: '/crm/kanban', text: 'CRM', icon: GitBranch, permission: hasPermission('can_view_menu_crm'), isBeta: false },
       { path: '/agendamentos', text: 'Agendamentos', icon: CalendarDays, permission: hasPermission('can_view_menu_crm'), isBeta: false },
       { path: '/prospectar', text: 'Envios em Massa', icon: Rocket, permission: hasPermission('can_view_menu_prospect'), isBeta: false },

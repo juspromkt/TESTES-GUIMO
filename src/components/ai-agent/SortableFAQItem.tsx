@@ -74,7 +74,7 @@ export function SortableFAQItem({ faq, onRemove, onUpdate, onMediaUpload, isUplo
     <div
       ref={setNodeRef}
       style={style}
-      className="border border-gray-300 rounded-lg p-4"
+      className="border border-gray-200 rounded-lg p-4"
     >
       <div className="flex items-start gap-4">
         <div

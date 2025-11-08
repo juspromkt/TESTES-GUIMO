@@ -1,4 +1,4 @@
-// NOVO FAQSection.tsx COM DRAG AND DROP E MÍDIA COMO NAS ETAPAS
+﻿// NOVO FAQSection.tsx COM DRAG AND DROP E MÃDIA COMO NAS ETAPAS
 
 import React, { useState, useEffect, useRef } from "react";
 import {
@@ -10,6 +10,7 @@ import {
   Save,
   Maximize2,
   Minimize2,
+  Zap,
 } from "lucide-react";
 import ReactQuill from "react-quill";
 import { registerMediaBlot } from "./mediaBlot";
@@ -21,6 +22,7 @@ import {
   DropResult,
 } from "@hello-pangea/dnd";
 import "react-quill/dist/quill.snow.css";
+import SmartDecisionModal from "./SmartDecisionModal";
 
 interface FAQ {
   ordem: number;
@@ -28,18 +30,14 @@ interface FAQ {
   resposta: string;
 }
 
-interface MediaItem {
-  url: string;
-  type: string;
-  name?: string;
-}
-
 interface FAQSectionProps {
   faqs: FAQ[];
   setFaqs: React.Dispatch<React.SetStateAction<FAQ[]>>;
   savingFAQs: boolean;
   token: string;
+  idAgente: number;
   canEdit: boolean;
+  isLoading: boolean;
 }
 
 export default function FAQSection({
@@ -47,52 +45,22 @@ export default function FAQSection({
   setFaqs,
   savingFAQs,
   token,
+  idAgente,
   canEdit,
+  isLoading,
 }: FAQSectionProps) {
   const quillRefs = useRef<{ [key: number]: ReactQuill | null }>({});
   const [activeUpload, setActiveUpload] = useState<number | null>(null);
   const [saving, setSaving] = useState<number | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [faqToDelete, setFaqToDelete] = useState<number | null>(null);
   const [isQuillReady, setIsQuillReady] = useState(false);
   const [collapsedFaqs, setCollapsedFaqs] = useState<boolean[]>(() =>
-    (faqs || []).map(() => true)
+    faqs.map(() => true)
   );
-
-  const MAX_CHARS = 2000;
-
-  // Função para remover tags HTML e contar caracteres
-  const getTextLength = (html: string) => {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.textContent?.length || 0;
-  };
-
-  // Contabilizar caracteres de todas as perguntas juntas
-  const totalCharCount = (faqs || []).reduce((total, faq) => {
-    const perguntaLength = faq?.pergunta?.length || 0;
-    const respostaLength = getTextLength(faq?.resposta || '');
-    return total + perguntaLength + respostaLength;
-  }, 0);
-
-  const charPercentage = (totalCharCount / MAX_CHARS) * 100;
-
-  // Determina a cor baseada na porcentagem
-  const getProgressColor = () => {
-    if (charPercentage < 50) return 'bg-emerald-500 dark:bg-emerald-600';
-    if (charPercentage < 75) return 'bg-yellow-500 dark:bg-yellow-600';
-    if (charPercentage < 90) return 'bg-orange-500 dark:bg-orange-600';
-    return 'bg-red-500 dark:bg-red-600';
-  };
-
-  const getTextColor = () => {
-    if (charPercentage < 50) return 'text-emerald-600 dark:text-emerald-400';
-    if (charPercentage < 75) return 'text-yellow-600 dark:text-yellow-400';
-    if (charPercentage < 90) return 'text-orange-600 dark:text-orange-400';
-    return 'text-red-600 dark:text-red-400';
-  };
+  // Smart Decision state
+  const [smartDecisionModalOpen, setSmartDecisionModalOpen] = useState(false);
+  const [currentDecisionFaq, setCurrentDecisionFaq] = useState<number | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -103,8 +71,6 @@ export default function FAQSection({
   }, []);
 
   useEffect(() => {
-    if (!faqs || !Array.isArray(faqs)) return;
-
     setCollapsedFaqs((prev) => {
       if (prev.length === 0) {
         return faqs.map(() => true);
@@ -120,99 +86,180 @@ export default function FAQSection({
 
       return prev;
     });
-  }, [faqs?.length, faqs]);
+  }, [faqs.length, faqs]);
 
   async function registerMediaBlot() {
-    if (typeof window !== "undefined") {
-      const { Quill } = await import("react-quill");
-      const BlockEmbed = Quill.import("blots/block/embed");
+  if (typeof window !== "undefined") {
+    const { Quill } = await import("react-quill");
+    const BlockEmbed = Quill.import("blots/block/embed");
 
-      class MediaBlot extends BlockEmbed {
-        static create(value: MediaItem | string) {
-          const node = super.create();
-          node.setAttribute("contenteditable", "false");
+    class MediaBlot extends BlockEmbed {
+      static create(value: MediaItem | string) {
+        const node = super.create();
+        node.setAttribute("contenteditable", "false");
 
-          if (typeof value === "string") {
-            node.innerHTML = value;
-            return node;
-          }
-
-          node.setAttribute("data-url", value.url);
-          node.setAttribute("data-type", value.type);
-          if (value.name) {
-            node.setAttribute("data-name", value.name);
-          }
-
-          if (value.type.startsWith("image")) {
-            node.innerHTML = `<img src="${value.url}" alt="${
-              value.name || ""
-            }" style="max-width: 300px; border-radius: 8px;" />`;
-          } else if (value.type.startsWith("video")) {
-            node.innerHTML = `<video src="${value.url}" controls style="max-width: 200px; border-radius: 8px;"></video>`;
-          } else if (value.type.startsWith("audio")) {
-            node.innerHTML = `<audio src="${value.url}" controls style="width: 300px;"></audio>`;
-          } else if (value.type === "application/pdf") {
-            node.innerHTML = `
-              <div style="display: flex; align-items: center; background: #eff6ff; padding: 12px; border-radius: 8px; max-width: 80%; margin: 0 auto;">
-                <div style="width: 40px; height: 40px; background: #dc2626; display: flex; justify-content: center; align-items: center; border-radius: 8px; color: white; font-size: 20px;">📄</div>
-                <a href="${
-                  value.url
-                }" target="_blank" style="margin-left: 12px; color: #2563eb; font-weight: 500; text-decoration: none;">${
-              value.name || "Abrir PDF"
-            }</a>
-              </div>`;
-          }
-
+        if (typeof value === "string") {
+          node.innerHTML = value;
           return node;
         }
 
-        static value(node: HTMLElement) {
-          return {
-            url: node.getAttribute("data-url"),
-            type: node.getAttribute("data-type"),
-            name: node.getAttribute("data-name"),
-            html: node.innerHTML,
-          };
+        node.setAttribute("data-url", value.url);
+        node.setAttribute("data-type", value.type);
+        if (value.name) node.setAttribute("data-name", value.name);
+
+        if (value.type.startsWith("image")) {
+          node.innerHTML = `<img src="${value.url}" alt="${value.name || ""}" style="max-width: 300px; border-radius: 8px;" />`;
+        } else if (value.type.startsWith("video")) {
+          node.innerHTML = `<video src="${value.url}" controls style="max-width: 200px; border-radius: 8px;"></video>`;
+        } else if (value.type.startsWith("audio")) {
+          node.innerHTML = `<audio src="${value.url}" controls style="width: 300px;"></audio>`;
+        } else if (value.type === "application/pdf") {
+          node.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:flex-start;background:#eff6ff;padding:4px;border-radius:8px;max-width:80%;margin:2px;line-height:1;">
+              <div style="width:40px;height:40px;background:#dc2626;display:flex;justify-content:center;align-items:center;border-radius:8px;color:#fff;font-size:24px;line-height:1;transform:translateY(1px);">📄</div>
+              <a href="${value.url}" target="_blank" style="color:#2563eb;font-weight:500;text-decoration:none;margin-left:8px;">${value.name || "Abrir PDF"}</a>
+            </div>`;
         }
+
+        return node;
       }
 
-      MediaBlot.blotName = "media";
-      MediaBlot.tagName = "div";
-      MediaBlot.className = "ql-media";
-      Quill.register(MediaBlot);
+      static value(node: HTMLElement) {
+        return {
+          url: node.getAttribute("data-url"),
+          type: node.getAttribute("data-type"),
+          name: node.getAttribute("data-name"),
+          html: node.innerHTML,
+        };
+      }
     }
+
+    MediaBlot.blotName = "media";
+    MediaBlot.tagName = "div";
+    MediaBlot.className = "ql-media";
+    Quill.register(MediaBlot);
+
+    // SmartDecision inline embed
+    const Embed = Quill.import("blots/embed");
+    class SmartDecisionBlot extends Embed {
+      static create(value: any) {
+        const node = super.create() as HTMLElement;
+        node.setAttribute('contenteditable','false');
+        const t = value?.type || '';
+        const id = value?.id ?? null;
+        const label = value?.label ?? '';
+        node.setAttribute('data-type', t);
+        if (id !== null) node.setAttribute('data-id', String(id));
+        if (label) node.setAttribute('data-label', String(label));
+
+        const base = 'display:inline-flex;align-items:center;gap:4px;border-radius:9999px;padding:1px 8px;margin:1px 1px;font-size:11px;font-weight:600;white-space:nowrap;line-height:1;user-select:none;';
+        const styles: Record<string, { bg: string; border: string; color: string; icon: string; prefix: string }> = {
+          add_tag: { bg:'#FFF7ED', border:'#FED7AA', color:'#9A3412', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>', prefix:'Adicionar Tag' },
+          transfer_agent: { bg:'#EFF6FF', border:'#BFDBFE', color:'#1E40AF', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>', prefix:'Ação: Transferir para Agente' },
+          transfer_user: { bg:'#ECFDF5', border:'#BBF7D0', color:'#065F46', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-3-3.87"></path><circle cx="8.5" cy="7" r="4"></circle></svg>', prefix:'Ação: Transferir para Usuário' },
+          assign_source: { bg:'#F5F3FF', border:'#DDD6FE', color:'#5B21B6', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18"></path><path d="M3 12h18"></path><path d="M3 17h18"></path></svg>', prefix:'Ação: Atribuir Fonte' },
+          stop_agent: { bg:'#FEF2F2', border:'#FECACA', color:'#991B1B', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>', prefix:'Ação: Interromper Agente' },
+        };
+        const s = styles[t] || styles.add_tag;
+        const prefix = t === 'transfer_stage'
+          ? 'Ação: Transferir para o estágio'
+          : t === 'notify'
+          ? 'Ação: Notificação'
+          : t === 'assign_product'
+          ? 'Ação: Atribuir Produto'
+          : s.prefix;
+        const formatted = t === 'stop_agent'
+          ? prefix
+          : t === 'transfer_stage'
+          ? `${prefix} ${value?.id != null ? `#${value.id} ` : ''}${value?.label ?? ''}`
+          : `${prefix} ${value?.id != null ? `#${value.id} - ` : ''}${value?.label ?? ''}`;
+
+        node.setAttribute('style', `${base}background:${s.bg};border:1px solid ${s.border};color:${s.color};`);
+        node.innerHTML = `${s.icon}<span>${formatted}</span>`;
+        return node;
+      }
+      static value(node: HTMLElement) {
+        return {
+          type: node.getAttribute('data-type') || '',
+          id: node.getAttribute('data-id') ? Number(node.getAttribute('data-id')) : null,
+          label: node.getAttribute('data-label') || '',
+          text: node.textContent || ''
+        };
+      }
+    }
+    SmartDecisionBlot.blotName = 'smartDecision';
+    SmartDecisionBlot.tagName = 'span';
+    SmartDecisionBlot.className = 'ql-smart-decision';
+    Quill.register(SmartDecisionBlot);
   }
+}
 
   const handleAddFAQ = () => {
     setFaqs((prev) => [
-      ...(prev || []),
-      { ordem: (prev || []).length + 1, pergunta: "", resposta: "" },
+      ...prev,
+      { ordem: prev.length + 1, pergunta: "", resposta: "" },
     ]);
   };
 
-  const handleDeleteClick = (ordem: number) => {
-    setFaqToDelete(ordem);
-    setDeleteModalOpen(true);
+  // Abrir modal de decisão inteligente
+  const handleOpenSmartDecision = (ordem: number) => {
+    setCurrentDecisionFaq(ordem);
+    setSmartDecisionModalOpen(true);
   };
+  // Inserir decisão inteligente no editor (FAQ) via embed
+  const handleInsertSmartDecision = (html: string) => {
+    if (currentDecisionFaq === null) return;
+    const editor = quillRefs.current[currentDecisionFaq]?.getEditor();
+    if (editor) {
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      const el = temp.querySelector('[data-type]') as HTMLElement | null;
+      const type = (el?.getAttribute('data-type') || '') as 'add_tag' | 'transfer_agent' | 'transfer_user' | 'assign_source' | 'transfer_stage' | 'notify' | 'assign_product' | 'stop_agent';
+      const idAttr = el?.getAttribute('data-id');
+      const id = idAttr ? parseInt(idAttr) : null;
+      const label = el?.getAttribute('data-label') || '';
 
-  const confirmDelete = () => {
-    if (faqToDelete !== null) {
-      const updated = (faqs || [])
-        .filter((f) => f.ordem !== faqToDelete)
-        .map((f, i) => ({ ...f, ordem: i + 1 }));
-      setFaqs(updated);
-      setDeleteModalOpen(false);
-      setFaqToDelete(null);
+      const range = editor.getSelection(true);
+      if (range) {
+        editor.insertEmbed(range.index, 'smartDecision', { type, id, label }, 'user');
+        editor.setSelection(range.index + 1, 0);
+      }
+
+      const currentContent = editor.root.innerHTML;
+      handleUpdateFAQ(currentDecisionFaq, 'resposta', currentContent);
     }
   };
 
-  const cancelDelete = () => {
-    setDeleteModalOpen(false);
-    setFaqToDelete(null);
-  };
+
+
+
+  // Atalho Ctrl+D para abrir decisão inteligente no editor focado
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+        e.preventDefault();
+        const focusedElement = document.activeElement as Element | null;
+        const quillContainer = focusedElement?.closest('.ql-container');
+        if (quillContainer) {
+          for (const faq of faqs) {
+            const editorRef = quillRefs.current[faq.ordem];
+            if (
+              editorRef &&
+              editorRef.getEditor().root === quillContainer.querySelector('.ql-editor')
+            ) {
+              handleOpenSmartDecision(faq.ordem);
+              break;
+            }
+          }
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [faqs]);
 
   const handleRemoveFAQ = (ordem: number) => {
-    const updated = (faqs || [])
+    const updated = faqs
       .filter((f) => f.ordem !== ordem)
       .map((f, i) => ({ ...f, ordem: i + 1 }));
     setFaqs(updated);
@@ -224,7 +271,7 @@ export default function FAQSection({
     value: string
   ) => {
     setFaqs((prev) =>
-      (prev || []).map((f) => (f.ordem === ordem ? { ...f, [field]: value } : f))
+      prev.map((f) => (f.ordem === ordem ? { ...f, [field]: value } : f))
     );
   };
 
@@ -235,11 +282,11 @@ export default function FAQSection({
 
     try {
       const res = await fetch(
-        "https://n8n.lumendigital.com.br/webhook/prospecta/agente/upload",
+        `https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/upload?id_agente=${idAgente}`,
         {
           method: "POST",
           headers: { token },
-          body: formData,
+          body: (() => { formData.append('id_agente', String(idAgente)); return formData; })(),
         }
       );
 
@@ -266,19 +313,19 @@ export default function FAQSection({
     setModalLoading(true);
     try {
       await fetch(
-        "https://n8n.lumendigital.com.br/webhook/prospecta/agente/faq/create",
+        "https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/faq/create",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             token,
           },
-          body: JSON.stringify(faqs),
+          body: JSON.stringify(faqs.map(f => ({ ...f, id_agente: idAgente }))),
         }
       );
 
       const updated = await fetch(
-        "https://n8n.lumendigital.com.br/webhook/prospecta/agente/faq/get",
+        `https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/faq/get?id_agente=${idAgente}`,
         {
           headers: { token },
         }
@@ -301,16 +348,16 @@ export default function FAQSection({
   };
 
   const onDragEnd = (result: DropResult) => {
-    if (!result.destination || !faqs) return;
+    if (!result.destination) return;
 
-    const reordered = [...(faqs || [])];
+    const reordered = [...faqs];
     const [removed] = reordered.splice(result.source.index, 1);
     reordered.splice(result.destination.index, 0, removed);
 
     setFaqs(reordered.map((faq, i) => ({ ...faq, ordem: i + 1 })));
 
     setCollapsedFaqs((prev) => {
-      const updated = [...(prev || [])];
+      const updated = [...prev];
       const [collapsed] = updated.splice(result.source.index, 1);
       updated.splice(
         result.destination.index,
@@ -323,7 +370,7 @@ export default function FAQSection({
 
   const toggleFaqCollapse = (index: number) => {
     setCollapsedFaqs((prev) => {
-      const next = [...(prev || [])];
+      const next = [...prev];
       next[index] = !next[index];
       return next;
     });
@@ -346,63 +393,31 @@ export default function FAQSection({
     "list",
     "bullet",
     "media",
+    "smartDecision",
   ];
 
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-sm border border-gray-300 dark:border-neutral-700 p-6">
+    <div className="relative" aria-busy={isLoading}>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
-            Perguntas frequentes e informações do seu escritório
+          <h2 className="text-lg font-semibold text-gray-900">
+            Perguntas Frequentes
           </h2>
-          <p className="text-sm text-gray-500 dark:text-neutral-400">
-            Adicione as principais informações do seu escritório e as perguntas mais frequentes que a IA deve saber responder
+          <p className="text-sm text-gray-500">
+            Configure as perguntas que o agente deve responder
           </p>
         </div>
         {canEdit && (
           <button
             onClick={handleAddFAQ}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-500 dark:bg-emerald-600 rounded-lg hover:bg-emerald-600 dark:hover:bg-emerald-500"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-500 rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading}
           >
             <Plus className="w-4 h-4" /> Adicionar
           </button>
         )}
       </div>
-
-      {/* Contador de caracteres total */}
-      {faqs && faqs.length > 0 && (
-        <div className="mb-6 space-y-2">
-          <div className="flex justify-between items-center">
-            <span className={`text-sm font-medium ${getTextColor()}`}>
-              Total de caracteres: {totalCharCount}/{MAX_CHARS}
-            </span>
-            <span className={`text-xs ${getTextColor()}`}>
-              ({charPercentage.toFixed(0)}%)
-            </span>
-          </div>
-          <div className="w-full h-2 bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-            <div
-              className={`h-full ${getProgressColor()} transition-all duration-300 ease-out`}
-              style={{ width: `${Math.min(charPercentage, 100)}%` }}
-            />
-          </div>
-
-          {/* Alerta quando exceder o limite */}
-          {totalCharCount > MAX_CHARS && (
-            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-800/50 rounded-lg flex items-start gap-2">
-              <span className="text-amber-600 dark:text-amber-400 text-lg">⚠️</span>
-              <div>
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
-                  Limite recomendado excedido
-                </p>
-                <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
-                  Seu agente pode se perder pelo volume de caracteres. Recomendamos manter até {MAX_CHARS} caracteres no total de todas as perguntas.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="faq">
@@ -412,7 +427,7 @@ export default function FAQSection({
               ref={provided.innerRef}
               {...provided.droppableProps}
             >
-              {(faqs || []).map((faq, index) => (
+              {faqs.map((faq, index) => (
                 <Draggable
                   key={faq.ordem}
                   draggableId={String(faq.ordem)}
@@ -424,23 +439,23 @@ export default function FAQSection({
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        className="border border-gray-300 dark:border-neutral-600 rounded-lg p-4 bg-gray-50 dark:bg-neutral-700/50"
+                        className="border border-gray-200 rounded-lg p-4 bg-gray-50"
                       >
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="flex items-start gap-3">
                             <div
                               {...provided.dragHandleProps}
-                              className="cursor-grab text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-400"
+                              className="cursor-grab text-gray-400 hover:text-gray-600"
                             >
                               <GripVertical className="w-5 h-5" />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-gray-700 dark:text-neutral-300">
+                              <p className="text-sm font-medium text-gray-700">
                                 Pergunta {faq.ordem}
                               </p>
                               {isCollapsed && (
                                 <p
-                                  className="text-sm font-semibold text-gray-900 dark:text-neutral-100 truncate"
+                                  className="text-sm font-semibold text-gray-900 truncate"
                                   title={faq.pergunta || "Pergunta sem título"}
                                 >
                                   {faq.pergunta || "Pergunta sem título"}
@@ -449,21 +464,11 @@ export default function FAQSection({
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            {canEdit && (
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteClick(faq.ordem)}
-                                className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                                title="Excluir pergunta"
-                              >
-                                <Trash2 className="w-5 h-5" />
-                              </button>
-                            )}
                             <button
                               type="button"
                               onClick={() => toggleFaqCollapse(index)}
                               aria-expanded={!isCollapsed}
-                              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors"
+                              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-emerald-600 bg-emerald-100 rounded-lg hover:bg-emerald-200 transition-colors"
                             >
                               {isCollapsed ? (
                                 <>
@@ -483,7 +488,7 @@ export default function FAQSection({
                         {!isCollapsed && (
                           <div className="mt-4 space-y-4">
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Pergunta {faq.ordem}
                               </label>
                               <input
@@ -496,54 +501,63 @@ export default function FAQSection({
                                     e.target.value
                                   )
                                 }
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
+                                className="w-full px-3 py-2 border rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
                                 placeholder="Digite a pergunta"
                                 disabled={!canEdit}
                               />
                             </div>
 
                             <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
                               Resposta
                             </label>
-                            {canEdit && (
-                              <>
-                                <input
-                                  type="file"
-                                  id={`upload-${faq.ordem}`}
-                                  className="hidden"
-                                  accept="image/*,video/*,audio/*,application/pdf"
-                                  onChange={(e) =>
-                                    e.target.files?.[0] &&
-                                    handleMediaUpload(
-                                      faq.ordem,
-                                      e.target.files[0]
-                                    )
-                                  }
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    document
-                                      .getElementById(`upload-${faq.ordem}`)
-                                      ?.click()
-                                  }
-                                  disabled={activeUpload === faq.ordem}
-                                  className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 text-gray-700 dark:text-neutral-300 rounded-lg mb-2"
-                                >
-                                  <Upload className="w-4 h-4" /> Adicionar Mídia
-                                </button>
-                              </>
-                            )}
-
                             <div className="relative">
+                              {/* Action buttons above editor */}
+                              {canEdit && (
+                                <div className="flex items-center gap-2 mb-2">
+                                  <input
+                                    type="file"
+                                    id={`upload-${faq.ordem}`}
+                                    className="hidden"
+                                    accept="image/*,video/*,audio/*,application/pdf"
+                                    onChange={(e) =>
+                                      e.target.files?.[0] &&
+                                      handleMediaUpload(
+                                        faq.ordem,
+                                        e.target.files![0]
+                                      )
+                                    }
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      document
+                                        .getElementById(`upload-${faq.ordem}`)
+                                        ?.click()
+                                    }
+                                    disabled={activeUpload === faq.ordem}
+                                    className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"
+                                  >
+                                    <Upload className="w-4 h-4" /> Adicionar Mídia
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenSmartDecision(faq.ordem)}
+                                    className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"
+                                    title="Inserir Decisão Inteligente (Ctrl+D)"
+                                  >
+                                    <Zap className="w-4 h-4" /> Decisão Inteligente (Ctrl+D)
+                                  </button>
+                                </div>
+                              )}
+
                               {isQuillReady && (
-                              <ReactQuill
-                                ref={(el) =>
-                                  (quillRefs.current[faq.ordem] = el)
-                                }
-                                theme="snow"
-                                value={faq.resposta}
+                                <ReactQuill
+                                  ref={(el) =>
+                                    (quillRefs.current[faq.ordem] = el)
+                                  }
+                                  theme="snow"
+                                  value={faq.resposta}
                                 onChange={
                                   canEdit
                                     ? (v) =>
@@ -558,38 +572,29 @@ export default function FAQSection({
                                 formats={formats}
                                 readOnly={!canEdit}
                                 placeholder="Digite a resposta"
-                                className="bg-white dark:bg-neutral-700 rounded-lg
-                                  [&_.ql-editor]:text-gray-900 [&_.ql-editor]:dark:text-neutral-100
-                                  [&_.ql-editor]:min-h-[120px]
-                                  [&_.ql-toolbar]:dark:bg-neutral-800
-                                  [&_.ql-toolbar]:dark:border-neutral-600
-                                  [&_.ql-container]:dark:border-neutral-600
-                                  [&_.ql-container]:dark:bg-neutral-700
-                                  [&_.ql-stroke]:dark:stroke-neutral-300
-                                  [&_.ql-fill]:dark:fill-neutral-300
-                                  [&_.ql-picker-label]:dark:text-neutral-300
-                                  [&_.ql-picker-options]:dark:bg-neutral-700
-                                  [&_.ql-picker-item]:dark:text-neutral-300
-                                  [&_.ql-picker-item:hover]:dark:bg-neutral-600
-                                  [&_button:hover]:dark:bg-neutral-600
-                                  [&_button.ql-active]:dark:bg-emerald-900/30
-                                  [&_.ql-editor.ql-blank::before]:dark:text-neutral-500"
+                                className="bg-white rounded-lg"
                               />
-                      )}
+                              )}
                               {activeUpload === faq.ordem && (
-                                <div className="absolute inset-0 bg-white/80 dark:bg-neutral-800/80 flex items-center justify-center">
-                                  <Loader2 className="w-6 h-6 animate-spin text-emerald-500 dark:text-emerald-400" />
+                                <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                                  <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
                                 </div>
                               )}
-                            </div>
-                          </div>
+                             </div>
+                           </div>
 
                           {canEdit && (
-                            <div className="flex justify-end items-center pt-2">
+                            <div className="flex justify-between items-center pt-2">
+                              <button
+                                onClick={() => handleRemoveFAQ(faq.ordem)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <Trash2 className="w-5 h-5" />
+                              </button>
                               <button
                                 onClick={handleSave}
                                 disabled={savingFAQs || modalLoading}
-                                className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 disabled:opacity-50"
+                                className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
                               >
                                 {savingFAQs || modalLoading ? (
                                   <>
@@ -625,42 +630,28 @@ export default function FAQSection({
       >
         {modalLoading ? (
           <div className="flex items-center justify-center gap-2 py-4">
-            <Loader2 className="w-5 h-5 animate-spin text-emerald-500 dark:text-emerald-400" />
-            <p className="text-sm text-gray-600 dark:text-neutral-400">Processando resposta...</p>
+            <Loader2 className="w-5 h-5 animate-spin text-emerald-500" />
+            <p className="text-sm text-gray-600">Processando resposta...</p>
           </div>
         ) : (
-          <p className="text-gray-700 dark:text-neutral-300">Alterações salvas com sucesso!</p>
+          <p className="text-gray-700">Alterações salvas com sucesso!</p>
         )}
-      </Modal>
-
-      <Modal
-        isOpen={deleteModalOpen}
-        onClose={cancelDelete}
-        title="Confirmar Exclusão"
-      >
-        <div className="space-y-4">
-          <p className="text-gray-700 dark:text-neutral-300">
-            Tem certeza que deseja excluir a Pergunta #{faqToDelete}?
-          </p>
-          <p className="text-sm text-gray-500 dark:text-neutral-400">
-            Esta ação não pode ser desfeita.
-          </p>
-          <div className="flex justify-end gap-3 mt-6">
-            <button
-              onClick={cancelDelete}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-lg hover:bg-gray-200 dark:hover:bg-neutral-600 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={confirmDelete}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-500 rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
-            >
-              Excluir
-            </button>
-          </div>
+        </Modal>
+        <SmartDecisionModal
+          isOpen={smartDecisionModalOpen}
+          onClose={() => setSmartDecisionModalOpen(false)}
+          onInsert={handleInsertSmartDecision}
+          token={token}
+          currentAgentId={idAgente}
+        />
+      </div>
+      {isLoading && (
+        <div className="pointer-events-auto absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/70 backdrop-blur-sm">
+          <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
         </div>
-      </Modal>
+      )}
     </div>
   );
 }
+
+

@@ -20,9 +20,9 @@ class MediaBlot extends BlockEmbed {
         node.innerHTML = `<audio src="${value.url}" controls style="width:300px;"></audio>`;
       } else if (value.type === 'application/pdf') {
         node.innerHTML = `
-          <div style="display:flex;align-items:center;background:#eff6ff;padding:12px;border-radius:8px;max-width:80%;margin:0 auto;">
-            <div style="width:40px;height:40px;background:#dc2626;display:flex;justify-content:center;align-items:center;border-radius:8px;color:white;font-size:20px;">📄</div>
-            <a href="${value.url}" target="_blank" style="margin-left:12px;color:#2563eb;font-weight:500;text-decoration:none;">${value.name || 'Abrir PDF'}</a>
+  <div style="display: flex; align-items: center; justify-content: flex-start; background: #eff6ff; padding: 4px; border-radius: 8px; max-width: 80%; margin: 2px; line-height: 1;">
+            <div style="width:40px;height:40px;background:#dc2626;display:flex;justify-content:flex-start;align-items:center;border-radius:8px;color:white;font-size:20px;">📄</div>
+            <a href="${value.url}" target="_blank" style="color:#2563eb;font-weight:500;text-decoration:none;">${value.name || 'Abrir PDF'}</a>
           </div>`;
       }
       return node;

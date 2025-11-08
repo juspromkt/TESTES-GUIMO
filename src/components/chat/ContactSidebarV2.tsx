@@ -4,7 +4,6 @@ import {
   ChevronLeft,
   User,
   Phone,
-  Bot,
   Pause,
   BanIcon,
   Users,
@@ -28,6 +27,7 @@ import {
   Trash2,
   Save,
 } from "lucide-react";
+import GuimooIcon from "../GuimooIcon";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import type { Chat } from "./utils/api";
@@ -1580,7 +1580,7 @@ export default function ContactSidebarV2({
             {/* Controle da IA */}
             <div className="rounded-xl border border-gray-300 dark:border-gray-600 p-4 bg-white dark:bg-gray-800 space-y-3 transition-colors duration-200">
               <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-200">
-                <Bot className="w-4 h-4" />
+                <GuimooIcon className="w-4 h-4" />
                 <span>Controle da IA</span>
               </div>
 

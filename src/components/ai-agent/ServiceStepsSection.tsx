@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import {
   ListOrdered,
   Plus,
@@ -9,7 +9,8 @@ import {
   Maximize2,
   Minimize2,
   GripVertical,
-  Users,
+  Zap,
+  MessageSquare,
 } from "lucide-react";
 import ReactQuill from "react-quill";
 import { registerMediaBlot } from "./mediaBlot";
@@ -21,6 +22,7 @@ import {
   DropResult,
 } from "@hello-pangea/dnd";
 import Modal from "../Modal";
+import SmartDecisionModal from "./SmartDecisionModal";
 
 interface ServiceStep {
   ordem: number;
@@ -44,8 +46,10 @@ interface ServiceStepsSectionProps {
   handleSaveSteps: () => Promise<void>;
   onMediaUpload: (file: File) => Promise<string>;
   isUploading: boolean;
-  canEdit: boolean; // ✅ NOVO
+  canEdit: boolean; // âœ… NOVO
   token: string;
+  idAgente: number;
+  isLoading: boolean;
 }
 
 interface MediaItem {
@@ -66,14 +70,14 @@ export default function ServiceStepsSection({
   isUploading,
   canEdit,
   token,
+  idAgente,
+  isLoading,
 }: ServiceStepsSectionProps) {
   const quillRefs = useRef<{ [key: number]: ReactQuill | null }>({});
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [isQuillReady, setIsQuillReady] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [stepToDelete, setStepToDelete] = useState<number | null>(null);
   const [atribuirStepIndex, setAtribuirStepIndex] = useState<number | null>(
     null
   );
@@ -85,44 +89,15 @@ export default function ServiceStepsSection({
     serviceSteps.map(() => true)
   );
 
-  const MAX_CHARS = 5000;
-
-  // Função para remover tags HTML e contar caracteres
-  const getTextLength = (html: string) => {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.textContent?.length || 0;
-  };
-
-  // Contabilizar caracteres de todas as etapas juntas
-  const totalCharCount = serviceSteps.reduce((total, step) => {
-    const nomeLength = step.nome.length;
-    const descricaoLength = getTextLength(step.descricao);
-    return total + nomeLength + descricaoLength;
-  }, 0);
-
-  const charPercentage = (totalCharCount / MAX_CHARS) * 100;
-
-  // Determina a cor baseada na porcentagem
-  const getProgressColor = () => {
-    if (charPercentage < 50) return 'bg-emerald-500 dark:bg-emerald-600';
-    if (charPercentage < 75) return 'bg-yellow-500 dark:bg-yellow-600';
-    if (charPercentage < 90) return 'bg-orange-500 dark:bg-orange-600';
-    return 'bg-red-500 dark:bg-red-600';
-  };
-
-  const getTextColor = () => {
-    if (charPercentage < 50) return 'text-emerald-600 dark:text-emerald-400';
-    if (charPercentage < 75) return 'text-yellow-600 dark:text-yellow-400';
-    if (charPercentage < 90) return 'text-orange-600 dark:text-orange-400';
-    return 'text-red-600 dark:text-red-400';
-  };
+  // Smart Decision Modal
+  const [smartDecisionModalOpen, setSmartDecisionModalOpen] = useState(false);
+  const [currentDecisionStep, setCurrentDecisionStep] = useState<number | null>(null);
 
   const fetchAtribuicoes = async () => {
     setIsLoadingAtrib(true);
     try {
       const res = await fetch(
-        "https://n8n.lumendigital.com.br/webhook/prospecta/agente/atribuicao/get",
+        `https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/atribuicao/get?id_agente=${idAgente}`,
         {
           headers: { token },
         }
@@ -155,14 +130,14 @@ export default function ServiceStepsSection({
     setIsSavingAtrib(true);
     try {
       await fetch(
-        "https://n8n.lumendigital.com.br/webhook/prospecta/agente/atribuicao/create",
+        "https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/atribuicao/create",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             token: token,
           },
-          body: JSON.stringify(atribuicoes),
+          body: JSON.stringify(atribuicoes.map(a => ({ ...a, id_agente: idAgente }))),
         }
       );
     } catch (err) {
@@ -184,24 +159,6 @@ export default function ServiceStepsSection({
       console.error("Erro ao salvar etapas:", err);
       setModalLoading(false);
     }
-  };
-
-  const handleDeleteClick = (ordem: number) => {
-    setStepToDelete(ordem);
-    setDeleteModalOpen(true);
-  };
-
-  const confirmDelete = () => {
-    if (stepToDelete !== null) {
-      handleRemoveStep(stepToDelete);
-      setDeleteModalOpen(false);
-      setStepToDelete(null);
-    }
-  };
-
-  const cancelDelete = () => {
-    setDeleteModalOpen(false);
-    setStepToDelete(null);
   };
 
   const handleDragEnd = (result: DropResult) => {
@@ -263,18 +220,29 @@ export default function ServiceStepsSection({
 
       return prev;
     });
-  }, [serviceSteps.length]);
+  }, [serviceSteps.length, serviceSteps]);
 
+  // Evita duplicar carregamentos em StrictMode
+  const loadedOnceRef = useRef(false);
   useEffect(() => {
+    if (loadedOnceRef.current) return;
+    loadedOnceRef.current = true;
+    fetchAtribuicoes();
     fetchUsuarios();
   }, []);
 
-  // Buscar atribuições quando o atribuirStepIndex mudar
+  // Recarrega atribuições quando o agente selecionado mudar
+  const prevAgentRef = useRef<number | null>(null);
   useEffect(() => {
-    if (atribuirStepIndex !== null) {
+    if (prevAgentRef.current === null) {
+      prevAgentRef.current = idAgente;
+      return; // evita duplicar com o carregamento inicial
+    }
+    if (prevAgentRef.current !== idAgente) {
+      prevAgentRef.current = idAgente;
       fetchAtribuicoes();
     }
-  }, [atribuirStepIndex]);
+  }, [idAgente]);
 
   useEffect(() => {
     const initializeQuill = async () => {
@@ -287,8 +255,57 @@ export default function ServiceStepsSection({
   async function registerMediaBlot() {
     if (typeof window !== "undefined") {
       const { Quill } = await import("react-quill");
-      const BlockEmbed = Quill.import("blots/block/embed");
+      const BlockEmbed = Quill.import("blots/block/embed");      const Embed = Quill.import("blots/embed");
 
+      class SmartDecisionBlot extends Embed {
+        static create(value: any) {
+          const node = super.create() as HTMLElement;
+          node.setAttribute('contenteditable','false');
+          const t = value?.type || '';
+          const id = value?.id ?? null;
+          const label = value?.label ?? '';
+          node.setAttribute('data-type', t);
+          if (id !== null) node.setAttribute('data-id', String(id));
+          if (label) node.setAttribute('data-label', String(label));
+
+          const base = 'display:inline-flex;align-items:center;gap:4px;border-radius:9999px;padding:1px 8px;margin:1px 1px;font-size:11px;font-weight:600;white-space:nowrap;line-height:1;user-select:none;';
+          const styles: Record<string, { bg: string; border: string; color: string; icon: string; prefix: string }> = {
+            add_tag: { bg:'#FFF7ED', border:'#FED7AA', color:'#9A3412', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>', prefix:'Adicionar Tag' },
+            transfer_agent: { bg:'#EFF6FF', border:'#BFDBFE', color:'#1E40AF', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>', prefix:'Ação: Transferir para Agente' },
+            transfer_user: { bg:'#ECFDF5', border:'#BBF7D0', color:'#065F46', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-3-3.87"></path><circle cx="8.5" cy="7" r="4"></circle></svg>', prefix:'Ação: Transferir para Usuário' },
+            assign_source: { bg:'#F5F3FF', border:'#DDD6FE', color:'#5B21B6', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18"></path><path d="M3 12h18"></path><path d="M3 17h18"></path></svg>', prefix:'Ação: Atribuir Fonte' },
+            stop_agent: { bg:'#FEF2F2', border:'#FECACA', color:'#991B1B', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>', prefix:'Ação: Interromper Agente' },
+          };
+          const s = styles[t] || styles.add_tag;
+          const prefix = t === 'transfer_stage'
+            ? 'Ação: Transferir para o estágio'
+            : t === 'notify'
+            ? 'Ação: Notificação'
+            : t === 'assign_product'
+            ? 'Ação: Atribuir Produto'
+            : s.prefix;
+          const text = t === 'stop_agent'
+            ? prefix
+            : t === 'transfer_stage'
+            ? `${prefix} ${id !== null ? `#${id} ` : ''}${label}`
+            : `${prefix} ${id !== null ? `#${id} - ` : ''}${label}`;
+          node.setAttribute('style', `${base}background:${s.bg};border:1px solid ${s.border};color:${s.color};`);
+          node.innerHTML = `${s.icon}<span>${text}</span>`;
+          return node;
+        }
+        static value(node: HTMLElement) {
+          return {
+            type: node.getAttribute('data-type') || '',
+            id: node.getAttribute('data-id') ? Number(node.getAttribute('data-id')) : null,
+            label: node.getAttribute('data-label') || '',
+            text: node.textContent || ''
+          };
+        }
+      }
+      SmartDecisionBlot.blotName = 'smartDecision';
+      SmartDecisionBlot.tagName = 'span';
+      SmartDecisionBlot.className = 'ql-smart-decision';
+      Quill.register(SmartDecisionBlot);
       class MediaBlot extends BlockEmbed {
         static create(value: MediaItem | string) {
           const node = super.create();
@@ -315,14 +332,10 @@ export default function ServiceStepsSection({
             node.innerHTML = `<audio src="${value.url}" controls style="width: 300px;"></audio>`;
           } else if (value.type === "application/pdf") {
             node.innerHTML = `
-              <div style="display: flex; align-items: center; background: #eff6ff; padding: 12px; border-radius: 8px; max-width: 80%; margin: 0 auto;">
-                <div style="width: 40px; height: 40px; background: #dc2626; display: flex; justify-content: center; align-items: center; border-radius: 8px; color: white; font-size: 20px;">📄</div>
-                <a href="${
-                  value.url
-                }" target="_blank" style="margin-left: 12px; color: #2563eb; font-weight: 500; text-decoration: none;">${
-              value.name || "Abrir PDF"
-            }</a>
-              </div>`;
+  <div style="display: flex; align-items: center; justify-content: flex-start; background: #eff6ff; padding: 4px; border-radius: 8px; max-width: 80%; margin: 2px; line-height: 1;">
+    <div style="width: 40px; height: 40px; background: #dc2626; display: flex; justify-content: center; align-items: center; border-radius: 8px; color: white; font-size: 24px; line-height: 1; transform: translateY(1px);">ðŸ“„</div> 
+    <a href="${value.url}" target="_blank" style="color: #2563eb; font-weight: 500; text-decoration: none; margin-left: 8px;">${value.name || "Abrir PDF"}</a>
+  </div>`;
           }
 
           return node;
@@ -375,6 +388,86 @@ export default function ServiceStepsSection({
     }
   };
 
+  // Abrir modal de decisão inteligente
+  const handleOpenSmartDecision = (ordem: number) => {
+    setCurrentDecisionStep(ordem);
+    setSmartDecisionModalOpen(true);
+  };
+  // Inserir decisão inteligente no editor via embed customizado
+  const handleInsertSmartDecision = (html: string) => {
+    if (currentDecisionStep === null) return;
+
+    const editor = quillRefs.current[currentDecisionStep]?.getEditor();
+    if (editor) {
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      const el = temp.querySelector('[data-type]') as HTMLElement | null;
+      const type = (el?.getAttribute('data-type') || '') as 'add_tag' | 'transfer_agent' | 'transfer_user' | 'assign_source' | 'transfer_stage' | 'notify' | 'assign_product' | 'stop_agent';
+      const idAttr = el?.getAttribute('data-id');
+      const id = idAttr ? parseInt(idAttr) : null;
+      const label = el?.getAttribute('data-label') || '';
+
+      const range = editor.getSelection(true);
+      if (range) {
+        editor.insertEmbed(range.index, 'smartDecision', { type, id, label }, 'user');
+        editor.setSelection(range.index + 1, 0);
+      }
+
+      const currentContent = editor.root.innerHTML;
+      handleUpdateStep(currentDecisionStep, 'descricao', currentContent);
+    }
+  };
+
+  // Inserir template situação/mensagem diretamente no editor
+  const handleInsertSituationTemplate = (ordem: number) => {
+    const editor = quillRefs.current[ordem]?.getEditor();
+    if (editor) {
+      const range = editor.getSelection(true);
+      if (range) {
+        // Cria um HTML com o template destacado
+        const templateHTML = `<div style="background: rgba(254, 202, 202, 0.3); border: 2px solid #fca5a5; border-radius: 6px; padding: 12px; margin: 8px 0;"><p style="margin: 0 0 8px 0;"><strong>🚩 Situação:</strong> Digite aqui a situação...</p><p style="margin: 0;"><strong>💬 Mensagem (o que você deve retornar):</strong><br>Digite aqui a mensagem que o agente deve retornar...</p></div><p><br></p>`;
+
+        // Insere o HTML usando o clipboard do Quill
+        const delta = editor.clipboard.convert(templateHTML);
+        editor.setContents(
+          editor.getContents().compose(
+            new (editor.constructor as any).imports.delta().retain(range.index).concat(delta)
+          ),
+          'user'
+        );
+        editor.setSelection(range.index + delta.length(), 0);
+      }
+
+      const currentContent = editor.root.innerHTML;
+      handleUpdateStep(ordem, 'descricao', currentContent);
+    }
+  };
+  // Listener para tecla de atalho Ctrl+D
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+        e.preventDefault();
+        // Encontrar qual editor está focado
+        const focusedElement = document.activeElement;
+        const quillEditor = focusedElement?.closest('.ql-container');
+
+        if (quillEditor) {
+          // Encontrar qual step corresponde a este editor
+          for (const step of serviceSteps) {
+            const editorRef = quillRefs.current[step.ordem];
+            if (editorRef && editorRef.getEditor().root === quillEditor.querySelector('.ql-editor')) {
+              handleOpenSmartDecision(step.ordem);
+              break;
+            }
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [serviceSteps]);
+
   const modules = {
     toolbar: {
       container: [
@@ -394,20 +487,22 @@ export default function ServiceStepsSection({
     "list",
     "bullet",
     "media",
+    "smartDecision",
   ];
 
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-md p-8">
+    <div className="relative" aria-busy={isLoading}>
+      <div className="bg-white rounded-xl shadow-md p-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
-            <ListOrdered className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+          <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+            <ListOrdered className="w-6 h-6 text-orange-600" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">
+            <h2 className="text-xl font-semibold text-gray-900">
               Etapas de Atendimento
             </h2>
-            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">
+            <p className="text-sm text-gray-500 mt-1">
               Configure o fluxo de atendimento do agente
             </p>
           </div>
@@ -415,48 +510,14 @@ export default function ServiceStepsSection({
         {canEdit && (
           <button
             onClick={handleAddStep}
-            className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/50 transition-colors font-medium"
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading}
           >
             <Plus className="w-4 h-4" />
             Adicionar Etapa
           </button>
         )}
       </div>
-
-      {/* Contador de caracteres total */}
-      {serviceSteps.length > 0 && (
-        <div className="mb-6 space-y-2">
-          <div className="flex justify-between items-center">
-            <span className={`text-sm font-medium ${getTextColor()}`}>
-              Total de caracteres: {totalCharCount}/{MAX_CHARS}
-            </span>
-            <span className={`text-xs ${getTextColor()}`}>
-              ({charPercentage.toFixed(0)}%)
-            </span>
-          </div>
-          <div className="w-full h-2 bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-            <div
-              className={`h-full ${getProgressColor()} transition-all duration-300 ease-out`}
-              style={{ width: `${Math.min(charPercentage, 100)}%` }}
-            />
-          </div>
-
-          {/* Alerta quando exceder o limite */}
-          {totalCharCount > MAX_CHARS && (
-            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-800/50 rounded-lg flex items-start gap-2">
-              <span className="text-amber-600 dark:text-amber-400 text-lg">⚠️</span>
-              <div>
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
-                  Limite recomendado excedido
-                </p>
-                <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
-                  Seu agente pode se perder pelo volume de caracteres. Recomendamos manter até {MAX_CHARS} caracteres no total de todas as etapas.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       <div className="space-y-6 no-scroll-anchor">
         <DragDropContext onDragEnd={handleDragEnd}>
@@ -480,27 +541,27 @@ export default function ServiceStepsSection({
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            className="bg-orange-50/50 dark:bg-orange-900/10 rounded-lg p-6 no-scroll-anchor border border-transparent dark:border-neutral-700"
+                            className="bg-orange-50/50 rounded-lg p-6 no-scroll-anchor"
                           >
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div className="flex items-center gap-2">
                               <div
                                 {...provided.dragHandleProps}
-                                className="cursor-grab active:cursor-grabbing text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-400"
+                                className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
                                 title="Arraste para reordenar"
                               >
                                 <GripVertical className="w-5 h-5" />
                               </div>
-                              <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center text-orange-600 dark:text-orange-400 font-semibold">
+                              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-semibold">
                                 {step.ordem}
                               </div>
                               <div className="min-w-0">
-                                <p className="text-sm font-medium text-gray-700 dark:text-neutral-300">
+                                <p className="text-sm font-medium text-gray-700">
                                   Etapa #{step.ordem}
                                 </p>
                                 {isCollapsed && (
                                   <p
-                                    className="text-sm font-semibold text-gray-900 dark:text-neutral-100 truncate"
+                                    className="text-sm font-semibold text-gray-900 truncate"
                                     title={step.nome || "Sem nome"}
                                   >
                                     {step.nome || "Sem nome"}
@@ -513,7 +574,7 @@ export default function ServiceStepsSection({
                                 type="button"
                                 onClick={() => toggleStepCollapse(index)}
                                 aria-expanded={!isCollapsed}
-                                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-orange-600 bg-orange-100 rounded-lg hover:bg-orange-200 transition-colors"
                               >
                                 {isCollapsed ? (
                                   <>
@@ -530,8 +591,8 @@ export default function ServiceStepsSection({
                               {canEdit && !isCollapsed && (
                                 <button
                                   type="button"
-                                  onClick={() => handleDeleteClick(step.ordem)}
-                                  className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-1"
+                                  onClick={() => handleRemoveStep(step.ordem)}
+                                  className="text-red-500 hover:text-red-700 p-1"
                                 >
                                   <Trash2 className="w-5 h-5" />
                                 </button>
@@ -542,7 +603,7 @@ export default function ServiceStepsSection({
                           {!isCollapsed && (
                             <div className="mt-4 space-y-4">
                               <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
                               Nome da Etapa
                             </label>
                             <input
@@ -556,47 +617,64 @@ export default function ServiceStepsSection({
                                 )
                               }
                               placeholder="Ex: Apresentação Inicial"
-                              className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-orange-500 dark:focus:border-orange-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                               disabled={!canEdit}
                             />
                           </div>
 
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
                               Descrição da Etapa
                             </label>
-                            {canEdit && (
-                              <>
-                                <input
-                                  type="file"
-                                  id={`file-upload-${step.ordem}`}
-                                  accept="image/*,video/*,audio/*,application/pdf"
-                                  onChange={(e) =>
-                                    handleFileUpload(step.ordem, e)
-                                  }
-                                  className="hidden"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    document
-                                      .getElementById(
-                                        `file-upload-${step.ordem}`
-                                      )
-                                      ?.click()
-                                  }
-                                  disabled={
-                                    isUploading && activeStep === step.ordem
-                                  }
-                                  className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 text-gray-700 dark:text-neutral-300 rounded-lg transition-colors disabled:opacity-50 mb-2"
-                                >
-                                  <Upload className="w-4 h-4" />
-                                  Adicionar Mídia - Suporta imagens, vídeos, áudios e PDFs (máx. 63MB)
-                                </button>
-                              </>
-                            )}
-
                             <div className="relative">
+                              {canEdit && (
+                                <div className="flex items-center gap-2 mb-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleInsertSituationTemplate(step.ordem)}
+                                    className="flex items-center gap-2 px-3 py-1 text-sm bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors"
+                                    title="Inserir Modelo Situação/Mensagem"
+                                  >
+                                    <MessageSquare className="w-4 h-4" />
+                                    Situação/Mensagem
+                                  </button>
+                                  <input
+                                    type="file"
+                                    id={`file-upload-${step.ordem}`}
+                                    accept="image/*,video/*,audio/*,application/pdf"
+                                    onChange={(e) =>
+                                      handleFileUpload(step.ordem, e)
+                                    }
+                                    className="hidden"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      document
+                                        .getElementById(
+                                          `file-upload-${step.ordem}`
+                                        )
+                                        ?.click()
+                                    }
+                                    disabled={
+                                      isUploading && activeStep === step.ordem
+                                    }
+                                    className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                                  >
+                                    <Upload className="w-4 h-4" />
+                                    Adicionar Mídia
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenSmartDecision(step.ordem)}
+                                    className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                                    title="Inserir Decisão Inteligente (Ctrl+D)"
+                                  >
+                                    <Zap className="w-4 h-4" />
+                                    Decisão Inteligente (Ctrl+D)
+                                  </button>
+                                </div>
+                              )}
                               {isQuillReady && (
                                 <ReactQuill
                                   ref={(el) =>
@@ -620,35 +698,18 @@ export default function ServiceStepsSection({
                                   formats={formats}
                                   readOnly={!canEdit}
                                   placeholder="Descreva esta etapa de atendimento..."
-                                  className="bg-white dark:bg-neutral-700 rounded-lg
-                                    [&_.ql-editor]:text-gray-900 [&_.ql-editor]:dark:text-neutral-100
-                                    [&_.ql-editor]:min-h-[120px]
-                                    [&_.ql-toolbar]:dark:bg-neutral-800
-                                    [&_.ql-toolbar]:dark:border-neutral-600
-                                    [&_.ql-container]:dark:border-neutral-600
-                                    [&_.ql-container]:dark:bg-neutral-700
-                                    [&_.ql-stroke]:dark:stroke-neutral-300
-                                    [&_.ql-fill]:dark:fill-neutral-300
-                                    [&_.ql-picker-label]:dark:text-neutral-300
-                                    [&_.ql-picker-options]:dark:bg-neutral-700
-                                    [&_.ql-picker-item]:dark:text-neutral-300
-                                    [&_.ql-picker-item:hover]:dark:bg-neutral-600
-                                    [&_button:hover]:dark:bg-neutral-600
-                                    [&_button.ql-active]:dark:bg-orange-900/30
-                                    [&_.ql-editor.ql-blank::before]:dark:text-neutral-500"
+                                  className="bg-white rounded-lg"
                                 />
                               )}
                               {isUploading && activeStep === step.ordem && (
-                                <div className="absolute inset-0 bg-white/80 dark:bg-neutral-800/80 flex items-center justify-center">
-                                  <Loader2 className="w-6 h-6 animate-spin text-orange-500 dark:text-orange-400" />
+                                <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                                  <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
                                 </div>
                               )}
                             </div>
                           </div>
-
                           {canEdit && (
-                            <div className="space-y-3 pt-4">
-                              <div className="flex items-center justify-between">
+                              <div className="flex items-center justify-between pt-2">
                                 <label className="flex items-center gap-3 cursor-pointer">
                                   <div className="relative">
                                     <input
@@ -672,169 +733,130 @@ export default function ServiceStepsSection({
                                       }}
                                       className="sr-only peer"
                                     />
-                                    <div className="w-11 h-6 bg-gray-300 dark:bg-neutral-600 rounded-full peer peer-checked:bg-orange-500 dark:peer-checked:bg-orange-600 transition-colors"></div>
+                                    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-orange-500 transition-colors"></div>
                                     <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></div>
                                   </div>
-                                  <span className="text-sm text-gray-700 dark:text-neutral-300">
-                                    Transferir o atendimento para um usuário (use junto com "Desativar a IA nessa etapa")
+                                  <span className="text-sm text-gray-700">
+                                    Atribuir automaticamente usuário ao lead
                                   </span>
                                 </label>
                               </div>
+                            )}
 
-                          {step.atribuir_lead && (
-                            <div className="space-y-4">
-                              {/* Header minimalista */}
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
-                                    <Users className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                                  </div>
-                                  <span className="text-sm font-semibold text-gray-700 dark:text-neutral-300">
-                                    Rodízio de Atribuição
-                                  </span>
-                                </div>
-                                {Array.isArray(atribuicoes) && atribuicoes.length > 0 && (
-                                  <span className="text-xs px-2 py-1 bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 rounded-md font-medium">
-                                    {atribuicoes.filter(a => a.isAtivo).length} de {atribuicoes.length}
-                                  </span>
-                                )}
-                              </div>
+                          {step.atribuir_lead && canEdit && (
+                            <div className="bg-white border border-orange-200 rounded-lg p-4 mt-4">
+                              <h3 className="text-sm font-semibold text-gray-800 mb-2">
+                                Lista de usuários que participam do rodízio de leads
+                              </h3>
 
                               {isLoadingAtrib ? (
-                                <div className="flex items-center justify-center py-8">
-                                  <Loader2 className="w-5 h-5 animate-spin text-orange-500 dark:text-orange-400" />
+                                <div className="flex items-center justify-center py-4">
+                                  <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
+                                  <span className="ml-2 text-sm text-gray-600">
+                                    Carregando usuários...
+                                  </span>
                                 </div>
                               ) : (
                                 <>
-                                  {/* Grid horizontal de cartões */}
-                                  <div className="flex flex-wrap gap-2">
-                                    {Array.isArray(atribuicoes) && atribuicoes.length > 0 ? (
-                                      atribuicoes.map((atr, idx) => {
-                                        const user = usuariosAtivos.find((u) => u.Id === atr.id_usuario);
-                                        return (
-                                          <button
-                                            key={atr.id_usuario}
-                                            onClick={() => {
-                                              const updated = atribuicoes.map((a) =>
-                                                a.id_usuario === atr.id_usuario
-                                                  ? { ...a, isAtivo: !a.isAtivo }
-                                                  : a
-                                              );
-                                              setAtribuicoes(updated);
-                                            }}
-                                            className={`group flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all ${
-                                              atr.isAtivo
-                                                ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-500 dark:border-orange-600'
-                                                : 'bg-gray-50 dark:bg-neutral-800 border-gray-200 dark:border-neutral-700 opacity-50 hover:opacity-100'
-                                            }`}
-                                          >
-                                            <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold ${
-                                              atr.isAtivo
-                                                ? 'bg-orange-500 text-white'
-                                                : 'bg-gray-300 dark:bg-neutral-600 text-gray-600 dark:text-neutral-400'
-                                            }`}>
-                                              {idx + 1}
+                                  {Array.isArray(atribuicoes) && atribuicoes.length > 0 ? (
+                                  <ul className="space-y-2 mb-4">
+                                    {atribuicoes.map((atr) => {
+                                      const user = usuariosAtivos.find(
+                                        (u) => u.Id === atr.id_usuario
+                                      );
+                                      return (
+                                        <li
+                                          key={atr.id_usuario}
+                                          className="flex justify-between items-center border p-2 rounded"
+                                        >
+                                          <span className="text-sm">
+                                            {user?.nome ||
+                                              `Usuário ${atr.id_usuario}`}
+                                          </span>
+                                          <label className="flex items-center gap-2 cursor-pointer">
+                                            <div className="relative">
+                                              <input
+                                                type="checkbox"
+                                                className="sr-only peer"
+                                                checked={atr.isAtivo}
+                                                onChange={(e) => {
+                                                  const updated =
+                                                    atribuicoes.map((a) =>
+                                                      a.id_usuario ===
+                                                      atr.id_usuario
+                                                        ? {
+                                                            ...a,
+                                                            isAtivo:
+                                                              e.target.checked,
+                                                          }
+                                                        : a
+                                                    );
+                                                  setAtribuicoes(updated);
+                                                }}
+                                              />
+                                              <div className="w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-orange-500 transition-colors"></div>
+                                              <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></div>
                                             </div>
-                                            <span className={`text-sm font-medium ${
-                                              atr.isAtivo
-                                                ? 'text-orange-900 dark:text-orange-200'
-                                                : 'text-gray-600 dark:text-neutral-400'
-                                            }`}>
-                                              {user?.nome || `Usuário ${atr.id_usuario}`}
-                                            </span>
-                                            {atr.isAtivo && (
-                                              <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-                                            )}
-                                          </button>
-                                        );
-                                      })
-                                    ) : (
-                                      <div className="w-full text-center py-6 border-2 border-dashed border-gray-200 dark:border-neutral-700 rounded-lg">
-                                        <p className="text-sm text-gray-400 dark:text-neutral-500">
-                                          Nenhum usuário adicionado
-                                        </p>
-                                      </div>
-                                    )}
-                                  </div>
+                                          </label>
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+) : (
+  <div className="text-sm text-gray-500 mb-4">
+    Nenhum usuário adicionado Ã  atribuição automática.
+  </div>
+)}
+ <select
+  onChange={(e) => {
+    const id = parseInt(e.target.value);
 
-                                  {/* Select inline para adicionar */}
-                                  <div className="flex gap-2">
-                                    <select
-                                      onChange={(e) => {
-                                        const id = parseInt(e.target.value);
-                                        if (!id) return;
+    if (!id) return;
 
-                                        const existe = Array.isArray(atribuicoes) &&
-                                          atribuicoes.find((a) => a.id_usuario === id);
+    const existe =
+      Array.isArray(atribuicoes) &&
+      atribuicoes.find((a) => a.id_usuario === id);
 
-                                        if (!existe) {
-                                          setAtribuicoes([
-                                            ...(Array.isArray(atribuicoes) ? atribuicoes : []),
-                                            { id_usuario: id, isAtivo: true },
-                                          ]);
-                                        }
-                                        e.target.value = "";
-                                      }}
-                                      className="flex-1 text-sm border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400"
-                                    >
-                                      <option value="">Adicionar usuário...</option>
-                                      {usuariosAtivos
-                                        .filter(user => !atribuicoes.find(a => a.id_usuario === user.Id))
-                                        .map((user) => (
-                                          <option key={user.Id} value={user.Id}>
-                                            {user.nome}
-                                          </option>
-                                        ))}
-                                    </select>
-                                    <button
-                                      onClick={saveAtribuicoes}
-                                      disabled={isSavingAtrib}
-                                      className="px-4 py-2 bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
-                                    >
-                                      {isSavingAtrib ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                      ) : (
-                                        <Save className="w-4 h-4" />
-                                      )}
-                                      Salvar
-                                    </button>
-                                  </div>
+    if (!existe) {
+      setAtribuicoes([
+        ...(Array.isArray(atribuicoes) ? atribuicoes : []),
+        { id_usuario: id, isAtivo: true },
+      ]);
+    }
+  }}
+  className="w-full text-sm border rounded p-2 mb-3"
+>
+  <option value="">Adicionar usuário à atribuição</option>
+  {usuariosAtivos.map((user) => (
+    <option key={user.Id} value={user.Id}>
+      {user.nome}
+    </option>
+  ))}
+</select>
+
+
+                                  <button
+                                    onClick={saveAtribuicoes}
+                                    disabled={isSavingAtrib}
+                                    className="text-sm px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition disabled:opacity-50"
+                                  >
+                                    {isSavingAtrib
+                                      ? "Salvando..."
+                                      : "Salvar Atribuições"}
+                                  </button>
                                 </>
                               )}
                             </div>
                           )}
 
-                              <div className="flex items-center justify-between">
-                                <label className="flex items-center gap-3 cursor-pointer">
-                                  <div className="relative">
-                                    <input
-                                      type="checkbox"
-                                      checked={!!step.desativar_agente}
-                                      disabled={!canEdit}
-                                      onChange={() =>
-                                        handleUpdateStep(
-                                          step.ordem,
-                                          "desativar_agente",
-                                          !step.desativar_agente
-                                        )
-                                      }
-                                      className="sr-only peer"
-                                    />
-                                    <div className="w-11 h-6 bg-gray-300 dark:bg-neutral-600 rounded-full peer peer-checked:bg-orange-500 dark:peer-checked:bg-orange-600 transition-colors"></div>
-                                    <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></div>
-                                  </div>
-                                  <span className="text-sm text-gray-700 dark:text-neutral-300">Desativar a IA nessa etapa</span>
-                                </label>
-                              </div>
-                            </div>
-                          )}
+                          {/* Opção de interromper agente removida */}
 
                           {canEdit && (
                             <div className="flex justify-end pt-2">
                               <button
                                 onClick={handleSaveWithModal}
                                 disabled={savingSteps}
-                                className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-600 dark:bg-orange-700 text-white rounded-lg hover:bg-orange-700 dark:hover:bg-orange-600 transition-colors disabled:opacity-50 font-medium"
+                                className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 font-medium"
                               >
                                 {savingSteps ? (
                                   <>
@@ -864,9 +886,9 @@ export default function ServiceStepsSection({
           </Droppable>
         </DragDropContext>
         {serviceSteps.length === 0 && (
-          <div className="text-center py-12 bg-orange-50/50 dark:bg-orange-900/10 rounded-lg border border-transparent dark:border-neutral-700">
-            <ListOrdered className="w-12 h-12 text-orange-300 dark:text-orange-700 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-neutral-400">
+          <div className="text-center py-12 bg-orange-50/50 rounded-lg">
+            <ListOrdered className="w-12 h-12 text-orange-300 mx-auto mb-4" />
+            <p className="text-gray-500">
               Nenhuma etapa cadastrada. Adicione etapas para treinar o agente.
             </p>
           </div>
@@ -876,7 +898,7 @@ export default function ServiceStepsSection({
           <div className="flex justify-end pt-6">
             <button
               onClick={handleAddStep}
-              className="flex items-center gap-2 px-6 py-3 bg-orange-600 dark:bg-orange-700 text-white rounded-lg hover:bg-orange-700 dark:hover:bg-orange-600 transition-colors font-medium"
+              className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
             >
               <Plus className="w-5 h-5" />
               <span>Adicionar Etapa</span>
@@ -891,43 +913,28 @@ export default function ServiceStepsSection({
         >
           {modalLoading ? (
             <div className="flex items-center justify-center gap-2 py-4">
-              <Loader2 className="w-5 h-5 animate-spin text-orange-500 dark:text-orange-400" />
-              <p className="text-sm text-gray-600 dark:text-neutral-400">Processando etapas...</p>
+              <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
+              <p className="text-sm text-gray-600">Processando etapas...</p>
             </div>
           ) : (
-            <p className="text-gray-700 dark:text-neutral-300">Etapas salvas com sucesso!</p>
+            <p className="text-gray-700">Etapas salvas com sucesso!</p>
           )}
         </Modal>
-
-        <Modal
-          isOpen={deleteModalOpen}
-          onClose={cancelDelete}
-          title="Confirmar Exclusão"
-        >
-          <div className="space-y-4">
-            <p className="text-gray-700 dark:text-neutral-300">
-              Tem certeza que deseja excluir a Etapa #{stepToDelete}?
-            </p>
-            <p className="text-sm text-gray-500 dark:text-neutral-400">
-              Esta ação não pode ser desfeita.
-            </p>
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={cancelDelete}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-lg hover:bg-gray-200 dark:hover:bg-neutral-600 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-500 rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
-              >
-                Excluir
-              </button>
-            </div>
-          </div>
-        </Modal>
+        <SmartDecisionModal
+          isOpen={smartDecisionModalOpen}
+          onClose={() => setSmartDecisionModalOpen(false)}
+          onInsert={handleInsertSmartDecision}
+          token={token}
+          currentAgentId={idAgente}
+        />
       </div>
+      </div>
+      {isLoading && (
+        <div className="pointer-events-auto absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/70 backdrop-blur-sm">
+          <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+        </div>
+      )}
     </div>
   );
 }
+
