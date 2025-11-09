@@ -43,7 +43,9 @@
       "Bash(del /S /Q \"node_modules\\.vite\" 2)",
       "Bash(awk:*)",
       "Bash(\"d:\\GUIMOO - VERSÃO TESTE\\lumen-guimoo\\src\\components\\ai-agent\\ServiceStepsSection.tsx.tmp\")",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(node scripts/consolidate-agent-models.js:*)",
+      "Bash(node scripts/consolidate-agent-models.cjs:*)"
     ],
     "deny": [],
     "ask": []
