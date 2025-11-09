@@ -371,16 +371,16 @@ export default function ServiceStepsSection({
           if (value.type.startsWith("image")) {
             node.innerHTML = `<img src="${value.url}" alt="${
               value.name || ""
-            }" style="max-width: 300px; border-radius: 8px;" />`;
+            }" style="max-width: 210px; border-radius: 8px;" />`;
           } else if (value.type.startsWith("video")) {
-            node.innerHTML = `<video src="${value.url}" controls style="max-width: 200px; border-radius: 8px;"></video>`;
+            node.innerHTML = `<video src="${value.url}" controls style="max-width: 140px; border-radius: 8px;"></video>`;
           } else if (value.type.startsWith("audio")) {
-            node.innerHTML = `<audio src="${value.url}" controls style="width: 300px;"></audio>`;
+            node.innerHTML = `<audio src="${value.url}" controls style="width: 210px;"></audio>`;
           } else if (value.type === "application/pdf") {
             node.innerHTML = `
-  <div style="display: flex; align-items: center; justify-content: flex-start; background: #eff6ff; padding: 4px; border-radius: 8px; max-width: 80%; margin: 2px; line-height: 1;">
-    <div style="width: 40px; height: 40px; background: #dc2626; display: flex; justify-content: center; align-items: center; border-radius: 8px; color: white; font-size: 24px; line-height: 1; transform: translateY(1px);">ðŸ“„</div> 
-    <a href="${value.url}" target="_blank" style="color: #2563eb; font-weight: 500; text-decoration: none; margin-left: 8px;">${value.name || "Abrir PDF"}</a>
+  <div style="display: inline-flex; align-items: center; background: #eff6ff; padding: 6px 10px; border-radius: 8px; margin: 2px; line-height: 1;">
+    <div style="width: 32px; height: 32px; background: #dc2626; display: flex; justify-content: center; align-items: center; border-radius: 6px; color: white; font-size: 20px; line-height: 1; flex-shrink: 0;">ðŸ"„</div>
+    <a href="${value.url}" target="_blank" style="color: #2563eb; font-weight: 500; text-decoration: none; margin-left: 8px; white-space: nowrap;">${value.name || "Abrir PDF"}</a>
   </div>`;
           }
 
@@ -569,9 +569,28 @@ export default function ServiceStepsSection({
           const editorElement = editor.root.parentElement;
           if (editorElement) {
             const rect = editorElement.getBoundingClientRect();
+
+            // Calcula a posição inicial do menu
+            let menuTop = rect.top + bounds.top + bounds.height;
+            const menuLeft = rect.left + bounds.left;
+
+            // Altura estimada do menu (aproximadamente 400px)
+            const menuHeight = 400;
+            const windowHeight = window.innerHeight;
+
+            // Se o menu vai ultrapassar a parte inferior da janela, posiciona acima do cursor
+            if (menuTop + menuHeight > windowHeight) {
+              menuTop = rect.top + bounds.top - menuHeight - 5;
+
+              // Se ainda assim ficar fora (muito no topo), ajusta para ficar visível
+              if (menuTop < 0) {
+                menuTop = Math.max(10, windowHeight - menuHeight - 10);
+              }
+            }
+
             setQuickCommandPosition({
-              top: rect.top + bounds.top + bounds.height,
-              left: rect.left + bounds.left
+              top: menuTop,
+              left: menuLeft
             });
             setQuickCommandStep(step.ordem);
             setQuickCommandInitial(null); // Reset para não ter comando inicial
@@ -784,9 +803,28 @@ export default function ServiceStepsSection({
             if (chipIndex !== -1) {
               // Pega a posição do chip
               const rect = chipElement.getBoundingClientRect();
+
+              // Calcula a posição inicial do menu
+              let menuTop = rect.bottom + 5;
+              const menuLeft = rect.left;
+
+              // Altura estimada do menu (aproximadamente 400px)
+              const menuHeight = 400;
+              const windowHeight = window.innerHeight;
+
+              // Se o menu vai ultrapassar a parte inferior da janela, posiciona acima do chip
+              if (menuTop + menuHeight > windowHeight) {
+                menuTop = rect.top - menuHeight - 5;
+
+                // Se ainda assim ficar fora (muito no topo), ajusta para ficar visível
+                if (menuTop < 0) {
+                  menuTop = Math.max(10, windowHeight - menuHeight - 10);
+                }
+              }
+
               setQuickCommandPosition({
-                top: rect.bottom + 5,
-                left: rect.left
+                top: menuTop,
+                left: menuLeft
               });
               setQuickCommandStep(step.ordem);
               setQuickCommandInitial(type);
@@ -965,7 +1003,7 @@ export default function ServiceStepsSection({
     <div className="h-full flex flex-col transition-colors duration-200" aria-busy={isLoading}>
       <style>{`
         .quill-editor-container {
-          height: 100%;
+          height: 810px;
           display: flex;
           flex-direction: column;
         }
@@ -980,7 +1018,7 @@ export default function ServiceStepsSection({
           background: white !important;
           backdrop-filter: blur(4px) !important;
           transition: all 200ms !important;
-          flex: 1;
+          height: 810px;
           overflow: hidden;
           display: flex;
           flex-direction: column;
@@ -991,6 +1029,7 @@ export default function ServiceStepsSection({
         }
         .quill-editor-container .quill .ql-editor {
           height: 100%;
+          max-height: 810px;
           overflow-y: auto !important;
           overflow-x: hidden !important;
           padding: 1rem !important;
