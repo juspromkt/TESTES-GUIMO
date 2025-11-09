@@ -36,7 +36,14 @@
       "Bash(timeout 10 bash -c 'while ! curl -s http://localhost:5173 > /dev/null; do sleep 1; done; echo \"\"Server ready\"\"')",
       "Bash(timeout 10 bash -c 'npm run dev > /tmp/dev_output.txt 2>&1 & sleep 3 && (curl -s http://localhost:5173 > /dev/null && echo \"\"Server started successfully\"\" || echo \"\"Waiting for server...\"\") && tail -20 /tmp/dev_output.txt')",
       "Bash(del \"src\\components\\ai-agent\\CreateAgentModal.tsx\")",
-      "Bash(git remote add:*)"
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(npx vite build:*)",
+      "Bash(del /S /Q \"node_modules\\.vite\")",
+      "Bash(del /S /Q \"node_modules\\.vite\" 2)",
+      "Bash(awk:*)",
+      "Bash(\"d:\\GUIMOO - VERSÃO TESTE\\lumen-guimoo\\src\\components\\ai-agent\\ServiceStepsSection.tsx.tmp\")",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

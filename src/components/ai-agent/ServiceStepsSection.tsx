@@ -11,6 +11,8 @@ import {
   GripVertical,
   Zap,
   MessageSquare,
+  AlertCircle,
+  CheckCircle,
 } from "lucide-react";
 import ReactQuill from "react-quill";
 import { registerMediaBlot } from "./mediaBlot";
@@ -21,8 +23,8 @@ import {
   Draggable,
   DropResult,
 } from "@hello-pangea/dnd";
-import Modal from "../Modal";
 import SmartDecisionModal from "./SmartDecisionModal";
+import QuickCommandMenu from "./QuickCommandMenu";
 
 interface ServiceStep {
   ordem: number;
@@ -76,8 +78,6 @@ export default function ServiceStepsSection({
   const quillRefs = useRef<{ [key: number]: ReactQuill | null }>({});
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [isQuillReady, setIsQuillReady] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalLoading, setModalLoading] = useState(false);
   const [atribuirStepIndex, setAtribuirStepIndex] = useState<number | null>(
     null
   );
@@ -89,9 +89,26 @@ export default function ServiceStepsSection({
     serviceSteps.map(() => true)
   );
 
+  // Controle de alterações não salvas
+  const [originalSteps, setOriginalSteps] = useState<ServiceStep[]>([]);
+  const [successMessage, setSuccessMessage] = useState(false);
+
+  // Controle do step ativo (qual está sendo editado)
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+
   // Smart Decision Modal
   const [smartDecisionModalOpen, setSmartDecisionModalOpen] = useState(false);
   const [currentDecisionStep, setCurrentDecisionStep] = useState<number | null>(null);
+
+  // Quick Command Menu
+  const [quickCommandOpen, setQuickCommandOpen] = useState(false);
+  const [quickCommandPosition, setQuickCommandPosition] = useState({ top: 0, left: 0 });
+  const [quickCommandStep, setQuickCommandStep] = useState<number | null>(null);
+  const [quickCommandInitial, setQuickCommandInitial] = useState<'add_tag' | 'transfer_agent' | 'transfer_user' | 'assign_source' | 'transfer_stage' | 'notify' | 'assign_product' | 'stop_agent' | null>(null);
+  const [chipToReplace, setChipToReplace] = useState<{ index: number; length: number } | null>(null);
+
+  // Verifica se há mudanças não salvas
+  const hasUnsavedChanges = JSON.stringify(serviceSteps) !== JSON.stringify(originalSteps);
 
   const fetchAtribuicoes = async () => {
     setIsLoadingAtrib(true);
@@ -148,16 +165,22 @@ export default function ServiceStepsSection({
   };
 
   const handleSaveWithModal = async () => {
-    setModalLoading(true); // somente o loading do modal
+    setSuccessMessage(false);
     try {
       await handleSaveSteps(); // já atualiza os dados por prop
+
+      // Atualiza o original para sincronizar
+      setOriginalSteps(JSON.parse(JSON.stringify(serviceSteps)));
+
+      // Mostra mensagem de sucesso
+      setSuccessMessage(true);
+
+      // Oculta mensagem após 3 segundos
       setTimeout(() => {
-        setModalOpen(true);
-        setModalLoading(false);
-      }, 300);
+        setSuccessMessage(false);
+      }, 3000);
     } catch (err) {
       console.error("Erro ao salvar etapas:", err);
-      setModalLoading(false);
     }
   };
 
@@ -195,6 +218,13 @@ export default function ServiceStepsSection({
       return next;
     });
   };
+
+  // Sincroniza os steps originais quando os dados são carregados
+  useEffect(() => {
+    if (serviceSteps.length > 0 && originalSteps.length === 0) {
+      setOriginalSteps(JSON.parse(JSON.stringify(serviceSteps)));
+    }
+  }, [serviceSteps]);
 
   useEffect(() => {
     const etapaComAtribuicao = serviceSteps.find((step) => step.atribuir_lead);
@@ -264,33 +294,48 @@ export default function ServiceStepsSection({
           const t = value?.type || '';
           const id = value?.id ?? null;
           const label = value?.label ?? '';
+          const invalid = value?.invalid ?? false;
           node.setAttribute('data-type', t);
           if (id !== null) node.setAttribute('data-id', String(id));
           if (label) node.setAttribute('data-label', String(label));
+          if (invalid) node.setAttribute('data-invalid', 'true');
 
-          const base = 'display:inline-flex;align-items:center;gap:4px;border-radius:9999px;padding:1px 8px;margin:1px 1px;font-size:11px;font-weight:600;white-space:nowrap;line-height:1;user-select:none;';
-          const styles: Record<string, { bg: string; border: string; color: string; icon: string; prefix: string }> = {
-            add_tag: { bg:'#FFF7ED', border:'#FED7AA', color:'#9A3412', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>', prefix:'Adicionar Tag' },
-            transfer_agent: { bg:'#EFF6FF', border:'#BFDBFE', color:'#1E40AF', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>', prefix:'Ação: Transferir para Agente' },
-            transfer_user: { bg:'#ECFDF5', border:'#BBF7D0', color:'#065F46', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-3-3.87"></path><circle cx="8.5" cy="7" r="4"></circle></svg>', prefix:'Ação: Transferir para Usuário' },
-            assign_source: { bg:'#F5F3FF', border:'#DDD6FE', color:'#5B21B6', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18"></path><path d="M3 12h18"></path><path d="M3 17h18"></path></svg>', prefix:'Ação: Atribuir Fonte' },
-            stop_agent: { bg:'#FEF2F2', border:'#FECACA', color:'#991B1B', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>', prefix:'Ação: Interromper Agente' },
+          const base = 'display:inline-flex;align-items:center;border-radius:6px;padding:4px 10px;margin:0 2px;font-size:12px;font-weight:500;white-space:nowrap;line-height:1.4;user-select:none;';
+
+          // Se inválido, usa estilo vermelho
+          if (invalid) {
+            const text = t === 'stop_agent'
+              ? 'Interromper agente (INVÁLIDO)'
+              : `${label} (INVÁLIDO)`;
+            node.setAttribute('style', `${base}background:#FEE2E2;border:1px solid #DC2626;color:#991B1B;`);
+            node.innerHTML = `<span>${text}</span>`;
+            node.setAttribute('title', 'Este chip está inválido. O item foi removido ou está inativo.');
+            return node;
+          }
+
+          const styles: Record<string, { bg: string; border: string; color: string; text: string }> = {
+            add_tag: { bg:'#FFF7ED', border:'#FED7AA', color:'#9A3412', text:'Adicionar tag' },
+            transfer_agent: { bg:'#EFF6FF', border:'#BFDBFE', color:'#1E40AF', text:'Transferir para agente' },
+            transfer_user: { bg:'#ECFDF5', border:'#BBF7D0', color:'#065F46', text:'Transferir para usuário' },
+            assign_source: { bg:'#F5F3FF', border:'#DDD6FE', color:'#5B21B6', text:'Atribuir fonte' },
+            transfer_stage: { bg:'#DBEAFE', border:'#93C5FD', color:'#1E3A8A', text:'Transferir para estágio' },
+            notify: { bg:'#FEF3C7', border:'#FCD34D', color:'#92400E', text:'Enviar notificação' },
+            assign_product: { bg:'#FCE7F3', border:'#F9A8D4', color:'#831843', text:'Atribuir produto' },
+            stop_agent: { bg:'#FEF2F2', border:'#FECACA', color:'#991B1B', text:'Interromper agente' },
           };
           const s = styles[t] || styles.add_tag;
-          const prefix = t === 'transfer_stage'
-            ? 'Ação: Transferir para o estágio'
-            : t === 'notify'
-            ? 'Ação: Notificação'
-            : t === 'assign_product'
-            ? 'Ação: Atribuir Produto'
-            : s.prefix;
-          const text = t === 'stop_agent'
-            ? prefix
-            : t === 'transfer_stage'
-            ? `${prefix} ${id !== null ? `#${id} ` : ''}${label}`
-            : `${prefix} ${id !== null ? `#${id} - ` : ''}${label}`;
+
+          let text = '';
+          if (t === 'stop_agent') {
+            text = s.text;
+          } else if (label) {
+            text = `${s.text}: ${label}`;
+          } else {
+            text = s.text;
+          }
+
           node.setAttribute('style', `${base}background:${s.bg};border:1px solid ${s.border};color:${s.color};`);
-          node.innerHTML = `${s.icon}<span>${text}</span>`;
+          node.innerHTML = `<span>${text}</span>`;
           return node;
         }
         static value(node: HTMLElement) {
@@ -298,6 +343,7 @@ export default function ServiceStepsSection({
             type: node.getAttribute('data-type') || '',
             id: node.getAttribute('data-id') ? Number(node.getAttribute('data-id')) : null,
             label: node.getAttribute('data-label') || '',
+            invalid: node.getAttribute('data-invalid') === 'true',
             text: node.textContent || ''
           };
         }
@@ -418,6 +464,43 @@ export default function ServiceStepsSection({
     }
   };
 
+  // Inserir decisão via QuickCommand (remove "/" e insere, ou substitui chip existente)
+  const handleInsertQuickCommand = (html: string) => {
+    if (quickCommandStep === null) return;
+
+    const editor = quillRefs.current[quickCommandStep]?.getEditor();
+    if (editor) {
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      const el = temp.querySelector('[data-type]') as HTMLElement | null;
+      const type = (el?.getAttribute('data-type') || '') as 'add_tag' | 'transfer_agent' | 'transfer_user' | 'assign_source' | 'transfer_stage' | 'notify' | 'assign_product' | 'stop_agent';
+      const idAttr = el?.getAttribute('data-id');
+      const id = idAttr ? parseInt(idAttr) : null;
+      const label = el?.getAttribute('data-label') || '';
+
+      const selection = editor.getSelection(true);
+      if (selection) {
+        if (chipToReplace) {
+          // Se está substituindo um chip existente, deleta o chip antigo e insere o novo
+          editor.deleteText(chipToReplace.index, chipToReplace.length, 'user');
+          editor.insertEmbed(chipToReplace.index, 'smartDecision', { type, id, label }, 'user');
+          editor.setSelection(chipToReplace.index + 1, 0);
+        } else {
+          // Remove a barra "/" e insere o chip
+          editor.deleteText(selection.index - 1, 1, 'user');
+          editor.insertEmbed(selection.index - 1, 'smartDecision', { type, id, label }, 'user');
+          editor.setSelection(selection.index, 0);
+        }
+      }
+
+      const currentContent = editor.root.innerHTML;
+      handleUpdateStep(quickCommandStep, 'descricao', currentContent);
+    }
+
+    setQuickCommandOpen(false);
+    setChipToReplace(null);
+  };
+
   // Inserir template situação/mensagem diretamente no editor
   const handleInsertSituationTemplate = (ordem: number) => {
     const editor = quillRefs.current[ordem]?.getEditor();
@@ -468,6 +551,394 @@ export default function ServiceStepsSection({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [serviceSteps]);
 
+  // Listener para detectar "/" e abrir QuickCommandMenu
+  useEffect(() => {
+    const handleTextChange = () => {
+      for (const step of serviceSteps) {
+        const editor = quillRefs.current[step.ordem]?.getEditor();
+        if (!editor) continue;
+
+        const selection = editor.getSelection();
+        if (!selection) continue;
+
+        const text = editor.getText(Math.max(0, selection.index - 1), 1);
+
+        if (text === '/') {
+          // Pega a posição do cursor
+          const bounds = editor.getBounds(selection.index);
+          const editorElement = editor.root.parentElement;
+          if (editorElement) {
+            const rect = editorElement.getBoundingClientRect();
+            setQuickCommandPosition({
+              top: rect.top + bounds.top + bounds.height,
+              left: rect.left + bounds.left
+            });
+            setQuickCommandStep(step.ordem);
+            setQuickCommandInitial(null); // Reset para não ter comando inicial
+            setChipToReplace(null); // Reset para não substituir nenhum chip
+            setQuickCommandOpen(true);
+          }
+        }
+      }
+    };
+
+    // Adiciona listener de mudança de texto em todos os editores
+    const editorRefs = Object.values(quillRefs.current);
+    editorRefs.forEach(ref => {
+      if (ref) {
+        const editor = ref.getEditor();
+        editor.on('text-change', handleTextChange);
+      }
+    });
+
+    return () => {
+      editorRefs.forEach(ref => {
+        if (ref) {
+          const editor = ref.getEditor();
+          editor.off('text-change', handleTextChange);
+        }
+      });
+    };
+  }, [serviceSteps, isQuillReady]);
+
+  // Validação de chips ao carregar
+  useEffect(() => {
+    if (!isQuillReady || serviceSteps.length === 0) return;
+
+    const validateChips = async () => {
+      try {
+        // Busca todos os dados necessários para validação
+        const [tagsRes, agentsRes, usersRes, sourcesRes, funnelsRes, productsRes] = await Promise.all([
+          fetch('https://n8n.lumendigital.com.br/webhook/prospecta/tag/list', { headers: { token } }).then(r => r.json()).catch(() => []),
+          fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/get', { headers: { token } }).then(r => r.json()).catch(() => []),
+          fetch('https://n8n.lumendigital.com.br/webhook/prospectai/usuario/get', { headers: { token } }).then(r => r.json()).catch(() => []),
+          fetch('https://n8n.lumendigital.com.br/webhook/prospecta/fonte/get', { headers: { token } }).then(r => r.json()).catch(() => []),
+          fetch('https://n8n.lumendigital.com.br/webhook/prospecta/funil/get', { headers: { token } }).then(r => r.json()).catch(() => []),
+          fetch('https://n8n.lumendigital.com.br/webhook/produtos/get', { headers: { token } }).then(r => r.json()).catch(() => []),
+        ]);
+
+        const tags = Array.isArray(tagsRes) ? tagsRes : [];
+        const agents = Array.isArray(agentsRes) ? agentsRes.filter(a => a.isAtivo === true) : [];
+        const users = Array.isArray(usersRes) ? usersRes : [];
+        const sources = Array.isArray(sourcesRes) ? sourcesRes : [];
+        const funnels = Array.isArray(funnelsRes) ? funnelsRes : [];
+        const products = Array.isArray(productsRes) ? productsRes : [];
+
+        // Busca notificações do agente principal
+        const principalAgent = agents.find((a: any) => a.isAgentePrincipal);
+        let notifications: any[] = [];
+        if (principalAgent) {
+          notifications = await fetch(`https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/funcao/geral?id_agente=${principalAgent.Id}`, { headers: { token } })
+            .then(r => r.json())
+            .then(data => Array.isArray(data) ? data.filter(f => f.tipo === 'NOTIFICACAO') : [])
+            .catch(() => []);
+        }
+
+        // Valida cada roteiro
+        for (const step of serviceSteps) {
+          const editor = quillRefs.current[step.ordem]?.getEditor();
+          if (!editor) continue;
+
+          const container = editor.root;
+          const chipElements = container.querySelectorAll('.ql-smart-decision');
+          let needsUpdate = false;
+
+          chipElements.forEach((chipEl: Element) => {
+            const htmlEl = chipEl as HTMLElement;
+            const type = htmlEl.getAttribute('data-type');
+            const idStr = htmlEl.getAttribute('data-id');
+            const id = idStr ? parseInt(idStr) : null;
+            const currentlyInvalid = htmlEl.getAttribute('data-invalid') === 'true';
+
+            let isValid = true;
+
+            // Valida baseado no tipo
+            if (type === 'add_tag' && id) {
+              isValid = tags.some((t: any) => t.Id === id);
+            } else if (type === 'transfer_agent' && id) {
+              isValid = agents.some((a: any) => a.Id === id && a.isAtivo === true);
+            } else if (type === 'transfer_user' && id) {
+              isValid = users.some((u: any) => u.Id === id);
+            } else if (type === 'assign_source' && id) {
+              isValid = sources.some((s: any) => s.Id === id);
+            } else if (type === 'transfer_stage' && id) {
+              isValid = funnels.some((f: any) => f.estagios?.some((s: any) => s.Id === id));
+            } else if (type === 'notify' && id) {
+              isValid = notifications.some((n: any) => n.id === id);
+            } else if (type === 'assign_product' && id) {
+              isValid = products.some((p: any) => p.Id === id);
+            } else if (type === 'stop_agent') {
+              isValid = true; // stop_agent não precisa validação
+            }
+
+            // Se o estado de validade mudou, atualiza
+            if ((isValid && currentlyInvalid) || (!isValid && !currentlyInvalid)) {
+              needsUpdate = true;
+            }
+          });
+
+          // Se precisa atualizar, re-renderiza o editor
+          if (needsUpdate) {
+            const Delta = (editor.constructor as any).imports.delta;
+            const currentContents = editor.getContents();
+            const newOps = currentContents.ops.map((op: any) => {
+              if (op.insert && typeof op.insert === 'object' && op.insert.smartDecision) {
+                const chipData = op.insert.smartDecision;
+                const type = chipData.type;
+                const id = chipData.id;
+
+                let isValid = true;
+                if (type === 'add_tag' && id) {
+                  isValid = tags.some((t: any) => t.Id === id);
+                } else if (type === 'transfer_agent' && id) {
+                  isValid = agents.some((a: any) => a.Id === id && a.isAtivo === true);
+                } else if (type === 'transfer_user' && id) {
+                  isValid = users.some((u: any) => u.Id === id);
+                } else if (type === 'assign_source' && id) {
+                  isValid = sources.some((s: any) => s.Id === id);
+                } else if (type === 'transfer_stage' && id) {
+                  isValid = funnels.some((f: any) => f.estagios?.some((s: any) => s.Id === id));
+                } else if (type === 'notify' && id) {
+                  isValid = notifications.some((n: any) => n.id === id);
+                } else if (type === 'assign_product' && id) {
+                  isValid = products.some((p: any) => p.Id === id);
+                }
+
+                return {
+                  ...op,
+                  insert: {
+                    smartDecision: {
+                      ...chipData,
+                      invalid: !isValid
+                    }
+                  }
+                };
+              }
+              return op;
+            });
+
+            editor.setContents(new Delta(newOps), 'silent');
+            const currentContent = editor.root.innerHTML;
+            handleUpdateStep(step.ordem, 'descricao', currentContent);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao validar chips:', error);
+      }
+    };
+
+    validateChips();
+  }, [serviceSteps, isQuillReady, token]);
+
+  // Listener para click em chips
+  useEffect(() => {
+    if (!isQuillReady || !canEdit) return;
+
+    const handleChipClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const chipElement = target.closest('.ql-smart-decision') as HTMLElement;
+
+      if (!chipElement) return;
+
+      // Encontra qual roteiro contém este chip
+      for (const step of serviceSteps) {
+        const editor = quillRefs.current[step.ordem]?.getEditor();
+        if (!editor) continue;
+
+        const editorRoot = editor.root;
+        if (editorRoot.contains(chipElement)) {
+          const type = chipElement.getAttribute('data-type') as 'add_tag' | 'transfer_agent' | 'transfer_user' | 'assign_source' | 'transfer_stage' | 'notify' | 'assign_product' | 'stop_agent' | null;
+
+          if (type) {
+            // Encontra o índice do chip no conteúdo do editor
+            const contents = editor.getContents();
+            let chipIndex = -1;
+            let currentIndex = 0;
+
+            for (let i = 0; i < contents.ops.length; i++) {
+              const op = contents.ops[i];
+
+              if (op.insert && typeof op.insert === 'object' && op.insert.smartDecision) {
+                // Verifica se este é o chip clicado comparando os atributos
+                const chipData = op.insert.smartDecision;
+                const chipId = chipElement.getAttribute('data-id');
+                const chipLabel = chipElement.getAttribute('data-label');
+                const chipType = chipElement.getAttribute('data-type');
+
+                if (chipData.type === chipType &&
+                    String(chipData.id || '') === String(chipId || '') &&
+                    chipData.label === chipLabel) {
+                  chipIndex = currentIndex;
+                  break;
+                }
+              }
+
+              // Incrementa o índice baseado no tamanho do insert
+              if (typeof op.insert === 'string') {
+                currentIndex += op.insert.length;
+              } else {
+                currentIndex += 1; // Embeds ocupam 1 posição
+              }
+            }
+
+            if (chipIndex !== -1) {
+              // Pega a posição do chip
+              const rect = chipElement.getBoundingClientRect();
+              setQuickCommandPosition({
+                top: rect.bottom + 5,
+                left: rect.left
+              });
+              setQuickCommandStep(step.ordem);
+              setQuickCommandInitial(type);
+              setChipToReplace({ index: chipIndex, length: 1 });
+              setQuickCommandOpen(true);
+            }
+          }
+          break;
+        }
+      }
+    };
+
+    document.addEventListener('click', handleChipClick);
+    return () => document.removeEventListener('click', handleChipClick);
+  }, [serviceSteps, isQuillReady, canEdit]);
+
+  // Listener para copiar/colar preservando os chips
+  useEffect(() => {
+    const handleCopy = (e: ClipboardEvent) => {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+
+      // Verifica se está dentro de um editor Quill
+      const container = selection.getRangeAt(0).commonAncestorContainer;
+      const editorElement = (container instanceof Element ? container : container.parentElement)?.closest('.ql-editor');
+
+      if (!editorElement) return;
+
+      // Pega o HTML selecionado
+      const range = selection.getRangeAt(0);
+      const clonedSelection = range.cloneContents();
+      const div = document.createElement('div');
+      div.appendChild(clonedSelection);
+
+      // Adiciona o HTML completo (com chips) ao clipboard
+      const html = div.innerHTML;
+      const text = div.textContent || '';
+
+      e.clipboardData?.setData('text/html', html);
+      e.clipboardData?.setData('text/plain', text);
+      e.preventDefault();
+    };
+
+    const handlePaste = (e: ClipboardEvent) => {
+      const focusedElement = document.activeElement;
+      const editorElement = focusedElement?.closest('.ql-container');
+
+      if (!editorElement) return;
+
+      // Encontra qual editor está focado
+      for (const step of serviceSteps) {
+        const editorRef = quillRefs.current[step.ordem];
+        if (editorRef && editorRef.getEditor().root === editorElement.querySelector('.ql-editor')) {
+          const editor = editorRef.getEditor();
+          const html = e.clipboardData?.getData('text/html');
+          const text = e.clipboardData?.getData('text/plain');
+
+          if (html && html.includes('smart-decision-token')) {
+            // Se tem HTML com chips, usa o HTML
+            e.preventDefault();
+
+            const selection = editor.getSelection(true);
+            if (selection) {
+              const delta = editor.clipboard.convert(html);
+              editor.updateContents(
+                new (editor.constructor as any).imports.delta()
+                  .retain(selection.index)
+                  .delete(selection.length)
+                  .concat(delta),
+                'user'
+              );
+              editor.setSelection(selection.index + delta.length(), 0);
+
+              const currentContent = editor.root.innerHTML;
+              handleUpdateStep(step.ordem, 'descricao', currentContent);
+            }
+          } else if (text && text.includes('Ação:')) {
+            // Se é texto puro com padrão de chips, reconstrói os chips
+            e.preventDefault();
+
+            const selection = editor.getSelection(true);
+            if (selection) {
+              const Delta = (editor.constructor as any).imports.delta;
+              const delta = new Delta();
+
+              // Regex para detectar padrões de chips no texto
+              const chipPattern = /Ação: (Transferir para Agente|Transferir para Usuário|Transferir para o estágio|Notificação|Atribuir Produto|Interromper Agente|Adicionar Tag|Atribuir Fonte) #?(\d+)?\s*-?\s*([^\n\r]*?)(?=(?:Ação:|$))/g;
+
+              let lastIndex = 0;
+              let match;
+
+              while ((match = chipPattern.exec(text)) !== null) {
+                // Adiciona texto antes do chip
+                if (match.index > lastIndex) {
+                  delta.insert(text.substring(lastIndex, match.index));
+                }
+
+                const actionType = match[1];
+                const id = match[2] ? parseInt(match[2]) : null;
+                const label = match[3]?.trim() || '';
+
+                // Mapeia o tipo de ação para o tipo de chip
+                let chipType: 'add_tag' | 'transfer_agent' | 'transfer_user' | 'assign_source' | 'transfer_stage' | 'notify' | 'assign_product' | 'stop_agent' | null = null;
+
+                if (actionType === 'Transferir para Agente') chipType = 'transfer_agent';
+                else if (actionType === 'Transferir para Usuário') chipType = 'transfer_user';
+                else if (actionType === 'Transferir para o estágio') chipType = 'transfer_stage';
+                else if (actionType === 'Notificação') chipType = 'notify';
+                else if (actionType === 'Atribuir Produto') chipType = 'assign_product';
+                else if (actionType === 'Interromper Agente') chipType = 'stop_agent';
+                else if (actionType === 'Adicionar Tag') chipType = 'add_tag';
+                else if (actionType === 'Atribuir Fonte') chipType = 'assign_source';
+
+                if (chipType) {
+                  delta.insert({ smartDecision: { type: chipType, id, label } });
+                }
+
+                lastIndex = chipPattern.lastIndex;
+              }
+
+              // Adiciona texto restante
+              if (lastIndex < text.length) {
+                delta.insert(text.substring(lastIndex));
+              }
+
+              editor.updateContents(
+                new Delta()
+                  .retain(selection.index)
+                  .delete(selection.length)
+                  .concat(delta),
+                'user'
+              );
+              editor.setSelection(selection.index + delta.length(), 0);
+
+              const currentContent = editor.root.innerHTML;
+              handleUpdateStep(step.ordem, 'descricao', currentContent);
+            }
+          }
+          break;
+        }
+      }
+    };
+
+    document.addEventListener('copy', handleCopy);
+    document.addEventListener('paste', handlePaste);
+
+    return () => {
+      document.removeEventListener('copy', handleCopy);
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, [serviceSteps, isQuillReady]);
+
   const modules = {
     toolbar: {
       container: [
@@ -491,450 +962,262 @@ export default function ServiceStepsSection({
   ];
 
   return (
-    <div className="relative" aria-busy={isLoading}>
-      <div className="bg-white rounded-xl shadow-md p-8">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-            <ListOrdered className="w-6 h-6 text-orange-600" />
+    <div className="h-full flex flex-col transition-colors duration-200" aria-busy={isLoading}>
+      <style>{`
+        .quill-editor-container {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+        .quill-editor-container .quill {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+        .quill-editor-container .quill .ql-container {
+          border: 1px solid rgb(209 213 219) !important;
+          border-radius: 0.5rem !important;
+          background: white !important;
+          backdrop-filter: blur(4px) !important;
+          transition: all 200ms !important;
+          flex: 1;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+        .dark .quill-editor-container .quill .ql-container {
+          border: 1px solid rgba(75, 85, 99, 0.5) !important;
+          background: rgba(31, 41, 55, 0.4) !important;
+        }
+        .quill-editor-container .quill .ql-editor {
+          height: 100%;
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          padding: 1rem !important;
+          color: rgb(17 24 39) !important;
+        }
+        .dark .quill-editor-container .quill .ql-editor {
+          color: white !important;
+        }
+        .quill-editor-container .quill .ql-editor.ql-blank::before {
+          color: rgb(156 163 175) !important;
+        }
+        .dark .quill-editor-container .quill .ql-editor.ql-blank::before {
+          color: rgb(107 114 128) !important;
+        }
+        .quill-editor-container .quill .ql-toolbar {
+          display: none !important;
+        }
+        /* Estilo da scrollbar para combinar com o RulesSection */
+        .quill-editor-container .quill .ql-editor::-webkit-scrollbar {
+          width: 8px;
+        }
+        .quill-editor-container .quill .ql-editor::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .quill-editor-container .quill .ql-editor::-webkit-scrollbar-thumb {
+          background: rgb(209 213 219);
+          border-radius: 4px;
+        }
+        .dark .quill-editor-container .quill .ql-editor::-webkit-scrollbar-thumb {
+          background: rgba(75, 85, 99, 0.5);
+        }
+        .quill-editor-container .quill .ql-editor::-webkit-scrollbar-thumb:hover {
+          background: rgb(156 163 175);
+        }
+        .dark .quill-editor-container .quill .ql-editor::-webkit-scrollbar-thumb:hover {
+          background: rgba(75, 85, 99, 0.7);
+        }
+      `}</style>
+
+      {/* Botões de ação no topo junto com o botão Salvar */}
+      {canEdit && serviceSteps.length > 0 && (
+        <div className="flex items-center justify-between gap-3 mb-4">
+          {/* Botões de ação à esquerda */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                handleInsertSituationTemplate(serviceSteps[currentStepIndex].ordem);
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+              title="Inserir Modelo Situação/Mensagem"
+            >
+              <MessageSquare className="w-4 h-4" />
+              Situação/Mensagem
+            </button>
+            <input
+              type="file"
+              id="file-upload-global"
+              accept="image/*,video/*,audio/*,application/pdf"
+              onChange={(e) => {
+                handleFileUpload(serviceSteps[currentStepIndex].ordem, e);
+              }}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => document.getElementById('file-upload-global')?.click()}
+              disabled={isUploading}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50 font-medium"
+            >
+              <Upload className="w-4 h-4" />
+              Adicionar Mídia
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                handleOpenSmartDecision(serviceSteps[currentStepIndex].ordem);
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors font-medium"
+              title="Inserir Decisão Inteligente (Ctrl+D)"
+            >
+              <Zap className="w-4 h-4" />
+              Decisão Inteligente
+            </button>
           </div>
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Etapas de Atendimento
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Configure o fluxo de atendimento do agente
-            </p>
-          </div>
-        </div>
-        {canEdit && (
-          <button
-            onClick={handleAddStep}
-            className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={isLoading}
-          >
-            <Plus className="w-4 h-4" />
-            Adicionar Etapa
-          </button>
-        )}
-      </div>
 
-      <div className="space-y-6 no-scroll-anchor">
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="steps">
-            {(provided) => (
-              <div
-                className="space-y-6 no-scroll-anchor"
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-              >
-                {serviceSteps.map((step, index) => {
-                  return (
-                    <Draggable
-                      draggableId={step.ordem.toString()}
-                      index={index}
-                      key={step.ordem}
-                    >
-                      {(provided) => {
-                        const isCollapsed = collapsedSteps[index] ?? true;
-                        return (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            className="bg-orange-50/50 rounded-lg p-6 no-scroll-anchor"
-                          >
-                          <div className="flex flex-wrap items-start justify-between gap-3">
-                            <div className="flex items-center gap-2">
-                              <div
-                                {...provided.dragHandleProps}
-                                className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
-                                title="Arraste para reordenar"
-                              >
-                                <GripVertical className="w-5 h-5" />
-                              </div>
-                              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-semibold">
-                                {step.ordem}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-sm font-medium text-gray-700">
-                                  Etapa #{step.ordem}
-                                </p>
-                                {isCollapsed && (
-                                  <p
-                                    className="text-sm font-semibold text-gray-900 truncate"
-                                    title={step.nome || "Sem nome"}
-                                  >
-                                    {step.nome || "Sem nome"}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => toggleStepCollapse(index)}
-                                aria-expanded={!isCollapsed}
-                                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-orange-600 bg-orange-100 rounded-lg hover:bg-orange-200 transition-colors"
-                              >
-                                {isCollapsed ? (
-                                  <>
-                                    <Maximize2 className="w-4 h-4" />
-                                    Expandir
-                                  </>
-                                ) : (
-                                  <>
-                                    <Minimize2 className="w-4 h-4" />
-                                    Reduzir
-                                  </>
-                                )}
-                              </button>
-                              {canEdit && !isCollapsed && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveStep(step.ordem)}
-                                  className="text-red-500 hover:text-red-700 p-1"
-                                >
-                                  <Trash2 className="w-5 h-5" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-
-                          {!isCollapsed && (
-                            <div className="mt-4 space-y-4">
-                              <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Nome da Etapa
-                            </label>
-                            <input
-                              type="text"
-                              value={step.nome}
-                              onChange={(e) =>
-                                handleUpdateStep(
-                                  step.ordem,
-                                  "nome",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Ex: Apresentação Inicial"
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                              disabled={!canEdit}
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Descrição da Etapa
-                            </label>
-                            <div className="relative">
-                              {canEdit && (
-                                <div className="flex items-center gap-2 mb-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleInsertSituationTemplate(step.ordem)}
-                                    className="flex items-center gap-2 px-3 py-1 text-sm bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors"
-                                    title="Inserir Modelo Situação/Mensagem"
-                                  >
-                                    <MessageSquare className="w-4 h-4" />
-                                    Situação/Mensagem
-                                  </button>
-                                  <input
-                                    type="file"
-                                    id={`file-upload-${step.ordem}`}
-                                    accept="image/*,video/*,audio/*,application/pdf"
-                                    onChange={(e) =>
-                                      handleFileUpload(step.ordem, e)
-                                    }
-                                    className="hidden"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      document
-                                        .getElementById(
-                                          `file-upload-${step.ordem}`
-                                        )
-                                        ?.click()
-                                    }
-                                    disabled={
-                                      isUploading && activeStep === step.ordem
-                                    }
-                                    className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors disabled:opacity-50"
-                                  >
-                                    <Upload className="w-4 h-4" />
-                                    Adicionar Mídia
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenSmartDecision(step.ordem)}
-                                    className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-                                    title="Inserir Decisão Inteligente (Ctrl+D)"
-                                  >
-                                    <Zap className="w-4 h-4" />
-                                    Decisão Inteligente (Ctrl+D)
-                                  </button>
-                                </div>
-                              )}
-                              {isQuillReady && (
-                                <ReactQuill
-                                  ref={(el) =>
-                                    (quillRefs.current[step.ordem] = el)
-                                  }
-                                  theme="snow"
-                                  value={step.descricao}
-                                  onChange={
-                                    canEdit
-                                      ? (content) =>
-                                          handleUpdateStep(
-                                            step.ordem,
-                                            "descricao",
-                                            content
-                                          )
-                                      : () => {}
-                                  }
-                                  modules={
-                                    canEdit ? modules : { toolbar: false }
-                                  }
-                                  formats={formats}
-                                  readOnly={!canEdit}
-                                  placeholder="Descreva esta etapa de atendimento..."
-                                  className="bg-white rounded-lg"
-                                />
-                              )}
-                              {isUploading && activeStep === step.ordem && (
-                                <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                                  <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          {canEdit && (
-                              <div className="flex items-center justify-between pt-2">
-                                <label className="flex items-center gap-3 cursor-pointer">
-                                  <div className="relative">
-                                    <input
-                                      type="checkbox"
-                                      checked={!!step.atribuir_lead}
-                                      disabled={!canEdit}
-                                      onChange={() => {
-                                        const novoValor = !step.atribuir_lead;
-                                        handleUpdateStep(
-                                          step.ordem,
-                                          "atribuir_lead",
-                                          novoValor
-                                        );
-
-                                        if (novoValor) {
-                                          setAtribuirStepIndex(step.ordem);
-                                        } else {
-                                          setAtribuirStepIndex(null);
-                                          setAtribuicoes([]);
-                                        }
-                                      }}
-                                      className="sr-only peer"
-                                    />
-                                    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-orange-500 transition-colors"></div>
-                                    <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></div>
-                                  </div>
-                                  <span className="text-sm text-gray-700">
-                                    Atribuir automaticamente usuário ao lead
-                                  </span>
-                                </label>
-                              </div>
-                            )}
-
-                          {step.atribuir_lead && canEdit && (
-                            <div className="bg-white border border-orange-200 rounded-lg p-4 mt-4">
-                              <h3 className="text-sm font-semibold text-gray-800 mb-2">
-                                Lista de usuários que participam do rodízio de leads
-                              </h3>
-
-                              {isLoadingAtrib ? (
-                                <div className="flex items-center justify-center py-4">
-                                  <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
-                                  <span className="ml-2 text-sm text-gray-600">
-                                    Carregando usuários...
-                                  </span>
-                                </div>
-                              ) : (
-                                <>
-                                  {Array.isArray(atribuicoes) && atribuicoes.length > 0 ? (
-                                  <ul className="space-y-2 mb-4">
-                                    {atribuicoes.map((atr) => {
-                                      const user = usuariosAtivos.find(
-                                        (u) => u.Id === atr.id_usuario
-                                      );
-                                      return (
-                                        <li
-                                          key={atr.id_usuario}
-                                          className="flex justify-between items-center border p-2 rounded"
-                                        >
-                                          <span className="text-sm">
-                                            {user?.nome ||
-                                              `Usuário ${atr.id_usuario}`}
-                                          </span>
-                                          <label className="flex items-center gap-2 cursor-pointer">
-                                            <div className="relative">
-                                              <input
-                                                type="checkbox"
-                                                className="sr-only peer"
-                                                checked={atr.isAtivo}
-                                                onChange={(e) => {
-                                                  const updated =
-                                                    atribuicoes.map((a) =>
-                                                      a.id_usuario ===
-                                                      atr.id_usuario
-                                                        ? {
-                                                            ...a,
-                                                            isAtivo:
-                                                              e.target.checked,
-                                                          }
-                                                        : a
-                                                    );
-                                                  setAtribuicoes(updated);
-                                                }}
-                                              />
-                                              <div className="w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-orange-500 transition-colors"></div>
-                                              <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></div>
-                                            </div>
-                                          </label>
-                                        </li>
-                                      );
-                                    })}
-                                  </ul>
-) : (
-  <div className="text-sm text-gray-500 mb-4">
-    Nenhum usuário adicionado Ã  atribuição automática.
-  </div>
-)}
- <select
-  onChange={(e) => {
-    const id = parseInt(e.target.value);
-
-    if (!id) return;
-
-    const existe =
-      Array.isArray(atribuicoes) &&
-      atribuicoes.find((a) => a.id_usuario === id);
-
-    if (!existe) {
-      setAtribuicoes([
-        ...(Array.isArray(atribuicoes) ? atribuicoes : []),
-        { id_usuario: id, isAtivo: true },
-      ]);
-    }
-  }}
-  className="w-full text-sm border rounded p-2 mb-3"
->
-  <option value="">Adicionar usuário à atribuição</option>
-  {usuariosAtivos.map((user) => (
-    <option key={user.Id} value={user.Id}>
-      {user.nome}
-    </option>
-  ))}
-</select>
-
-
-                                  <button
-                                    onClick={saveAtribuicoes}
-                                    disabled={isSavingAtrib}
-                                    className="text-sm px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition disabled:opacity-50"
-                                  >
-                                    {isSavingAtrib
-                                      ? "Salvando..."
-                                      : "Salvar Atribuições"}
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Opção de interromper agente removida */}
-
-                          {canEdit && (
-                            <div className="flex justify-end pt-2">
-                              <button
-                                onClick={handleSaveWithModal}
-                                disabled={savingSteps}
-                                className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 font-medium"
-                              >
-                                {savingSteps ? (
-                                  <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    <span>Salvando...</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Save className="w-4 h-4" />
-                                    <span>Salvar Etapa</span>
-                                  </>
-                                )}
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                }}
-                    </Draggable>
-                  );
-                })}
-                {provided.placeholder}
+          {/* Indicadores e Botão Salvar à direita */}
+          <div className="flex items-center gap-3">
+            {hasUnsavedChanges && (
+              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm font-medium">
+                <AlertCircle className="w-4 h-4" />
+                Alterações não salvas
               </div>
             )}
-          </Droppable>
-        </DragDropContext>
-        {serviceSteps.length === 0 && (
-          <div className="text-center py-12 bg-orange-50/50 rounded-lg">
-            <ListOrdered className="w-12 h-12 text-orange-300 mx-auto mb-4" />
-            <p className="text-gray-500">
-              Nenhuma etapa cadastrada. Adicione etapas para treinar o agente.
-            </p>
+            {successMessage && (
+              <div className="flex items-center gap-2 text-green-600 dark:text-green-400 text-sm font-medium">
+                <CheckCircle className="w-4 h-4" />
+                Roteiros salvos com sucesso!
+              </div>
+            )}
+            <button
+              onClick={handleSaveWithModal}
+              disabled={savingSteps || !hasUnsavedChanges}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                savingSteps || !hasUnsavedChanges
+                  ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-sm hover:shadow-md'
+              }`}
+            >
+              {savingSteps ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Salvar
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Campo de texto com scroll interno */}
+      <div className="flex-1 relative quill-editor-container">
+        {isQuillReady && serviceSteps.length > 0 && (
+          <div className="h-full">
+            {serviceSteps.map((step, index) => (
+              <div
+                key={step.ordem}
+                className="h-full"
+                style={{ display: index === currentStepIndex ? 'block' : 'none' }}
+              >
+                <ReactQuill
+                  ref={(el) => (quillRefs.current[step.ordem] = el)}
+                  theme="snow"
+                  value={step.descricao}
+                  onChange={
+                    canEdit
+                      ? (content) =>
+                          handleUpdateStep(step.ordem, "descricao", content)
+                      : () => {}
+                  }
+                  modules={{ toolbar: false }}
+                  formats={formats}
+                  readOnly={!canEdit}
+                  placeholder="Descreva como o agente deve conduzir a conversa neste roteiro..."
+                  className="quill h-full"
+                />
+                {isUploading && activeStep === step.ordem && (
+                  <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 flex items-center justify-center rounded-lg">
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-500 dark:text-blue-400" />
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
 
-        {canEdit && serviceSteps.length > 0 && (
-          <div className="flex justify-end pt-6">
+        {serviceSteps.length === 0 && canEdit && (
+          <div className="flex-1 flex flex-col items-center justify-center py-16 px-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Nenhum roteiro cadastrado
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
+              Crie o roteiro que o seu agente seguirá nas conversas com os clientes. Esse roteiro define a estrutura de raciocínio, as perguntas e o estilo de comunicação da IA.
+            </p>
             <button
               onClick={handleAddStep}
-              className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg transition-colors font-medium shadow-sm hover:shadow-md"
+              disabled={isLoading}
             >
-              <Plus className="w-5 h-5" />
-              <span>Adicionar Etapa</span>
+              Adicionar Roteiro
             </button>
           </div>
         )}
+        {serviceSteps.length === 0 && !canEdit && (
+          <div className="flex-1 flex flex-col items-center justify-center py-16 px-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Nenhum roteiro cadastrado
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 text-center max-w-md">
+              Nenhum roteiro foi configurado para este agente.
+            </p>
+          </div>
+        )}
+      </div>
 
-        <Modal
-          isOpen={modalOpen}
-          onClose={() => setModalOpen(false)}
-          title="Sucesso"
-        >
-          {modalLoading ? (
-            <div className="flex items-center justify-center gap-2 py-4">
-              <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
-              <p className="text-sm text-gray-600">Processando etapas...</p>
-            </div>
-          ) : (
-            <p className="text-gray-700">Etapas salvas com sucesso!</p>
-          )}
-        </Modal>
-        <SmartDecisionModal
-          isOpen={smartDecisionModalOpen}
-          onClose={() => setSmartDecisionModalOpen(false)}
-          onInsert={handleInsertSmartDecision}
-          token={token}
-          currentAgentId={idAgente}
+      {/* Inputs de arquivo escondidos para cada step */}
+      {serviceSteps.map((step) => (
+        <input
+          key={`file-${step.ordem}`}
+          type="file"
+          id={`file-upload-${step.ordem}`}
+          accept="image/*,video/*,audio/*,application/pdf"
+          onChange={(e) => handleFileUpload(step.ordem, e)}
+          className="hidden"
         />
-      </div>
-      </div>
+      ))}
+
+      <SmartDecisionModal
+        isOpen={smartDecisionModalOpen}
+        onClose={() => setSmartDecisionModalOpen(false)}
+        onInsert={handleInsertSmartDecision}
+        token={token}
+        currentAgentId={idAgente}
+      />
+      <QuickCommandMenu
+        isOpen={quickCommandOpen}
+        position={quickCommandPosition}
+        onInsert={handleInsertQuickCommand}
+        onClose={() => {
+          setQuickCommandOpen(false);
+          setQuickCommandInitial(null);
+          setChipToReplace(null);
+        }}
+        token={token}
+        currentAgentId={idAgente}
+        initialCommand={quickCommandInitial}
+      />
       {isLoading && (
-        <div className="pointer-events-auto absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/70 backdrop-blur-sm">
-          <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+        <div className="pointer-events-auto absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-500 dark:text-blue-400" />
         </div>
       )}
     </div>
   );
 }
-

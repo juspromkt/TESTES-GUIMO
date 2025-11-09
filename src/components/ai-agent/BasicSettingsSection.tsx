@@ -38,7 +38,6 @@ export default function BasicSettingsSection({
   const [saving, setSaving] = useState(false);
   const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [pendingPrincipalChange, setPendingPrincipalChange] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
@@ -80,31 +79,25 @@ export default function BasicSettingsSection({
       const allAgentsData = await allAgentsResponse.json();
       if (Array.isArray(allAgentsData)) {
         setAllAgents(allAgentsData);
-      }
 
-      // Busca dados do agente específico (nome, isAtivo, isAgentePrincipal)
-      const agentResponse = await fetch(`https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/get?id_agente=${idAgente}`, {
-        headers: { token }
-      });
-      const agentData = await agentResponse.json();
+        // Busca o agente atual dentro da lista
+        const currentAgent = allAgentsData.find(a => a.Id === idAgente);
+        if (currentAgent) {
+          const agentName = currentAgent.nome || '';
+          setNome(agentName);
+          setOriginalNome(agentName);
+          setIsAtivo(Boolean(currentAgent.isAtivo));
+          setIsAgentePrincipal(Boolean(currentAgent.isAgentePrincipal));
+          setIsGatilho(Boolean(currentAgent.isGatilho));
+          setGatilho(currentAgent.gatilho || '');
+        }
+      }
 
       // Busca dados dos parâmetros (delay/debounce_time)
       const paramsResponse = await fetch(`https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/parametros/get?id_agente=${idAgente}`, {
         headers: { token }
       });
       const paramsData = await paramsResponse.json();
-
-      // A API retorna todos os agentes mesmo com id_agente, então precisamos filtrar
-      if (Array.isArray(agentData) && agentData.length > 0) {
-        const agent = agentData.find(a => a.Id === idAgente) || agentData[0];
-        const agentName = agent.nome || '';
-        setNome(agentName);
-        setOriginalNome(agentName); // Armazena nome original
-        setIsAtivo(Boolean(agent.isAtivo));
-        setIsAgentePrincipal(Boolean(agent.isAgentePrincipal));
-        setIsGatilho(Boolean(agent.isGatilho));
-        setGatilho(agent.gatilho || '');
-      }
 
       if (Array.isArray(paramsData) && paramsData.length > 0) {
         const params = paramsData[0];
@@ -129,255 +122,22 @@ export default function BasicSettingsSection({
       return;
     }
 
-    // Busca o agente principal anterior (se houver)
-    const oldPrincipalAgent = allAgents.find(
-      a => a.isAgentePrincipal && a.Id !== idAgente
-    );
+    // Validação: gatilho obrigatório se isGatilho = true
+    if (isGatilho && !gatilho.trim()) {
+      toast.error('Gatilho é obrigatório quando "Gatilho de Acionamento" está ativo');
+      return;
+    }
 
     setSaving(true);
 
-    let transferredCount = 0;
-
     try {
-      // IMPORTANTE: Só copia notificações se estamos ATIVANDO como principal E existe outro agente principal
-      // Se estamos apenas desativando (isAgentePrincipal = false), não faz cópia
+      // Busca o agente principal anterior (se houver)
+      const oldPrincipalAgent = allAgents.find(
+        a => a.isAgentePrincipal && a.Id !== idAgente
+      );
+
+      // Se estamos ativando como principal e existe outro agente principal, desativa o anterior
       if (isAgentePrincipal === true && oldPrincipalAgent) {
-        console.log(`[BasicSettings] Copiando notificações do agente ${oldPrincipalAgent.Id} para ${idAgente}`);
-
-        // Buscar notificações EXISTENTES do novo agente (para evitar duplicação)
-        const existingFunctionsResponse = await fetch(
-          `https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/funcao/geral?id_agente=${idAgente}`,
-          { headers: { token } }
-        );
-
-        const existingFunctions = existingFunctionsResponse.ok ? await existingFunctionsResponse.json() : [];
-        const existingNotifications = Array.isArray(existingFunctions)
-          ? existingFunctions.filter((func: any) => func.tipo === 'NOTIFICACAO')
-          : [];
-
-        console.log(`[BasicSettings] Notificações já existentes no agente ${idAgente}:`, existingNotifications.length);
-
-        // DELETAR todas as notificações existentes no novo agente antes de copiar
-        if (existingNotifications.length > 0) {
-          console.log(`[BasicSettings] 🗑️ INICIANDO DELEÇÃO: ${existingNotifications.length} notificações existentes no agente ${idAgente}`);
-          console.log(`[BasicSettings] Lista completa de notificações a deletar:`, existingNotifications.map(n => ({ id: n.id, nome: n.nome })));
-
-          let deletedCount = 0;
-          let failedCount = 0;
-
-          for (const existingNotif of existingNotifications) {
-            try {
-              console.log(`[BasicSettings] 🔄 Tentando deletar: "${existingNotif.nome}" (ID: ${existingNotif.id})`);
-
-              const deleteResponse = await fetch(
-                `https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/funcao/delete?id=${existingNotif.id}`,
-                {
-                  method: 'DELETE',
-                  headers: { token }
-                }
-              );
-
-              console.log(`[BasicSettings] Status da resposta:`, deleteResponse.status, deleteResponse.statusText);
-
-              if (deleteResponse.ok) {
-                deletedCount++;
-                console.log(`[BasicSettings] ✅ Notificação "${existingNotif.nome}" deletada! (${deletedCount}/${existingNotifications.length})`);
-
-                // Tentar ler a resposta
-                try {
-                  const responseText = await deleteResponse.text();
-                  if (responseText.trim()) {
-                    console.log(`[BasicSettings] Resposta da API:`, responseText);
-                  }
-                } catch (readErr) {
-                  console.log(`[BasicSettings] Não foi possível ler resposta (mas deletou)`);
-                }
-              } else {
-                failedCount++;
-                const errorText = await deleteResponse.text();
-                console.error(`[BasicSettings] ❌ FALHA ao deletar "${existingNotif.nome}"`);
-                console.error(`[BasicSettings] Status HTTP:`, deleteResponse.status);
-                console.error(`[BasicSettings] Erro detalhado:`, errorText);
-              }
-            } catch (deleteErr) {
-              failedCount++;
-              console.error(`[BasicSettings] ❌ EXCEÇÃO ao deletar notificação ${existingNotif.id}:`, deleteErr);
-            }
-          }
-
-          console.log(`[BasicSettings] ===== RESUMO DA DELEÇÃO =====`);
-          console.log(`[BasicSettings] ✅ Deletadas: ${deletedCount}`);
-          console.log(`[BasicSettings] ❌ Falharam: ${failedCount}`);
-          console.log(`[BasicSettings] 📊 Total: ${existingNotifications.length}`);
-          console.log(`[BasicSettings] ===== FIM DA DELEÇÃO =====`);
-        } else {
-          console.log(`[BasicSettings] ⚠️ Nenhuma notificação existente para deletar no agente ${idAgente}`);
-        }
-
-        // Buscar todas as funções do antigo agente principal
-        const functionsResponse = await fetch(
-          `https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/funcao/geral?id_agente=${oldPrincipalAgent.Id}`,
-          { headers: { token } }
-        );
-
-        if (functionsResponse.ok) {
-          const functions = await functionsResponse.json();
-          console.log(`[BasicSettings] ===== RESPOSTA RAW DA API =====`);
-          console.log(`[BasicSettings] Funções retornadas:`, functions);
-          console.log(`[BasicSettings] É array?`, Array.isArray(functions));
-          console.log(`[BasicSettings] Quantidade:`, Array.isArray(functions) ? functions.length : 'N/A');
-
-          // Filtrar apenas as notificações (tipo NOTIFICACAO)
-          const notifications = Array.isArray(functions)
-            ? functions.filter((func: any) => func.tipo === 'NOTIFICACAO')
-            : [];
-
-          console.log(`[BasicSettings] Encontradas ${notifications.length} notificações para copiar`);
-
-          // Log detalhado de cada notificação com seus atributos
-          notifications.forEach((notif, index) => {
-            console.log(`[BasicSettings] Notificação ${index + 1}:`, {
-              id: notif.id,
-              nome: notif.nome,
-              atributos: notif.atributos,
-              temAtributos: Array.isArray(notif.atributos),
-              qtdAtributos: Array.isArray(notif.atributos) ? notif.atributos.length : 0
-            });
-          });
-
-          // COPIAR cada notificação do agente principal antigo
-          let copiedCount = 0;
-
-          for (const notification of notifications) {
-            try {
-
-              // Remove o id e atributos para forçar criação de nova notificação
-              const { id, atributos, ...notificationData } = notification;
-
-              const payload = {
-                ...notificationData,
-                id_agente: idAgente, // Copia para o novo agente principal
-                tipo: 'NOTIFICACAO'
-              };
-              console.log(`[BasicSettings] Notificação original tem ${Array.isArray(atributos) ? atributos.length : 0} destinatários`);
-              console.log(`[BasicSettings] Payload para copiar notificação (original: ${id}):`, payload);
-
-              const createResponse = await fetch(
-                'https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/funcao/create',
-                {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    token
-                  },
-                  body: JSON.stringify(payload)
-                }
-              );
-
-              if (!createResponse.ok) {
-                console.error(`[BasicSettings] Erro ao copiar notificação ${id} - Status:`, createResponse.status);
-                const errorText = await createResponse.text();
-                console.error(`[BasicSettings] Resposta de erro:`, errorText);
-              } else {
-                const responseData = await createResponse.json();
-                const newNotificationId = responseData.id;
-                console.log(`[BasicSettings] Notificação ${id} copiada com sucesso. Nova ID: ${newNotificationId}`);
-
-                // COPIAR os destinatários (atributos) da notificação original
-                if (Array.isArray(atributos) && atributos.length > 0) {
-                  console.log(`[BasicSettings] Copiando ${atributos.length} destinatários da notificação ${id} para a nova notificação ${newNotificationId}`);
-                  console.log(`[BasicSettings] Lista de atributos:`, atributos);
-
-                  for (const atributo of atributos) {
-                    try {
-                      console.log(`[BasicSettings] Atributo original:`, atributo);
-
-                      // Remove o id e id_funcao do atributo original
-                      const { id: atributoId, id_funcao, ...atributoData } = atributo;
-
-                      // Converter id_usuario para número se for string
-                      let processedIdUsuario = atributoData.id_usuario;
-                      if (typeof processedIdUsuario === 'string' && atributoData.id_usuario.trim() !== '') {
-                        const parsed = parseInt(processedIdUsuario);
-                        processedIdUsuario = isNaN(parsed) ? null : parsed;
-                      } else if (typeof processedIdUsuario === 'string' && atributoData.id_usuario.trim() === '') {
-                        processedIdUsuario = null;
-                      }
-
-                      // Garantir que numero seja null ou string válida
-                      let processedNumero = atributoData.numero;
-                      if (typeof processedNumero === 'string' && processedNumero.trim() === '') {
-                        processedNumero = null;
-                      }
-
-                      const atributoPayload = {
-                        isAtivo: atributoData.isAtivo !== false, // Default true se não estiver definido
-                        numero: processedNumero,
-                        id_usuario: processedIdUsuario,
-                        notificar_usuario_responsavel: Boolean(atributoData.notificar_usuario_responsavel),
-                        id_funcao: newNotificationId, // Associa ao novo ID da notificação
-                        id_agente: idAgente
-                      };
-
-                      console.log(`[BasicSettings] Payload do destinatário (original ID: ${atributoId}):`, atributoPayload);
-
-                      const atributoResponse = await fetch(
-                        'https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/funcao/atributo/create',
-                        {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            token
-                          },
-                          body: JSON.stringify(atributoPayload)
-                        }
-                      );
-
-                      if (atributoResponse.ok) {
-                        // Verificar se há conteúdo na resposta antes de fazer parse
-                        const responseText = await atributoResponse.text();
-                        console.log(`[BasicSettings] ✅ Destinatário ${atributoId} copiado com sucesso!`);
-                        console.log(`[BasicSettings] Resposta raw da API:`, responseText);
-
-                        try {
-                          if (responseText.trim()) {
-                            const atributoResponseData = JSON.parse(responseText);
-                            console.log(`[BasicSettings] Resposta parseada:`, atributoResponseData);
-                            console.log(`[BasicSettings] Nova ID do destinatário: ${atributoResponseData.id || 'N/A'}`);
-                          } else {
-                            console.log(`[BasicSettings] API retornou resposta vazia (sem JSON), mas status foi OK`);
-                          }
-                        } catch (parseErr) {
-                          console.warn(`[BasicSettings] Não foi possível parsear JSON da resposta, mas o destinatário foi criado:`, parseErr);
-                          console.log(`[BasicSettings] Resposta que causou erro:`, responseText);
-                        }
-                      } else {
-                        const errorText = await atributoResponse.text();
-                        console.error(`[BasicSettings] ❌ ERRO ao copiar destinatário ${atributoId}`);
-                        console.error(`[BasicSettings] Status HTTP:`, atributoResponse.status);
-                        console.error(`[BasicSettings] Erro detalhado:`, errorText);
-                        console.error(`[BasicSettings] Payload enviado era:`, atributoPayload);
-                      }
-                    } catch (atributoErr) {
-                      console.error(`[BasicSettings] Erro ao copiar destinatário:`, atributoErr);
-                    }
-                  }
-                } else {
-                  console.log(`[BasicSettings] Notificação ${id} não tem destinatários para copiar (atributos: ${JSON.stringify(atributos)})`);
-                }
-
-                copiedCount++;
-              }
-            } catch (err) {
-              console.error(`[BasicSettings] Erro ao copiar notificação ${notification.id}:`, err);
-            }
-          }
-
-          transferredCount = copiedCount;
-          console.log(`[BasicSettings] ✅ Resumo final: ${copiedCount} notificações copiadas com sucesso para o agente ${idAgente}`);
-        }
-
-        // Desativar o agente principal anterior
         console.log(`[BasicSettings] Desativando agente principal anterior: ${oldPrincipalAgent.nome}`);
         await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/update', {
           method: 'PUT',
@@ -392,6 +152,7 @@ export default function BasicSettingsSection({
         });
       }
 
+      // Salva todas as configurações do agente em uma única chamada
       const agentPayload = {
         Id: idAgente,
         nome,
@@ -401,7 +162,6 @@ export default function BasicSettingsSection({
         gatilho
       };
 
-      // Salva nome, isAtivo e isAgentePrincipal no endpoint de agentes
       const agentResponse = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/update', {
         method: 'PUT',
         headers: {
@@ -413,12 +173,12 @@ export default function BasicSettingsSection({
 
       if (!agentResponse.ok) throw new Error('Erro ao salvar configurações do agente');
 
+      // Salva delay (debounce_time) separadamente
       const paramsPayload = {
         id_agente: idAgente,
         debounce_time: parseInt(delay) || 20
       };
 
-      // Salva delay (debounce_time) no endpoint de parâmetros
       const paramsResponse = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/parametros/create', {
         method: 'POST',
         headers: {
@@ -436,12 +196,6 @@ export default function BasicSettingsSection({
       // Propaga mudança de nome para o componente pai
       if (onNameChange) {
         onNameChange(nome);
-      }
-
-      // Propaga mudança de status principal para forçar reload das notificações
-      if (onPrincipalChange && (isAgentePrincipal && oldPrincipalAgent)) {
-        console.log('[BasicSettings] Notificando componente pai sobre mudança de agente principal');
-        onPrincipalChange(isAgentePrincipal);
       }
 
       toast.success('Configurações salvas!');
@@ -483,7 +237,6 @@ export default function BasicSettingsSection({
   const handleConfirmPrincipalChange = () => {
     setShowConfirmModal(false);
     setIsAgentePrincipal(true);
-    setPendingPrincipalChange(true);
   };
 
   const handleCancelPrincipalChange = () => {

@@ -65,6 +65,80 @@ ChartJS.register(
   ArcElement
 );
 
+// ==================== Skeleton Components ====================
+const SkeletonKPI = () => (
+  <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-gray-200 dark:border-neutral-700 animate-pulse">
+    <div className="h-3 bg-gray-200 dark:bg-neutral-700 rounded w-20 mb-2"></div>
+    <div className="h-10 bg-gray-300 dark:bg-neutral-600 rounded w-32 mb-1"></div>
+    <div className="h-3 bg-gray-200 dark:bg-neutral-700 rounded w-24"></div>
+  </div>
+);
+
+const SkeletonChart = () => (
+  <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
+    <div className="px-4 py-3 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
+      <div className="h-5 bg-gray-300 dark:bg-neutral-600 rounded w-40 animate-pulse"></div>
+    </div>
+    <div className="p-4">
+      <div className="h-64 bg-gray-100 dark:bg-neutral-700/50 rounded animate-pulse flex items-end justify-around gap-2 px-4 pb-4">
+        {[...Array(7)].map((_, i) => (
+          <div key={i} className="bg-gray-300 dark:bg-neutral-600 rounded-t" style={{ height: `${Math.random() * 60 + 40}%`, width: '12%' }}></div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const SkeletonFunnel = () => (
+  <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
+    <div className="px-4 py-3 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
+      <div className="h-5 bg-gray-300 dark:bg-neutral-600 rounded w-36 mb-1 animate-pulse"></div>
+      <div className="h-3 bg-gray-200 dark:bg-neutral-700 rounded w-28 animate-pulse"></div>
+    </div>
+    <div className="p-4 space-y-2">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="bg-gray-50 dark:bg-neutral-700/30 border border-gray-200 dark:border-neutral-600 rounded-lg p-3 animate-pulse">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gray-300 dark:bg-neutral-600 rounded-lg"></div>
+            <div className="flex-1">
+              <div className="h-4 bg-gray-300 dark:bg-neutral-600 rounded w-32 mb-1"></div>
+              <div className="h-3 bg-gray-200 dark:bg-neutral-700 rounded w-24"></div>
+            </div>
+            <div className="h-6 bg-gray-300 dark:bg-neutral-600 rounded w-12"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const SkeletonTags = () => (
+  <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
+    <div className="px-4 py-3 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
+      <div className="h-5 bg-gray-300 dark:bg-neutral-600 rounded w-28 animate-pulse"></div>
+    </div>
+    <div className="p-8 flex items-center gap-6">
+      <div className="w-48 h-48 bg-gray-100 dark:bg-neutral-700/50 rounded-full animate-pulse"></div>
+      <div className="flex-1 space-y-2">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="h-10 bg-gray-100 dark:bg-neutral-700/50 rounded-lg animate-pulse"></div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const SkeletonMap = () => (
+  <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
+    <div className="px-4 py-3 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
+      <div className="h-5 bg-gray-300 dark:bg-neutral-600 rounded w-32 animate-pulse"></div>
+    </div>
+    <div className="p-8">
+      <div className="h-96 bg-gray-100 dark:bg-neutral-700/50 rounded-lg animate-pulse"></div>
+    </div>
+  </div>
+);
+
 // ==================== Sortable Funnel Card Component ====================
 interface SortableFunnelCardProps {
   stage: StageDeals;
@@ -254,6 +328,13 @@ export default function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
 
+  // Estados de loading individuais para cada seção
+  const [loadingMetrics, setLoadingMetrics] = useState(true);
+  const [loadingChart, setLoadingChart] = useState(true);
+  const [loadingFunnel, setLoadingFunnel] = useState(true);
+  const [loadingTags, setLoadingTags] = useState(true);
+  const [loadingMap, setLoadingMap] = useState(true);
+
   // Novos estados para métricas avançadas
   const [previousPeriodMetrics, setPreviousPeriodMetrics] = useState<DealMetrics>({
     quantidade: 0,
@@ -264,10 +345,23 @@ export default function Dashboard() {
   const token = user ? JSON.parse(user).token : null;
 
   useEffect(() => {
-    fetchData();
-    fetchPreviousPeriodData();
-    fetchTagCounts();
-    fetchStateData();
+    // Carrega dados de forma progressiva (lazy loading)
+    const loadData = async () => {
+      // Primeiro carrega métricas e gráfico (dados principais)
+      fetchData();
+      fetchPreviousPeriodData();
+
+      // Depois carrega funil (usa dados de fetchData)
+      // O funil será carregado automaticamente quando stageDeals for atualizado
+
+      // Carrega tags em paralelo
+      setTimeout(() => fetchTagCounts(), 100);
+
+      // Carrega mapa por último (dados mais pesados)
+      setTimeout(() => fetchStateData(), 200);
+    };
+
+    loadData();
   }, [startDate, endDate]);
 
   // Buscar funis e etapas para obter a ordem correta
@@ -328,6 +422,10 @@ export default function Dashboard() {
   const fetchData = async () => {
     try {
       setIsRefreshing(true);
+      setLoadingMetrics(true);
+      setLoadingChart(true);
+      setLoadingFunnel(true);
+
       const body = { dataInicio: startDate, dataFinal: endDate };
       const res = await fetch("https://n8n.lumendigital.com.br/webhook/relatorio/crm/jus", {
         method: "POST",
@@ -346,8 +444,18 @@ export default function Dashboard() {
         quantidade: Number(crm.qtdNegociacoes) || 0,
         quantidadeMedia: Number(crm.qtdMediaNegociacoesDia) || 0,
       });
+      setLoadingMetrics(false);
+
       setDailyDeals(Array.isArray(crm.negociacoesUltimos7Dias) ? crm.negociacoesUltimos7Dias : []);
+      setLoadingChart(false);
+
       setStageDeals(Array.isArray(crm.negociacoesAbertasPorEstagio) ? crm.negociacoesAbertasPorEstagio : []);
+      setLoadingFunnel(false);
+    } catch (error) {
+      console.error("Erro ao buscar dados:", error);
+      setLoadingMetrics(false);
+      setLoadingChart(false);
+      setLoadingFunnel(false);
     } finally {
       setIsRefreshing(false);
     }
@@ -390,6 +498,7 @@ export default function Dashboard() {
 
   const fetchTagCounts = async () => {
     try {
+      setLoadingTags(true);
       const [tagsRes, assocRes] = await Promise.all([
         fetch("https://n8n.lumendigital.com.br/webhook/prospecta/tag/list", { headers: { token } }),
         fetch("https://n8n.lumendigital.com.br/webhook/prospecta/tag/negociacao/list", { headers: { token } }),
@@ -415,11 +524,14 @@ export default function Dashboard() {
     } catch (err) {
       console.error("Erro ao buscar etiquetas:", err);
       setTagCounts([]);
+    } finally {
+      setLoadingTags(false);
     }
   };
 
   const fetchStateData = async () => {
     try {
+      setLoadingMap(true);
       const response = await fetch("https://n8n.lumendigital.com.br/webhook/prospecta/contato/get", {
         headers: { token }
       });
@@ -466,6 +578,8 @@ export default function Dashboard() {
     } catch (err) {
       console.error("Erro ao buscar dados por estado:", err);
       setStateData([]);
+    } finally {
+      setLoadingMap(false);
     }
   };
 
@@ -740,43 +854,53 @@ export default function Dashboard() {
 
         {/* KPIs Compactos em linha horizontal */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-            {/* Total de Contatos com comparação */}
-            <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-gray-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-600 transition-theme">
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-xs font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wide">Total</p>
-                {growthRate !== 0 && (
-                  <div className={`flex items-center gap-0.5 ${growthRate > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {growthRate > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                    <span className="text-xs font-bold">{Math.abs(growthRate).toFixed(1)}%</span>
-                  </div>
-                )}
+          {loadingMetrics ? (
+            <>
+              <SkeletonKPI />
+              <SkeletonKPI />
+              <SkeletonKPI />
+            </>
+          ) : (
+            <>
+              {/* Total de Contatos com comparação */}
+              <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-gray-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-600 transition-theme">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wide">Total</p>
+                  {growthRate !== 0 && (
+                    <div className={`flex items-center gap-0.5 ${growthRate > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                      {growthRate > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+                      <span className="text-xs font-bold">{Math.abs(growthRate).toFixed(1)}%</span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-2xl md:text-3xl xl:text-4xl font-bold text-gray-900 dark:text-neutral-100">{dealMetrics.quantidade.toLocaleString()}</p>
+                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
+                  {growthRate > 0 ? '+' : ''}{(dealMetrics.quantidade - previousPeriodMetrics.quantidade).toLocaleString()} vs anterior
+                </p>
               </div>
-              <p className="text-2xl md:text-3xl xl:text-4xl font-bold text-gray-900 dark:text-neutral-100">{dealMetrics.quantidade.toLocaleString()}</p>
-              <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
-                {growthRate > 0 ? '+' : ''}{(dealMetrics.quantidade - previousPeriodMetrics.quantidade).toLocaleString()} vs anterior
-              </p>
-            </div>
 
-            {/* Média Diária */}
-            <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-gray-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-600 transition-theme">
-              <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">Média Diária</p>
-              <p className="text-2xl md:text-3xl xl:text-4xl font-bold text-gray-900 dark:text-neutral-100">{dealMetrics.quantidadeMedia.toFixed(2)}</p>
-              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Contatos/dia</p>
-            </div>
-
-            {/* Pico de Atividade */}
-            <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-gray-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-600 transition-theme">
-              <div className="flex items-center gap-1 mb-1">
-                <Activity className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide">Pico</p>
+              {/* Média Diária */}
+              <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-gray-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-600 transition-theme">
+                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">Média Diária</p>
+                <p className="text-2xl md:text-3xl xl:text-4xl font-bold text-gray-900 dark:text-neutral-100">{dealMetrics.quantidadeMedia.toFixed(2)}</p>
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Contatos/dia</p>
               </div>
-              <p className="text-2xl md:text-3xl xl:text-4xl font-bold text-gray-900 dark:text-neutral-100">
-                {peakDay ? peakDay.qtdLeads : 0}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
-                {peakDay ? `${formatBR(peakDay.dia)}` : 'Sem dados'}
-              </p>
-            </div>
+
+              {/* Pico de Atividade */}
+              <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-gray-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-600 transition-theme">
+                <div className="flex items-center gap-1 mb-1">
+                  <Activity className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide">Pico</p>
+                </div>
+                <p className="text-2xl md:text-3xl xl:text-4xl font-bold text-gray-900 dark:text-neutral-100">
+                  {peakDay ? peakDay.qtdLeads : 0}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
+                  {peakDay ? `${formatBR(peakDay.dia)}` : 'Sem dados'}
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Grid de 3 colunas: Volume+Etiquetas | Mapa | Funil */}
@@ -785,139 +909,157 @@ export default function Dashboard() {
           {/* Coluna 1: Volume + Etiquetas */}
           <div className="flex flex-col gap-3">
             {/* Gráfico de Volume */}
-            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden">
-            <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
-              <div className="w-7 h-7 bg-blue-50 dark:bg-blue-950 rounded-lg flex items-center justify-center flex-shrink-0">
-                <BarIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="text-base font-bold text-gray-900 dark:text-neutral-100">Volume de conversas</h3>
-            </div>
-            <div className="p-3 sm:p-4">
-              <div className="h-48 sm:h-56 md:h-64 xl:h-72 2xl:h-80">
-                <Line data={lineData} options={lineOptions} />
-              </div>
-            </div>
-          </div>
-
-          {/* Etiquetas */}
-          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme flex flex-col overflow-visible">
-            <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
-              <div className="w-7 h-7 bg-gradient-to-tr from-pink-100 to-blue-50 dark:from-pink-950 dark:to-blue-950 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Tags className="w-5 h-5 text-pink-600 dark:text-pink-400" />
-              </div>
-              <h3 className="text-base font-bold text-gray-900 dark:text-neutral-100">Etiquetas</h3>
-            </div>
-
-            <div className="p-8 flex-1 flex items-center justify-center overflow-visible">
-              {tagCounts.length > 0 ? (
-                <div className="flex items-center gap-6 w-full">
-                  {/* Pizza à esquerda */}
-                  <div className="flex-shrink-0">
-                    <div className="relative w-48 h-48 xl:w-56 xl:h-56">
-                      <Doughnut data={tagsData} options={tagsOptions} />
-                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <p className="text-xs text-gray-500 dark:text-neutral-400 font-semibold uppercase tracking-wide">Total</p>
-                        <p className="text-3xl xl:text-4xl font-bold text-gray-800 dark:text-neutral-100 mt-1">{totalTags.toLocaleString()}</p>
-                      </div>
-                    </div>
+            {loadingChart ? (
+              <SkeletonChart />
+            ) : (
+              <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden">
+                <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
+                  <div className="w-7 h-7 bg-blue-50 dark:bg-blue-950 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <BarIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
-
-                  {/* Legenda à direita */}
-                  <div className="flex-1 flex flex-col gap-2 min-w-0">
-                    {finalTags.map((tag, i) => {
-                      const percent = totalTags > 0 ? ((tag.quantidade / totalTags) * 100).toFixed(1) : 0;
-                      return (
-                        <div
-                          key={tag.id_tag}
-                          className="flex items-center justify-between gap-3 px-3 py-2.5 bg-gray-50 dark:bg-neutral-700/50 border border-gray-200 dark:border-neutral-600 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-600/50 hover:border-gray-300 dark:hover:border-neutral-500 transition-all group"
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                            <span
-                              className="w-3.5 h-3.5 rounded-full flex-shrink-0 ring-2 ring-white dark:ring-neutral-800 shadow-sm"
-                              style={{ backgroundColor: tagColors[i] }}
-                            />
-                            <span className="text-gray-800 dark:text-neutral-200 text-sm font-medium truncate group-hover:text-gray-900 dark:group-hover:text-neutral-100 transition-colors">
-                              {tag.nome}
-                            </span>
-                          </div>
-                          <div className="flex items-baseline gap-1.5 text-gray-700 dark:text-neutral-300 font-semibold whitespace-nowrap">
-                            <span className="text-base">{tag.quantidade}</span>
-                            <span className="text-xs text-gray-400 dark:text-neutral-500">({percent}%)</span>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <h3 className="text-base font-bold text-gray-900 dark:text-neutral-100">Volume de conversas</h3>
+                </div>
+                <div className="p-3 sm:p-4">
+                  <div className="h-48 sm:h-56 md:h-64 xl:h-72 2xl:h-80">
+                    <Line data={lineData} options={lineOptions} />
                   </div>
                 </div>
-              ) : (
-                <p className="text-sm text-gray-500 dark:text-neutral-400 text-center py-6">Nenhuma etiqueta disponível.</p>
-              )}
+              </div>
+            )}
+
+          {/* Etiquetas */}
+          {loadingTags ? (
+            <SkeletonTags />
+          ) : (
+            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme flex flex-col overflow-visible">
+              <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
+                <div className="w-7 h-7 bg-gradient-to-tr from-pink-100 to-blue-50 dark:from-pink-950 dark:to-blue-950 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Tags className="w-5 h-5 text-pink-600 dark:text-pink-400" />
+                </div>
+                <h3 className="text-base font-bold text-gray-900 dark:text-neutral-100">Etiquetas</h3>
+              </div>
+
+              <div className="p-8 flex-1 flex items-center justify-center overflow-visible">
+                {tagCounts.length > 0 ? (
+                  <div className="flex items-center gap-6 w-full">
+                    {/* Pizza à esquerda */}
+                    <div className="flex-shrink-0">
+                      <div className="relative w-48 h-48 xl:w-56 xl:h-56">
+                        <Doughnut data={tagsData} options={tagsOptions} />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                          <p className="text-xs text-gray-500 dark:text-neutral-400 font-semibold uppercase tracking-wide">Total</p>
+                          <p className="text-3xl xl:text-4xl font-bold text-gray-800 dark:text-neutral-100 mt-1">{totalTags.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Legenda à direita */}
+                    <div className="flex-1 flex flex-col gap-2 min-w-0">
+                      {finalTags.map((tag, i) => {
+                        const percent = totalTags > 0 ? ((tag.quantidade / totalTags) * 100).toFixed(1) : 0;
+                        return (
+                          <div
+                            key={tag.id_tag}
+                            className="flex items-center justify-between gap-3 px-3 py-2.5 bg-gray-50 dark:bg-neutral-700/50 border border-gray-200 dark:border-neutral-600 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-600/50 hover:border-gray-300 dark:hover:border-neutral-500 transition-all group"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              <span
+                                className="w-3.5 h-3.5 rounded-full flex-shrink-0 ring-2 ring-white dark:ring-neutral-800 shadow-sm"
+                                style={{ backgroundColor: tagColors[i] }}
+                              />
+                              <span className="text-gray-800 dark:text-neutral-200 text-sm font-medium truncate group-hover:text-gray-900 dark:group-hover:text-neutral-100 transition-colors">
+                                {tag.nome}
+                              </span>
+                            </div>
+                            <div className="flex items-baseline gap-1.5 text-gray-700 dark:text-neutral-300 font-semibold whitespace-nowrap">
+                              <span className="text-base">{tag.quantidade}</span>
+                              <span className="text-xs text-gray-400 dark:text-neutral-500">({percent}%)</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-neutral-400 text-center py-6">Nenhuma etiqueta disponível.</p>
+                )}
+              </div>
             </div>
-          </div>
+          )}
           </div>
 
           {/* Coluna 2: Funil de Conversão */}
-        {orderedFunnelStages.length > 0 && (
-          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden">
-            <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
-              <div className="w-7 h-7 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 rounded-lg flex items-center justify-center flex-shrink-0">
-                <GitBranch className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+          {loadingFunnel ? (
+            <SkeletonFunnel />
+          ) : (
+            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden">
+              <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
+                <div className="w-7 h-7 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <GitBranch className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-gray-900 dark:text-neutral-100">Funil de Conversão</h3>
+                  <p className="text-xs text-gray-500 dark:text-neutral-400">De {dealMetrics.quantidade} leads totais</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="text-base font-bold text-gray-900 dark:text-neutral-100">Funil de Conversão</h3>
-                <p className="text-xs text-gray-500 dark:text-neutral-400">De {dealMetrics.quantidade} leads totais</p>
-              </div>
-            </div>
 
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <div
-                className="p-3 sm:p-4 overflow-y-auto"
-                style={{ maxHeight: 'calc(100vh - 250px)', WebkitOverflowScrolling: 'touch' }}
-              >
-                <SortableContext
-                  items={orderedFunnelStages.map(stage => stage.estagio)}
-                  strategy={verticalListSortingStrategy}
+              {orderedFunnelStages.length > 0 ? (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
                 >
-                  <div className="space-y-2">
-                    {orderedFunnelStages.map((stage, i) => {
-                      const totalLeads = dealMetrics.quantidade || 1;
-                      const percentFromFirst = ((stage.quantidade / totalLeads) * 100).toFixed(1);
+                  <div
+                    className="p-3 sm:p-4 overflow-y-auto"
+                    style={{ maxHeight: 'calc(100vh - 250px)', WebkitOverflowScrolling: 'touch' }}
+                  >
+                    <SortableContext
+                      items={orderedFunnelStages.map(stage => stage.estagio)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-2">
+                        {orderedFunnelStages.map((stage, i) => {
+                          const totalLeads = dealMetrics.quantidade || 1;
+                          const percentFromFirst = ((stage.quantidade / totalLeads) * 100).toFixed(1);
 
-                      const colors = [
-                        { from: 'from-blue-500', to: 'to-cyan-500', bg: 'bg-blue-50 dark:bg-blue-950/30', border: 'border-blue-200 dark:border-blue-800', text: 'text-blue-700 dark:text-blue-300' },
-                        { from: 'from-cyan-500', to: 'to-teal-500', bg: 'bg-cyan-50 dark:bg-cyan-950/30', border: 'border-cyan-200 dark:border-cyan-800', text: 'text-cyan-700 dark:text-cyan-300' },
-                        { from: 'from-teal-500', to: 'to-emerald-500', bg: 'bg-teal-50 dark:bg-teal-950/30', border: 'border-teal-200 dark:border-teal-800', text: 'text-teal-700 dark:text-teal-300' },
-                        { from: 'from-emerald-500', to: 'to-green-500', bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800', text: 'text-emerald-700 dark:text-emerald-300' },
-                        { from: 'from-green-500', to: 'to-lime-500', bg: 'bg-green-50 dark:bg-green-950/30', border: 'border-green-200 dark:border-green-800', text: 'text-green-700 dark:text-green-300' },
-                        { from: 'from-lime-500', to: 'to-yellow-500', bg: 'bg-lime-50 dark:bg-lime-950/30', border: 'border-lime-200 dark:border-lime-800', text: 'text-lime-700 dark:text-lime-300' },
-                        { from: 'from-yellow-500', to: 'to-amber-500', bg: 'bg-yellow-50 dark:bg-yellow-950/30', border: 'border-yellow-200 dark:border-yellow-800', text: 'text-yellow-700 dark:text-yellow-300' },
-                        { from: 'from-amber-500', to: 'to-orange-500', bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-800', text: 'text-amber-700 dark:text-amber-300' },
-                      ];
-                      const color = colors[i % colors.length];
+                          const colors = [
+                            { from: 'from-blue-500', to: 'to-cyan-500', bg: 'bg-blue-50 dark:bg-blue-950/30', border: 'border-blue-200 dark:border-blue-800', text: 'text-blue-700 dark:text-blue-300' },
+                            { from: 'from-cyan-500', to: 'to-teal-500', bg: 'bg-cyan-50 dark:bg-cyan-950/30', border: 'border-cyan-200 dark:border-cyan-800', text: 'text-cyan-700 dark:text-cyan-300' },
+                            { from: 'from-teal-500', to: 'to-emerald-500', bg: 'bg-teal-50 dark:bg-teal-950/30', border: 'border-teal-200 dark:border-teal-800', text: 'text-teal-700 dark:text-teal-300' },
+                            { from: 'from-emerald-500', to: 'to-green-500', bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800', text: 'text-emerald-700 dark:text-emerald-300' },
+                            { from: 'from-green-500', to: 'to-lime-500', bg: 'bg-green-50 dark:bg-green-950/30', border: 'border-green-200 dark:border-green-800', text: 'text-green-700 dark:text-green-300' },
+                            { from: 'from-lime-500', to: 'to-yellow-500', bg: 'bg-lime-50 dark:bg-lime-950/30', border: 'border-lime-200 dark:border-lime-800', text: 'text-lime-700 dark:text-lime-300' },
+                            { from: 'from-yellow-500', to: 'to-amber-500', bg: 'bg-yellow-50 dark:bg-yellow-950/30', border: 'border-yellow-200 dark:border-yellow-800', text: 'text-yellow-700 dark:text-yellow-300' },
+                            { from: 'from-amber-500', to: 'to-orange-500', bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-800', text: 'text-amber-700 dark:text-amber-300' },
+                          ];
+                          const color = colors[i % colors.length];
 
-                      return (
-                        <SortableFunnelCard
-                          key={stage.estagio}
-                          stage={stage}
-                          index={i}
-                          percentFromFirst={percentFromFirst}
-                          color={color}
-                        />
-                      );
-                    })}
+                          return (
+                            <SortableFunnelCard
+                              key={stage.estagio}
+                              stage={stage}
+                              index={i}
+                              percentFromFirst={percentFromFirst}
+                              color={color}
+                            />
+                          );
+                        })}
+                      </div>
+                    </SortableContext>
                   </div>
-                </SortableContext>
-              </div>
-            </DndContext>
-          </div>
-        )}
+                </DndContext>
+              ) : (
+                <div className="p-6 flex items-center justify-center">
+                  <p className="text-sm text-gray-500 dark:text-neutral-400 text-center">
+                    Nenhum dado de funil disponível no período selecionado
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Coluna 3: Mapa do Brasil por Estado */}
-          <BrazilMapSection stateData={stateData} />
+          <BrazilMapSection stateData={stateData} isLoading={loadingMap} />
 
       </div>
       </div>

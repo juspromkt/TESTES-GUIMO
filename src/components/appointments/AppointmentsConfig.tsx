@@ -13,6 +13,36 @@ interface AppointmentsConfigProps {
   canEdit: boolean;
 }
 
+// Skeleton Loading Component
+const ConfigSkeleton = () => (
+  <div className="space-y-6 animate-pulse">
+    <div className="h-8 bg-gray-300 dark:bg-neutral-600 rounded w-1/3"></div>
+
+    {/* Toggle skeleton */}
+    <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-neutral-700 rounded-lg">
+      <div className="h-5 bg-gray-200 dark:bg-neutral-700 rounded w-1/4"></div>
+      <div className="h-6 w-11 bg-gray-200 dark:bg-neutral-700 rounded-full"></div>
+    </div>
+
+    {/* Textarea skeleton */}
+    <div className="space-y-2">
+      <div className="h-5 bg-gray-200 dark:bg-neutral-700 rounded w-1/5"></div>
+      <div className="h-40 bg-gray-100 dark:bg-neutral-700/50 rounded"></div>
+    </div>
+
+    {/* Checkboxes skeleton */}
+    {[...Array(3)].map((_, i) => (
+      <div key={i} className="flex items-center gap-3">
+        <div className="w-5 h-5 bg-gray-200 dark:bg-neutral-700 rounded"></div>
+        <div className="h-4 bg-gray-200 dark:bg-neutral-700 rounded w-1/3"></div>
+      </div>
+    ))}
+
+    {/* Button skeleton */}
+    <div className="h-10 bg-gray-300 dark:bg-neutral-600 rounded w-32"></div>
+  </div>
+);
+
 export default function AppointmentsConfig({ canEdit }: AppointmentsConfigProps) {
   const [config, setConfig] = useState<ReminderConfig>({
     isAtivo: false,
@@ -104,11 +134,7 @@ Exemplo de formato esperado:
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
-    );
+    return <ConfigSkeleton />;
   }
 
   return (

@@ -9,6 +9,7 @@ interface QuickCommandMenuProps {
   onClose: () => void;
   token: string;
   currentAgentId: number;
+  initialCommand?: DecisionType | null;
 }
 
 type DecisionType = 'add_tag' | 'transfer_agent' | 'transfer_user' | 'assign_source' | 'transfer_stage' | 'notify' | 'assign_product' | 'stop_agent';
@@ -24,7 +25,7 @@ const commands = [
   { type: 'stop_agent' as DecisionType, icon: StopCircle, label: 'Desativar Agente', color: 'text-red-600 dark:text-red-400', bgColor: '#FEF2F2', borderColor: '#FECACA', textColor: '#991B1B' },
 ];
 
-export default function QuickCommandMenu({ isOpen, position, onInsert, onClose, token, currentAgentId }: QuickCommandMenuProps) {
+export default function QuickCommandMenu({ isOpen, position, onInsert, onClose, token, currentAgentId, initialCommand }: QuickCommandMenuProps) {
   const [page, setPage] = useState<'commands' | 'selection'>('commands');
   const [selectedCommand, setSelectedCommand] = useState<DecisionType | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -42,14 +43,24 @@ export default function QuickCommandMenu({ isOpen, position, onInsert, onClose, 
   // Reset ao abrir/fechar
   useEffect(() => {
     if (isOpen) {
-      setPage('commands');
-      setSelectedCommand(null);
-      setSearchTerm('');
-      setSelectedIndex(0);
-      setSelectedFunnelId(null);
+      if (initialCommand) {
+        // Se há um comando inicial, vai direto para a seleção
+        setSelectedCommand(initialCommand);
+        setPage('selection');
+        setSearchTerm('');
+        setSelectedIndex(0);
+        setSelectedFunnelId(null);
+      } else {
+        // Comportamento normal
+        setPage('commands');
+        setSelectedCommand(null);
+        setSearchTerm('');
+        setSelectedIndex(0);
+        setSelectedFunnelId(null);
+      }
       setTimeout(() => searchInputRef.current?.focus(), 100);
     }
-  }, [isOpen]);
+  }, [isOpen, initialCommand]);
 
   // Buscar dados quando selecionar comando
   useEffect(() => {
@@ -71,7 +82,7 @@ export default function QuickCommandMenu({ isOpen, position, onInsert, onClose, 
         const res = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/get', { headers: { token } });
         if (!res.ok) throw new Error('Erro ao buscar agentes');
         const data = await res.json();
-        setItems(Array.isArray(data) ? data.filter(a => a && a.Id && a.Id !== currentAgentId).map((a: any) => ({ id: a.Id, nome: a.nome })) : []);
+        setItems(Array.isArray(data) ? data.filter(a => a && a.Id && a.Id !== currentAgentId && a.isAtivo === true).map((a: any) => ({ id: a.Id, nome: a.nome })) : []);
       } else if (commandType === 'transfer_user') {
         const res = await fetch('https://n8n.lumendigital.com.br/webhook/prospectai/usuario/get', { headers: { token } });
         if (!res.ok) throw new Error('Erro ao buscar usuários');

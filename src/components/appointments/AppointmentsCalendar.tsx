@@ -42,6 +42,18 @@ interface CalendarEvent {
   extendedProps: { appointment: Appointment };
 }
 
+// Skeleton Loading Component
+const CalendarSkeleton = () => (
+  <div className="animate-pulse space-y-4">
+    <div className="h-10 bg-gray-200 dark:bg-neutral-700 rounded w-full"></div>
+    <div className="grid grid-cols-7 gap-2">
+      {[...Array(35)].map((_, i) => (
+        <div key={i} className="h-20 bg-gray-100 dark:bg-neutral-700/50 rounded"></div>
+      ))}
+    </div>
+  </div>
+);
+
 export default function AppointmentsCalendar() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -290,11 +302,7 @@ export default function AppointmentsCalendar() {
 
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <CalendarIcon className="w-6 h-6 animate-spin text-blue-600 dark:text-blue-400" />
-      </div>
-    );
+    return <CalendarSkeleton />;
   }
 
   if (error) {

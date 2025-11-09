@@ -56,6 +56,32 @@ const createEmptyState = (): Record<Day, TimeWindow[]> => ({
   saturday: [],
 });
 
+// Skeleton Loading Component
+const ScheduleWindowsSkeleton = () => (
+  <div className="space-y-6 animate-pulse">
+    <div className="h-8 bg-gray-300 dark:bg-neutral-600 rounded w-1/3 mb-6"></div>
+
+    {/* Days skeleton */}
+    {[...Array(7)].map((_, i) => (
+      <div key={i} className="border border-gray-200 dark:border-neutral-700 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="h-6 bg-gray-300 dark:bg-neutral-600 rounded w-32"></div>
+          <div className="h-9 w-32 bg-gray-200 dark:bg-neutral-700 rounded"></div>
+        </div>
+        <div className="space-y-2">
+          {[...Array(2)].map((_, j) => (
+            <div key={j} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-neutral-700/30 rounded">
+              <div className="h-4 bg-gray-200 dark:bg-neutral-700 rounded w-20"></div>
+              <div className="h-4 bg-gray-200 dark:bg-neutral-700 rounded w-4"></div>
+              <div className="h-4 bg-gray-200 dark:bg-neutral-700 rounded w-20"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
 export default function ScheduleWindowsSection({ token, idAgente, canEdit }: ScheduleWindowsSectionProps) {
   const [windows, setWindows] = useState<Record<Day, TimeWindow[]>>(createEmptyState());
   const [loading, setLoading] = useState(true);
@@ -254,11 +280,7 @@ export default function ScheduleWindowsSection({ token, idAgente, canEdit }: Sch
   );
 
   if (loading) {
-    return (
-      <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6 flex justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
-      </section>
-    );
+    return <ScheduleWindowsSkeleton />;
   }
 
   return (

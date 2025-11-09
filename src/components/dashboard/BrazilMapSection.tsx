@@ -11,9 +11,10 @@ interface StateData {
 
 interface BrazilMapSectionProps {
   stateData?: StateData[];
+  isLoading?: boolean;
 }
 
-export default function BrazilMapSection({ stateData = [] }: BrazilMapSectionProps) {
+export default function BrazilMapSection({ stateData = [], isLoading = false }: BrazilMapSectionProps) {
   const [hoveredState, setHoveredState] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [hasError, setHasError] = useState(false);
@@ -112,6 +113,21 @@ export default function BrazilMapSection({ stateData = [] }: BrazilMapSectionPro
 
   // Verifica se há dados reais (stateData foi fornecido e tem conteúdo)
   const hasRealData = stateData.length > 0;
+
+  // Skeleton de loading
+  if (isLoading) {
+    return (
+      <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden flex flex-col h-full">
+        <div className="px-3 py-2.5 flex items-center justify-between border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
+          <div className="h-5 bg-gray-300 dark:bg-neutral-600 rounded w-48 animate-pulse"></div>
+          <div className="h-7 bg-gray-200 dark:bg-neutral-700 rounded w-24 animate-pulse"></div>
+        </div>
+        <div className="p-8">
+          <div className="h-96 bg-gray-100 dark:bg-neutral-700/50 rounded-lg animate-pulse"></div>
+        </div>
+      </div>
+    );
+  }
 
   // Se houver erro, mostra mensagem
   if (hasError) {

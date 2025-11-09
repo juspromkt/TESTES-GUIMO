@@ -24,6 +24,34 @@ interface AppointmentsListProps {
   canEdit: boolean;
 }
 
+// Skeleton Loading Component
+const ListSkeleton = () => (
+  <div className="space-y-4">
+    {/* Search and filters skeleton */}
+    <div className="flex gap-4 mb-6">
+      <div className="flex-1 h-10 bg-gray-200 dark:bg-neutral-700 rounded animate-pulse"></div>
+      <div className="w-32 h-10 bg-gray-200 dark:bg-neutral-700 rounded animate-pulse"></div>
+    </div>
+
+    {/* List items skeleton */}
+    {[...Array(5)].map((_, i) => (
+      <div key={i} className="border border-gray-200 dark:border-neutral-700 rounded-lg p-4 animate-pulse">
+        <div className="flex items-center justify-between">
+          <div className="flex-1 space-y-3">
+            <div className="h-5 bg-gray-300 dark:bg-neutral-600 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 dark:bg-neutral-700 rounded w-1/2"></div>
+            <div className="h-4 bg-gray-200 dark:bg-neutral-700 rounded w-2/3"></div>
+          </div>
+          <div className="flex gap-2">
+            <div className="w-8 h-8 bg-gray-200 dark:bg-neutral-700 rounded"></div>
+            <div className="w-8 h-8 bg-gray-200 dark:bg-neutral-700 rounded"></div>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
 export default function AppointmentsList({ canEdit }: AppointmentsListProps) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -389,11 +417,7 @@ export default function AppointmentsList({ canEdit }: AppointmentsListProps) {
   );
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
-    );
+    return <ListSkeleton />;
   }
 
   if (error) {

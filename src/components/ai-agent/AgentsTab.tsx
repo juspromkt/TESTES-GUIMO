@@ -193,7 +193,7 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
 
   const subTabs = [
     { id: 'agents', label: 'Agentes', icon: GuimooIcon },
-    { id: 'notifications', label: 'Notificações', icon: IoLogoWhatsapp },
+    { id: 'notifications', label: 'Notificações', icon: Bell },
     { id: 'followup', label: 'Follow-up', icon: MdAutorenew },
   ] as const;
 

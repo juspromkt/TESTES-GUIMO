@@ -1,14 +1,21 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Repeat2,
   Plus,
   Trash2,
   Loader2,
-  Save,
   GripVertical,
-  Maximize2,
-  Minimize2,
   Upload,
+  Clock,
+  MessageSquare,
+  Sparkles,
+  X,
+  Info,
+  CheckCircle,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import {
   DragDropContext,
@@ -37,16 +44,47 @@ interface FollowUpTabProps {
   canViewAgent: boolean;
 }
 
+interface Toast {
+  id: number;
+  type: 'success' | 'error';
+  message: string;
+}
+
+const DEFAULT_PROMPT = `Analise as últimas mensagens trocadas e continue o atendimento a partir do ponto exato em que parou, sem repetir perguntas já feitas.
+
+Regras:
+- Sempre leia o histórico recente da conversa antes de responder.
+- Identifique o último ponto da interação e continue de forma contextual.
+- Evite mensagens genéricas e nunca diga o nome do cliente.
+- Mantenha linguagem acolhedora, profissional e consultiva.
+
+Estrutura:
+1. Retome o contexto da conversa.
+2. Avance no ponto parado.
+3. Finalize com uma chamada leve para ação.
+
+Exemplos:
+• Se o cliente parou em análise: "Você tinha me contado sobre [resumo]. Para avançarmos, preciso só confirmar [pergunta]."
+• Se parou em contrato: "Na última mensagem falamos sobre o contrato. Deseja que eu reenvie o link para assinatura?"
+• Se ficou em dúvida: "Notei que você ficou em dúvida sobre [tema]. Posso explicar melhor ou mostrar um exemplo prático?"
+
+⚠️ Regra Interna: Nunca dê instruções jurídicas ou respostas sobre casos. Seu papel é apenas analisar se o cliente tem direito de abrir um processo, mantendo tom acolhedor e direto.`;
+
 export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
   const [followUps, setFollowUps] = useState<FollowUp[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
-  const [collapsedFollowUps, setCollapsedFollowUps] = useState<boolean[]>([]);
+  const [toasts, setToasts] = useState<Toast[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [activeFollowUp, setActiveFollowUp] = useState<number | null>(null);
   const [isQuillReady, setIsQuillReady] = useState(false);
+  const [showDefaultPromptModal, setShowDefaultPromptModal] = useState(false);
+  const [selectedFollowUpForPrompt, setSelectedFollowUpForPrompt] = useState<number | null>(null);
+  const [collapsedFollowUps, setCollapsedFollowUps] = useState<Set<number>>(new Set());
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [followUpToDelete, setFollowUpToDelete] = useState<number | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [initialFollowUps, setInitialFollowUps] = useState<FollowUp[]>([]);
   const quillRefs = useRef<{ [key: number]: ReactQuill | null }>({});
 
   const timeOptions = [
@@ -65,7 +103,14 @@ export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
     { value: '30 dias', label: '30 dias', minutes: 43200 },
   ];
 
-  // Função para converter horário em minutos
+  const addToast = (type: 'success' | 'error', message: string) => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, type, message }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 5000);
+  };
+
   const getTimeInMinutes = (horario: string): number => {
     const option = timeOptions.find(opt => opt.value === horario);
     return option?.minutes || 0;
@@ -89,14 +134,17 @@ export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
 
       if (Array.isArray(data) && data.length > 0) {
         setFollowUps(data);
-        setCollapsedFollowUps(data.map(() => true));
+        setInitialFollowUps(JSON.parse(JSON.stringify(data))); // Deep copy
+        // Inicializa todos os follow-ups como recolhidos
+        setCollapsedFollowUps(new Set(data.map((f: FollowUp) => f.ordem)));
       } else {
         setFollowUps([]);
-        setCollapsedFollowUps([]);
+        setInitialFollowUps([]);
       }
+      setHasUnsavedChanges(false);
     } catch (err) {
       console.error('Erro ao carregar follow-ups:', err);
-      setError('Erro ao carregar configurações de follow-up');
+      addToast('error', 'Erro ao carregar configurações de follow-up');
     } finally {
       setLoading(false);
     }
@@ -114,23 +162,18 @@ export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
     initializeQuill();
   }, []);
 
+  // Aviso de navegação com alterações não salvas
   useEffect(() => {
-    setCollapsedFollowUps((prev) => {
-      if (prev.length === 0) {
-        return followUps.map(() => true);
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
       }
+    };
 
-      if (followUps.length > prev.length) {
-        return [...prev, ...Array(followUps.length - prev.length).fill(true)];
-      }
-
-      if (followUps.length < prev.length) {
-        return prev.slice(0, followUps.length);
-      }
-
-      return prev;
-    });
-  }, [followUps.length]);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   // Registrar MediaBlot para suporte a mídias
   async function registerMediaBlot() {
@@ -230,10 +273,10 @@ export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
         });
         editor.setSelection(range.index + 1, 0);
       }
+      addToast('success', 'Mídia adicionada com sucesso');
     } catch (error) {
       console.error('Error uploading media:', error);
-      setError('Erro ao fazer upload da mídia');
-      setTimeout(() => setError(''), 3000);
+      addToast('error', 'Erro ao fazer upload da mídia');
     } finally {
       setIsUploading(false);
       setActiveFollowUp(null);
@@ -251,17 +294,28 @@ export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
         horario: '30 minutos',
       },
     ]);
-    setCollapsedFollowUps([...collapsedFollowUps, false]);
+    setHasUnsavedChanges(true);
   };
 
   const handleRemoveFollowUp = (ordem: number) => {
-    const updatedFollowUps = followUps
-      .filter((followUp) => followUp.ordem !== ordem)
-      .map((followUp, index) => ({
-        ...followUp,
-        ordem: index + 1,
-      }));
-    setFollowUps(updatedFollowUps);
+    setFollowUpToDelete(ordem);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (followUpToDelete !== null) {
+      const updatedFollowUps = followUps
+        .filter((followUp) => followUp.ordem !== followUpToDelete)
+        .map((followUp, index) => ({
+          ...followUp,
+          ordem: index + 1,
+        }));
+      setFollowUps(updatedFollowUps);
+      setHasUnsavedChanges(true);
+      addToast('success', 'Follow-up removido com sucesso');
+    }
+    setShowDeleteModal(false);
+    setFollowUpToDelete(null);
   };
 
   const handleUpdateFollowUp = (
@@ -274,6 +328,7 @@ export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
         followUp.ordem === ordem ? { ...followUp, [field]: value } : followUp
       )
     );
+    setHasUnsavedChanges(true);
   };
 
   const handleDragEnd = (result: DropResult) => {
@@ -289,53 +344,50 @@ export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
     }));
 
     setFollowUps(reordered);
+    setHasUnsavedChanges(true);
+  };
 
-    setCollapsedFollowUps((prev) => {
-      const updated = [...prev];
-      const [collapsed] = updated.splice(result.source.index, 1);
-      updated.splice(
-        result.destination!.index,
-        0,
-        collapsed !== undefined ? collapsed : true
-      );
-      return updated.slice(0, reordered.length);
+  const handleApplyDefaultPrompt = () => {
+    if (selectedFollowUpForPrompt !== null) {
+      // Converte o texto em HTML formatado preservando quebras de linha
+      const formattedPrompt = DEFAULT_PROMPT
+        .split('\n')
+        .map(line => {
+          if (line.trim() === '') {
+            return '<p><br></p>';
+          }
+          return `<p>${line}</p>`;
+        })
+        .join('');
+
+      handleUpdateFollowUp(selectedFollowUpForPrompt, 'prompt', formattedPrompt);
+      addToast('success', 'Texto padrão aplicado com sucesso');
+    }
+    setShowDefaultPromptModal(false);
+    setSelectedFollowUpForPrompt(null);
+  };
+
+  const toggleCollapse = (ordem: number) => {
+    setCollapsedFollowUps(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(ordem)) {
+        newSet.delete(ordem);
+      } else {
+        newSet.add(ordem);
+      }
+      return newSet;
     });
   };
 
-  const toggleFollowUpCollapse = (index: number) => {
-    setCollapsedFollowUps((prev) => {
-      const next = [...prev];
-      next[index] = !next[index];
-      return next;
-    });
-  };
-
-  // Configurações do ReactQuill
+  // Configurações do ReactQuill - sem toolbar
   const modules = {
-    toolbar: {
-      container: [
-        [{ header: [1, 2, false] }],
-        ['bold', 'italic', 'underline'],
-        [{ list: 'ordered' }, { list: 'bullet' }],
-        ['clean'],
-      ],
-    },
+    toolbar: false,
   };
 
-  const formats = [
-    'header',
-    'bold',
-    'italic',
-    'underline',
-    'list',
-    'bullet',
-    'media',
-  ];
+  const formats = ['media'];
 
   const handleSave = async () => {
     setSaving(true);
-    setError('');
-    setSuccess('');
 
     try {
       // Ordenar follow-ups por tempo de espera (menor para maior)
@@ -366,332 +418,434 @@ export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
       }
 
       await fetchFollowUps();
-      setSuccess('Follow-ups salvos e ordenados com sucesso!');
-      setTimeout(() => setSuccess(''), 3000);
+      addToast('success', 'Follow-ups salvos e ordenados com sucesso!');
     } catch (err) {
       console.error('Erro ao salvar follow-ups:', err);
-      setError('Erro ao salvar configurações de follow-up');
-      setTimeout(() => setError(''), 3000);
+      addToast('error', 'Erro ao salvar configurações de follow-up');
     } finally {
       setSaving(false);
     }
   };
 
-  // Verificar se há inconsistência na ordem dos tempos
-  const hasTimeOrderIssue = followUps.some((followUp, index) => {
-    if (index === 0) return false;
-    const currentTime = getTimeInMinutes(followUp.horario);
-    const previousTime = getTimeInMinutes(followUps[index - 1].horario);
-    return currentTime < previousTime;
-  });
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-gray-600 dark:text-neutral-400" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 bg-neutral-100 rounded-lg flex items-center justify-center">
-            <Repeat2 className="w-4 h-4 text-neutral-700" />
-          </div>
-          <div>
-            <h2 className="text-sm font-semibold text-neutral-900">
-              Follow-up Automático
-            </h2>
-            <p className="text-xs text-neutral-500">
-              Configuração global - funciona para todos os agentes
-            </p>
-          </div>
-        </div>
-        {canViewAgent && (
-          <button
-            onClick={handleAddFollowUp}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors font-medium"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Adicionar
-          </button>
-        )}
-      </div>
+    <>
+      <style>{`
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        .toast-enter {
+          animation: slideInRight 0.3s ease-out forwards;
+        }
+        .ql-editor {
+          font-size: 18px !important;
+          padding: 0 !important;
+          min-height: 60px !important;
+        }
+        .ql-container {
+          border: none !important;
+          font-size: 18px !important;
+        }
+      `}</style>
 
-      {/* Validation Warning */}
-      {hasTimeOrderIssue && (
-        <div className="px-3 py-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg">
-          <p className="text-xs font-medium">Atenção: Ordem de tempo inconsistente</p>
-          <p className="text-xs mt-0.5 text-amber-700">
-            Os follow-ups serão reordenados automaticamente ao salvar.
-          </p>
-        </div>
-      )}
-
-      {/* Success/Error Messages */}
-      {success && (
-        <div className="px-3 py-2.5 bg-neutral-50 border border-neutral-200 text-neutral-700 rounded-lg text-xs">
-          {success}
-        </div>
-      )}
-
-      {error && (
-        <div className="px-3 py-2.5 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs">
-          {error}
-        </div>
-      )}
-
-      {/* Follow-ups List */}
-      <div className="space-y-4">
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="followups">
-            {(provided) => (
-              <div
-                className="space-y-4"
-                ref={provided.innerRef}
-                {...provided.droppableProps}
+      {/* Toast Container */}
+      {toasts.length > 0 && createPortal(
+        <div className="fixed top-4 right-4 z-[10001] flex flex-col gap-3 max-w-md">
+          {toasts.map((toast) => (
+            <div
+              key={toast.id}
+              className={`toast-enter flex items-start gap-3 p-4 rounded-lg shadow-2xl border ${
+                toast.type === 'success'
+                  ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
+                  : 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
+              }`}
+            >
+              {toast.type === 'success' ? (
+                <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              )}
+              <div className="flex-1 text-sm font-medium">
+                {toast.message}
+              </div>
+              <button
+                onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+                className="text-current opacity-50 hover:opacity-100 transition-opacity"
               >
-                {followUps.map((followUp, index) => {
-                  const isCollapsed = collapsedFollowUps[index] ?? true;
-                  return (
-                    <Draggable
-                      draggableId={followUp.ordem.toString()}
-                      index={index}
-                      key={followUp.ordem}
-                      isDragDisabled={!canViewAgent}
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>,
+        document.body
+      )}
+
+      <div className="h-screen flex flex-col bg-gradient-to-b from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950">
+        <div className="flex-shrink-0 p-6 pb-0">
+          <div className="max-w-4xl mx-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-gradient-to-br from-neutral-800 to-neutral-700 dark:from-white/10 dark:to-white/5 rounded-xl flex items-center justify-center shadow-inner">
+                  <Repeat2 className="w-4 h-4 text-white dark:text-neutral-200" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-neutral-900 dark:text-white">Follow-up Automático</h1>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400">Configure mensagens automáticas para reativar leads</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {canViewAgent && followUps.length > 0 && (
+                  <div className="relative">
+                    {hasUnsavedChanges && !saving && (
+                      <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-lg" />
+                    )}
+                    <button
+                      onClick={handleSave}
+                      disabled={saving}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold shadow transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                        hasUnsavedChanges && !saving
+                          ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:opacity-90'
+                          : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:opacity-90'
+                      }`}
                     >
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          className="bg-neutral-50 border border-neutral-200 rounded-lg p-4"
-                        >
-                          {/* Header */}
-                          <div className="flex items-start justify-between gap-3 mb-3">
-                            <div className="flex items-center gap-2">
-                              {canViewAgent && (
-                                <div
-                                  {...provided.dragHandleProps}
-                                  className="cursor-grab active:cursor-grabbing text-neutral-400 hover:text-neutral-600"
-                                  title="Arraste para reordenar"
-                                >
-                                  <GripVertical className="w-4 h-4" />
-                                </div>
-                              )}
-                              <div className="w-7 h-7 bg-neutral-200 rounded flex items-center justify-center text-neutral-900 font-semibold text-xs">
-                                {followUp.ordem}
-                              </div>
-                              <div>
-                                <p className="text-xs font-medium text-neutral-900">
-                                  Follow-up #{followUp.ordem}
-                                </p>
-                                {isCollapsed && (
-                                  <p className="text-xs text-neutral-500">
-                                    {followUp.horario}
-                                  </p>
-                                )}
-                              </div>
+                      {saving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Salvando...
+                        </>
+                      ) : hasUnsavedChanges ? (
+                        <>
+                          <AlertCircle className="w-4 h-4" />
+                          Salvar alterações
+                        </>
+                      ) : (
+                        'Salvar'
+                      )}
+                    </button>
+                  </div>
+                )}
+                {canViewAgent && (
+                  <button
+                    onClick={handleAddFollowUp}
+                    className="flex items-center gap-2 bg-gradient-to-r from-neutral-900 to-neutral-700 dark:from-white dark:to-neutral-300 text-white dark:text-neutral-900 px-4 py-2 rounded-lg text-sm font-semibold shadow hover:opacity-90 transition"
+                  >
+                    <Plus className="w-4 h-4" /> Novo
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto px-6 pb-6">
+          <div className="max-w-4xl mx-auto">
+            {/* Visual Timeline */}
+            {followUps.length > 0 ? (
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="followups">
+                {(provided) => (
+                  <div
+                    className="relative space-y-6 before:content-[''] before:absolute before:left-5 before:top-0 before:bottom-0 before:w-0.5 before:bg-neutral-300 dark:before:bg-neutral-700"
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                  >
+                    {followUps.map((followUp, index) => (
+                      <Draggable
+                        draggableId={followUp.ordem.toString()}
+                        index={index}
+                        key={followUp.ordem}
+                        isDragDisabled={!canViewAgent}
+                      >
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className="relative pl-12 group"
+                          >
+                            {/* Node */}
+                            <div className="absolute left-2.5 top-3 w-5 h-5 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 flex items-center justify-center font-bold text-[10px] shadow-lg">
+                              {followUp.ordem}
                             </div>
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => toggleFollowUpCollapse(index)}
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-neutral-700 bg-neutral-200 rounded hover:bg-neutral-300 transition-colors"
-                              >
-                                {isCollapsed ? (
-                                  <>
-                                    <Maximize2 className="w-3 h-3" />
-                                    Expandir
-                                  </>
-                                ) : (
-                                  <>
-                                    <Minimize2 className="w-3 h-3" />
-                                    Reduzir
-                                  </>
-                                )}
-                              </button>
-                              {canViewAgent && !isCollapsed && (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleRemoveFollowUp(followUp.ordem)
-                                  }
-                                  className="text-red-600 hover:text-red-700 p-1"
-                                  title="Remover"
+
+                            {/* Card */}
+                            <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-sm hover:shadow-md transition-all">
+                              <div className="p-4">
+                                {/* Header - Clicável */}
+                                <div
+                                  className="flex items-center justify-between gap-2 cursor-pointer"
+                                  onClick={() => toggleCollapse(followUp.ordem)}
                                 >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              )}
+                                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                                    <div className="p-1 flex-shrink-0">
+                                      {collapsedFollowUps.has(followUp.ordem) ? (
+                                        <ChevronDown className="w-4 h-4 text-neutral-400 dark:text-neutral-500" />
+                                      ) : (
+                                        <ChevronUp className="w-4 h-4 text-neutral-400 dark:text-neutral-500" />
+                                      )}
+                                    </div>
+                                    <Clock className="w-3.5 h-3.5 text-neutral-400 dark:text-neutral-500 flex-shrink-0" />
+                                    <select
+                                      value={followUp.horario}
+                                      onChange={(e) => {
+                                        e.stopPropagation();
+                                        handleUpdateFollowUp(
+                                          followUp.ordem,
+                                          'horario',
+                                          e.target.value
+                                        );
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                      disabled={!canViewAgent}
+                                      className="text-xs font-medium text-neutral-700 dark:text-white bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-white disabled:opacity-50"
+                                    >
+                                      {timeOptions.map((opt) => (
+                                        <option key={opt.value} value={opt.value} className="bg-white dark:bg-neutral-700 text-neutral-700 dark:text-white">{opt.label}</option>
+                                      ))}
+                                    </select>
+                                    <div className="flex items-center text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-700 px-2 py-1 rounded-md">
+                                      <Info className="w-3 h-3 mr-1 text-neutral-400 dark:text-neutral-300" />
+                                      Enviado <span className="mx-1 font-medium text-neutral-700 dark:text-neutral-200">{followUp.horario}</span> após a última mensagem do lead
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                                    {canViewAgent && (
+                                      <>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedFollowUpForPrompt(followUp.ordem);
+                                            setShowDefaultPromptModal(true);
+                                          }}
+                                          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-md text-xs font-medium hover:bg-neutral-200 dark:hover:bg-neutral-600 transition"
+                                        >
+                                          <Sparkles className="w-3.5 h-3.5" /> Aplicar texto padrão
+                                        </button>
+                                        <div
+                                          {...provided.dragHandleProps}
+                                          className="cursor-grab active:cursor-grabbing p-1"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <GripVertical className="w-3.5 h-3.5 text-neutral-400 dark:text-neutral-500" />
+                                        </div>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleRemoveFollowUp(followUp.ordem);
+                                          }}
+                                          className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition"
+                                          title="Remover"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Message - Expandable */}
+                                {!collapsedFollowUps.has(followUp.ordem) && (
+                                  <div className="mt-3 space-y-2">
+                                    <div className="bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg p-3">
+                                      <div className="relative">
+                                        {isQuillReady && (
+                                          <ReactQuill
+                                            ref={(el) =>
+                                              (quillRefs.current[followUp.ordem] = el)
+                                            }
+                                            theme="snow"
+                                            value={followUp.prompt}
+                                            onChange={
+                                              canViewAgent
+                                                ? (content) =>
+                                                    handleUpdateFollowUp(
+                                                      followUp.ordem,
+                                                      'prompt',
+                                                      content
+                                                    )
+                                                : undefined
+                                            }
+                                            modules={modules}
+                                            formats={formats}
+                                            readOnly={!canViewAgent}
+                                            placeholder="Digite a mensagem que o agente deve enviar..."
+                                            className="bg-transparent text-neutral-700 dark:text-neutral-300"
+                                          />
+                                        )}
+                                        {isUploading &&
+                                          activeFollowUp === followUp.ordem && (
+                                            <div className="absolute inset-0 bg-white/80 dark:bg-neutral-900/80 flex items-center justify-center rounded-lg">
+                                              <Loader2 className="w-5 h-5 animate-spin text-gray-500 dark:text-neutral-400" />
+                                            </div>
+                                          )}
+                                      </div>
+                                      {canViewAgent && (
+                                        <div className="mt-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
+                                          <input
+                                            type="file"
+                                            id={`file-upload-followup-${followUp.ordem}`}
+                                            accept="image/*,video/*,audio/*,application/pdf"
+                                            onChange={(e) =>
+                                              handleFileUpload(followUp.ordem, e)
+                                            }
+                                            className="hidden"
+                                          />
+                                          <button
+                                            onClick={() =>
+                                              document
+                                                .getElementById(
+                                                  `file-upload-followup-${followUp.ordem}`
+                                                )
+                                                ?.click()
+                                            }
+                                            disabled={
+                                              isUploading &&
+                                              activeFollowUp === followUp.ordem
+                                            }
+                                            className="flex items-center gap-1.5 text-xs bg-neutral-100 dark:bg-neutral-700 px-2.5 py-1.5 rounded text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600 transition disabled:opacity-50"
+                                          >
+                                            <Upload className="w-3.5 h-3.5" /> Adicionar Mídia
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
-
-                          {/* Content */}
-                          {!isCollapsed && (
-                            <div className="space-y-3">
-                              {/* Horário */}
-                              <div>
-                                <label className="block text-xs font-medium text-neutral-700 mb-1.5">
-                                  Tempo de Espera
-                                </label>
-                                <select
-                                  value={followUp.horario}
-                                  onChange={(e) =>
-                                    handleUpdateFollowUp(
-                                      followUp.ordem,
-                                      'horario',
-                                      e.target.value
-                                    )
-                                  }
-                                  disabled={!canViewAgent}
-                                  className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-lg focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 disabled:bg-neutral-100 disabled:text-neutral-500"
-                                >
-                                  {timeOptions.map((option) => (
-                                    <option
-                                      key={option.value}
-                                      value={option.value}
-                                    >
-                                      {option.label}
-                                    </option>
-                                  ))}
-                                </select>
-                                <p className="text-xs text-neutral-500 mt-1">
-                                  Tempo após a última interação
-                                </p>
-                              </div>
-
-                              {/* Prompt */}
-                              <div>
-                                <label className="block text-xs font-medium text-neutral-700 mb-1.5">
-                                  Mensagem de Follow-up
-                                </label>
-                                {canViewAgent && (
-                                  <>
-                                    <input
-                                      type="file"
-                                      id={`file-upload-followup-${followUp.ordem}`}
-                                      accept="image/*,video/*,audio/*,application/pdf"
-                                      onChange={(e) =>
-                                        handleFileUpload(followUp.ordem, e)
-                                      }
-                                      className="hidden"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        document
-                                          .getElementById(
-                                            `file-upload-followup-${followUp.ordem}`
-                                          )
-                                          ?.click()
-                                      }
-                                      disabled={
-                                        isUploading &&
-                                        activeFollowUp === followUp.ordem
-                                      }
-                                      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded transition-colors disabled:opacity-50 mb-2"
-                                    >
-                                      <Upload className="w-3.5 h-3.5" />
-                                      Adicionar Mídia
-                                    </button>
-                                  </>
-                                )}
-
-                                <div className="relative">
-                                  {isQuillReady && (
-                                    <ReactQuill
-                                      ref={(el) =>
-                                        (quillRefs.current[followUp.ordem] = el)
-                                      }
-                                      theme="snow"
-                                      value={followUp.prompt}
-                                      onChange={
-                                        canViewAgent
-                                          ? (content) =>
-                                              handleUpdateFollowUp(
-                                                followUp.ordem,
-                                                'prompt',
-                                                content
-                                              )
-                                          : undefined
-                                      }
-                                      modules={
-                                        canViewAgent ? modules : { toolbar: false }
-                                      }
-                                      formats={formats}
-                                      readOnly={!canViewAgent}
-                                      placeholder="Digite a mensagem que o agente deve enviar neste follow-up..."
-                                      className="bg-white rounded-lg"
-                                    />
-                                  )}
-                                  {isUploading &&
-                                    activeFollowUp === followUp.ordem && (
-                                      <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                                        <Loader2 className="w-6 h-6 animate-spin text-gray-500" />
-                                      </div>
-                                    )}
-                                </div>
-                                <p className="text-xs text-neutral-500 mt-1">
-                                  Instrução para reativar o lead
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </Draggable>
-                  );
-                })}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
-
-        {/* Empty State */}
-        {followUps.length === 0 && (
-          <div className="text-center py-10 bg-neutral-50 rounded-lg border border-neutral-200">
-            <Repeat2 className="w-10 h-10 text-neutral-300 mx-auto mb-3" />
-            <p className="text-xs text-neutral-500 mb-3">
-              Nenhum follow-up configurado
-            </p>
-            {canViewAgent && (
-              <button
-                onClick={handleAddFollowUp}
-                className="inline-flex items-center gap-1.5 px-3 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors text-xs font-medium"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Adicionar Follow-up
-              </button>
-            )}
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          ) : (
+            <div className="text-center py-16 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
+              <Repeat2 className="w-12 h-12 text-neutral-300 dark:text-neutral-600 mx-auto mb-3" />
+              <h3 className="text-base font-semibold text-neutral-900 dark:text-white mb-1">
+                Nenhum follow-up configurado
+              </h3>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-4">
+                Crie sua primeira sequência de mensagens automáticas
+              </p>
+              {canViewAgent && (
+                <button
+                  onClick={handleAddFollowUp}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-neutral-900 to-neutral-700 dark:from-white dark:to-neutral-300 text-white dark:text-neutral-900 px-4 py-2 rounded-lg text-sm font-semibold shadow hover:opacity-90 transition"
+                >
+                  <Plus className="w-4 h-4" /> Criar Follow-up
+                </button>
+              )}
+            </div>
+          )}
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Save Button */}
-      {canViewAgent && followUps.length > 0 && (
-        <div className="flex justify-end pt-3">
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium"
+      {/* Modal de Texto Padrão */}
+      {showDefaultPromptModal && createPortal(
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
+          onClick={() => setShowDefaultPromptModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-neutral-900 max-w-2xl w-full rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700 p-6 relative mx-4"
+            onClick={(e) => e.stopPropagation()}
           >
-            {saving ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>Salvando...</span>
-              </>
-            ) : (
-              <>
-                <Save className="w-3.5 h-3.5" />
-                <span>Salvar</span>
-              </>
-            )}
-          </button>
-        </div>
+            <button
+              onClick={() => setShowDefaultPromptModal(false)}
+              className="absolute top-4 right-4 text-neutral-500 hover:text-neutral-700 dark:hover:text-white transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-3 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-yellow-500" /> Texto Padrão da IA
+            </h2>
+            <div className="h-80 overflow-y-auto bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4 text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-line">
+              {DEFAULT_PROMPT}
+            </div>
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                onClick={() => setShowDefaultPromptModal(false)}
+                className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleApplyDefaultPrompt}
+                className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition"
+              >
+                Inserir no campo
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
-    </div>
+
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && createPortal(
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]"
+          onClick={() => {
+            setShowDeleteModal(false);
+            setFollowUpToDelete(null);
+          }}
+        >
+          <div
+            className="bg-white dark:bg-neutral-900 max-w-md w-full rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700 p-6 relative mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-2">
+                Excluir Follow-up
+              </h3>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
+                Tem certeza que deseja excluir este follow-up? Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setFollowUpToDelete(null);
+                  }}
+                  className="flex-1 px-4 py-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-lg text-sm font-medium hover:bg-red-700 dark:hover:bg-red-600 transition"
+                >
+                  Excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
   );
 }
