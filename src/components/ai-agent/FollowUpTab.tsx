@@ -494,11 +494,11 @@ export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
         document.body
       )}
 
-      <div className="h-screen flex flex-col bg-gradient-to-b from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950">
-        <div className="flex-shrink-0 p-6 pb-0">
+      <div className="h-full flex flex-col bg-gradient-to-b from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950">
+        {/* Header Fixo */}
+        <div className="flex-shrink-0 p-6 pb-4 border-b border-neutral-200 dark:border-neutral-800">
           <div className="max-w-4xl mx-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 bg-gradient-to-br from-neutral-800 to-neutral-700 dark:from-white/10 dark:to-white/5 rounded-xl flex items-center justify-center shadow-inner">
                   <Repeat2 className="w-4 h-4 text-white dark:text-neutral-200" />
@@ -552,10 +552,9 @@ export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
           </div>
         </div>
 
-        {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto px-6 pb-6">
+        {/* Área Scrollável dos Follow-ups */}
+        <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-4xl mx-auto">
-            {/* Visual Timeline */}
             {followUps.length > 0 ? (
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="followups">

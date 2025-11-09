@@ -193,9 +193,15 @@ export default function BasicSettingsSection({
       // Atualiza o nome original após salvar com sucesso
       setOriginalNome(nome);
 
-      // Propaga mudança de nome para o componente pai
+      // Propaga todas as mudanças para o componente pai
       if (onNameChange) {
         onNameChange(nome);
+      }
+      if (onAtivoChange) {
+        onAtivoChange(isAtivo);
+      }
+      if (onPrincipalChange) {
+        onPrincipalChange(isAgentePrincipal);
       }
 
       toast.success('Configurações salvas!');
@@ -304,7 +310,7 @@ export default function BasicSettingsSection({
             Delay (segundos)
             <div className="group relative">
               <Info className="h-3 w-3 text-gray-400 cursor-help" />
-              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-10">
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block w-48 p-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-50 whitespace-normal">
                 Tempo de espera antes de responder
               </div>
             </div>
@@ -330,7 +336,7 @@ export default function BasicSettingsSection({
         {/* Agente Ativo */}
         <div className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
           isAtivo
-            ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700'
+            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700'
             : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600'
         } ${!canEdit ? 'opacity-50' : ''}`}>
           <div>
@@ -343,8 +349,8 @@ export default function BasicSettingsSection({
             type="button"
             onClick={() => canEdit && setIsAtivo(!isAtivo)}
             disabled={!canEdit}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:cursor-not-allowed ${
-              isAtivo ? 'bg-green-600 dark:bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:cursor-not-allowed ${
+              isAtivo ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
             }`}
           >
             <span
