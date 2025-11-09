@@ -6,9 +6,10 @@ interface RulesSectionProps {
   idAgente: number;
   canEdit: boolean;
   onRulesChange?: (rules: string) => void;
+  onSaved?: () => void;
 }
 
-export default function RulesSection({ token, idAgente, canEdit, onRulesChange }: RulesSectionProps) {
+export default function RulesSection({ token, idAgente, canEdit, onRulesChange, onSaved }: RulesSectionProps) {
   const [rules, setRules] = useState('');
   const [originalRules, setOriginalRules] = useState('');
   const [saving, setSaving] = useState(false);
@@ -80,6 +81,11 @@ export default function RulesSection({ token, idAgente, canEdit, onRulesChange }
 
       // Mostra mensagem de sucesso
       setSuccessMessage(true);
+
+      // Notifica o componente pai que as regras foram salvas
+      if (onSaved) {
+        onSaved();
+      }
 
       // Oculta mensagem após 3 segundos
       setTimeout(() => {

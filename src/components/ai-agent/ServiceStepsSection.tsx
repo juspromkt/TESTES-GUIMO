@@ -52,6 +52,7 @@ interface ServiceStepsSectionProps {
   token: string;
   idAgente: number;
   isLoading: boolean;
+  onSaved?: () => void;
 }
 
 interface MediaItem {
@@ -74,6 +75,7 @@ export default function ServiceStepsSection({
   token,
   idAgente,
   isLoading,
+  onSaved,
 }: ServiceStepsSectionProps) {
   const quillRefs = useRef<{ [key: number]: ReactQuill | null }>({});
   const [activeStep, setActiveStep] = useState<number | null>(null);
@@ -171,6 +173,11 @@ export default function ServiceStepsSection({
 
       // Atualiza o original para sincronizar
       setOriginalSteps(JSON.parse(JSON.stringify(serviceSteps)));
+
+      // Notifica o componente pai que o roteiro foi salvo
+      if (onSaved) {
+        onSaved();
+      }
 
       // Mostra mensagem de sucesso
       setSuccessMessage(true);

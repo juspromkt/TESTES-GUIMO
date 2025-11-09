@@ -113,6 +113,27 @@ export default function AgentConfigModal({
     }
   }, [agent, onAgentUpdate]);
 
+  // Callback para quando regras são salvas
+  const handleRulesSaved = useCallback(() => {
+    if (onAgentUpdate && agent) {
+      onAgentUpdate({ Id: agent.Id });
+    }
+  }, [agent, onAgentUpdate]);
+
+  // Callback para quando roteiro é salvo
+  const handleStepsSaved = useCallback(() => {
+    if (onAgentUpdate && agent) {
+      onAgentUpdate({ Id: agent.Id });
+    }
+  }, [agent, onAgentUpdate]);
+
+  // Callback para quando FAQ é salvo
+  const handleFAQSaved = useCallback(() => {
+    if (onAgentUpdate && agent) {
+      onAgentUpdate({ Id: agent.Id });
+    }
+  }, [agent, onAgentUpdate]);
+
   // Função para extrair texto puro do HTML (remove tags HTML)
   const stripHtml = (html: string) => {
     const tmp = document.createElement('div');
@@ -436,6 +457,7 @@ export default function AgentConfigModal({
               idAgente={agent.Id}
               canEdit={canEdit}
               onRulesChange={(newRules) => setRules(newRules)}
+              onSaved={handleRulesSaved}
             />
           )}
 
@@ -454,6 +476,7 @@ export default function AgentConfigModal({
               token={token}
               idAgente={agent.Id}
               isLoading={serviceStepsLoading}
+              onSaved={handleStepsSaved}
             />
           )}
 
@@ -466,6 +489,7 @@ export default function AgentConfigModal({
               canEdit={canEdit}
               idAgente={agent.Id}
               isLoading={faqsLoading}
+              onSaved={handleFAQSaved}
             />
           )}
         </div>

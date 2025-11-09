@@ -40,6 +40,7 @@ interface FAQSectionProps {
   idAgente: number;
   canEdit: boolean;
   isLoading: boolean;
+  onSaved?: () => void;
 }
 
 export default function FAQSection({
@@ -50,6 +51,7 @@ export default function FAQSection({
   idAgente,
   canEdit,
   isLoading,
+  onSaved,
 }: FAQSectionProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
@@ -310,6 +312,11 @@ export default function FAQSection({
         const json = await updated.json();
         setFaqs(json);
       }
+
+      // Notifica o componente pai que o FAQ foi salvo
+      if (onSaved) {
+        onSaved();
+      }
     } catch (err) {
       console.error('Erro ao salvar FAQs:', err);
     } finally {
@@ -328,6 +335,39 @@ export default function FAQSection({
   return (
     <>
       <div className="h-full flex flex-col">
+        {/* Cabeçalho fixo */}
+        {faqs.length > 0 && (
+          <div className="flex-shrink-0 flex items-center justify-end p-6">
+            <div className="flex items-center gap-3">
+              {canEdit && (
+                <>
+                  <button
+                    onClick={handleAddFaq}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Adicionar Pergunta
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg text-sm font-semibold shadow hover:shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      'Salvar Perguntas'
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-4xl mx-auto">
             {faqs.length > 0 ? (
