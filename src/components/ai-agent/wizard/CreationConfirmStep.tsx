@@ -7,6 +7,7 @@ export default function CreationConfirmStep({ state, onNext, onSuccess, token }:
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [retryAttempt, setRetryAttempt] = useState(0);
+  const [applyingTemplate, setApplyingTemplate] = useState(false);
 
   useEffect(() => {
     loadAgentData();
@@ -115,37 +116,136 @@ export default function CreationConfirmStep({ state, onNext, onSuccess, token }:
     }
   };
 
-  const handleContinue = () => {
-    onNext({
-      currentStep: 'edit-rules'
-    });
+  const handleContinue = async () => {
+    // Se for um template, aplicar o conteúdo antes de continuar
+    if (state.singleAgent.creationType === 'template' && state.singleAgent.selectedTemplate && agent?.Id) {
+      setApplyingTemplate(true);
+      setError('');
+
+      try {
+        const template = state.singleAgent.selectedTemplate;
+
+        // 1. Aplicar Regras
+        if (template.regras) {
+          await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/regras/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              token
+            },
+            body: JSON.stringify({
+              regras: template.regras.regras || '',
+              id_agente: agent.Id
+            })
+          });
+        }
+
+        // 2. Aplicar Etapas
+        if (template.etapas && template.etapas.length > 0) {
+          await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/etapas/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              token
+            },
+            body: JSON.stringify(
+              template.etapas.map(e => ({ ...e, id_agente: agent.Id }))
+            )
+          });
+        }
+
+        // 3. Aplicar FAQ
+        if (template.faq && template.faq.length > 0) {
+          await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/faq/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              token
+            },
+            body: JSON.stringify(
+              template.faq.map(f => ({ ...f, id_agente: agent.Id }))
+            )
+          });
+        }
+
+        // Passar para a próxima etapa (edit-rules) com conteúdo já carregado
+        onNext({
+          singleAgent: {
+            ...state.singleAgent,
+            editedContent: {
+              regras: template.regras?.regras || '',
+              etapas: template.etapas || [],
+              faq: template.faq || []
+            }
+          },
+          currentStep: 'edit-rules'
+        });
+      } catch (err: any) {
+        console.error('Erro ao aplicar template:', err);
+        setError('Erro ao aplicar modelo ao agente. Você pode configurar manualmente.');
+        setApplyingTemplate(false);
+      }
+    } else {
+      // Se não for template, ir direto para edição
+      onNext({
+        currentStep: 'edit-rules'
+      });
+    }
   };
 
-  if (loading) {
+  if (loading || applyingTemplate) {
     return (
       <div className="flex items-center justify-center min-h-[500px]">
-        <div className="text-center space-y-6">
-          <div className="relative">
-            <div className="w-20 h-20 border-4 border-blue-200 dark:border-blue-800 rounded-full"></div>
-            <div className="w-20 h-20 border-4 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+        <div className="text-center space-y-8 max-w-md">
+          {/* Spinner animado com gradiente */}
+          <div className="relative mx-auto w-24 h-24">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 opacity-20 animate-pulse"></div>
+            <div className="absolute inset-2 rounded-full bg-white dark:bg-gray-900"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 border-r-purple-500 animate-spin"></div>
+            <div className="absolute inset-3 rounded-full border-4 border-transparent border-t-purple-400 border-r-blue-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
           </div>
-          <div className="space-y-2">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Verificando agente criado...
+
+          {/* Texto */}
+          <div className="space-y-3">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {applyingTemplate ? 'Aplicando modelo ao agente' : 'Verificando agente criado'}
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              {retryAttempt > 0
+            <p className="text-base text-gray-600 dark:text-gray-400">
+              {applyingTemplate
+                ? 'Configurando regras, roteiro e perguntas frequentes...'
+                : retryAttempt > 0
                 ? `Buscando agente... (tentativa ${retryAttempt}/5)`
-                : 'Aguarde um momento'
+                : 'Aguarde enquanto verificamos os dados do agente'
               }
             </p>
           </div>
-          <div className="flex items-center justify-center gap-1">
-            <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-            <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+
+          {/* Barra de progresso animada */}
+          <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-progress"></div>
+          </div>
+
+          {/* Pontos animados */}
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce"></div>
+            <div className="w-2.5 h-2.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
           </div>
         </div>
+
+        <style>{`
+          @keyframes progress {
+            0% {
+              transform: translateX(-100%);
+            }
+            100% {
+              transform: translateX(400%);
+            }
+          }
+          .animate-progress {
+            animation: progress 1.5s ease-in-out infinite;
+          }
+        `}</style>
       </div>
     );
   }

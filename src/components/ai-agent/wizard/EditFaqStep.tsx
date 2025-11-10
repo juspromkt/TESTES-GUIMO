@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { HelpCircle, Loader2 } from 'lucide-react';
 import { StepComponentProps, AgentTemplate } from '../../../types/agent-wizard';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 export default function EditFaqStep({ state, onNext, onBack, token }: StepComponentProps) {
   const [faq, setFaq] = useState<AgentTemplate['faq']>([]);
@@ -8,13 +10,19 @@ export default function EditFaqStep({ state, onNext, onBack, token }: StepCompon
   const [error, setError] = useState('');
 
   useEffect(() => {
+    console.log('🔍 EditFaqStep - state completo:', state);
+    console.log('📋 Template selecionado:', state.singleAgent.selectedTemplate);
+    console.log('❓ FAQ do template:', state.singleAgent.selectedTemplate?.faq);
+
     // Prioridade 1: Carregar do editedContent (se já foi editado)
     if (state.singleAgent.editedContent?.faq) {
+      console.log('📝 Carregando FAQ do editedContent');
       setFaq(state.singleAgent.editedContent.faq);
     }
     // Prioridade 2: Carregar FAQ do template se houver
     else if (state.singleAgent.selectedTemplate && state.singleAgent.creationType === 'template') {
       const template = state.singleAgent.selectedTemplate;
+      console.log('📋 Carregando FAQ do template:', template.faq);
       setFaq(template.faq || []);
     }
   }, []);
@@ -153,13 +161,24 @@ export default function EditFaqStep({ state, onNext, onBack, token }: StepCompon
                   Remover
                 </button>
               </div>
-              <textarea
-                value={item.descricao.replace(/<[^>]*>/g, '')}
-                onChange={(e) => handleUpdateFaq(index, 'descricao', `<p>${e.target.value}</p>`)}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
-                placeholder="Resposta..."
-              />
+              <div className="relative">
+                <ReactQuill
+                  value={item.descricao || ''}
+                  onChange={(value) => handleUpdateFaq(index, 'descricao', value)}
+                  theme="snow"
+                  placeholder="Digite a resposta..."
+                  style={{ minHeight: '150px' }}
+                  modules={{
+                    toolbar: [
+                      [{ 'header': [3, false] }],
+                      ['bold', 'italic', 'underline'],
+                      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                      ['link'],
+                      ['clean']
+                    ]
+                  }}
+                />
+              </div>
             </div>
           ))}
         </div>

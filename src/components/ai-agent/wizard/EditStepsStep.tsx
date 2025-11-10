@@ -40,11 +40,14 @@ export default function EditStepsStep({ state, onNext, onBack, token }: StepComp
   useEffect(() => {
     // Prioridade 1: Carregar do editedContent (se já foi editado)
     if (state.singleAgent.editedContent?.etapas) {
+      console.log('📝 Carregando etapas do editedContent:', state.singleAgent.editedContent.etapas);
       setEtapas(state.singleAgent.editedContent.etapas);
     }
     // Prioridade 2: Carregar etapas do template se houver
     else if (state.singleAgent.selectedTemplate && state.singleAgent.creationType === 'template') {
       const template = state.singleAgent.selectedTemplate;
+      console.log('📋 Template selecionado:', template);
+      console.log('📌 Etapas do template:', template.etapas);
       setEtapas(template.etapas || []);
     }
   }, []);

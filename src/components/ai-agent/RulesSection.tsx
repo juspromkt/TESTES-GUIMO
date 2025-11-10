@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2, Save, AlertCircle, CheckCircle } from 'lucide-react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 interface RulesSectionProps {
   token: string;
@@ -99,8 +101,64 @@ export default function RulesSection({ token, idAgente, canEdit, onRulesChange, 
     }
   }
 
+  const modules = {
+    toolbar: false,
+  };
+
+  const formats = [
+    'header',
+    'bold',
+    'italic',
+    'underline',
+    'list',
+    'bullet',
+    'link',
+  ];
+
   return (
     <div className="h-full flex flex-col transition-colors duration-200">
+      <style>{`
+        .rules-quill-container {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+        .rules-quill-container .quill {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          background-color: white;
+          border-radius: 0.5rem;
+          overflow: hidden;
+        }
+        .dark .rules-quill-container .quill {
+          background-color: rgba(31, 41, 55, 0.4);
+        }
+        .rules-quill-container .ql-container {
+          flex: 1;
+          border: 1px solid rgb(209, 213, 219);
+          border-radius: 0.5rem;
+          font-size: 0.95rem;
+        }
+        .dark .rules-quill-container .ql-container {
+          border-color: rgba(75, 85, 99, 0.5);
+        }
+        .rules-quill-container .ql-editor {
+          min-height: 100%;
+          color: rgb(17, 24, 39);
+        }
+        .dark .rules-quill-container .ql-editor {
+          color: white;
+        }
+        .rules-quill-container .ql-editor.ql-blank::before {
+          color: rgb(156, 163, 175);
+          font-style: normal;
+        }
+        .dark .rules-quill-container .ql-editor.ql-blank::before {
+          color: rgb(107, 114, 128);
+        }
+      `}</style>
+
       {/* Botão Salvar no canto superior direito */}
       {canEdit && (
         <div className="flex items-center justify-end gap-3 mb-4">
@@ -140,28 +198,23 @@ export default function RulesSection({ token, idAgente, canEdit, onRulesChange, 
         </div>
       )}
 
-      {/* Campo de Texto */}
-      <div className="flex-1 relative">
-        <textarea
-          value={rules}
-          onChange={(e) => canEdit && handleRulesChange(e.target.value)}
-          placeholder="Defina as regras gerais que o agente deve seguir..."
-          disabled={!canEdit || isLoadingRules}
-          className={`w-full h-full p-4 border rounded-lg
-                   backdrop-blur-sm resize-none transition-all duration-200
-                   ${isLoadingRules
-                     ? 'border-gray-300 dark:border-gray-600/50 bg-gray-50 dark:bg-gray-800/40 text-gray-500 dark:text-gray-400'
-                     : 'border-gray-300 dark:border-gray-600/50 bg-white dark:bg-gray-800/40 text-gray-900 dark:text-white'
-                   }
-                   placeholder-gray-400 dark:placeholder-gray-500
-                   focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent
-                   disabled:bg-gray-50 dark:disabled:bg-gray-800/40 disabled:text-gray-500 dark:disabled:text-gray-400`}
-        />
-        {isLoadingRules && (
+      {/* Editor Quill */}
+      <div className="flex-1 relative rules-quill-container">
+        {isLoadingRules ? (
           <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 flex items-center justify-center rounded-lg">
             <Loader2 className="w-6 h-6 animate-spin text-blue-500 dark:text-blue-400" />
             <span className="ml-2 text-sm text-gray-600 dark:text-gray-300">Carregando regras...</span>
           </div>
+        ) : (
+          <ReactQuill
+            value={rules}
+            onChange={(content) => canEdit && handleRulesChange(content)}
+            modules={modules}
+            formats={formats}
+            readOnly={!canEdit}
+            placeholder="Defina as regras gerais que o agente deve seguir..."
+            className="quill h-full"
+          />
         )}
       </div>
 

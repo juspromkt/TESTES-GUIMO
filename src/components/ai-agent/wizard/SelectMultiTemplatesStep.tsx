@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, CheckSquare, Square, Info } from 'lucide-react';
 import { StepComponentProps, AgentTemplate, AGENT_MODELS } from '../../../types/agent-wizard';
+import { agentModels } from '../../../data/agent-models';
 
 export default function SelectMultiTemplatesStep({ state, onNext, onBack }: StepComponentProps) {
   const [templates, setTemplates] = useState<AgentTemplate[]>([]);
@@ -19,10 +20,40 @@ export default function SelectMultiTemplatesStep({ state, onNext, onBack }: Step
     try {
       const loadedTemplates: AgentTemplate[] = [];
 
+      // Mapeamento de IDs para as chaves do agentModels
+      const modelMap: Record<string, string> = {
+        'bancario': 'bancario',
+        'bpc': 'bpc',
+        'maternidade': 'maternidade',
+        'trabalhista': 'trabalhista',
+        'auxilio': 'auxilio',
+        'invalidez': 'invalidez',
+        'desconto-indevido': 'descontoIndevido',
+        'bancario-produtor': 'bancarioProdutorRural',
+        'pensao-divorcio': 'pensaoDivorcio',
+        'pensao-morte': 'pensaoMorte'
+      };
+
       for (const model of AGENT_MODELS.NIVEL_2) {
         try {
-          const response = await fetch(`/src/data/agent-models/${model.file}`);
-          const data = await response.json();
+          const modelKey = modelMap[model.id];
+
+          if (!modelKey || !agentModels[modelKey]) {
+            console.warn(`⚠️ Modelo ${model.id} não encontrado no mapeamento`);
+            continue;
+          }
+
+          const data = agentModels[modelKey].data;
+
+          console.log(`📦 Carregando template ${model.nome}:`, {
+            hasPersonalidade: !!data.personalidade,
+            hasRegras: !!data.regras,
+            hasEtapas: !!data.etapas,
+            etapasCount: data.etapas?.length || 0,
+            hasFaq: !!data.faq,
+            faqCount: data.faq?.length || 0
+          });
+
           loadedTemplates.push({
             id: model.id,
             nome: model.nome,
@@ -32,13 +63,13 @@ export default function SelectMultiTemplatesStep({ state, onNext, onBack }: Step
             ...data
           });
         } catch (error) {
-          console.error(`Erro ao carregar modelo ${model.file}:`, error);
+          console.error(`❌ Erro ao carregar modelo ${model.id}:`, error);
         }
       }
 
       setTemplates(loadedTemplates);
     } catch (error) {
-      console.error('Erro ao carregar templates:', error);
+      console.error('❌ Erro geral ao carregar templates:', error);
     } finally {
       setLoading(false);
     }
@@ -72,11 +103,52 @@ export default function SelectMultiTemplatesStep({ state, onNext, onBack }: Step
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center space-y-3">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-gray-600 dark:text-gray-400">Carregando modelos disponíveis...</p>
+      <div className="flex items-center justify-center min-h-[500px]">
+        <div className="text-center space-y-8 max-w-md">
+          {/* Spinner animado com gradiente */}
+          <div className="relative mx-auto w-24 h-24">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 opacity-20 animate-pulse"></div>
+            <div className="absolute inset-2 rounded-full bg-white dark:bg-gray-900"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 border-r-purple-500 animate-spin"></div>
+            <div className="absolute inset-3 rounded-full border-4 border-transparent border-t-purple-400 border-r-blue-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+          </div>
+
+          {/* Texto */}
+          <div className="space-y-3">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Carregando modelos
+            </h3>
+            <p className="text-base text-gray-600 dark:text-gray-400">
+              Buscando templates disponíveis para multiagentes...
+            </p>
+          </div>
+
+          {/* Barra de progresso animada */}
+          <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-progress"></div>
+          </div>
+
+          {/* Pontos animados */}
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce"></div>
+            <div className="w-2.5 h-2.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          </div>
         </div>
+
+        <style>{`
+          @keyframes progress {
+            0% {
+              transform: translateX(-100%);
+            }
+            100% {
+              transform: translateX(400%);
+            }
+          }
+          .animate-progress {
+            animation: progress 1.5s ease-in-out infinite;
+          }
+        `}</style>
       </div>
     );
   }

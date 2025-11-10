@@ -7,6 +7,7 @@ import AgentTestTab from '../components/ai-agent/AgentTestTab';
 import AgentSelector from '../components/ai-agent/AgentSelector';
 import AgentFormModal from '../components/ai-agent/AgentFormModal';
 import { hasPermission } from '../utils/permissions';
+import { useToast } from '../contexts/ToastContext';
 
 interface ServiceStep {
   ordem: number;
@@ -58,7 +59,6 @@ const AIAgent = () => {
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null);
   const [isEnabled, setIsEnabled] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [isAgentFormOpen, setIsAgentFormOpen] = useState(false);
   const [agentFormMode, setAgentFormMode] = useState<'create' | 'edit'>('create');
 
@@ -73,6 +73,7 @@ const AIAgent = () => {
   const [schedulingLoading, setSchedulingLoading] = useState(true);
   const canEdit = hasPermission('can_edit_agent');
   const [agentsLoading, setAgentsLoading] = useState(true);
+  const toast = useToast();
 
   const setGenericError = useCallback(() => {
     setError((prev) =>
@@ -117,8 +118,7 @@ const AIAgent = () => {
 
   const handleAgentFormSuccess = async () => {
     await fetchMultiAgents();
-    setSuccess('Agente salvo com sucesso!');
-    setTimeout(() => setSuccess(''), 3000);
+    toast.success('Agente salvo com sucesso!');
   };
 
   const fetchMultiAgents = useCallback(async () => {if (!token) return;
@@ -293,7 +293,7 @@ const AIAgent = () => {
 
   const handleToggleAgent = async () => {
     if (!token || !selectedAgentId) {
-      setError('Token ou agente nÃ£o selecionado.');
+      toast.error('Token ou agente não selecionado.');
       return;
     }
 
@@ -315,11 +315,22 @@ const AIAgent = () => {
         throw new Error('Erro ao alternar status do agente');
       }
 
-      setIsEnabled(prev => !prev);
-      await fetchMultiAgents();
+      const newStatus = !isEnabled;
+      setIsEnabled(newStatus);
+
+      // Atualiza localmente sem recarregar toda a lista
+      setAgents(prev =>
+        prev.map(a =>
+          a.Id === selectedAgentId
+            ? { ...a, isAtivo: newStatus }
+            : a
+        )
+      );
+
+      toast.success(`Agente ${newStatus ? 'ativado' : 'desativado'} com sucesso!`);
     } catch (err) {
       console.error('Erro ao alternar status do agente:', err);
-      setError('Erro ao alternar status do agente');
+      toast.error('Erro ao alternar status do agente');
     } finally {
       setTogglingAgent(false);
     }
@@ -363,7 +374,6 @@ const AIAgent = () => {
   const handleSaveSteps = async () => {
     setSavingSteps(true);
     setError('');
-    setSuccess('');
 
     try {
       const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/etapas/create', {
@@ -390,11 +400,10 @@ const AIAgent = () => {
         }
       }
 
-      setSuccess('Etapas de atendimento salvas com sucesso!');
-      setTimeout(() => setSuccess(''), 3000);
+      toast.success('Etapas de atendimento salvas com sucesso!');
     } catch (err) {
       console.error('Erro ao salvar etapas:', err);
-      setError('Erro ao salvar etapas de atendimento');
+      toast.error('Erro ao salvar etapas de atendimento');
     } finally {
       setSavingSteps(false);
     }
@@ -559,17 +568,6 @@ const AIAgent = () => {
                     Tentar novamente →
                   </button>
                 </div>
-              </div>
-            )}
-
-            {success && (
-              <div className="mb-8 flex items-start gap-4 px-5 py-4 text-emerald-700 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-300 rounded-xl shadow-md">
-                <div className="mt-0.5 h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-sm">
-                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <p className="text-sm font-semibold mt-2">{success}</p>
               </div>
             )}
 

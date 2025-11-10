@@ -6,6 +6,7 @@ import FAQSection from './FAQSection';
 import BasicSettingsSection from './BasicSettingsSection';
 import TriggerSection from './TriggerSection';
 import AudioSettingsSection from './AudioSettingsSection';
+import AgentImportExportSection from './AgentImportExportSection';
 import { hasPermission } from '../../utils/permissions';
 
 interface ServiceStep {
@@ -65,6 +66,7 @@ export default function AgentConfigModal({
   // Estados para controlar seções expansíveis
   const [isTriggerExpanded, setIsTriggerExpanded] = useState(false);
   const [isAudioExpanded, setIsAudioExpanded] = useState(false);
+  const [isImportExportExpanded, setIsImportExportExpanded] = useState(false);
 
   // Estados locais para refletir mudanças em tempo real
   const [localAgentName, setLocalAgentName] = useState(agent?.nome || '');
@@ -682,6 +684,37 @@ export default function AgentConfigModal({
                   token={token}
                   idAgente={agent.Id}
                   canEdit={canEdit}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Divisor */}
+          <div className="border-t border-gray-100 dark:border-gray-700 my-6"></div>
+
+          {/* 5️⃣ EXPORTAR/IMPORTAR AGENTE */}
+          <div className="mb-6">
+            <button
+              onClick={() => setIsImportExportExpanded(!isImportExportExpanded)}
+              className="w-full flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+            >
+              <h3 className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
+                Exportar/Importar Agente
+              </h3>
+              {isImportExportExpanded ? (
+                <ChevronUp className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              )}
+            </button>
+
+            {isImportExportExpanded && (
+              <div className="mt-3">
+                <AgentImportExportSection
+                  token={token}
+                  idAgente={agent.Id}
+                  canEdit={canEdit}
+                  onImportSuccess={handleSuccess}
                 />
               </div>
             )}

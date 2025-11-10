@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { FileText, List, HelpCircle, Loader2 } from 'lucide-react';
 import { StepComponentProps, AgentTemplate } from '../../../types/agent-wizard';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 type Tab = 'regras' | 'roteiro' | 'faq';
 
@@ -221,12 +223,21 @@ export default function EditContentStep({ state, onNext, token }: StepComponentP
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Regras de Atendimento
               </label>
-              <textarea
-                value={regras.replace(/<[^>]*>/g, '')} // Remove HTML tags para edição
-                onChange={(e) => setRegras(`<p>${e.target.value}</p>`)}
-                rows={15}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 font-mono text-sm"
+              <ReactQuill
+                value={regras}
+                onChange={setRegras}
+                theme="snow"
                 placeholder="Digite as regras de atendimento do agente..."
+                style={{ height: '450px', marginBottom: '50px' }}
+                modules={{
+                  toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link'],
+                    ['clean']
+                  ]
+                }}
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                 Defina como o agente deve se comportar durante o atendimento
@@ -273,12 +284,21 @@ export default function EditContentStep({ state, onNext, token }: StepComponentP
                       Remover
                     </button>
                   </div>
-                  <textarea
-                    value={etapa.descricao.replace(/<[^>]*>/g, '')}
-                    onChange={(e) => handleUpdateEtapa(index, 'descricao', `<p>${e.target.value}</p>`)}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                  <ReactQuill
+                    value={etapa.descricao}
+                    onChange={(value) => handleUpdateEtapa(index, 'descricao', value)}
+                    theme="snow"
                     placeholder="Descrição da etapa..."
+                    style={{ minHeight: '150px' }}
+                    modules={{
+                      toolbar: [
+                        [{ 'header': [3, false] }],
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['link'],
+                        ['clean']
+                      ]
+                    }}
                   />
                 </div>
               ))}
@@ -330,12 +350,21 @@ export default function EditContentStep({ state, onNext, token }: StepComponentP
                       Remover
                     </button>
                   </div>
-                  <textarea
-                    value={item.descricao.replace(/<[^>]*>/g, '')}
-                    onChange={(e) => handleUpdateFaq(index, 'descricao', `<p>${e.target.value}</p>`)}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                  <ReactQuill
+                    value={item.descricao}
+                    onChange={(value) => handleUpdateFaq(index, 'descricao', value)}
+                    theme="snow"
                     placeholder="Resposta..."
+                    style={{ minHeight: '150px' }}
+                    modules={{
+                      toolbar: [
+                        [{ 'header': [3, false] }],
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['link'],
+                        ['clean']
+                      ]
+                    }}
                   />
                 </div>
               ))}

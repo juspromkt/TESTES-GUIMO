@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, CheckCircle } from 'lucide-react';
 import { StepComponentProps, AgentTemplate, AGENT_MODELS } from '../../../types/agent-wizard';
+import { agentModels } from '../../../data/agent-models';
 
 export default function SelectTemplateStep({ state, onNext, onBack }: StepComponentProps) {
   const [templates, setTemplates] = useState<AgentTemplate[]>([]);
@@ -19,10 +20,40 @@ export default function SelectTemplateStep({ state, onNext, onBack }: StepCompon
     try {
       const loadedTemplates: AgentTemplate[] = [];
 
+      // Mapeamento de IDs para as chaves do agentModels
+      const modelMap: Record<string, string> = {
+        'bancario': 'bancario',
+        'bpc': 'bpc',
+        'maternidade': 'maternidade',
+        'trabalhista': 'trabalhista',
+        'auxilio': 'auxilio',
+        'invalidez': 'invalidez',
+        'desconto-indevido': 'descontoIndevido',
+        'bancario-produtor': 'bancarioProdutorRural',
+        'pensao-divorcio': 'pensaoDivorcio',
+        'pensao-morte': 'pensaoMorte'
+      };
+
       for (const model of AGENT_MODELS.NIVEL_2) {
         try {
-          const response = await fetch(`/src/data/agent-models/${model.file}`);
-          const data = await response.json();
+          const modelKey = modelMap[model.id];
+
+          if (!modelKey || !agentModels[modelKey]) {
+            console.warn(`⚠️ Modelo ${model.id} não encontrado no mapeamento`);
+            continue;
+          }
+
+          const data = agentModels[modelKey].data;
+
+          console.log(`📦 Carregando template ${model.nome}:`, {
+            hasPersonalidade: !!data.personalidade,
+            hasRegras: !!data.regras,
+            hasEtapas: !!data.etapas,
+            etapasCount: data.etapas?.length || 0,
+            hasFaq: !!data.faq,
+            faqCount: data.faq?.length || 0
+          });
+
           loadedTemplates.push({
             id: model.id,
             nome: model.nome,
@@ -32,13 +63,13 @@ export default function SelectTemplateStep({ state, onNext, onBack }: StepCompon
             ...data
           });
         } catch (error) {
-          console.error(`Erro ao carregar modelo ${model.file}:`, error);
+          console.error(`❌ Erro ao carregar modelo ${model.id}:`, error);
         }
       }
 
       setTemplates(loadedTemplates);
     } catch (error) {
-      console.error('Erro ao carregar templates:', error);
+      console.error('❌ Erro geral ao carregar templates:', error);
     } finally {
       setLoading(false);
     }

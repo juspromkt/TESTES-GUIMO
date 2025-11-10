@@ -497,58 +497,84 @@ export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
       <div className="h-full flex flex-col bg-gradient-to-b from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-950">
         {/* Header Fixo */}
         <div className="flex-shrink-0 p-6 pb-4 border-b border-neutral-200 dark:border-neutral-800">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* Cabeçalho com ícone, título e contador */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-gradient-to-br from-neutral-800 to-neutral-700 dark:from-white/10 dark:to-white/5 rounded-xl flex items-center justify-center shadow-inner">
-                  <Repeat2 className="w-4 h-4 text-white dark:text-neutral-200" />
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl blur-lg opacity-20"></div>
+                  <div className="relative w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <Repeat2 className="w-7 h-7 text-white" strokeWidth={2.5} />
+                  </div>
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-neutral-900 dark:text-white">Follow-up Automático</h1>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400">Configure mensagens automáticas para reativar leads</p>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-neutral-100 dark:to-white bg-clip-text text-transparent">
+                    Follow-up Automático
+                  </h1>
+                  <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1.5 font-light">
+                    Configure mensagens automáticas inteligentes para reativar leads
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                {canViewAgent && followUps.length > 0 && (
-                  <div className="relative">
-                    {hasUnsavedChanges && !saving && (
-                      <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-lg" />
-                    )}
-                    <button
-                      onClick={handleSave}
-                      disabled={saving}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold shadow transition disabled:opacity-50 disabled:cursor-not-allowed ${
-                        hasUnsavedChanges && !saving
-                          ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:opacity-90'
-                          : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:opacity-90'
-                      }`}
-                    >
-                      {saving ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Salvando...
-                        </>
-                      ) : hasUnsavedChanges ? (
-                        <>
-                          <AlertCircle className="w-4 h-4" />
-                          Salvar alterações
-                        </>
-                      ) : (
-                        'Salvar'
-                      )}
-                    </button>
-                  </div>
-                )}
-                {canViewAgent && (
-                  <button
-                    onClick={handleAddFollowUp}
-                    className="flex items-center gap-2 bg-gradient-to-r from-neutral-900 to-neutral-700 dark:from-white dark:to-neutral-300 text-white dark:text-neutral-900 px-4 py-2 rounded-lg text-sm font-semibold shadow hover:opacity-90 transition"
-                  >
-                    <Plus className="w-4 h-4" /> Novo
-                  </button>
+              <div className="flex flex-col items-end gap-1">
+                {followUps.length > 0 && (
+                  <>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-4xl font-light tracking-tight text-gray-900 dark:text-white">
+                        {followUps.length}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                      <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                        Follow-up{followUps.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
+
+            {/* Botões de Ação */}
+            {canViewAgent && followUps.length > 0 && (
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={handleAddFollowUp}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all duration-200 font-medium text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 group"
+                >
+                  <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" strokeWidth={2.5} />
+                  <span>Criar Novo Follow-up</span>
+                </button>
+                <div className="relative">
+                  {hasUnsavedChanges && !saving && (
+                    <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-lg" />
+                  )}
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+                      hasUnsavedChanges && !saving
+                        ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:from-yellow-600 hover:to-orange-600 hover:shadow-lg hover:-translate-y-0.5'
+                        : 'bg-gradient-to-r from-gray-500 to-gray-600 text-white hover:from-gray-600 hover:to-gray-700'
+                    }`}
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2.5} />
+                        Salvando...
+                      </>
+                    ) : hasUnsavedChanges ? (
+                      <>
+                        <AlertCircle className="w-4 h-4" strokeWidth={2.5} />
+                        Salvar alterações
+                      </>
+                    ) : (
+                      'Salvar'
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -748,9 +774,10 @@ export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
               {canViewAgent && (
                 <button
                   onClick={handleAddFollowUp}
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-neutral-900 to-neutral-700 dark:from-white dark:to-neutral-300 text-white dark:text-neutral-900 px-4 py-2 rounded-lg text-sm font-semibold shadow hover:opacity-90 transition"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all duration-200 font-medium text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 group"
                 >
-                  <Plus className="w-4 h-4" /> Criar Follow-up
+                  <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" strokeWidth={2.5} />
+                  <span>Criar Novo Follow-up</span>
                 </button>
               )}
             </div>

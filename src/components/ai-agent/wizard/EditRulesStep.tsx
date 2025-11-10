@@ -131,60 +131,6 @@ export default function EditRulesStep({ state, onNext, onBack, token }: StepComp
 
   return (
     <div className="space-y-6">
-      <style>{`
-        .quill-editor-regras {
-          height: 400px;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .quill-editor-regras .quill {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .quill-editor-regras .ql-container {
-          flex: 1;
-          overflow-y: auto;
-          font-size: 14px;
-          border-bottom-left-radius: 8px;
-          border-bottom-right-radius: 8px;
-        }
-
-        .quill-editor-regras .ql-toolbar {
-          border-top-left-radius: 8px;
-          border-top-right-radius: 8px;
-          background-color: rgb(249 250 251);
-        }
-
-        .dark .quill-editor-regras .ql-toolbar {
-          background-color: rgb(31 41 55);
-          border-color: rgb(75 85 99);
-        }
-
-        .dark .quill-editor-regras .ql-container {
-          background-color: rgb(31 41 55);
-          border-color: rgb(75 85 99);
-          color: rgb(243 244 246);
-        }
-
-        .dark .quill-editor-regras .ql-editor.ql-blank::before {
-          color: rgb(107 114 128);
-        }
-
-        .dark .quill-editor-regras .ql-stroke {
-          stroke: rgb(156 163 175);
-        }
-
-        .dark .quill-editor-regras .ql-fill {
-          fill: rgb(156 163 175);
-        }
-
-        .dark .quill-editor-regras .ql-picker-label {
-          color: rgb(156 163 175);
-        }
-      `}</style>
 
       {/* Título */}
       <div className="text-center space-y-2">
@@ -214,10 +160,7 @@ export default function EditRulesStep({ state, onNext, onBack, token }: StepComp
         )}
 
         <div>
-          <div className="flex justify-between items-center mb-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Regras de Atendimento
-            </label>
+          <div className="flex justify-end items-center mb-2">
             <button
               onClick={handleApplyTemplate}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-sm font-medium"
@@ -226,26 +169,33 @@ export default function EditRulesStep({ state, onNext, onBack, token }: StepComp
               Aplicar Modelo
             </button>
           </div>
-          <div className="quill-editor-regras">
+          <div className="quill-wrapper-no-toolbar">
             <ReactQuill
               ref={quillRef}
-              theme="snow"
               value={regras}
               onChange={setRegras}
+              theme="snow"
               placeholder="Digite as regras de atendimento do agente..."
+              style={{ height: '450px', marginBottom: '50px' }}
               modules={{
                 toolbar: [
-                  [{ header: [1, 2, 3, false] }],
-                  ['bold', 'italic', 'underline'],
-                  [{ list: 'ordered' }, { list: 'bullet' }],
+                  [{ 'header': [1, 2, 3, false] }],
+                  ['bold', 'italic', 'underline', 'strike'],
+                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                  ['link'],
                   ['clean']
                 ]
               }}
             />
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            Defina como o agente deve se comportar durante o atendimento, tom de voz, diretrizes, etc.
-          </p>
+          <style>{`
+            .quill-wrapper-no-toolbar .ql-toolbar {
+              display: none !important;
+            }
+            .quill-wrapper-no-toolbar .ql-container {
+              border-top: 1px solid #ccc;
+            }
+          `}</style>
         </div>
 
         {/* Dicas */}
@@ -257,7 +207,6 @@ export default function EditRulesStep({ state, onNext, onBack, token }: StepComp
             <li>• Seja específico sobre o tom de comunicação (formal, amigável, técnico)</li>
             <li>• Defina limites claros do que o agente pode ou não fazer</li>
             <li>• Inclua instruções sobre como lidar com situações específicas</li>
-            <li>• Especifique quando transferir para outro agente ou humano</li>
           </ul>
         </div>
       </div>

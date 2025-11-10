@@ -7,7 +7,7 @@ export default function ReviewMultiAgentsStep({ state, onNext, onBack }: StepCom
 
   const handleContinue = () => {
     onNext({
-      currentStep: 'batch-creation'
+      currentStep: 'define-multi-names'
     });
   };
 
@@ -126,7 +126,7 @@ export default function ReviewMultiAgentsStep({ state, onNext, onBack }: StepCom
           onClick={handleContinue}
           className="px-6 py-2.5 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-medium"
         >
-          Criar {totalAgents} Agentes →
+          Definir Nomes →
         </button>
       </div>
     </div>

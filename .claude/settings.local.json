@@ -45,7 +45,9 @@
       "Bash(\"d:\\GUIMOO - VERSÃO TESTE\\lumen-guimoo\\src\\components\\ai-agent\\ServiceStepsSection.tsx.tmp\")",
       "Bash(find:*)",
       "Bash(node scripts/consolidate-agent-models.js:*)",
-      "Bash(node scripts/consolidate-agent-models.cjs:*)"
+      "Bash(node scripts/consolidate-agent-models.cjs:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)"
     ],
     "deny": [],
     "ask": []

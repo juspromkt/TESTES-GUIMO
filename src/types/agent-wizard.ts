@@ -17,10 +17,12 @@ export type MultiAgentStep =
   | 'select-mode'           // Step 1: Escolher entre único ou multi
   | 'select-templates'      // Step 2b: Seleção múltipla de modelos
   | 'review-agents'         // Step 3b: Revisão dos agentes a criar
-  | 'batch-creation'        // Step 4b: Criação em lote
-  | 'creation-confirm'      // Step 5b: Confirmação de criação múltipla
-  | 'edit-agents'           // Step 6b: Edição individual de cada agente
-  | 'final-confirmation';   // Step 7b: Confirmação final
+  | 'define-multi-names'    // Step 4b: Definir nomes personalizados
+  | 'batch-creation'        // Step 5b: Criação em lote
+  | 'creation-confirm'      // Step 6b: Confirmação de criação múltipla
+  | 'edit-agents'           // Step 7b: Edição individual de cada agente
+  | 'edit-multi-agent'      // Step 8b: Edição individual (usado no wizard)
+  | 'final-confirmation';   // Step 9b: Confirmação final
 
 export type WizardStep = SingleAgentStep | MultiAgentStep;
 
@@ -82,6 +84,7 @@ export interface WizardState {
   // Estado para multiagentes
   multiAgent: {
     selectedTemplates: AgentTemplate[];
+    customAgentNames?: Map<string, string>; // Mapa de templateId -> nome customizado
     createdAgents: CreatedAgent[];
     currentEditingIndex: number; // Índice do agente sendo editado
     editedContents: Map<number, {

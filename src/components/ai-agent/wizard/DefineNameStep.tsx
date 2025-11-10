@@ -155,25 +155,51 @@ export default function DefineNameStep({ state, onNext, onBack, token }: StepCom
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[500px]">
-        <div className="text-center space-y-6">
-          <div className="relative">
-            <div className="w-20 h-20 border-4 border-blue-200 dark:border-blue-800 rounded-full"></div>
-            <div className="w-20 h-20 border-4 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+        <div className="text-center space-y-8 max-w-md">
+          {/* Spinner animado com gradiente */}
+          <div className="relative mx-auto w-24 h-24">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 opacity-20 animate-pulse"></div>
+            <div className="absolute inset-2 rounded-full bg-white dark:bg-gray-900"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 border-r-purple-500 animate-spin"></div>
+            <div className="absolute inset-3 rounded-full border-4 border-transparent border-t-purple-400 border-r-blue-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
           </div>
-          <div className="space-y-2">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Criando agente...
+
+          {/* Texto */}
+          <div className="space-y-3">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Criando agente
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Aguarde enquanto configuramos "{agentName}"
+            <p className="text-base text-gray-600 dark:text-gray-400">
+              Aguarde enquanto configuramos <strong className="text-gray-900 dark:text-white">"{agentName}"</strong>
             </p>
           </div>
-          <div className="flex items-center justify-center gap-1">
-            <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-            <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+
+          {/* Barra de progresso animada */}
+          <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-progress"></div>
+          </div>
+
+          {/* Pontos animados */}
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce"></div>
+            <div className="w-2.5 h-2.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
           </div>
         </div>
+
+        <style>{`
+          @keyframes progress {
+            0% {
+              transform: translateX(-100%);
+            }
+            100% {
+              transform: translateX(400%);
+            }
+          }
+          .animate-progress {
+            animation: progress 1.5s ease-in-out infinite;
+          }
+        `}</style>
       </div>
     );
   }

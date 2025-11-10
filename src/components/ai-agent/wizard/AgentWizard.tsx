@@ -13,6 +13,9 @@ import EditFaqStep from './EditFaqStep';
 import FinalConfirmationStep from './FinalConfirmationStep';
 import SelectMultiTemplatesStep from './SelectMultiTemplatesStep';
 import ReviewMultiAgentsStep from './ReviewMultiAgentsStep';
+import DefineMultiNamesStep from './DefineMultiNamesStep';
+import BatchCreationStep from './BatchCreationStep';
+import MultiAgentEditStep from './MultiAgentEditStep';
 
 interface AgentWizardProps {
   isOpen: boolean;
@@ -102,17 +105,23 @@ export default function AgentWizard({ isOpen, onClose, onSuccess, token }: Agent
         case 'review-agents':
           previousStep = 'select-templates';
           break;
-        case 'batch-creation':
+        case 'define-multi-names':
           previousStep = 'review-agents';
+          break;
+        case 'batch-creation':
+          previousStep = 'define-multi-names';
           break;
         case 'creation-confirm':
           previousStep = 'batch-creation';
+          break;
+        case 'edit-multi-agent':
+          previousStep = 'creation-confirm';
           break;
         case 'edit-agents':
           previousStep = 'creation-confirm';
           break;
         case 'final-confirmation':
-          previousStep = 'edit-agents';
+          previousStep = 'edit-multi-agent';
           break;
       }
     }
@@ -157,14 +166,20 @@ export default function AgentWizard({ isOpen, onClose, onSuccess, token }: Agent
         return <SelectMultiTemplatesStep {...commonProps} />;
       case 'review-agents':
         return <ReviewMultiAgentsStep {...commonProps} />;
+      case 'define-multi-names':
+        return <DefineMultiNamesStep {...commonProps} />;
+      case 'batch-creation':
+        return <BatchCreationStep {...commonProps} />;
+      case 'edit-multi-agent':
+        return <MultiAgentEditStep {...commonProps} />;
 
       // Steps compartilhados entre single e multi (mas com lógica diferente)
       case 'creation-confirm':
         if (wizardState.mode === 'single') {
           return <CreationConfirmStep {...commonProps} />;
         }
-        // TODO: Implementar versão multi
-        return <div>Multi creation confirm (TODO)</div>;
+        // Multiagent usa batch-creation ao invés de creation-confirm
+        return <div>Redirecionando...</div>;
 
       case 'final-confirmation':
         return <FinalConfirmationStep {...commonProps} />;

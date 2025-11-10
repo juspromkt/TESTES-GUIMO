@@ -7,6 +7,7 @@ import FollowUpTab from './FollowUpTab';
 import AgentFunctionsSection from './AgentFunctionsSection';
 import { hasPermission } from '../../utils/permissions';
 import GuimooIcon from '../GuimooIcon';
+import { useToast } from '../../contexts/ToastContext';
 
 interface Agent {
   Id: number;
@@ -20,6 +21,7 @@ interface Agent {
   stepsCount?: number;
   faqCount?: number;
   hasInvalidChips?: boolean;
+  invalidChipsCount?: number;
 }
 
 interface AgentsTabProps {
@@ -33,8 +35,6 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('agents');
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
   const [isAgentFormOpen, setIsAgentFormOpen] = useState(false);
   const [agentFormMode, setAgentFormMode] = useState<'create' | 'edit'>('create');
   const [selectedAgent, setSelectedAgent] = useState<Agent | undefined>();
@@ -47,21 +47,23 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const canEdit = hasPermission('can_edit_agent');
+  const toast = useToast();
 
-  // Função auxiliar para verificar se há chips inválidos em uma descrição HTML
-  const checkInvalidChips = (html: string): boolean => {
-    if (!html) return false;
+  // Função auxiliar para contar chips inválidos em uma descrição HTML
+  const countInvalidChips = (html: string): number => {
+    if (!html) return 0;
     const tmp = document.createElement('div');
     tmp.innerHTML = html;
     const decisionChips = tmp.querySelectorAll('.ql-smart-decision');
 
+    let count = 0;
     for (const chip of Array.from(decisionChips)) {
-      const agentId = chip.getAttribute('data-agent-id');
-      if (!agentId || agentId === 'null' || agentId === 'undefined') {
-        return true;
+      const isInvalid = chip.getAttribute('data-invalid') === 'true';
+      if (isInvalid) {
+        count++;
       }
     }
-    return false;
+    return count;
   };
 
   // Função para buscar dados de configuração de um agente
@@ -90,18 +92,21 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
 
       // Conta etapas e verifica chips inválidos
       const stepsCount = stepsData && Array.isArray(stepsData) ? stepsData.length : 0;
-      let hasInvalidChips = false;
+      let invalidChipsCount = 0;
       if (stepsData && Array.isArray(stepsData)) {
-        hasInvalidChips = stepsData.some((step: any) => checkInvalidChips(step.descricao || ''));
+        invalidChipsCount = stepsData.reduce((total: number, step: any) => {
+          return total + countInvalidChips(step.descricao || '');
+        }, 0);
       }
+      const hasInvalidChips = invalidChipsCount > 0;
 
       // Conta FAQs
       const faqCount = faqData && Array.isArray(faqData) ? faqData.length : 0;
 
-      return { hasRules, stepsCount, faqCount, hasInvalidChips };
+      return { hasRules, stepsCount, faqCount, hasInvalidChips, invalidChipsCount };
     } catch (err) {
       console.error('Erro ao buscar dados de configuração:', err);
-      return { hasRules: false, stepsCount: 0, faqCount: 0, hasInvalidChips: false };
+      return { hasRules: false, stepsCount: 0, faqCount: 0, hasInvalidChips: false, invalidChipsCount: 0 };
     }
   };
 
@@ -129,11 +134,11 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
       }
     } catch (err) {
       console.error('Erro ao buscar agentes:', err);
-      setError('Não foi possível carregar os agentes');
-      setTimeout(() => setError(''), 3000);
+      toast.error('Não foi possível carregar os agentes');
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   useEffect(() => {
@@ -173,12 +178,10 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
         )
       );
 
-      setSuccess(`Agente ${agent.isAtivo ? 'desativado' : 'ativado'} com sucesso!`);
-      setTimeout(() => setSuccess(''), 3000);
+      toast.success(`Agente ${agent.isAtivo ? 'desativado' : 'ativado'} com sucesso!`);
     } catch (err) {
       console.error('Erro ao alternar status do agente:', err);
-      setError('Erro ao alternar status do agente');
-      setTimeout(() => setError(''), 3000);
+      toast.error('Erro ao alternar status do agente');
     } finally {
       setTogglingAgentId(null);
     }
@@ -199,8 +202,7 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
 
   const handleAgentFormSuccess = async () => {
     await fetchAgents();
-    setSuccess('Agente salvo com sucesso!');
-    setTimeout(() => setSuccess(''), 3000);
+    toast.success('Agente salvo com sucesso!');
   };
 
   const handleCardClick = (agent: Agent) => {
@@ -264,7 +266,8 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
         fetchAgents();
       }, 1000);
     }
-  }, [fetchAgents]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const subTabs = [
     { id: 'agents', label: 'Agentes', icon: GuimooIcon },
@@ -320,49 +323,29 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
           {/* Cabeçalho - Only show on agents tab */}
           {activeSubTab === 'agents' && (
             <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Agentes</h1>
-                  <p className="text-gray-500 dark:text-gray-400 mt-1">Gerencie seus assistentes virtuais</p>
+              <div className="flex items-center justify-between">
+                {/* Campo de Busca */}
+                <div className="relative w-full max-w-2xl">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Buscar agentes por nome ou gatilho..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all"
+                  />
                 </div>
 
                 {canEdit && (
                   <button
                     onClick={handleCreateAgent}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition-all shadow-sm hover:shadow-md"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition-all shadow-sm hover:shadow-md ml-4"
                   >
                     <Plus className="h-5 w-5" />
                     Novo Agente
                   </button>
                 )}
               </div>
-
-              {/* Campo de Busca */}
-              <div className="relative max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
-                <input
-                  type="text"
-                  placeholder="Buscar agentes por nome ou gatilho..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Mensagens de Feedback */}
-          {success && (
-            <div className="mb-6 flex items-center gap-3 px-4 py-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-xl">
-              <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse" />
-              <p className="text-sm font-medium">{success}</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="mb-6 flex items-center gap-3 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl">
-              <div className="w-2 h-2 bg-red-500 dark:bg-red-400 rounded-full" />
-              <p className="text-sm font-medium">{error}</p>
             </div>
           )}
 
@@ -561,6 +544,21 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
                                   }
                                 </span>
                               </div>
+
+                              {/* Ações Inválidas */}
+                              {(principalAgent.invalidChipsCount ?? 0) > 0 && (
+                                <div className="flex items-center justify-between p-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                                  <div className="flex items-center gap-2">
+                                    <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                    <span className="text-xs font-medium text-red-700 dark:text-red-300">
+                                      Ações Inválidas
+                                    </span>
+                                  </div>
+                                  <span className="text-xs font-semibold text-red-600 dark:text-red-400">
+                                    {principalAgent.invalidChipsCount} {principalAgent.invalidChipsCount === 1 ? 'erro' : 'erros'}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -714,6 +712,21 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
                                       }
                                     </span>
                                   </div>
+
+                                  {/* Ações Inválidas */}
+                                  {(agent.invalidChipsCount ?? 0) > 0 && (
+                                    <div className="flex items-center justify-between p-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                                      <div className="flex items-center gap-2">
+                                        <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                        <span className="text-xs font-medium text-red-700 dark:text-red-300">
+                                          Ações Inválidas
+                                        </span>
+                                      </div>
+                                      <span className="text-xs font-semibold text-red-600 dark:text-red-400">
+                                        {agent.invalidChipsCount} {agent.invalidChipsCount === 1 ? 'erro' : 'erros'}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                               </div>
@@ -871,6 +884,21 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
                                       }
                                     </span>
                                   </div>
+
+                                  {/* Ações Inválidas */}
+                                  {(agent.invalidChipsCount ?? 0) > 0 && (
+                                    <div className="flex items-center justify-between p-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                                      <div className="flex items-center gap-2">
+                                        <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                        <span className="text-xs font-medium text-red-700 dark:text-red-300">
+                                          Ações Inválidas
+                                        </span>
+                                      </div>
+                                      <span className="text-xs font-semibold text-red-600 dark:text-red-400">
+                                        {agent.invalidChipsCount} {agent.invalidChipsCount === 1 ? 'erro' : 'erros'}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                               </div>
@@ -894,21 +922,11 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
                 <div className="flex items-center justify-center py-32">
                   <Loader2 className="h-12 w-12 animate-spin text-gray-400 dark:text-gray-600" />
                 </div>
-              ) : !agents.find(a => a.isAgentePrincipal) ? (
-                <div className="flex flex-col items-center justify-center py-32">
-                  <Bell className="h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                    Nenhum agente principal configurado
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-400">
-                    Configure um agente como principal para gerenciar notificações globais
-                  </p>
-                </div>
               ) : (
                 <AgentFunctionsSection
                   key={notificationsKey} // Força remontagem quando muda o agente principal
                   token={token}
-                  idAgente={agents.find(a => a.isAgentePrincipal)!.Id}
+                  idAgente={agents.find(a => a.isAgentePrincipal)?.Id ?? 0}
                   canEdit={canEdit}
                 />
               )}
