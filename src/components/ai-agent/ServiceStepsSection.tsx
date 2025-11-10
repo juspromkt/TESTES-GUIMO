@@ -1189,7 +1189,7 @@ export default function ServiceStepsSection({
                   className="quill h-full"
                 />
                 {isUploading && activeStep === step.ordem && (
-                  <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 flex items-center justify-center rounded-lg">
+                  <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center rounded-lg">
                     <Loader2 className="w-6 h-6 animate-spin text-blue-500 dark:text-blue-400" />
                   </div>
                 )}
@@ -1204,7 +1204,7 @@ export default function ServiceStepsSection({
               Nenhum roteiro cadastrado
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
-              Crie o roteiro que o seu agente seguirá nas conversas com os clientes. Esse roteiro define a estrutura de raciocínio, as perguntas e o estilo de comunicação da IA.
+              Crie o roteiro que o seu agente seguirá nas conversas com os clientes. Esse roteiro define a estrutura de raciocínio, as perguntas e o estilo de comunicação do agente.
             </p>
             <button
               onClick={handleAddStep}
@@ -1260,7 +1260,7 @@ export default function ServiceStepsSection({
         initialCommand={quickCommandInitial}
       />
       {isLoading && (
-        <div className="pointer-events-auto absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm">
+        <div className="pointer-events-auto absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
           <Loader2 className="h-6 w-6 animate-spin text-blue-500 dark:text-blue-400" />
         </div>
       )}

@@ -57,6 +57,8 @@ const ChatProprio = () => {
   const [showUnanswered, setShowUnanswered] = useState(false);
   const [chatListActiveTab, setChatListActiveTab] = useState<'all' | 'ia' | 'transfers' | 'unread' | 'unanswered'>('all');
   const [filteredChatCount, setFilteredChatCount] = useState(0);
+  const [selectedAgentIds, setSelectedAgentIds] = useState<number[]>([]);
+  const [availableAgents, setAvailableAgents] = useState<any[]>([]);
 
   // Contadores separados para cada filtro
   const [iaCount, setIaCount] = useState(0);
@@ -111,6 +113,28 @@ const ChatProprio = () => {
     setSoundEnabled(newValue);
     localStorage.setItem('chat_sound_enabled', JSON.stringify(newValue));
   };
+
+  // Carregar agentes disponíveis
+  useEffect(() => {
+    if (!token) return;
+
+    const loadAgents = async () => {
+      try {
+        const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/get', {
+          headers: { token }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableAgents(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar agentes:', error);
+        setAvailableAgents([]);
+      }
+    };
+
+    loadAgents();
+  }, [token]);
 
   // Força reload sempre que entrar na página - executado no mount
   useEffect(() => {
@@ -278,6 +302,10 @@ const ChatProprio = () => {
     setTransfersCount(counts.transfers);
   }, []);
 
+  const handleFilteredCountChange = useCallback((count: number) => {
+    setFilteredChatCount(count);
+  }, []);
+
   const handleNewChatSuccess = async (remoteJid: string, name: string) => {
     const user = localStorage.getItem('user');
     const token = user ? JSON.parse(user).token : null;
@@ -405,25 +433,25 @@ const ChatProprio = () => {
     <div className="h-screen flex flex-col w-full bg-background dark:bg-gray-900 overflow-hidden md:pt-0 transition-colors duration-200">
       {/* Barra superior fixa - ocupa toda a largura da tela */}
       {activeTab === 'chat' && (
-        <div className="hidden md:block md:relative md:top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 shadow-sm transition-colors duration-200">
-          <div className="px-2 md:px-4 py-2 flex items-center justify-between gap-1.5 md:gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+        <div className="hidden md:block md:relative md:top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <div className="px-4 py-2 flex items-center justify-between gap-2">
 
             {/* Grupo Esquerdo: Campo de busca + Filtros */}
-            <div className="flex items-center gap-1.5 md:gap-2 flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               {/* Campo de busca */}
               <div className="relative flex-1 min-w-[200px] max-w-lg">
-                <Search className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500 pointer-events-none flex-shrink-0" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Pesquisar..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-8 md:pl-9 pr-3 py-2 md:py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-all touch-manipulation"
+                  className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
                 />
               </div>
 
               {/* Filtros */}
-              <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {/* Responsáveis (multi-select) */}
                 <MultiSelectDropdown
                   options={usuariosPorContato.map(u => ({ id: u.Id, label: u.nome }))}
@@ -445,17 +473,14 @@ const ChatProprio = () => {
                 {/* Filtro de Data */}
                 <button
                   onClick={() => setShowDateModal(true)}
-                  className={`flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-2 md:py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap touch-manipulation active:scale-95 ${
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                     startDate || endDate
-                      ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 text-white shadow-md hover:from-blue-600 hover:to-indigo-700 dark:hover:from-blue-700 dark:hover:to-indigo-800 active:from-blue-700 active:to-indigo-800'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 active:bg-gray-300 dark:active:bg-gray-500'
+                      ? 'bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
-                  <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="hidden sm:inline">Período</span>
-                  {(startDate || endDate) && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse flex-shrink-0" />
-                  )}
+                  <Calendar className="w-4 h-4" />
+                  <span>Período</span>
                 </button>
               </div>
             </div>
@@ -463,26 +488,26 @@ const ChatProprio = () => {
             {/* Botão de Som de Notificação */}
             <button
               onClick={toggleSound}
-              className={`flex items-center justify-center p-2 md:py-1.5 md:px-2.5 rounded-lg transition-all shadow-sm hover:shadow-md active:scale-95 touch-manipulation flex-shrink-0 ${
+              className={`flex items-center justify-center p-2 rounded-lg transition-colors ${
                 soundEnabled
-                  ? 'bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-500 dark:border-emerald-400 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30'
-                  : 'bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/40'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
               title={soundEnabled ? 'Som de notificação ativado' : 'Som de notificação desativado'}
               aria-label={soundEnabled ? 'Desativar som de notificação' : 'Ativar som de notificação'}
             >
-              {soundEnabled ? <Volume2 className="w-4 h-4 flex-shrink-0" /> : <VolumeX className="w-4 h-4 flex-shrink-0" />}
+              {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </button>
 
             {/* Botão Nova Conversa - Canto Direito */}
             <button
               onClick={() => setNewChatModalOpen(true)}
-              className="flex items-center gap-1 md:gap-1.5 px-2 md:px-4 py-2 md:py-1.5 rounded-lg text-xs md:text-sm font-medium bg-gradient-to-r from-emerald-500 to-green-600 dark:from-emerald-600 dark:to-green-700 text-white hover:from-emerald-600 hover:to-green-700 dark:hover:from-emerald-700 dark:hover:to-green-800 active:from-emerald-700 active:to-green-800 transition-all shadow-md hover:shadow-lg active:scale-95 whitespace-nowrap touch-manipulation flex-shrink-0"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors whitespace-nowrap"
               title="Nova conversa"
               aria-label="Nova conversa"
             >
-              <Plus className="w-4 h-4 flex-shrink-0" />
-              <span className="hidden sm:inline">Nova conversa</span>
+              <Plus className="w-4 h-4" />
+              <span>Nova conversa</span>
             </button>
           </div>
         </div>
@@ -491,62 +516,98 @@ const ChatProprio = () => {
       {/* Main area - chat list e message view lado a lado */}
       <div className="flex-1 flex min-w-0 overflow-x-hidden flex-row pt-[60px] md:pt-0">
         {/* Chat list - hidden on mobile when chat is selected */}
-        <div className={`w-full md:w-96 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 ${showMobileChat ? 'hidden md:block' : 'block'} flex-shrink-0 flex flex-col ${selectedChat ? 'overflow-hidden' : 'overflow-y-auto'} overflow-x-hidden transition-colors duration-200`} style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className={`w-full md:w-96 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 ${showMobileChat ? 'hidden md:block' : 'block'} flex-shrink-0 flex flex-col ${selectedChat ? 'overflow-hidden' : 'overflow-y-auto'} overflow-x-hidden transition-colors duration-200`} style={{ WebkitOverflowScrolling: 'touch' }}>
           {activeTab === 'chat' && (           
             <>
 
 
               {/* Área de lista com header fixo e conteúdo rolável */}
               <div className="flex-1 flex flex-col">
-                {/* 🔹 Cabeçalho fixo com os botões IA / NÃO RESP / TRANSF */}
-                <div className="px-2 md:px-3 py-2 md:py-2.5 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 sticky top-0 z-10 transition-colors duration-200">
-                  <div className="flex gap-1 md:gap-1.5">
+                {/* 🔹 Cabeçalho fixo com os botões TUDO / IA / NÃO LIDAS / TRANSFERIDAS */}
+                <div className="px-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 sticky top-0 z-10">
+                  <div className="flex items-center justify-around gap-1">
+                    {/* TUDO */}
+                    <button
+                      onClick={() => handleTabChange('all')}
+                      className={`flex items-center justify-center gap-1.5 py-3 px-2 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
+                        chatListActiveTab === 'all'
+                          ? 'border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 scale-105'
+                          : chatListActiveTab === 'ia'
+                          ? 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 -translate-x-2'
+                          : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                      }`}
+                    >
+                      Tudo
+                    </button>
+
                     {/* IA */}
                     <button
-                      onClick={() => handleTabChange(chatListActiveTab === 'ia' ? 'all' : 'ia')}
-                      className={`flex-1 flex items-center justify-center gap-1 md:gap-1.5 py-2 px-2 md:px-3 rounded-md transition-all duration-200 relative touch-manipulation active:scale-95 ${chatListActiveTab === 'ia'
-                          ? 'bg-purple-600 dark:bg-purple-700 text-white shadow-sm'
-                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 active:bg-gray-100 dark:active:bg-gray-500 border border-gray-200 dark:border-gray-600'
-                        }`}
+                      onClick={() => handleTabChange('ia')}
+                      className={`flex items-center justify-center gap-1.5 py-3 px-2 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
+                        chatListActiveTab === 'ia'
+                          ? 'border-purple-600 dark:border-purple-500 text-purple-600 dark:text-purple-400 scale-105'
+                          : chatListActiveTab === 'all'
+                          ? 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 translate-x-2'
+                          : chatListActiveTab === 'unanswered'
+                          ? 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 -translate-x-2'
+                          : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                      }`}
                     >
-                      <span className="text-[11px] md:text-xs font-semibold tracking-wide">IA ativa</span>
+                      IA ativa
                       {iaCount > 0 && (
-                        <span className={`text-[10px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1 ${chatListActiveTab === 'ia' ? 'bg-white text-purple-600 dark:text-purple-700' : 'bg-purple-600 dark:bg-purple-700 text-white'
-                          }`}>
+                        <span className={`text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1.5 ${
+                          chatListActiveTab === 'ia'
+                            ? 'bg-purple-600 dark:bg-purple-500 text-white'
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}>
                           {iaCount > 99 ? '99+' : iaCount}
                         </span>
                       )}
                     </button>
 
-                    {/* NÃO RESPONDIDOS */}
+                    {/* NÃO LIDAS */}
                     <button
-                      onClick={() => handleTabChange(chatListActiveTab === 'unanswered' ? 'all' : 'unanswered')}
-                      className={`flex-1 flex items-center justify-center gap-1 md:gap-1.5 py-2 px-1 md:px-3 rounded-md transition-all duration-200 relative touch-manipulation active:scale-95 ${chatListActiveTab === 'unanswered'
-                          ? 'bg-orange-600 dark:bg-orange-700 text-white shadow-sm'
-                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 active:bg-gray-100 dark:active:bg-gray-500 border border-gray-200 dark:border-gray-600'
-                        }`}
+                      onClick={() => handleTabChange('unanswered')}
+                      className={`flex items-center justify-center gap-1.5 py-3 px-2 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
+                        chatListActiveTab === 'unanswered'
+                          ? 'border-orange-600 dark:border-orange-500 text-orange-600 dark:text-orange-400 scale-105'
+                          : chatListActiveTab === 'ia'
+                          ? 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 translate-x-2'
+                          : chatListActiveTab === 'transfers'
+                          ? 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 -translate-x-2'
+                          : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                      }`}
                     >
-                      <span className="text-[11px] md:text-xs font-semibold tracking-wide truncate">Não lidas</span>
+                      Não lidas
                       {unansweredCount > 0 && (
-                        <span className={`text-[10px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1 flex-shrink-0 ${chatListActiveTab === 'unanswered' ? 'bg-white text-orange-600 dark:text-orange-700' : 'bg-orange-600 dark:bg-orange-700 text-white'
-                          }`}>
+                        <span className={`text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1.5 ${
+                          chatListActiveTab === 'unanswered'
+                            ? 'bg-orange-600 dark:bg-orange-500 text-white'
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}>
                           {unansweredCount > 99 ? '99+' : unansweredCount}
                         </span>
                       )}
                     </button>
 
-                    {/* TRANSFERÊNCIAS */}
+                    {/* TRANSFERIDAS */}
                     <button
-                      onClick={() => handleTabChange(chatListActiveTab === 'transfers' ? 'all' : 'transfers')}
-                      className={`flex-1 flex items-center justify-center gap-1 md:gap-1.5 py-2 px-1 md:px-3 rounded-md transition-all duration-200 relative touch-manipulation active:scale-95 ${chatListActiveTab === 'transfers'
-                          ? 'bg-yellow-600 dark:bg-yellow-700 text-white shadow-sm'
-                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 active:bg-gray-100 dark:active:bg-gray-500 border border-gray-200 dark:border-gray-600'
-                        }`}
+                      onClick={() => handleTabChange('transfers')}
+                      className={`flex items-center justify-center gap-1.5 py-3 px-2 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
+                        chatListActiveTab === 'transfers'
+                          ? 'border-yellow-600 dark:border-yellow-500 text-yellow-600 dark:text-yellow-400 scale-105'
+                          : chatListActiveTab === 'unanswered'
+                          ? 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 translate-x-2'
+                          : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                      }`}
                     >
-                      <span className="text-[11px] md:text-xs font-semibold tracking-wide truncate">Transferidas</span>
+                      Transferidas
                       {transfersCount > 0 && (
-                        <span className={`text-[10px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1 flex-shrink-0 ${chatListActiveTab === 'transfers' ? 'bg-white text-yellow-600 dark:text-yellow-700' : 'bg-yellow-600 dark:bg-yellow-700 text-white'
-                          }`}>
+                        <span className={`text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1.5 ${
+                          chatListActiveTab === 'transfers'
+                            ? 'bg-yellow-600 dark:bg-yellow-500 text-white'
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}>
                           {transfersCount > 99 ? '99+' : transfersCount}
                         </span>
                       )}
@@ -567,6 +628,7 @@ const ChatProprio = () => {
                     whatsappType={whatsappType || undefined}
                     externalSearchTerm={debouncedSearchTerm}
                     externalUsuarioFiltroIds={selectedResponsibleIds}
+                    externalAgenteFiltroIds={selectedAgentIds}
                     externalTagFiltroIds={selectedTagIds}
                     externalFunilId={selectedFunnelId}
                     externalStageFiltroIds={selectedStageIds}
@@ -577,7 +639,7 @@ const ChatProprio = () => {
                     externalShowUnanswered={showUnanswered}
                     externalActiveTab={chatListActiveTab}
                     externalHandleTabChange={handleTabChange}
-                    onFilteredCountChange={setFilteredChatCount}
+                    onFilteredCountChange={handleFilteredCountChange}
                     onCategoryCountsChange={handleCategoryCountsChange}
                   />
                 </div>
@@ -622,8 +684,11 @@ const ChatProprio = () => {
         isOpen={filterModalOpen}
         onClose={() => setFilterModalOpen(false)}
         availableTags={availableTags}
+        availableAgents={availableAgents}
         selectedTagIds={selectedTagIds}
         setSelectedTagIds={setSelectedTagIds}
+        selectedAgentIds={selectedAgentIds}
+        setSelectedAgentIds={setSelectedAgentIds}
         startDate={startDate}
         setStartDate={setStartDate}
         endDate={endDate}
@@ -647,34 +712,34 @@ const ChatProprio = () => {
 
       {/* Modal de Período */}
       {showDateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/60 p-4">
-          <div className="w-full max-w-3xl max-h-[90vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-300 dark:border-gray-700 overflow-hidden flex flex-col transition-colors duration-200">
-            <div className="flex items-center justify-between px-4 md:px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-b border-gray-300 dark:border-gray-700 flex-shrink-0">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70 p-4">
+          <div className="w-full max-w-3xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-lg overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-blue-700 dark:text-blue-400 flex-shrink-0" />
-                <h3 className="text-base md:text-lg font-semibold text-gray-800 dark:text-white truncate">
+                <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Selecionar Período
                 </h3>
               </div>
               <button
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-colors touch-manipulation flex-shrink-0"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 onClick={() => setShowDateModal(false)}
                 aria-label="Fechar modal"
               >
-                <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 px-4 md:px-6 py-4 md:py-6 bg-gray-50 dark:bg-gray-800 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-6 py-4 bg-white dark:bg-gray-900 overflow-y-auto">
               {/* Coluna de filtros rápidos */}
               <div className="flex flex-col gap-2">
-                <p className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filtro rápido</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filtro rápido</p>
                 <button
                   onClick={() => {
                     setToday();
                     setShowDateModal(false);
                   }}
-                  className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/30 active:bg-blue-100 dark:active:bg-blue-900/50 hover:border-blue-200 dark:hover:border-blue-500 active:scale-95 transition-all touch-manipulation"
+                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   Hoje
                 </button>
@@ -683,7 +748,7 @@ const ChatProprio = () => {
                     setLast7();
                     setShowDateModal(false);
                   }}
-                  className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/30 active:bg-blue-100 dark:active:bg-blue-900/50 hover:border-blue-200 dark:hover:border-blue-500 active:scale-95 transition-all touch-manipulation"
+                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   Últimos 7 dias
                 </button>
@@ -692,7 +757,7 @@ const ChatProprio = () => {
                     setLast30();
                     setShowDateModal(false);
                   }}
-                  className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/30 active:bg-blue-100 dark:active:bg-blue-900/50 hover:border-blue-200 dark:hover:border-blue-500 active:scale-95 transition-all touch-manipulation"
+                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   Últimos 30 dias
                 </button>
@@ -701,7 +766,7 @@ const ChatProprio = () => {
                     setThisMonth();
                     setShowDateModal(false);
                   }}
-                  className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/30 active:bg-blue-100 dark:active:bg-blue-900/50 hover:border-blue-200 dark:hover:border-blue-500 active:scale-95 transition-all touch-manipulation"
+                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   Este mês
                 </button>
@@ -710,14 +775,14 @@ const ChatProprio = () => {
                     setLastMonth();
                     setShowDateModal(false);
                   }}
-                  className="px-3 py-2.5 text-sm rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/30 active:bg-blue-100 dark:active:bg-blue-900/50 hover:border-blue-200 dark:hover:border-blue-500 active:scale-95 transition-all touch-manipulation"
+                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   Mês passado
                 </button>
               </div>
 
               {/* Coluna de seleção manual */}
-              <div className="md:col-span-2 bg-white dark:bg-gray-700 rounded-xl p-4 md:p-5 border border-gray-300 dark:border-gray-600 shadow-sm">
+              <div className="md:col-span-2 bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5 block">
@@ -728,7 +793,7 @@ const ChatProprio = () => {
                       onChange={(date: Date | null) => setStartDate(date)}
                       dateFormat="dd/MM/yyyy"
                       locale="pt-BR"
-                      className="w-full px-3 py-2.5 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 touch-manipulation"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
                       placeholderText="Selecione a data inicial"
                       dropdownMode="select"
                       popperClassName="z-[9999]"
@@ -745,7 +810,7 @@ const ChatProprio = () => {
                       onChange={(date: Date | null) => setEndDate(date)}
                       dateFormat="dd/MM/yyyy"
                       locale="pt-BR"
-                      className="w-full px-3 py-2.5 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 touch-manipulation"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
                       placeholderText="Selecione a data final"
                       dropdownMode="select"
                       popperClassName="z-[9999]"
@@ -755,20 +820,20 @@ const ChatProprio = () => {
                   </div>
                 </div>
 
-                <div className="mt-5 flex flex-col sm:flex-row justify-end gap-2">
+                <div className="mt-4 flex justify-end gap-2">
                   <button
                     onClick={() => {
                       setStartDate(null);
                       setEndDate(null);
                       setShowDateModal(false);
                     }}
-                    className="w-full sm:w-auto px-5 py-2.5 text-sm font-medium rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 active:bg-gray-400 dark:active:bg-gray-400 active:scale-95 transition-all shadow-sm touch-manipulation"
+                    className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
                     Limpar
                   </button>
                   <button
                     onClick={() => setShowDateModal(false)}
-                    className="w-full sm:w-auto px-5 py-2.5 text-sm font-medium rounded-lg bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-600 active:bg-blue-800 dark:active:bg-blue-500 active:scale-95 transition-all shadow-sm touch-manipulation"
+                    className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
                   >
                     Aplicar
                   </button>

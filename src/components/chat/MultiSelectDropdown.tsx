@@ -89,19 +89,19 @@ export function MultiSelectDropdown({
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
           disabled
             ? 'bg-gray-50 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
             : hasSelection
-            ? 'bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            ? 'bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600'
+            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
         }`}
       >
         {icon}
         <span className="max-w-[150px] truncate">{getDisplayText()}</span>
         {hasSelection && (
           <X
-            className="w-3.5 h-3.5 hover:bg-blue-600 dark:hover:bg-blue-700 rounded"
+            className="w-3.5 h-3.5 hover:bg-blue-700 dark:hover:bg-blue-600 rounded"
             onClick={clearAll}
           />
         )}
@@ -111,7 +111,7 @@ export function MultiSelectDropdown({
       {isOpen && createPortal(
         <div
           ref={dropdownRef}
-          className="fixed w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-96 overflow-y-auto transition-colors duration-200"
+          className="fixed w-72 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-96 overflow-y-auto transition-colors duration-200"
           style={{
             zIndex: 999999,
             top: `${dropdownPosition.top}px`,

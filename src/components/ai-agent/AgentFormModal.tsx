@@ -206,7 +206,7 @@ export default function AgentFormModal({
             </h2>
             <button
               onClick={handleCloseWizard}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg transition-colors"
               title="Fechar"
             >
               <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
@@ -256,7 +256,7 @@ export default function AgentFormModal({
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg transition-colors"
             disabled={loading}
           >
             <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
@@ -281,7 +281,7 @@ export default function AgentFormModal({
                 type="text"
                 value={formData.nome}
                 onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
                 placeholder="Ex: Atendimento Comercial"
                 disabled={loading}
               />
@@ -295,7 +295,7 @@ export default function AgentFormModal({
                   type="checkbox"
                   checked={formData.isAtivo}
                   onChange={(e) => setFormData({ ...formData, isAtivo: e.target.checked })}
-                  className="w-4 h-4 text-blue-600 dark:text-blue-500 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-800"
+                  className="w-4 h-4 text-blue-600 dark:text-blue-500 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900"
                   disabled={loading}
                 />
                 <div>
@@ -311,7 +311,7 @@ export default function AgentFormModal({
                     type="checkbox"
                     checked={formData.isAgentePrincipal}
                     onChange={(e) => setFormData({ ...formData, isAgentePrincipal: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 dark:text-blue-500 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-800"
+                    className="w-4 h-4 text-blue-600 dark:text-blue-500 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900"
                     disabled={loading}
                   />
                   <div>
@@ -343,7 +343,7 @@ export default function AgentFormModal({
                   type="checkbox"
                   checked={formData.isGatilho}
                   onChange={(e) => setFormData({ ...formData, isGatilho: e.target.checked })}
-                  className="w-4 h-4 text-blue-600 dark:text-blue-500 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-800"
+                  className="w-4 h-4 text-blue-600 dark:text-blue-500 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900"
                   disabled={loading}
                 />
                 <div>
@@ -362,7 +362,7 @@ export default function AgentFormModal({
                 <textarea
                   value={formData.gatilho}
                   onChange={(e) => setFormData({ ...formData, gatilho: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
                   placeholder="Ex: Olá! Gostaria de falar sobre vendas"
                   rows={3}
                   disabled={loading}
@@ -376,7 +376,7 @@ export default function AgentFormModal({
         </div>
 
         {/* Footer fixo com botões */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
           <div className="flex gap-3">
             <button
               type="button"

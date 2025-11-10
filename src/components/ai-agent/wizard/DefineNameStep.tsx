@@ -237,7 +237,7 @@ export default function DefineNameStep({ state, onNext, onBack, token }: StepCom
               value={agentName}
               onChange={(e) => setAgentName(e.target.value)}
               placeholder="Ex: Atendimento Comercial, Suporte BPC, etc."
-              className={`w-full px-4 py-3 pr-10 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:border-transparent ${
+              className={`w-full px-4 py-3 pr-10 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:border-transparent ${
                 agentName.trim() && !nameAvailable
                   ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400'
                   : agentName.trim() && nameAvailable
@@ -274,7 +274,7 @@ export default function DefineNameStep({ state, onNext, onBack, token }: StepCom
         </div>
 
         {/* Agente Principal */}
-        <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
           <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -283,7 +283,7 @@ export default function DefineNameStep({ state, onNext, onBack, token }: StepCom
                 setIsAgentePrincipal(e.target.checked);
                 setShowPrincipalWarning(e.target.checked && !!currentPrincipalAgent);
               }}
-              className="w-5 h-5 mt-0.5 text-blue-600 dark:text-blue-500 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-800"
+              className="w-5 h-5 mt-0.5 text-blue-600 dark:text-blue-500 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-900"
               disabled={loading}
             />
             <div className="flex-1">

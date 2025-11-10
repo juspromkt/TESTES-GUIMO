@@ -10,6 +10,7 @@ interface Session {
   criacao: string;
   ultima_interacao: string | null;
   telefone: string;
+  id_agente?: string;
 }
 
 type TabType = 'sessions' | 'interventions' | 'permanent';
@@ -27,21 +28,21 @@ const TAB_METADATA: Record<TabType, TabMetadata> = {
     singular: 'Sessão',
     singularLower: 'sessão',
     description:
-      'Sessões se referem às conversas ativas entre usuários e o Agente de IA. Cada sessão representa uma conversa em andamento com um número de telefone específico. Você pode gerenciar essas sessões, visualizando detalhes ou removendo-as quando necessário.'
+      'Sessões se referem às conversas ativas entre usuários e o Agente. Cada sessão representa uma conversa em andamento com um número de telefone específico. Você pode gerenciar essas sessões, visualizando detalhes ou removendo-as quando necessário.'
   },
   interventions: {
     label: 'Intervenções',
     singular: 'Intervenção',
     singularLower: 'intervenção',
     description:
-      'Intervenções ocorrem quando um atendente humano envia uma mensagem pelo mesmo número que o Agente de IA está utilizando. Quando isso acontece, a sessão do Agente é automaticamente pausada e registrada como uma intervenção.'
+      'Intervenções ocorrem quando um atendente humano envia uma mensagem pelo mesmo número que o Agente está utilizando. Quando isso acontece, a sessão do Agente é automaticamente pausada e registrada como uma intervenção.'
   },
   permanent: {
     label: 'Exclusões Permanentes',
     singular: 'Registro de exclusão permanente',
     singularLower: 'registro de exclusão permanente',
     description:
-      'A lista de exclusões permanentes impede que determinados números recebam atendimento do Agente de IA. Utilize esta aba para consultar, remover ou cadastrar números que devem permanecer bloqueados.'
+      'A lista de exclusões permanentes impede que determinados números recebam atendimento do Agente. Utilize esta aba para consultar, remover ou cadastrar números que devem permanecer bloqueados.'
   }
 };
 

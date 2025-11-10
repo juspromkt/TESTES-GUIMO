@@ -400,7 +400,7 @@ const ConversasMobile = () => {
     <div className="h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
       {!showMobileChat && (
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-4 sticky top-0 z-10">
+        <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-4 sticky top-0 z-10">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Conversas</h1>
             <div className="flex items-center gap-2">
@@ -448,7 +448,7 @@ const ConversasMobile = () => {
                   opacity: Math.min(pullDistance / 80, 1)
                 }}
               >
-                <div className="flex flex-col items-center gap-1 bg-white dark:bg-gray-800 rounded-full px-4 py-2 shadow-lg">
+                <div className="flex flex-col items-center gap-1 bg-white dark:bg-gray-900 rounded-full px-4 py-2 shadow-lg">
                   <div className={`${isRefreshing ? 'animate-spin' : ''}`}>
                     <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -464,7 +464,7 @@ const ConversasMobile = () => {
 
         {!showMobileChat ? (
           <div
-            className="h-full overflow-y-auto bg-white dark:bg-gray-800"
+            className="h-full overflow-y-auto bg-white dark:bg-gray-900"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -507,7 +507,7 @@ const ConversasMobile = () => {
       {/* Modal de Filtros */}
       {showFiltersModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0">
-          <div className="w-full h-[60vh] bg-white dark:bg-gray-800 rounded-t-3xl shadow-2xl overflow-hidden flex flex-col animate-slideUp">
+          <div className="w-full h-[60vh] bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl overflow-hidden flex flex-col animate-slideUp">
             <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Filtros</h3>
               <button
@@ -574,7 +574,7 @@ const ConversasMobile = () => {
       {/* Modal de Período */}
       {showDateModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0">
-          <div className="w-full max-h-[85vh] bg-white dark:bg-gray-800 rounded-t-3xl shadow-2xl overflow-hidden flex flex-col animate-slideUp">
+          <div className="w-full max-h-[85vh] bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl overflow-hidden flex flex-col animate-slideUp">
             <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-blue-700 dark:text-blue-400" />

@@ -169,6 +169,36 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
         throw new Error('Erro ao alternar status do agente');
       }
 
+      // Se está desativando o agente, transfere todas as conversas para o agente principal
+      if (agent.isAtivo) {
+        try {
+          // Busca o agente principal
+          const mainAgent = agents.find(a => a.isAgentePrincipal && a.isAtivo);
+
+          if (mainAgent) {
+            // Chama API para transferir conversas
+            await fetch(
+              'https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/transferir-conversas',
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  token: String(token),
+                },
+                body: JSON.stringify({
+                  id_agente_origem: agent.Id,
+                  id_agente_destino: mainAgent.Id
+                }),
+              }
+            );
+            toast.success(`Conversas transferidas para o agente principal: ${mainAgent.nome}`);
+          }
+        } catch (transferErr) {
+          console.error('Erro ao transferir conversas:', transferErr);
+          // Não bloqueia a desativação se a transferência falhar
+        }
+      }
+
       // Atualiza localmente
       setAgents(prev =>
         prev.map(a =>
@@ -289,10 +319,10 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       {/* Sidebar Interna */}
-      <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0">
+      <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex-shrink-0">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Agentes</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Gerenciamento de IA</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Gerenciamento de agentes</p>
         </div>
 
         <nav className="p-4 space-y-1">
@@ -332,14 +362,14 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
                     placeholder="Buscar agentes por nome ou gatilho..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all"
                   />
                 </div>
 
                 {canEdit && (
                   <button
                     onClick={handleCreateAgent}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition-all shadow-sm hover:shadow-md ml-4"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-900 dark:hover:bg-gray-600 transition-all shadow-sm hover:shadow-md ml-4"
                   >
                     <Plus className="h-5 w-5" />
                     Novo Agente
@@ -366,12 +396,12 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
                     <GuimooIcon className="h-10 w-10" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Nenhum agente criado</h3>
-                  <p className="text-gray-500 dark:text-gray-400 mb-6">Comece criando seu primeiro agente de IA</p>
+                  <p className="text-gray-500 dark:text-gray-400 mb-6">Comece criando seu primeiro agente</p>
 
                   {canEdit && (
                     <button
                       onClick={handleCreateAgent}
-                      className="flex items-center gap-2 px-6 py-3 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition-all shadow-sm hover:shadow-md"
+                      className="flex items-center gap-2 px-6 py-3 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-900 dark:hover:bg-gray-600 transition-all shadow-sm hover:shadow-md"
                     >
                       <Plus className="h-5 w-5" />
                       Criar Agente
@@ -427,7 +457,7 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
                             {/* Header */}
                             <div className="flex items-start justify-between mb-4">
                               <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-white/60 dark:bg-gray-800/60 rounded-lg p-2.5">
+                                <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-white/60 dark:bg-gray-900/60 rounded-lg p-2.5">
                                   <GuimooIcon className="h-full w-full" />
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -473,7 +503,7 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
                             {/* Grid de Configurações */}
                             <div className="space-y-2">
                               {/* Regras Gerais */}
-                              <div className="flex items-center justify-between p-2 rounded-lg bg-white/40 dark:bg-gray-800/40">
+                              <div className="flex items-center justify-between p-2 rounded-lg bg-white/40 dark:bg-gray-900/40">
                                 <div className="flex items-center gap-2">
                                   <ShieldCheck className={`h-4 w-4 ${
                                     principalAgent.hasRules
@@ -494,7 +524,7 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
                               </div>
 
                               {/* Roteiro de Atendimento */}
-                              <div className="flex items-center justify-between p-2 rounded-lg bg-white/40 dark:bg-gray-800/40">
+                              <div className="flex items-center justify-between p-2 rounded-lg bg-white/40 dark:bg-gray-900/40">
                                 <div className="flex items-center gap-2">
                                   <ListChecks className={`h-4 w-4 ${
                                     principalAgent.stepsCount && principalAgent.stepsCount > 0
@@ -522,7 +552,7 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
                               </div>
 
                               {/* FAQ */}
-                              <div className="flex items-center justify-between p-2 rounded-lg bg-white/40 dark:bg-gray-800/40">
+                              <div className="flex items-center justify-between p-2 rounded-lg bg-white/40 dark:bg-gray-900/40">
                                 <div className="flex items-center gap-2">
                                   <HelpCircle className={`h-4 w-4 ${
                                     principalAgent.faqCount && principalAgent.faqCount > 0
@@ -593,7 +623,7 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
                               <div key={agent.Id} className="w-96">
                               <div
                                 onClick={() => handleCardClick(agent)}
-                                className="group relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all cursor-pointer"
+                                className="group relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all cursor-pointer"
                               >
                                 {/* Header */}
                                 <div className="flex items-start justify-between mb-4">
@@ -765,7 +795,7 @@ export default function AgentsTab({ token, onAgentSelect }: AgentsTabProps) {
                               <div key={agent.Id} className="w-96">
                               <div
                                 onClick={() => handleCardClick(agent)}
-                                className="group relative bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-xl p-4 hover:bg-white dark:hover:bg-gray-800 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all cursor-pointer opacity-75 hover:opacity-100"
+                                className="group relative bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700/50 rounded-xl p-4 hover:bg-white dark:hover:bg-gray-900 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all cursor-pointer opacity-75 hover:opacity-100"
                               >
                                 {/* Header */}
                                 <div className="flex items-start justify-between mb-4">

@@ -134,7 +134,7 @@ const fetchFontes = async () => {
     </button>
 
     {/* Tooltip */}
-    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-800 dark:bg-neutral-900 text-white dark:text-neutral-100 text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10 border border-gray-700 dark:border-neutral-700">
+    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-900 dark:bg-neutral-900 text-white dark:text-neutral-100 text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10 border border-gray-700 dark:border-neutral-700">
       A <strong>origem do lead</strong> é preenchida de forma automática pelo sistema, você não precisa configurar. Automaticamente o sistema identificará de onde o lead veio (ex: facebook ads) e mostrará essa informação aqui (e no cartão CRM do lead). Se o lead não tiver uma origem identificada, será mostrado como <em>Indefinida</em>. Se você quiser ter controle total da fonte, fale com seu gestor de tráfego - ele saberá configurar, caso necessário.
     </div>
   </div>

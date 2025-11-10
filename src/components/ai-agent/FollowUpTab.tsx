@@ -803,7 +803,7 @@ export default function FollowUpTab({ token, canViewAgent }: FollowUpTabProps) {
               <X className="w-5 h-5" />
             </button>
             <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-3 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-yellow-500" /> Texto Padrão da IA
+              <Sparkles className="w-4 h-4 text-yellow-500" /> Texto Padrão do Agente
             </h2>
             <div className="h-80 overflow-y-auto bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4 text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-line">
               {DEFAULT_PROMPT}

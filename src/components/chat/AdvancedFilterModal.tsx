@@ -8,10 +8,17 @@ import type { Tag } from '../../types/tag';
 // Registra o locale português
 registerLocale('pt-BR', ptBR);
 
+interface Agent {
+  Id: number;
+  nome: string;
+  isAtivo?: boolean;
+}
+
 interface AdvancedFilterModalProps {
   isOpen: boolean;
   onClose: () => void;
   availableTags: Tag[];
+  availableAgents?: Agent[];
 
   // Date range
   startDate: Date | null;
@@ -33,6 +40,10 @@ interface AdvancedFilterModalProps {
   selectedTagIds: number[];
   setSelectedTagIds: (ids: number[]) => void;
 
+  // Agents filter
+  selectedAgentIds?: number[];
+  setSelectedAgentIds?: (ids: number[]) => void;
+
   // Filtered count
   filteredCount?: number;
 }
@@ -41,6 +52,7 @@ export function AdvancedFilterModal({
   isOpen,
   onClose,
   availableTags,
+  availableAgents = [],
   startDate,
   setStartDate,
   endDate,
@@ -55,6 +67,8 @@ export function AdvancedFilterModal({
   handleTabChange,
   selectedTagIds,
   setSelectedTagIds,
+  selectedAgentIds = [],
+  setSelectedAgentIds = () => {},
   filteredCount = 0,
 }: AdvancedFilterModalProps) {
   // Quick date filters
@@ -88,6 +102,7 @@ export function AdvancedFilterModal({
 
   const clearAllFilters = () => {
     setSelectedTagIds([]);
+    setSelectedAgentIds([]);
     setStartDate(null);
     setEndDate(null);
     setIaStatusFilter('all');
@@ -102,7 +117,8 @@ export function AdvancedFilterModal({
     iaStatusFilter !== 'all' ||
     showOnlyUnread ||
     showUnanswered ||
-    activeTab !== 'all';
+    activeTab !== 'all' ||
+    selectedAgentIds.length > 0;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
@@ -278,6 +294,56 @@ export function AdvancedFilterModal({
                 </button>
               </div>
             </div>
+
+            {/* Filtro de Responsáveis e Agentes */}
+            {(availableAgents.length > 0) && (
+              <div className="mb-4">
+                <label className="block text-xs font-semibold text-gray-700 mb-3">
+                  Agentes de IA
+                </label>
+                <div className="max-h-40 overflow-y-auto space-y-2 border border-gray-200 rounded-lg p-2">
+                  {availableAgents
+                    .filter(agent => agent.isAtivo !== false)
+                    .map((agent) => (
+                      <button
+                        key={agent.Id}
+                        onClick={() => {
+                          if (selectedAgentIds.includes(agent.Id)) {
+                            setSelectedAgentIds(selectedAgentIds.filter(id => id !== agent.Id));
+                          } else {
+                            setSelectedAgentIds([...selectedAgentIds, agent.Id]);
+                          }
+                        }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-all ${
+                          selectedAgentIds.includes(agent.Id)
+                            ? 'bg-emerald-100 text-emerald-900 border-2 border-emerald-500'
+                            : 'bg-gray-50 text-gray-700 border-2 border-transparent hover:bg-gray-100'
+                        }`}
+                      >
+                        <div
+                          className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                            selectedAgentIds.includes(agent.Id)
+                              ? 'bg-emerald-500 border-emerald-500'
+                              : 'border-gray-300'
+                          }`}
+                        >
+                          {selectedAgentIds.includes(agent.Id) && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="truncate flex-1 text-left font-medium">{agent.nome}</span>
+                      </button>
+                    ))}
+                </div>
+                {selectedAgentIds.length > 0 && (
+                  <div className="mt-2 text-xs text-gray-600">
+                    {selectedAgentIds.length} agente{selectedAgentIds.length !== 1 ? 's' : ''} selecionado{selectedAgentIds.length !== 1 ? 's' : ''}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Filtros Adicionais */}
             <div className="space-y-2">

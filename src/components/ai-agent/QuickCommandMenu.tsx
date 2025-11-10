@@ -308,7 +308,7 @@ export default function QuickCommandMenu({ isOpen, position, onInsert, onClose, 
 
       {/* Menu */}
       <div
-        className="fixed z-[9999] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col"
+        className="fixed z-[9999] bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col"
         style={{
           top: `${position.top}px`,
           left: `${position.left}px`,

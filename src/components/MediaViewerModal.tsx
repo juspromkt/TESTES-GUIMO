@@ -21,7 +21,7 @@ export default function MediaViewerModal({ isOpen, onClose, url, type, name }: M
       />
 
       {/* Modal */}
-      <div className="relative z-10 w-[90vw] h-[90vh] bg-white dark:bg-gray-800 rounded-lg shadow-2xl overflow-hidden flex flex-col">
+      <div className="relative z-10 w-[90vw] h-[90vh] bg-white dark:bg-gray-900 rounded-lg shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">

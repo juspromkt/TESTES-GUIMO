@@ -609,7 +609,7 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
                 <Book className="w-8 h-8 text-blue-600 dark:text-blue-400" />
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
-                Configure seu Agente de IA
+                Configure seu Agente
               </h2>
               <p className="text-lg text-gray-600 dark:text-neutral-300 max-w-2xl mx-auto">
                 Escolha um modelo pré-configurado ou crie um agente personalizado do zero
@@ -633,7 +633,7 @@ export default function DefaultModelsSection({ token, onSuccess, canEdit }: Defa
                       </div>
 
                       <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                        Escolher Área da IA
+                        Escolher Área do Agente
                       </h3>
                       <p className="text-gray-600 dark:text-neutral-300 text-sm mb-4">
                         Selecione entre 10 modelos especializados prontos para uso

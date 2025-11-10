@@ -277,7 +277,7 @@ export default function AutoMovementTab({ token, canViewAgent, idAgente }: AutoM
             <button
               onClick={handleReset}
               disabled={resetting}
-              className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-900 transition-colors disabled:opacity-50"
             >
               {resetting ? 'Resetando...' : 'Confirmar Reset'}
             </button>

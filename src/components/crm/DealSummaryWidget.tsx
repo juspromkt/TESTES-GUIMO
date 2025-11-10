@@ -191,7 +191,7 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
   };
 
   return (
-    <div className="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 transition-colors duration-200">
+    <div className="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 transition-colors duration-200">
       {/* Header - sempre visível */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}

@@ -21,12 +21,16 @@ import {
   RefreshCw,
   ChevronDown,
   Volume2,
-  VolumeX
+  VolumeX,
+  PlayCircle,
+  Pause,
+  BanIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMessageEvents } from '../../pages/MessageEventsContext';
 import { loadChats, updateCacheFromMessage, setCache, getCache, setChatListLoaded } from '../../utils/chatCache';
 import { onChatUpdate, type ChatUpdateEventData } from '../../utils/chatUpdateEvents';
+import GuimooIcon from '../GuimooIcon';
 
 
 const TRANSFER_STORAGE_KEY = 'chat_transfer_remote_jids';
@@ -54,6 +58,7 @@ interface ChatListProps {
   externalUsuarioFiltroId?: number | null;
   externalTagFiltroId?: number | null;
   externalUsuarioFiltroIds?: number[];
+  externalAgenteFiltroIds?: number[];
   externalTagFiltroIds?: number[];
   externalDepartamentoFiltroIds?: number[];
   externalFunilId?: number | null;
@@ -77,6 +82,7 @@ export function ChatList({
   externalUsuarioFiltroId,
   externalTagFiltroId,
   externalUsuarioFiltroIds,
+  externalAgenteFiltroIds,
   externalTagFiltroIds,
   externalDepartamentoFiltroIds,
   externalFunilId,
@@ -111,6 +117,7 @@ export function ChatList({
   const [internalUsuarioFiltroId, setInternalUsuarioFiltroId] = useState<number | null>(null);
   const [internalTagFiltroId, setInternalTagFiltroId] = useState<number | null>(null);
   const [internalUsuarioFiltroIds, setInternalUsuarioFiltroIds] = useState<number[]>([]);
+  const [internalAgenteFiltroIds, setInternalAgenteFiltroIds] = useState<number[]>([]);
   const [internalTagFiltroIds, setInternalTagFiltroIds] = useState<number[]>([]);
   const [internalDepartamentoFiltroIds, setInternalDepartamentoFiltroIds] = useState<number[]>([]);
   const [internalStageFiltroIds, setInternalStageFiltroIds] = useState<string[]>([]);
@@ -136,6 +143,8 @@ export function ChatList({
   const setTagFiltroId = externalTagFiltroId !== undefined ? () => {} : setInternalTagFiltroId;
   const usuarioFiltroIds = externalUsuarioFiltroIds !== undefined ? externalUsuarioFiltroIds : internalUsuarioFiltroIds;
   const setUsuarioFiltroIds = externalUsuarioFiltroIds !== undefined ? () => {} : setInternalUsuarioFiltroIds;
+  const agenteFiltroIds = externalAgenteFiltroIds !== undefined ? externalAgenteFiltroIds : internalAgenteFiltroIds;
+  const setAgenteFiltroIds = externalAgenteFiltroIds !== undefined ? () => {} : setInternalAgenteFiltroIds;
   const tagFiltroIds = externalTagFiltroIds !== undefined ? externalTagFiltroIds : internalTagFiltroIds;
   const setTagFiltroIds = externalTagFiltroIds !== undefined ? () => {} : setInternalTagFiltroIds;
   const departamentoFiltroIds = externalDepartamentoFiltroIds !== undefined ? externalDepartamentoFiltroIds : internalDepartamentoFiltroIds;
@@ -167,6 +176,7 @@ export function ChatList({
   const [sessions, setSessions] = useState<any[]>([]);
   const [interventions, setInterventions] = useState<any[]>([]);
   const [permanentExclusions, setPermanentExclusions] = useState<any[]>([]);
+  const [agents, setAgents] = useState<any[]>([]);
   const [contactMap, setContactMap] = useState<Record<string, Contact>>({});
   const [contactSearch, setContactSearch] = useState('');
   const [contactPopoverOpen, setContactPopoverOpen] = useState(false);
@@ -365,6 +375,7 @@ export function ChatList({
       usuarioFiltroId !== null ||
       tagFiltroId !== null ||
       usuarioFiltroIds.length > 0 ||
+      agenteFiltroIds.length > 0 ||
       tagFiltroIds.length > 0 ||
       stageFiltroIds.length > 0 ||
       startDate !== null ||
@@ -377,6 +388,7 @@ export function ChatList({
       iaStatusFilter,
       usuarioFiltroId,
       tagFiltroId,
+      agenteFiltroIds,
       usuarioFiltroIds,
       tagFiltroIds,
       stageFiltroIds,
@@ -971,20 +983,29 @@ useEffect(() => {
   };
 
   try {
-    const [sess, interv, perm] = await Promise.all([
+    const [sess, interv, perm, agts] = await Promise.all([
       safeFind(apiClient.findSessions),
       safeFind(apiClient.findInterventions),
       safeFind(apiClient.findPermanentExclusions),
+      safeFind(async (t: string) => {
+        const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/get', {
+          headers: { token: t }
+        });
+        if (!response.ok) throw new Error('Erro ao carregar agentes');
+        return response.json();
+      }),
     ]);
 
     setSessions(Array.isArray(sess) ? sess : []);
     setInterventions(Array.isArray(interv) ? interv : []);
     setPermanentExclusions(Array.isArray(perm) ? perm : []);
+    setAgents(Array.isArray(agts) ? agts : []);
   } catch {
     // não deve cair aqui, mas se cair, zera para não quebrar UI
     setSessions([]);
     setInterventions([]);
     setPermanentExclusions([]);
+    setAgents([]);
   }
 }, [token]);
 
@@ -1708,6 +1729,34 @@ const permanentSet = useMemo(() => {
   return new Set(keys);
 }, [permanentExclusions]);
 
+// Mapa de agentes por ID (id_agente -> nome)
+const agentsMap = useMemo(() => {
+  const map: Record<string, string> = {};
+  const arr = Array.isArray(agents) ? agents : [];
+  for (const agent of arr) {
+    if (agent?.Id && agent?.nome) {
+      map[String(agent.Id)] = agent.nome;
+    }
+  }
+  return map;
+}, [agents]);
+
+// Mapa de telefone -> id_agente (para saber qual agente está atendendo cada conversa)
+const phoneToAgentMap = useMemo(() => {
+  const map: Record<string, string> = {};
+  const arr = Array.isArray(sessions) ? sessions : [];
+  for (const session of arr) {
+    if (session?.telefone && session?.id_agente) {
+      const digits = String(session.telefone).replace(/\D/g, '');
+      if (digits) {
+        map[`${digits}@s.whatsapp.net`] = String(session.id_agente);
+        map[`${digits}@lid`] = String(session.id_agente);
+      }
+    }
+  }
+  return map;
+}, [sessions]);
+
 
 const contactsArray = useMemo(
   () =>
@@ -1788,6 +1837,13 @@ const filteredChats = useMemo(() => {
     if (usuarioFiltroIds.length > 0) {
       const dono = resolveUsuarioDono(chat.remoteJid);
       if (!dono || !usuarioFiltroIds.includes(dono.Id)) return false;
+    }
+
+    // Multi-select filter for AI agents
+    if (agenteFiltroIds.length > 0) {
+      const keys = jidCandidates(chat.remoteJid);
+      const agentId = keys.map(k => phoneToAgentMap[k]).find(id => id);
+      if (!agentId || !agenteFiltroIds.includes(Number(agentId))) return false;
     }
 
     // Multi-select filter for tags
@@ -1914,13 +1970,16 @@ const filteredChats = useMemo(() => {
 const chatsToShow = filteredChats;
 
   const [flashChatIds, setFlashChatIds] = useState<Set<string>>(new Set());
+  const lastFilteredCountRef = useRef<number>(-1);
+  const lastCategoryCountsRef = useRef<{ ia: number; unread: number; unanswered: number; transfers: number }>({ ia: 0, unread: 0, unanswered: 0, transfers: 0 });
 
   // Notify parent of filtered count changes
   useEffect(() => {
-    if (onFilteredCountChange) {
+    if (onFilteredCountChange && filteredChats.length !== lastFilteredCountRef.current) {
+      lastFilteredCountRef.current = filteredChats.length;
       onFilteredCountChange(filteredChats.length);
     }
-  }, [filteredChats, onFilteredCountChange]);
+  }, [filteredChats.length, onFilteredCountChange]);
 
   // Calculate category counts for all filter tabs
   // This counts ALL chats matching base filters (search, tags, dates, etc) but ignores activeTab
@@ -2019,8 +2078,18 @@ const chatsToShow = filteredChats;
       if (isTransfer) transfersCount++;
     });
 
-    onCategoryCountsChange({ ia: iaCount, unread: unreadCount, unanswered: unansweredCount, transfers: transfersCount });
-  }, [chats, searchTerm, unreadMessages, transferSet, sessionsSet, interventionsSet, permanentSet, tagsMap, departamentosMap, tagFiltroId, tagFiltroIds, departamentoFiltroIds, usuarioFiltroId, usuarioFiltroIds, stageFiltroIds, startDate, endDate, iaStatusFilter, showOnlyUnread, showUnanswered, onCategoryCountsChange, contactMap, resolveUsuarioDono, sanitizePushName, extractPhoneNumber, removeAccents]);
+    // Só chama o callback se os valores realmente mudaram
+    const lastCounts = lastCategoryCountsRef.current;
+    if (
+      lastCounts.ia !== iaCount ||
+      lastCounts.unread !== unreadCount ||
+      lastCounts.unanswered !== unansweredCount ||
+      lastCounts.transfers !== transfersCount
+    ) {
+      lastCategoryCountsRef.current = { ia: iaCount, unread: unreadCount, unanswered: unansweredCount, transfers: transfersCount };
+      onCategoryCountsChange({ ia: iaCount, unread: unreadCount, unanswered: unansweredCount, transfers: transfersCount });
+    }
+  }, [chats, searchTerm, unreadMessages, transferSet, sessionsSet, interventionsSet, permanentSet, tagsMap, departamentosMap, tagFiltroId, tagFiltroIds, departamentoFiltroIds, usuarioFiltroId, usuarioFiltroIds, agenteFiltroIds, phoneToAgentMap, stageFiltroIds, startDate, endDate, iaStatusFilter, showOnlyUnread, showUnanswered, onCategoryCountsChange, contactMap, resolveUsuarioDono]);
 
   useEffect(() => {
     chatsRef.current = chats;
@@ -2412,7 +2481,7 @@ const getLastMessageText = (chat) => {
     <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Header - oculto quando controlado externamente */}
       {!isExternallyControlled && (
-        <div className="border-b border-gray-300 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 transition-colors duration-200">
+        <div className="border-b border-gray-300 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 transition-colors duration-200">
           <div className="px-4 py-3 space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -2422,7 +2491,7 @@ const getLastMessageText = (chat) => {
                 <button
                   onClick={() => setShowControls(prev => !prev)}
                   className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                    showControls ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600'
+                    showControls ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600'
                   }`}
                 >
                   <span>{showControls ? 'Ocultar filtros' : 'Mostrar filtros'}</span>
@@ -2444,7 +2513,7 @@ const getLastMessageText = (chat) => {
                   className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${
                     soundEnabled
                       ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30'
-                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                   title={soundEnabled ? 'Som de notificação ativado' : 'Som de notificação desativado'}
                 >
@@ -2454,14 +2523,14 @@ const getLastMessageText = (chat) => {
                 <Popover.Root open={contactPopoverOpen} onOpenChange={setContactPopoverOpen}>
                   <Popover.Trigger asChild>
                     <button
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
                       title="Nova conversa"
                     >
                       <MessageSquarePlus className="h-4 w-4" />
                     </button>
                   </Popover.Trigger>
                   <Popover.Portal>
-                    <Popover.Content sideOffset={6} className="z-50 w-60 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-3 shadow-2xl transition-colors duration-200">
+                    <Popover.Content sideOffset={6} className="z-50 w-60 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-3 shadow-2xl transition-colors duration-200">
                       <input
                         type="text"
                         value={contactSearch}
@@ -2470,7 +2539,7 @@ const getLastMessageText = (chat) => {
                           setContactSearch(e.target.value);
                         }}
                         placeholder="Buscar contato"
-                        className="mb-2 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 p-2 text-sm focus:border-emerald-400 focus:outline-none transition-colors duration-200"
+                        className="mb-2 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 p-2 text-sm focus:border-emerald-400 focus:outline-none transition-colors duration-200"
                       />
                       <div className="max-h-60 overflow-y-auto">
                         {filteredContacts.map(c => (
@@ -2509,14 +2578,14 @@ const getLastMessageText = (chat) => {
                   lastUserInteractionRef.current = Date.now();
                   setSearchTerm(e.target.value);
                 }}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-2 pl-9 pr-3 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-colors duration-200"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 py-2 pl-9 pr-3 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 transition-colors duration-200"
               />
             </div>
 
             {showControls && (
             <div className="border-t border-gray-300 dark:border-gray-700 pt-3 transition-colors duration-200">
               <div
-                className="space-y-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white/95 dark:bg-gray-800/95 p-3 shadow-sm max-h-64 overflow-y-auto transition-colors duration-200"
+                className="space-y-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white/95 dark:bg-gray-900/95 p-3 shadow-sm max-h-64 overflow-y-auto transition-colors duration-200"
                 style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(148, 163, 184, 0.35) transparent' }}
               >
                 <div className="flex flex-wrap items-center gap-2">
@@ -2526,7 +2595,7 @@ const getLastMessageText = (chat) => {
                         className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-gray-600 dark:text-gray-400 transition-colors ${
                           iaStatusFilter !== 'all'
                             ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-700'
                         }`}
                         title="Filtrar por status de IA"
                       >
@@ -2536,7 +2605,7 @@ const getLastMessageText = (chat) => {
                       </button>
                     </Popover.Trigger>
                     <Popover.Portal>
-                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-3 shadow-2xl transition-colors duration-200">
+                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-3 shadow-2xl transition-colors duration-200">
                         <div className="space-y-1">
                           <button
                             onClick={() => setIaStatusFilter('active')}
@@ -2567,7 +2636,7 @@ const getLastMessageText = (chat) => {
                         className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-gray-600 dark:text-gray-400 transition-colors ${
                           usuarioFiltroId !== null
                             ? 'border-blue-300 bg-blue-50 text-blue-700'
-                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-700'
                         }`}
                         title="Filtrar por usuário"
                       >
@@ -2577,7 +2646,7 @@ const getLastMessageText = (chat) => {
                       </button>
                     </Popover.Trigger>
                     <Popover.Portal>
-                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-3 shadow-2xl transition-colors duration-200">
+                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-3 shadow-2xl transition-colors duration-200">
                         <div className="max-h-60 space-y-1 overflow-y-auto">
                           <button
                             onClick={() => setUsuarioFiltroId(null)}
@@ -2607,7 +2676,7 @@ const getLastMessageText = (chat) => {
                         className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-gray-600 dark:text-gray-400 transition-colors ${
                           tagFiltroId !== null
                             ? 'border-purple-300 bg-purple-50 text-purple-700'
-                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-700'
                         }`}
                         title="Filtrar por etiqueta"
                       >
@@ -2617,7 +2686,7 @@ const getLastMessageText = (chat) => {
                       </button>
                     </Popover.Trigger>
                     <Popover.Portal>
-                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-3 shadow-2xl transition-colors duration-200">
+                      <Popover.Content sideOffset={6} className="z-50 w-48 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-3 shadow-2xl transition-colors duration-200">
                         <div className="max-h-60 space-y-1 overflow-y-auto">
                           <button
                             onClick={() => setTagFiltroId(null)}
@@ -2659,7 +2728,7 @@ const getLastMessageText = (chat) => {
                       className={`flex-1 min-w-[120px] rounded-md border px-2.5 py-1 transition-colors ${
                         activeTab === tab.key
                           ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                          : 'border-transparent bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                          : 'border-transparent bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                       }`}
                     >
                       {tab.label}
@@ -2717,7 +2786,7 @@ const getLastMessageText = (chat) => {
 
               const isUnread = unreadCount > 0 || unreadCount === -1;
 
-              let containerTone = 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700';
+              let containerTone = 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-700';
               if (isSelected) {
                 containerTone = 'bg-gray-100 dark:bg-gray-700';
               } else if (isUnread) {
@@ -2739,9 +2808,9 @@ const getLastMessageText = (chat) => {
               return (
                 <div
                   key={chat.id}
-                  className={`${containerClasses} relative`}
+                  className={`${containerClasses} relative group overflow-visible`}
                 >
-                  {/* Botão de marcar como não lida */}
+                  {/* Botão de marcar como não lida - fica à direita */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -2759,13 +2828,13 @@ const getLastMessageText = (chat) => {
                       // Marca como não lida imediatamente (bolinha verde sem número)
                       setUnreadMessages(prev => ({ ...prev, [jid]: -1 }));
                     }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-full bg-white dark:bg-gray-700 shadow-md hover:bg-gray-100 dark:hover:bg-gray-600 z-10"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-10 group-hover:-translate-x-2 transition-transform duration-200 p-1.5 rounded-full bg-teal-500 hover:bg-teal-600 z-20"
                     title="Marcar como não lida"
                   >
-                    <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                    <ChevronDown className="w-4 h-4 text-white" />
                   </button>
 
-                  {/* Container clicável */}
+                  {/* Container clicável - desliza para direita no hover */}
                   <div
                     onClick={() => {
                       lastUserInteractionRef.current = Date.now();
@@ -2801,9 +2870,13 @@ const getLastMessageText = (chat) => {
                         }
                       }
                     }}
-                    className="flex items-center gap-3 w-full cursor-pointer"
+                    className="flex items-center gap-3 w-full cursor-pointer transition-transform duration-200 group-hover:-translate-x-8 relative"
                   >
-                  {/* Foto do usuário */}
+                  {/* Barra lateral de status */}
+                  {isUnread && (
+                    <div className="absolute -left-3 top-0 bottom-0 w-1 bg-teal-500"></div>
+                  )}
+                  {/* Avatar */}
                   <div className="flex-shrink-0">
                     {chat.profilePicUrl ? (
                       <img
@@ -2812,7 +2885,7 @@ const getLastMessageText = (chat) => {
                         className="h-12 w-12 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 font-semibold text-sm transition-colors duration-200">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-sm">
                         {getInitials(chat.pushName)}
                       </div>
                     )}
@@ -2821,13 +2894,21 @@ const getLastMessageText = (chat) => {
                   {/* Conteúdo da conversa */}
                   <div className="flex-1 min-w-0">
                     {/* Linha 1: Nome + Timestamp */}
-                    <div className="flex items-baseline justify-between gap-2 mb-0.5">
-                      <h3 className={`text-[15px] truncate flex-1 ${nameColorClass} transition-colors duration-200`}>
+                    <div className="flex items-baseline justify-between gap-3 mb-1">
+                      <h3 className={`text-[15px] truncate flex-1 ${nameColorClass} font-medium`}>
                         {displayName}
                       </h3>
-                      <span className={`text-xs flex-shrink-0 ${metaTextClass} transition-colors duration-200`}>
-                        {formatTimestamp(normalizeTimestamp(chat.lastMessage.messageTimestamp))}
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {/* Transfer Badge */}
+                        {isTransfer && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
+                            TRANSF
+                          </span>
+                        )}
+                        <span className={`text-[11px] ${metaTextClass}`}>
+                          {formatTimestamp(normalizeTimestamp(chat.lastMessage.messageTimestamp))}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Linha 2: Última mensagem + Badges */}
@@ -2850,14 +2931,7 @@ const getLastMessageText = (chat) => {
                           </span>
                         )}
                         {unreadCount === -1 && (
-                          <span className="inline-flex w-2.5 h-2.5 rounded-full bg-teal-500" title="Não lida"></span>
-                        )}
-
-                        {/* Transfer Badge */}
-                        {isTransfer && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-100 text-yellow-700">
-                            TRANSF
-                          </span>
+                          <span className="w-2.5 h-2.5 rounded-full bg-teal-500" title="Não lida"></span>
                         )}
 
                         {(() => {
@@ -2871,22 +2945,22 @@ const getLastMessageText = (chat) => {
 
                           if (iaAtiva) {
                             return (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-green-100 text-green-700">
-                                IA
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-emerald-100 dark:bg-emerald-900/40" title="IA Ativa">
+                                <PlayCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                               </span>
                             );
                           }
                           if (iaInativa) {
                             return (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-100 text-yellow-700">
-                                IA PAUSADA
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-yellow-100 dark:bg-yellow-900/40" title="IA Pausada">
+                                <Pause className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
                               </span>
                             );
                           }
                           if (iaPermanente) {
                             return (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-800">
-                                IA DESATIVADA
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-red-100 dark:bg-red-900/40" title="IA Desativada">
+                                <BanIcon className="w-4 h-4 text-red-600 dark:text-red-400" />
                               </span>
                             );
                           }
@@ -2895,17 +2969,34 @@ const getLastMessageText = (chat) => {
                       </div>
                     </div>
 
-                    {/* Linha 3: Responsável */}
-                    <div className="flex items-center gap-2 mt-0.5">
+                    {/* Linha 3: Responsável e Agente */}
+                    <div className="flex items-center gap-2 mt-1">
                       {/* Responsável */}
                       {dono && (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300">
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
-                          {dono.nome}
+                          <span>{dono.nome}</span>
                         </span>
                       )}
+
+                      {/* Agente de IA */}
+                      {(() => {
+                        const keys = jidCandidates(chat.remoteJid);
+                        const agentId = keys.map(k => phoneToAgentMap[k]).find(id => id);
+                        const agentName = agentId ? agentsMap[agentId] : null;
+
+                        if (agentName) {
+                          return (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300">
+                              <GuimooIcon className="w-3 h-3" />
+                              <span>{agentName}</span>
+                            </span>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   </div>
                   </div>

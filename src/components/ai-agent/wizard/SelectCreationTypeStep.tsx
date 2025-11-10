@@ -29,7 +29,7 @@ export default function SelectCreationTypeStep({ state, onNext, onBack }: StepCo
         {/* Opção: Criar do Zero */}
         <button
           onClick={() => handleSelectType('scratch')}
-          className="group relative p-8 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg transition-all duration-200 text-left bg-white dark:bg-gray-800"
+          className="group relative p-8 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg transition-all duration-200 text-left bg-white dark:bg-gray-900"
         >
           <div className="flex flex-col items-center text-center space-y-4">
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-full group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
@@ -68,7 +68,7 @@ export default function SelectCreationTypeStep({ state, onNext, onBack }: StepCo
         {/* Opção: Usar Modelo Pronto */}
         <button
           onClick={() => handleSelectType('template')}
-          className="group relative p-8 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg transition-all duration-200 text-left bg-white dark:bg-gray-800"
+          className="group relative p-8 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg transition-all duration-200 text-left bg-white dark:bg-gray-900"
         >
           <div className="flex flex-col items-center text-center space-y-4">
             <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-full group-hover:bg-green-100 dark:group-hover:bg-green-900/30 transition-colors">

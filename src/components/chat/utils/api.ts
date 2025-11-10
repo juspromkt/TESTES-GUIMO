@@ -391,17 +391,28 @@ async findChats(
   return data;
 },
 
-async findMensagensNaoLidas(token: string) {
-  const response = await fetch(
-    'https://n8n.lumendigital.com.br/webhook/prospecta/chat/findMensagensNaoLidas',
-    {
-      method: 'GET',
-      headers: { token }
-    }
-  );
+async findMensagensNaoLidas(token: string): Promise<Array<{remoteJid: string; qtdMensagens: number}>> {
+  try {
+    const response = await fetch(
+      'https://n8n.lumendigital.com.br/webhook/prospecta/chat/findMensagensNaoLidas',
+      {
+        method: 'GET',
+        headers: { token }
+      }
+    );
 
-  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-  return safeJsonParse(response, []);
+    if (!response.ok) {
+      console.error(`Erro ao buscar mensagens não lidas: ${response.status}`);
+      return [];
+    }
+
+    const result = await safeJsonParse(response, []);
+    // Garante que sempre retorna um array
+    return Array.isArray(result) ? result : [];
+  } catch (error) {
+    console.error('Erro ao buscar mensagens não lidas:', error);
+    return [];
+  }
 },
 
 async visualizarMensagens(token: string, remoteJid: string) {

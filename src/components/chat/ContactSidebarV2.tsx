@@ -26,8 +26,8 @@ import {
   Pencil,
   Trash2,
   Save,
+  Briefcase,
 } from "lucide-react";
-import { Grid as VirtualGrid } from 'react-window';
 import GuimooIcon from "../GuimooIcon";
 // Lazy import do ReactQuill para code splitting
 const ReactQuill = lazy(() => import('react-quill'));
@@ -227,15 +227,7 @@ const MediaPreview = React.memo(({
     };
   }, [mediaData.id, isBusiness]);
 
-  if (loading) {
-    return (
-      <div className="aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-        <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
-      </div>
-    );
-  }
-
-  if (!url) {
+  if (!url || loading) {
     return (
       <div className="aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
         {type === 'image' ? (
@@ -266,7 +258,7 @@ const MediaPreview = React.memo(({
           loading="lazy"
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-          <div className="bg-white/90 dark:bg-gray-800/90 rounded-full p-3">
+          <div className="bg-white/90 dark:bg-gray-900/90 rounded-full p-3">
             <ExternalLink className="w-6 h-6 text-gray-700 dark:text-gray-200" />
           </div>
         </div>
@@ -291,7 +283,7 @@ const MediaPreview = React.memo(({
           </div>
         </div>
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-          <div className="bg-white/90 dark:bg-gray-800/90 rounded-full p-3">
+          <div className="bg-white/90 dark:bg-gray-900/90 rounded-full p-3">
             <ExternalLink className="w-6 h-6 text-gray-700 dark:text-gray-200" />
           </div>
         </div>
@@ -323,7 +315,6 @@ export default function ContactSidebarV2({
     intervention: boolean;
     permanentExclusion: boolean;
   }>({ intervention: false, permanentExclusion: false });
-  const [isTransferChat, setIsTransferChat] = useState(false);
   const [updatingAI, setUpdatingAI] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [savingName, setSavingName] = useState(false);
@@ -439,6 +430,25 @@ export default function ContactSidebarV2({
       console.error('Erro ao buscar agentes:', err);
     } finally {
       setLoadingAgents(false);
+    }
+  };
+
+  // ✅ LAZY LOAD: Buscar departamentos apenas quando necessário
+  const fetchDepartamentos = async () => {
+    if (!token || availableDepartamentos.length > 0) return; // Evita re-fetch
+
+    try {
+      const response = await fetch(`https://n8n.lumendigital.com.br/webhook/produtos/get`, {
+        headers: { token },
+      });
+
+      if (response.ok) {
+        const deptData = await response.json();
+        const depts = Array.isArray(deptData) ? deptData.filter(isDepartamento) : [];
+        setAvailableDepartamentos(depts);
+      }
+    } catch (err) {
+      console.error('Erro ao buscar departamentos:', err);
     }
   };
 
@@ -689,41 +699,50 @@ export default function ContactSidebarV2({
         getCacheKey('findPermanentExclusionByRemoteJid', token, { remoteJid: digits }),
       ]);
 
-      // 🔥 PARALELIZAÇÃO MÁXIMA: Todas as requisições iniciais em paralelo
+      // 🔥 PARALELIZAÇÃO MÁXIMA: Buscar deal IDs primeiro para paralelizar getById
+      const dealIdsRes = await fetch(
+        `https://n8n.lumendigital.com.br/webhook/prospecta/chat/findDealsByContact`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", token },
+          body: JSON.stringify({ remoteJid: selectedChat.remoteJid }),
+        }
+      );
+
+      let dealId: number | null = null;
+      if (dealIdsRes.ok) {
+        const dealText = await dealIdsRes.text();
+        if (dealText) {
+          const deals = JSON.parse(dealText);
+          if (Array.isArray(deals) && deals.length > 0) {
+            dealId = deals[0].Id;
+          }
+        }
+      }
+
+      // Agora faz todas as requisições em paralelo, incluindo getById se houver dealId
       const [
         contactRes,
-        dealRes,
         sessionData,
         interventionData,
         permanentData,
-        transferRes,
         agentsRes,
-        departamentosRes
+        fullDealRes
       ] = await Promise.all([
         fetch(
           `https://n8n.lumendigital.com.br/webhook/prospecta/contato/getByRemoteJid?remoteJid=${digits}`,
           { headers: { token } }
         ),
-        fetch(
-          `https://n8n.lumendigital.com.br/webhook/prospecta/chat/findDealsByContact`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json", token },
-            body: JSON.stringify({ remoteJid: selectedChat.remoteJid }),
-          }
-        ),
         apiClient.findSessionByRemoteJid(token, digits).catch(() => null),
         apiClient.findInterventionByRemoteJid(token, digits).catch(() => null),
         apiClient.findPermanentExclusionByRemoteJid(token, digits).catch(() => null),
-        fetch(`https://n8n.lumendigital.com.br/webhook/prospecta/chat/transfer/get`, {
-          headers: { token },
-        }).catch(() => null),
         fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/get', {
           headers: { token }
         }).catch(() => null),
-        fetch(`https://n8n.lumendigital.com.br/webhook/produtos/get`, {
-          headers: { token },
-        }).catch(() => null)
+        dealId ? fetch(
+          `https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/getById?id=${dealId}`,
+          { headers: { token } }
+        ).catch(() => null) : Promise.resolve(null)
       ]);
 
       // Process contact data
@@ -738,35 +757,13 @@ export default function ContactSidebarV2({
       }
 
       // Process deal data
-      let dealId: number | null = null;
-      if (dealRes.ok) {
-        const dealText = await dealRes.text();
-        if (dealText) {
-          const deals = JSON.parse(dealText);
-          if (Array.isArray(deals) && deals.length > 0) {
-            const basicDeal = deals[0];
-            dealId = basicDeal.Id;
-
-            // Busca deal completo em paralelo (se houver dealId)
-            if (dealId) {
-              const fullDealRes = await fetch(
-                `https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/getById?id=${dealId}`,
-                { headers: { token } }
-              ).catch(() => null);
-
-              if (fullDealRes && fullDealRes.ok) {
-                const fullDealData = await fullDealRes.json();
-                const fullDeal = normalize(fullDealData);
-                if (fullDeal && fullDeal.Id) {
-                  setDealData(fullDeal);
-                } else {
-                  setDealData(basicDeal.Id ? basicDeal : null);
-                }
-              } else {
-                setDealData(basicDeal.Id ? basicDeal : null);
-              }
-            }
-          }
+      if (fullDealRes && fullDealRes.ok) {
+        try {
+          const fullDealData = await fullDealRes.json();
+          const fullDeal = normalize(fullDealData);
+          setDealData(fullDeal && fullDeal.Id ? fullDeal : null);
+        } catch (err) {
+          console.error('[ContactSidebarV2] Erro ao carregar deal completo:', err);
         }
       }
 
@@ -786,17 +783,6 @@ export default function ContactSidebarV2({
         permanentExclusion: hasPermanent,
       });
 
-      // Process transfer data
-      if (transferRes && transferRes.ok) {
-        const transferData = await transferRes.json();
-        const hasTransfer = Array.isArray(transferData)
-          ? transferData.some(
-              (t: any) => t.remoteJid === digits || t.remoteJid === selectedChat.remoteJid
-            )
-          : false;
-        setIsTransferChat(hasTransfer);
-      }
-
       // Process agents data
       if (agentsRes && agentsRes.ok) {
         const agentsData = await agentsRes.json();
@@ -810,12 +796,7 @@ export default function ContactSidebarV2({
         }
       }
 
-      // Process departamentos data
-      if (departamentosRes && departamentosRes.ok) {
-        const deptData = await departamentosRes.json();
-        const depts = Array.isArray(deptData) ? deptData.filter(isDepartamento) : [];
-        setAvailableDepartamentos(depts);
-      }
+      // ✅ OTIMIZADO: Departamentos agora são lazy load (não busca na abertura)
 
       // 🔥 Load tags and deal departamentos in parallel if we have a dealId
       if (dealId) {
@@ -878,13 +859,10 @@ export default function ContactSidebarV2({
       ]);
 
       // Busca em paralelo
-      const [sessionData, interventionData, permanentData, transferRes] = await Promise.all([
+      const [sessionData, interventionData, permanentData] = await Promise.all([
         apiClient.findSessionByRemoteJid(token, digits).catch(() => null),
         apiClient.findInterventionByRemoteJid(token, digits).catch(() => null),
         apiClient.findPermanentExclusionByRemoteJid(token, digits).catch(() => null),
-        fetch(`https://n8n.lumendigital.com.br/webhook/prospecta/chat/transfer/get`, {
-          headers: { token },
-        }).catch(() => null),
       ]);
 
       // Normaliza dados
@@ -895,6 +873,11 @@ export default function ContactSidebarV2({
       setSessionInfo(session);
       setInterventionInfo(intervention);
 
+      // Se a sessão tem um id_agente, seleciona ele no dropdown
+      if (session && session.id_agente) {
+        setSelectedAgentId(Number(session.id_agente));
+      }
+
       // Atualiza status da IA
       const hasIntervention = !!intervention && Object.keys(intervention).length > 0;
       const hasPermanent = !!permanent && Object.keys(permanent).length > 0;
@@ -903,17 +886,6 @@ export default function ContactSidebarV2({
         intervention: hasIntervention && !hasPermanent,
         permanentExclusion: hasPermanent,
       });
-
-      // Processar transferência
-      if (transferRes && transferRes.ok) {
-        const transferData = await transferRes.json();
-        const hasTransfer = Array.isArray(transferData)
-          ? transferData.some(
-              (t: any) => t.remoteJid === digits || t.remoteJid === selectedChat.remoteJid
-            )
-          : false;
-        setIsTransferChat(hasTransfer);
-      }
     } catch (error) {
       console.error("[ContactSidebarV2] Erro ao carregar informações de sessão:", error);
     }
@@ -1047,6 +1019,66 @@ export default function ContactSidebarV2({
     }
   }, [isOpen, contactData, dealData, initialLoad, activeView, modalAlreadyShown]);
 
+  // 🔄 Atualizar agente da sessão
+  const handleUpdateAgent = async (newAgentId: number | null) => {
+    console.log('[handleUpdateAgent] Iniciando atualização de agente', {
+      newAgentId,
+      selectedChat: selectedChat?.remoteJid,
+      pushName: selectedChat?.pushName,
+      hasToken: !!token
+    });
+
+    if (!selectedChat || !token || !newAgentId) {
+      console.log('[handleUpdateAgent] Validação falhou - faltam dados');
+      return;
+    }
+
+    // 🚀 OPTIMISTIC UPDATE: Atualiza a UI imediatamente
+    const previousAgentId = selectedAgentId;
+    setSelectedAgentId(newAgentId);
+
+    try {
+      console.log('[handleUpdateAgent] Chamando API /conversa/agente/ativar');
+
+      // Usa o endpoint /conversa/agente/ativar com id_agente para atribuir/trocar o agente
+      const response = await fetch(
+        `https://n8n.lumendigital.com.br/webhook/prospecta/conversa/agente/ativar`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", token },
+          body: JSON.stringify({
+            pushName: selectedChat.pushName,
+            remoteJid: selectedChat.remoteJid,
+            id_agente: newAgentId
+          }),
+        }
+      );
+
+      console.log('[handleUpdateAgent] Response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[handleUpdateAgent] Erro na resposta da API:', errorText);
+        throw new Error(`Erro na API: ${response.status}`);
+      }
+
+      console.log('[handleUpdateAgent] API respondeu com sucesso');
+
+      console.log('[handleUpdateAgent] Disparando refresh global...');
+
+      // Dispara refresh global para atualizar o ChatList
+      triggerGlobalRefresh();
+
+      console.log('[handleUpdateAgent] Atualização de agente concluída com sucesso');
+      toast.success('Agente atualizado com sucesso');
+    } catch (error) {
+      // Reverte em caso de erro
+      setSelectedAgentId(previousAgentId);
+      console.error("[ContactSidebarV2] Erro ao atualizar agente:", error);
+      toast.error('Erro ao atualizar agente');
+    }
+  };
+
   // ▶️ Ativar IA
   const handleStartAgent = async () => {
     if (!selectedChat || !token) return;
@@ -1078,13 +1110,11 @@ export default function ContactSidebarV2({
           headers: { "Content-Type": "application/json", token },
           body: JSON.stringify({
             pushName: selectedChat.pushName,
-            remoteJid: selectedChat.remoteJid
+            remoteJid: selectedChat.remoteJid,
+            id_agente: selectedAgentId
           }),
         }
       );
-
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      await loadSessionInfo();
 
       updateChatLocal(selectedChat.remoteJid, { iaActive: true });
 
@@ -1103,7 +1133,6 @@ export default function ContactSidebarV2({
     } catch (error) {
       console.error("[ContactSidebarV2] Erro ao ativar IA:", error);
       toast.error('Erro ao ativar IA');
-      await loadSessionInfo();
     } finally {
       setUpdatingAI(false);
     }
@@ -1132,13 +1161,10 @@ export default function ContactSidebarV2({
 
       triggerGlobalRefresh();
 
-      await loadSessionInfo();
-
       toast.success('IA pausada temporariamente');
     } catch (error) {
       console.error("[ContactSidebarV2] Erro ao pausar IA:", error);
       toast.error('Erro ao pausar IA');
-      await loadSessionInfo();
     } finally {
       setUpdatingAI(false);
     }
@@ -1158,20 +1184,15 @@ export default function ContactSidebarV2({
     try {
       await apiClient.createPermanentExclusion(token, selectedChatDigits);
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       updateChatLocal(selectedChat.remoteJid, { iaActive: false });
 
       const { updateChatIAStatus } = await import('../../utils/chatUpdateEvents');
       updateChatIAStatus(selectedChat.remoteJid, false);
 
-      await loadSessionInfo();
-
       toast.success('IA desativada permanentemente');
     } catch (error) {
       console.error("[ContactSidebarV2] Erro ao desativar IA:", error);
       toast.error('Erro ao desativar IA');
-      await loadSessionInfo();
     } finally {
       setUpdatingAI(false);
     }
@@ -1181,12 +1202,23 @@ export default function ContactSidebarV2({
   const handleDeleteIntervention = async () => {
     if (!token || !interventionInfo || !selectedChatDigits) return;
     setUpdatingAI(true);
+
+    // 🚀 OPTIMISTIC UPDATE
+    setAiStatus({
+      intervention: false,
+      permanentExclusion: false,
+    });
+
     try {
       await apiClient.deleteIntervention(token, selectedChatDigits);
       toast.success('Intervenção removida - IA reativada');
-      await loadSessionInfo();
       triggerGlobalRefresh();
     } catch (err) {
+      // Reverte em caso de erro
+      setAiStatus({
+        intervention: true,
+        permanentExclusion: false,
+      });
       console.error('Erro ao remover intervenção:', err);
       toast.error('Erro ao remover intervenção');
     } finally {
@@ -1198,12 +1230,23 @@ export default function ContactSidebarV2({
   const handleRemovePermanentExclusion = async () => {
     if (!selectedChat || !token || !selectedChatDigits) return;
     setUpdatingAI(true);
+
+    // 🚀 OPTIMISTIC UPDATE
+    setAiStatus({
+      intervention: false,
+      permanentExclusion: false,
+    });
+
     try {
       await apiClient.deletePermanentExclusion(token, selectedChatDigits);
       toast.success('Exclusão permanente removida');
-      await loadSessionInfo();
       triggerGlobalRefresh();
     } catch (error) {
+      // Reverte em caso de erro
+      setAiStatus({
+        intervention: false,
+        permanentExclusion: true,
+      });
       console.error("Erro ao remover exclusão permanente:", error);
       toast.error('Erro ao remover exclusão permanente');
     } finally {
@@ -1211,30 +1254,6 @@ export default function ContactSidebarV2({
     }
   };
 
-  // 🔄 Remover transferência
-  const handleRemoveTransfer = async () => {
-    if (!selectedChat || !token) return;
-    setUpdatingAI(true);
-    try {
-      const digits = selectedChat.remoteJid.replace(/\D/g, "");
-      await fetch(
-        `https://n8n.lumendigital.com.br/webhook/prospecta/chat/transfer/delete`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json", token },
-          body: JSON.stringify({ remoteJid: digits }),
-        }
-      );
-
-      triggerGlobalRefresh();
-      toast.success('Transferência cancelada');
-    } catch (error) {
-      console.error("Erro ao remover transferência:", error);
-      toast.error('Erro ao remover transferência');
-    } finally {
-      setUpdatingAI(false);
-    }
-  };
 
   // ✏️ Atualizar nome do contato
   const handleUpdateName = async () => {
@@ -1305,7 +1324,12 @@ export default function ContactSidebarV2({
   const handleUpdateResponsavel = async (id_usuario: number) => {
     if (!dealData || !token) return;
 
+    // 🚀 OPTIMISTIC UPDATE: Atualiza a UI imediatamente
+    const previousValue = dealData.id_usuario;
+    setDealData((prev) => (prev ? { ...prev, id_usuario } : null));
+
     try {
+      // Faz a chamada da API em background
       await fetch(
         `https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/update`,
         {
@@ -1314,8 +1338,6 @@ export default function ContactSidebarV2({
           body: JSON.stringify({ Id: dealData.Id, id_usuario }),
         }
       );
-
-      setDealData((prev) => (prev ? { ...prev, id_usuario } : null));
 
       if (selectedChat?.remoteJid) {
         const selectedUser = users.find(u => u.Id === id_usuario);
@@ -1335,6 +1357,8 @@ export default function ContactSidebarV2({
 
       toast.success('Responsável atualizado');
     } catch (error) {
+      // Reverte em caso de erro
+      setDealData((prev) => (prev ? { ...prev, id_usuario: previousValue } : null));
       console.error("Erro ao atualizar responsável:", error);
       toast.error('Erro ao atualizar responsável');
     }
@@ -1343,7 +1367,13 @@ export default function ContactSidebarV2({
   const handleUpdateStage = async (id_funil: number, id_estagio: number) => {
     if (!dealData || !token) return;
 
+    // 🚀 OPTIMISTIC UPDATE: Atualiza a UI imediatamente
+    const previousFunil = dealData.id_funil;
+    const previousEstagio = dealData.id_estagio;
+    setDealData((prev) => (prev ? { ...prev, id_funil, id_estagio } : null));
+
     try {
+      // Faz a chamada da API em background
       await fetch(
         `https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/update/funil`,
         {
@@ -1357,8 +1387,6 @@ export default function ContactSidebarV2({
         }
       );
 
-      setDealData((prev) => (prev ? { ...prev, id_funil, id_estagio } : null));
-
       if (selectedChat?.remoteJid) {
         updateChatLocal(selectedChat.remoteJid, { chatStageId: String(id_estagio) } as any);
 
@@ -1368,6 +1396,8 @@ export default function ContactSidebarV2({
 
       toast.success('Etapa atualizada');
     } catch (error) {
+      // Reverte em caso de erro
+      setDealData((prev) => (prev ? { ...prev, id_funil: previousFunil, id_estagio: previousEstagio } : null));
       console.error("Erro ao atualizar etapa:", error);
       toast.error('Erro ao atualizar etapa');
     }
@@ -1376,7 +1406,15 @@ export default function ContactSidebarV2({
   const handleAddTag = async (tagId: number) => {
     if (!dealData || !token) return;
 
+    // 🚀 OPTIMISTIC UPDATE: Adiciona tag imediatamente na UI
+    const tagToAdd = availableTags.find(t => t.Id === tagId);
+    if (!tagToAdd) return;
+
+    const previousTags = [...dealTags];
+    setDealTags(prev => [...prev, tagToAdd]);
+
     try {
+      // Faz a chamada da API em background
       await fetch(
         `https://n8n.lumendigital.com.br/webhook/prospecta/tag/negociacao`,
         {
@@ -1386,10 +1424,8 @@ export default function ContactSidebarV2({
         }
       );
 
-      await loadDealTags();
-
       if (selectedChat?.remoteJid) {
-        const updatedTagIds = [...dealTags.map(t => t.Id), tagId];
+        const updatedTagIds = [...previousTags.map(t => t.Id), tagId];
         updateChatLocal(selectedChat.remoteJid, { tagIds: updatedTagIds } as any);
 
         const { updateChatTags } = await import('../../utils/chatUpdateEvents');
@@ -1398,6 +1434,8 @@ export default function ContactSidebarV2({
 
       toast.success('Etiqueta adicionada');
     } catch (error) {
+      // Reverte em caso de erro
+      setDealTags(previousTags);
       console.error("Erro ao adicionar etiqueta:", error);
       toast.error('Erro ao adicionar etiqueta');
     }
@@ -1406,7 +1444,12 @@ export default function ContactSidebarV2({
   const handleRemoveTag = async (tagId: number) => {
     if (!dealData || !token) return;
 
+    // 🚀 OPTIMISTIC UPDATE: Remove tag imediatamente da UI
+    const previousTags = [...dealTags];
+    setDealTags(prev => prev.filter(t => t.Id !== tagId));
+
     try {
+      // Faz a chamada da API em background
       await fetch(
         `https://n8n.lumendigital.com.br/webhook/prospecta/tag/negociacao/delete`,
         {
@@ -1416,10 +1459,8 @@ export default function ContactSidebarV2({
         }
       );
 
-      await loadDealTags();
-
       if (selectedChat?.remoteJid) {
-        const updatedTagIds = dealTags.map(t => t.Id).filter(id => id !== tagId);
+        const updatedTagIds = previousTags.map(t => t.Id).filter(id => id !== tagId);
         updateChatLocal(selectedChat.remoteJid, { tagIds: updatedTagIds } as any);
 
         const { updateChatTags } = await import('../../utils/chatUpdateEvents');
@@ -1428,6 +1469,8 @@ export default function ContactSidebarV2({
 
       toast.success('Etiqueta removida');
     } catch (error) {
+      // Reverte em caso de erro
+      setDealTags(previousTags);
       console.error("Erro ao remover etiqueta:", error);
       toast.error('Erro ao remover etiqueta');
     }
@@ -1472,7 +1515,15 @@ export default function ContactSidebarV2({
   const handleAddDepartamento = async (departamentoId: number) => {
     if (!dealData || !token) return;
 
+    // 🚀 OPTIMISTIC UPDATE: Adiciona departamento imediatamente na UI
+    const deptToAdd = availableDepartamentos.find(d => d.Id === departamentoId);
+    if (!deptToAdd) return;
+
+    const previousDepts = [...dealDepartamentos];
+    setDealDepartamentos(prev => [...prev, deptToAdd]);
+
     try {
+      // Faz a chamada da API em background
       await fetch(`https://n8n.lumendigital.com.br/webhook/produtos/lead/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json", token },
@@ -1484,9 +1535,10 @@ export default function ContactSidebarV2({
         }),
       });
 
-      await loadDealDepartamentos();
       toast.success('Departamento adicionado');
     } catch (error) {
+      // Reverte em caso de erro
+      setDealDepartamentos(previousDepts);
       console.error("Erro ao adicionar departamento:", error);
       toast.error('Erro ao adicionar departamento');
     }
@@ -1495,16 +1547,22 @@ export default function ContactSidebarV2({
   const handleRemoveDepartamento = async (departamentoId: number) => {
     if (!dealData || !token) return;
 
+    // 🚀 OPTIMISTIC UPDATE: Remove departamento imediatamente da UI
+    const previousDepts = [...dealDepartamentos];
+    setDealDepartamentos(prev => prev.filter(d => d.Id !== departamentoId));
+
     try {
+      // Faz a chamada da API em background
       await fetch(`https://n8n.lumendigital.com.br/webhook/produtos/lead/delete`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json", token },
         body: JSON.stringify({ id_negociacao: dealData.Id, id_produto: departamentoId }),
       });
 
-      await loadDealDepartamentos();
       toast.success('Departamento removido');
     } catch (error) {
+      // Reverte em caso de erro
+      setDealDepartamentos(previousDepts);
       console.error("Erro ao remover departamento:", error);
       toast.error('Erro ao remover departamento');
     }
@@ -1518,7 +1576,15 @@ export default function ContactSidebarV2({
 
   // 🆕 Criar nova negociação
   const handleCreateDeal = async () => {
-    if (!selectedChat || !token) return;
+    if (!selectedChat || !token) {
+      console.error('[handleCreateDeal] Falta selectedChat ou token');
+      return;
+    }
+
+    console.log('[handleCreateDeal] Iniciando criação de negociação', {
+      pushName: contactData?.nome || selectedChat.pushName,
+      remoteJid: selectedChat.remoteJid
+    });
 
     setCreatingDeal(true);
 
@@ -1538,7 +1604,12 @@ export default function ContactSidebarV2({
         }
       );
 
+      console.log('[handleCreateDeal] Response status:', response.status);
+
       if (response.ok) {
+        const data = await response.json();
+        console.log('[handleCreateDeal] Negociação criada:', data);
+
         toast.success('Negociação criada com sucesso!');
 
         // Recarrega os dados para pegar a nova negociação
@@ -1547,10 +1618,12 @@ export default function ContactSidebarV2({
         // Fecha o modal
         setShowCreateDealModal(false);
       } else {
-        throw new Error('Erro ao criar negociação');
+        const errorText = await response.text();
+        console.error('[handleCreateDeal] Erro na resposta:', errorText);
+        throw new Error(`Erro ao criar negociação: ${response.status}`);
       }
     } catch (error) {
-      console.error('Erro ao criar negociação:', error);
+      console.error('[handleCreateDeal] Erro ao criar negociação:', error);
       toast.error('Erro ao criar negociação');
     } finally {
       setCreatingDeal(false);
@@ -1565,135 +1638,109 @@ export default function ContactSidebarV2({
     <div
       className={`
         fixed md:absolute right-0 top-0 bottom-0 md:h-full
-        bg-gradient-to-br from-white via-gray-50/50 to-white dark:from-gray-900 dark:via-gray-900/95 dark:to-gray-900
-        backdrop-blur-xl border-l border-gray-200/60 dark:border-gray-700/50
-        shadow-2xl shadow-gray-900/5 dark:shadow-black/20
-        transition-all duration-500 ease-out
+        bg-white dark:bg-gray-900
+        border-l border-gray-200 dark:border-gray-700
+        shadow-2xl
+        transition-all duration-200
         flex flex-col z-20
         ${isOpen ? "w-full md:w-[440px] opacity-100" : "w-0 opacity-0 overflow-hidden pointer-events-none"}
       `}
     >
-      {/* Header Premium com gradiente sutil */}
-      <div className="relative border-b border-gray-200/40 dark:border-gray-700/30 bg-gradient-to-r from-white/80 via-gray-50/60 to-white/80 dark:from-gray-900/80 dark:via-gray-800/50 dark:to-gray-900/80 backdrop-blur-md mt-[60px] md:mt-0">
-        {/* Subtle gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/5 dark:to-gray-900/10 pointer-events-none"></div>
-
-        {/* Tabs Premium com efeito de elevação */}
-        <div className="relative flex gap-2 px-6 pt-4 pb-4">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 mt-[60px] md:mt-0">
+        {/* Tabs */}
+        <nav className="flex gap-6 px-8">
           <button
             onClick={() => setActiveView('info')}
-            className={`group relative flex-1 flex items-center justify-center gap-2.5 px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+            className={`flex items-center gap-2 px-1 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeView === 'info'
-                ? 'text-white dark:text-white bg-gradient-to-br from-indigo-600 to-purple-600 shadow-lg shadow-indigo-500/30 dark:shadow-indigo-500/20'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-white/80 dark:hover:bg-gray-800/60 backdrop-blur-sm'
+                ? 'border-gray-900 dark:border-blue-500 text-gray-900 dark:text-white'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
-            {activeView === 'info' && (
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl blur-md opacity-50 group-hover:opacity-60 transition-opacity duration-300"></div>
-            )}
-            <Info className="relative w-4 h-4" />
-            <span className="relative">Informações</span>
+            <Info className="w-4 h-4" />
+            Informações
           </button>
 
           <button
             onClick={() => setActiveView('media')}
-            className={`group relative flex-1 flex items-center justify-center gap-2.5 px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+            className={`flex items-center gap-2 px-1 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeView === 'media'
-                ? 'text-white dark:text-white bg-gradient-to-br from-indigo-600 to-purple-600 shadow-lg shadow-indigo-500/30 dark:shadow-indigo-500/20'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-white/80 dark:hover:bg-gray-800/60 backdrop-blur-sm'
+                ? 'border-gray-900 dark:border-blue-500 text-gray-900 dark:text-white'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
-            {activeView === 'media' && (
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl blur-md opacity-50 group-hover:opacity-60 transition-opacity duration-300"></div>
-            )}
-            <ImageIcon className="relative w-4 h-4" />
-            <span className="relative">Mídias</span>
+            <ImageIcon className="w-4 h-4" />
+            Mídias
           </button>
 
           <button
             onClick={() => setActiveView('notas')}
-            className={`group relative flex-1 flex items-center justify-center gap-2.5 px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+            className={`flex items-center gap-2 px-1 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeView === 'notas'
-                ? 'text-white dark:text-white bg-gradient-to-br from-indigo-600 to-purple-600 shadow-lg shadow-indigo-500/30 dark:shadow-indigo-500/20'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-white/80 dark:hover:bg-gray-800/60 backdrop-blur-sm'
+                ? 'border-gray-900 dark:border-blue-500 text-gray-900 dark:text-white'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
-            {activeView === 'notas' && (
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl blur-md opacity-50 group-hover:opacity-60 transition-opacity duration-300"></div>
-            )}
-            <StickyNote className="relative w-4 h-4" />
-            <span className="relative">Notas</span>
+            <StickyNote className="w-4 h-4" />
+            Notas
           </button>
-        </div>
+        </nav>
       </div>
 
-      {/* Conteúdo principal com padding generoso */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
+      {/* Conteúdo principal */}
+      <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar">
         {activeView === 'info' ? (
-            <>
-            {/* Card Premium - Foto, Nome e Telefone */}
-            <div className="group relative rounded-xl border border-gray-200/60 dark:border-gray-700/40 p-4 bg-gradient-to-br from-white via-gray-50/30 to-white dark:from-gray-800/80 dark:via-gray-800/50 dark:to-gray-800/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
-              {/* Subtle glow effect */}
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 dark:from-indigo-500/10 dark:via-purple-500/10 dark:to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-              <div className="relative flex items-center space-x-3">
-                {selectedChat.profilePicUrl ? (
-                  <div className="relative">
-                    <img
-                      src={selectedChat.profilePicUrl}
-                      alt={contactData?.nome || selectedChat.pushName}
-                      className="h-14 w-14 rounded-xl object-cover ring-2 ring-white dark:ring-gray-700 shadow-md"
-                    />
-                    {/* Status indicator */}
-                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full ring-2 ring-white dark:ring-gray-800 shadow-sm"></div>
-                  </div>
-                ) : (
-                  <div className="relative h-14 w-14 rounded-xl flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-md">
-                    <User className="w-7 h-7" />
-                    {/* Status indicator */}
-                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full ring-2 ring-white dark:ring-gray-800 shadow-sm"></div>
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-base text-gray-900 dark:text-white transition-colors duration-200 truncate">
-                    {contactData?.nome || selectedChat.pushName}
-                  </h3>
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mt-1 font-light">
-                    <Phone className="w-3 h-3" />
-                    <span className="tracking-wide">
-                      {contactData?.telefone ||
-                        selectedChat.remoteJid.replace(/\D/g, "")}
-                    </span>
-                  </div>
+            <div className="space-y-6">
+            {/* Foto, Nome e Telefone */}
+            <div className="flex items-center gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
+              {selectedChat.profilePicUrl ? (
+                <img
+                  src={selectedChat.profilePicUrl}
+                  alt={contactData?.nome || selectedChat.pushName}
+                  className="h-20 w-20 rounded-lg object-cover flex-shrink-0"
+                />
+              ) : (
+                <div className="h-20 w-20 rounded-lg flex items-center justify-center bg-blue-600 dark:bg-blue-500 text-white flex-shrink-0">
+                  <User className="w-10 h-10" />
                 </div>
-              </div>
-
-              {/* Botão Ver Contato Completo - Premium */}
-              {contactData && onOpenContactModal && (
-                <button
-                  onClick={onOpenContactModal}
-                  className="relative group w-full mt-3 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-700/50 hover:from-gray-100 hover:to-gray-200 dark:hover:from-gray-700/50 dark:hover:to-gray-600/50 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-all duration-300 text-xs shadow-sm hover:shadow active:scale-[0.98] backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/30"
-                >
-                  <ExternalLink className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform duration-300" />
-                  <span>Ver detalhes completos</span>
-                </button>
               )}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-xl text-gray-900 dark:text-white truncate mb-1.5">
+                  {contactData?.nome || selectedChat.pushName}
+                </h3>
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-2">
+                  <Phone className="w-4 h-4" />
+                  <span className="text-sm">
+                    {contactData?.telefone || selectedChat.remoteJid.replace(/\D/g, "")}
+                  </span>
+                </div>
+                {contactData && onOpenContactModal && (
+                  <button
+                    onClick={onOpenContactModal}
+                    className="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors font-medium"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Ver detalhes completos
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Controle do Agente */}
-            <div className="rounded-xl border border-gray-300 dark:border-gray-600 p-4 bg-white dark:bg-gray-800 space-y-3 transition-colors duration-200">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-200">
-                  <GuimooIcon className="w-4 h-4" />
-                  <span>Controle do Agente</span>
-                </div>
+            <div className="space-y-4 pb-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-3">
+                <GuimooIcon className="w-5 h-5 text-gray-700 dark:text-gray-300 flex-shrink-0" />
 
                 {/* Dropdown de Agentes */}
                 <select
                   value={selectedAgentId || ""}
-                  onChange={(e) => setSelectedAgentId(Number(e.target.value) || null)}
+                  onChange={(e) => {
+                    const newAgentId = Number(e.target.value) || null;
+                    handleUpdateAgent(newAgentId);
+                  }}
                   disabled={loadingAgents}
-                  className="flex-1 max-w-[200px] text-xs border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="">Selecione um agente</option>
                   {agents.map((agent) => (
@@ -1705,192 +1752,177 @@ export default function ContactSidebarV2({
                 </select>
               </div>
 
-              <div className="space-y-2">
+              {/* Status da IA inline */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Status:</span>
                 {aiStatus.permanentExclusion ? (
-                  <div className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg transition-colors duration-200">
-                    <span className="text-xs text-red-700 dark:text-red-400 font-medium transition-colors duration-200">
-                      IA desativada permanentemente
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-red-600 dark:text-red-400 font-medium">
+                      Desativada permanentemente
                     </span>
                     <button
                       onClick={handleRemovePermanentExclusion}
                       disabled={updatingAI}
-                      className="p-1 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 rounded transition-colors duration-200 disabled:opacity-50"
+                      className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors disabled:opacity-50"
                       title="Remover exclusão permanente"
                     >
                       {updatingAI ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       ) : (
-                        <X className="w-3 h-3" />
+                        <X className="w-3.5 h-3.5" />
                       )}
                     </button>
                   </div>
                 ) : aiStatus.intervention ? (
-                  <div className="flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg transition-colors duration-200">
-                    <span className="text-xs text-yellow-700 dark:text-yellow-400 font-medium transition-colors duration-200">
-                      IA pausada (intervenção)
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
+                      Pausada (intervenção)
                     </span>
                     <button
                       onClick={handleDeleteIntervention}
                       disabled={updatingAI}
-                      className="p-1 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 rounded transition-colors duration-200 disabled:opacity-50"
+                      className="p-1 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded transition-colors disabled:opacity-50"
                       title="Reativar IA"
                     >
                       {updatingAI ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       ) : (
-                        <X className="w-3 h-3" />
+                        <X className="w-3.5 h-3.5" />
                       )}
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg transition-colors duration-200">
-                    <span className="text-xs text-green-700 dark:text-green-400 font-medium transition-colors duration-200">
-                      IA ativa
-                    </span>
-                  </div>
+                  <span className="text-sm text-green-600 dark:text-green-400 font-medium">
+                    Ativa
+                  </span>
                 )}
 
-                {isTransferChat && (
-                  <div className="flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg transition-colors duration-200">
-                    <span className="text-xs text-yellow-800 dark:text-yellow-400 font-medium transition-colors duration-200">
-                      Em transferência
-                    </span>
-                    <button
-                      onClick={handleRemoveTransfer}
-                      disabled={updatingAI}
-                      className="p-1 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 rounded transition-colors duration-200 disabled:opacity-50"
-                      title="Cancelar transferência"
-                    >
-                      {updatingAI ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <X className="w-3 h-3" />
-                      )}
-                    </button>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={handleStartAgent}
-                    disabled={
-                      updatingAI ||
-                      aiStatus.intervention ||
-                      aiStatus.permanentExclusion ||
-                      activationCooldown
-                    }
-                    className={`flex flex-col items-center justify-center p-2 rounded-lg border border-green-300 dark:border-green-700
-                      bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40
-                      transition-colors duration-200 disabled:cursor-not-allowed
-                      ${activationCooldown ? 'opacity-50 cursor-not-allowed' : 'disabled:opacity-50'}`}
-                    title={activationCooldown ? "Aguarde antes de reativar" : "Ativar IA"}
-                  >
-                    {updatingAI && (!aiStatus.intervention && !aiStatus.permanentExclusion) ? (
-                      <Loader2 className="w-4 h-4 text-green-600 dark:text-green-400 mb-1 animate-spin transition-colors duration-200" />
-                    ) : (
-                      <PlayCircle className="w-4 h-4 text-green-600 dark:text-green-400 mb-1 transition-colors duration-200" />
-                    )}
-                    <span className="text-[10px] text-green-700 dark:text-green-400 font-medium transition-colors duration-200">Ativar</span>
-                  </button>
-
-                  <button
-                    onClick={handlePauseAI}
-                    disabled={updatingAI || aiStatus.intervention || aiStatus.permanentExclusion}
-                    className="flex flex-col items-center justify-center p-2 rounded-lg border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                    title="Pausar IA temporariamente"
-                  >
-                    {updatingAI && !aiStatus.intervention && !aiStatus.permanentExclusion ? (
-                      <Loader2 className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mb-1 animate-spin transition-colors duration-200" />
-                    ) : (
-                      <Pause className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mb-1 transition-colors duration-200" />
-                    )}
-                    <span className="text-[10px] text-yellow-700 dark:text-yellow-400 font-medium transition-colors duration-200">Pausar</span>
-                  </button>
-
-                  <button
-                    onClick={handleDisableAI}
-                    disabled={updatingAI || aiStatus.permanentExclusion}
-                    className="flex flex-col items-center justify-center p-2 rounded-lg border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                    title="Desativar IA permanentemente"
-                  >
-                    {updatingAI && !aiStatus.permanentExclusion ? (
-                      <Loader2 className="w-4 h-4 text-red-600 dark:text-red-400 mb-1 animate-spin transition-colors duration-200" />
-                    ) : (
-                      <BanIcon className="w-4 h-4 text-red-600 dark:text-red-400 mb-1 transition-colors duration-200" />
-                    )}
-                    <span className="text-[10px] text-red-700 dark:text-red-400 font-medium transition-colors duration-200">Desativar</span>
-                  </button>
-                </div>
-
-                {/* Mensagem informativa de ativação */}
-                {showActivationMessage && (
-                  <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400 animate-fadeIn">
-                    ✅ Requisição enviada. Aguarde até 1 minuto para a IA iniciar o atendimento com o cliente.
-                  </p>
-                )}
               </div>
+
+              {/* Ações da IA */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleStartAgent}
+                  disabled={
+                    updatingAI ||
+                    aiStatus.intervention ||
+                    aiStatus.permanentExclusion ||
+                    activationCooldown
+                  }
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-green-600 dark:border-green-500 text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                  title={activationCooldown ? "Aguarde antes de reativar" : "Ativar IA"}
+                >
+                  {updatingAI && (!aiStatus.intervention && !aiStatus.permanentExclusion) ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <PlayCircle className="w-4 h-4" />
+                  )}
+                  Ativar
+                </button>
+
+                <button
+                  onClick={handlePauseAI}
+                  disabled={updatingAI || aiStatus.intervention || aiStatus.permanentExclusion}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-yellow-600 dark:border-yellow-500 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                  title="Pausar IA temporariamente"
+                >
+                  {updatingAI && !aiStatus.intervention && !aiStatus.permanentExclusion ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Pause className="w-4 h-4" />
+                  )}
+                  Pausar
+                </button>
+
+                <button
+                  onClick={handleDisableAI}
+                  disabled={updatingAI || aiStatus.permanentExclusion}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-600 dark:border-red-500 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                  title="Desativar IA permanentemente"
+                >
+                  {updatingAI && !aiStatus.permanentExclusion ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <BanIcon className="w-4 h-4" />
+                  )}
+                  Desativar
+                </button>
+              </div>
+
+              {/* Mensagem informativa de ativação */}
+              {showActivationMessage && (
+                <p className="text-sm text-gray-600 dark:text-gray-400 animate-fadeIn">
+                  ✅ Requisição enviada. Aguarde até 1 minuto para a IA iniciar o atendimento.
+                </p>
+              )}
             </div>
 
-            {/* Responsável */}
+            {/* Informações de CRM */}
             {dealData && (
-              <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-800 space-y-2">
-                <div className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
-                  <Users className="w-3.5 h-3.5" />
-                  <span>Responsável</span>
+              <div className="space-y-4 pb-6 border-b border-gray-200 dark:border-gray-700">
+                {/* Grid 2 colunas: Responsável e Funil */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Responsável */}
+                  <div className="space-y-1.5">
+                    <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
+                      <Users className="w-3.5 h-3.5" />
+                      Responsável
+                    </label>
+                    <select
+                      value={dealData.id_usuario || ""}
+                      onChange={(e) => handleUpdateResponsavel(Number(e.target.value))}
+                      className={`w-full border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 ${
+                        !dealData.id_usuario ? 'text-gray-500 dark:text-gray-400' : ''
+                      }`}
+                    >
+                      <option value="" disabled>Selecione</option>
+                      {users.filter(user => user.isAtivo).map((user) => (
+                        <option key={user.Id} value={user.Id}>
+                          {user.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Funil */}
+                  <div className="space-y-1.5">
+                    <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
+                      <Filter className="w-3.5 h-3.5" />
+                      Funil
+                    </label>
+                    <select
+                      value={dealData.id_funil || ""}
+                      onChange={(e) => {
+                        const funnelId = Number(e.target.value);
+                        const firstStage = funnels.find((f) => f.id === funnelId)?.estagios?.[0];
+                        if (firstStage) {
+                          handleUpdateStage(funnelId, Number(firstStage.Id));
+                        }
+                      }}
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                    >
+                      <option value="">Selecione</option>
+                      {funnels.map((funnel) => (
+                        <option key={funnel.id} value={funnel.id}>
+                          {funnel.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                <select
-                  value={dealData.id_usuario || ""}
-                  onChange={(e) => handleUpdateResponsavel(Number(e.target.value))}
-                  className={`w-full border border-gray-200 dark:border-gray-700 rounded-md p-2 text-xs bg-white dark:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-400 ${
-                    dealData.id_usuario ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'
-                  }`}
-                >
-                  <option value="" disabled>Selecione um responsável</option>
-                  {users.filter(user => user.isAtivo).map((user) => (
-                    <option key={user.Id} value={user.Id}>
-                      {user.nome}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Etapa do Funil */}
-            {dealData && (
-              <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-800 space-y-2">
-                <div className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
-                  <Filter className="w-3.5 h-3.5" />
-                  <span>Funil e Estágio</span>
-                </div>
-
-                <div className="space-y-2">
-                  <select
-                    value={dealData.id_funil || ""}
-                    onChange={(e) => {
-                      const funnelId = Number(e.target.value);
-                      const firstStage = funnels.find((f) => f.id === funnelId)?.estagios?.[0];
-                      if (firstStage) {
-                        handleUpdateStage(funnelId, Number(firstStage.Id));
-                      }
-                    }}
-                    className="w-full border border-gray-200 dark:border-gray-700 rounded-md p-2 text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-400"
-                  >
-                    <option value="">Selecione um funil</option>
-                    {funnels.map((funnel) => (
-                      <option key={funnel.id} value={funnel.id}>
-                        {funnel.nome}
-                      </option>
-                    ))}
-                  </select>
-
-                  {currentFunnel && (
+                {/* Estágio - full width */}
+                {currentFunnel && (
+                  <div className="space-y-1.5">
+                    <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
+                      Estágio
+                    </label>
                     <select
                       value={dealData.id_estagio || ""}
                       onChange={(e) =>
                         handleUpdateStage(dealData.id_funil, Number(e.target.value))
                       }
-                      className="w-full border border-gray-200 dark:border-gray-700 rounded-md p-2 text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                     >
                       <option value="">Selecione um estágio</option>
                       {currentFunnel.estagios?.map((stage) => (
@@ -1899,119 +1931,103 @@ export default function ContactSidebarV2({
                         </option>
                       ))}
                     </select>
-                  )}
-                </div>
-              </div>
-            )}
+                  </div>
+                )}
 
-            {/* Etiquetas (Tags) */}
-            {dealData && (
-              <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-800 space-y-2">
-                <div className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
-                  <TagIcon className="w-3.5 h-3.5" />
-                  <span>Etiquetas</span>
-                </div>
-
-                {/* Tags atuais */}
-                <div className="flex flex-wrap gap-1.5">
-                  {dealTags.length > 0 ? (
-                    dealTags.map((tag) => (
-                      <div
-                        key={tag.Id}
-                        className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium"
-                        style={{
-                          backgroundColor: tag.cor,
-                          color: tag.cor_texto,
-                        }}
-                      >
-                        {tag.nome}
-                        <button
-                          onClick={() => handleRemoveTag(tag.Id)}
-                          className="ml-1 hover:opacity-80"
+                {/* Etiquetas */}
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
+                    <TagIcon className="w-3.5 h-3.5" />
+                    Etiquetas
+                  </label>
+                  {dealTags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {dealTags.map((tag) => (
+                        <div
+                          key={tag.Id}
+                          className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium"
+                          style={{
+                            backgroundColor: tag.cor,
+                            color: tag.cor_texto,
+                          }}
                         >
-                          <X className="w-2.5 h-2.5" />
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-[10px] text-gray-500 dark:text-gray-400">Nenhuma etiqueta adicionada</p>
+                          {tag.nome}
+                          <button
+                            onClick={() => handleRemoveTag(tag.Id)}
+                            className="ml-1.5 hover:opacity-70"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   )}
+                  <select
+                    onChange={(e) => {
+                      const tagId = Number(e.target.value);
+                      if (tagId) {
+                        handleAddTag(tagId);
+                        e.target.value = "";
+                      }
+                    }}
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  >
+                    <option value="">+ Adicionar etiqueta</option>
+                    {availableTags
+                      .filter((tag) => !dealTags.find((dt) => dt.Id === tag.Id))
+                      .map((tag) => (
+                        <option key={tag.Id} value={tag.Id}>
+                          {tag.nome}
+                        </option>
+                      ))}
+                  </select>
                 </div>
 
-                {/* Adicionar nova tag */}
-                <select
-                  onChange={(e) => {
-                    const tagId = Number(e.target.value);
-                    if (tagId) {
-                      handleAddTag(tagId);
-                      e.target.value = "";
-                    }
-                  }}
-                  className="w-full border border-gray-200 dark:border-gray-700 rounded-md p-2 text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-400"
-                >
-                  <option value="">+ Adicionar etiqueta</option>
-                  {availableTags
-                    .filter((tag) => !dealTags.find((dt) => dt.Id === tag.Id))
-                    .map((tag) => (
-                      <option key={tag.Id} value={tag.Id}>
-                        {tag.nome}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            )}
-
-            {/* Departamentos */}
-            {dealData && (
-              <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-800 space-y-2">
-                <div className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
-                  <Building2 className="w-3.5 h-3.5" />
-                  <span>Departamentos</span>
-                </div>
-
-                {/* Departamentos atuais */}
-                <div className="flex flex-wrap gap-1.5">
-                  {dealDepartamentos.length > 0 ? (
-                    dealDepartamentos.map((dept) => (
-                      <div
-                        key={dept.Id}
-                        className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200"
-                      >
-                        <Building2 className="w-2.5 h-2.5 mr-1" />
-                        {dept.nome}
-                        <button
-                          onClick={() => handleRemoveDepartamento(dept.Id)}
-                          className="ml-1 hover:opacity-80"
+                {/* Departamentos */}
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
+                    <Building2 className="w-3.5 h-3.5" />
+                    Departamentos
+                  </label>
+                  {dealDepartamentos.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {dealDepartamentos.map((dept) => (
+                        <div
+                          key={dept.Id}
+                          className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
                         >
-                          <X className="w-2.5 h-2.5" />
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-[10px] text-gray-500 dark:text-gray-400">Nenhum departamento adicionado</p>
+                          {dept.nome}
+                          <button
+                            onClick={() => handleRemoveDepartamento(dept.Id)}
+                            className="ml-1.5 hover:opacity-70"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   )}
+                  <select
+                    onFocus={fetchDepartamentos}
+                    onChange={(e) => {
+                      const deptId = Number(e.target.value);
+                      if (deptId) {
+                        handleAddDepartamento(deptId);
+                        e.target.value = "";
+                      }
+                    }}
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  >
+                    <option value="">+ Adicionar departamento</option>
+                    {availableDepartamentos
+                      .filter((dept) => !dealDepartamentos.find((dd) => dd.Id === dept.Id))
+                      .map((dept) => (
+                        <option key={dept.Id} value={dept.Id}>
+                          {dept.nome}
+                        </option>
+                      ))}
+                  </select>
                 </div>
-
-                {/* Adicionar novo departamento */}
-                <select
-                  onChange={(e) => {
-                    const deptId = Number(e.target.value);
-                    if (deptId) {
-                      handleAddDepartamento(deptId);
-                      e.target.value = "";
-                    }
-                  }}
-                  className="w-full border border-gray-200 dark:border-gray-700 rounded-md p-2 text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-400"
-                >
-                  <option value="">+ Adicionar departamento</option>
-                  {availableDepartamentos
-                    .filter((dept) => !dealDepartamentos.find((dd) => dd.Id === dept.Id))
-                    .map((dept) => (
-                      <option key={dept.Id} value={dept.Id}>
-                        {dept.nome}
-                      </option>
-                    ))}
-                </select>
               </div>
             )}
 
@@ -2023,19 +2039,18 @@ export default function ContactSidebarV2({
                 contactPhone={contactData?.telefone}
               />
             )}
-
-          </>
+          </div>
         ) : activeView === 'media' ? (
           /* View de Mídias */
           <div className="space-y-4">
 
             {/* Sub-tabs de Mídias */}
-            <div className="grid grid-cols-3 gap-2 p-1 bg-gray-100/50 dark:bg-gray-800/30 rounded-xl">
+            <div className="grid grid-cols-3 gap-2 p-1 bg-gray-100 dark:bg-gray-900 rounded-lg">
               <button
                 onClick={() => setActiveMediaTab('images')}
-                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-300 ${
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeMediaTab === 'images'
-                    ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400'
+                    ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                 }`}
               >
@@ -2045,9 +2060,9 @@ export default function ContactSidebarV2({
 
               <button
                 onClick={() => setActiveMediaTab('videos')}
-                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-300 ${
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeMediaTab === 'videos'
-                    ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400'
+                    ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                 }`}
               >
@@ -2057,9 +2072,9 @@ export default function ContactSidebarV2({
 
               <button
                 onClick={() => setActiveMediaTab('docs')}
-                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-300 ${
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeMediaTab === 'docs'
-                    ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400'
+                    ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                 }`}
               >
@@ -2069,12 +2084,7 @@ export default function ContactSidebarV2({
             </div>
 
             {/* Conteúdo das mídias */}
-            {loadingMedia ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-6 h-6 text-gray-400 dark:text-gray-500 animate-spin" />
-              </div>
-            ) : (
-              <div className="space-y-2">
+            <div className="space-y-2">
                 {activeMediaTab === 'images' && (
                   mediaFiles.images.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -2084,33 +2094,18 @@ export default function ContactSidebarV2({
                       <p className="text-sm text-gray-500 dark:text-gray-400">Nenhuma imagem encontrada</p>
                     </div>
                   ) : (
-                    // 🚀 OTIMIZADO: Grid virtualizado - renderiza apenas itens visíveis
-                    <VirtualGrid
-                      columnCount={3}
-                      columnWidth={130}
-                      height={Math.min(500, Math.ceil(mediaFiles.images.length / 3) * 130)}
-                      rowCount={Math.ceil(mediaFiles.images.length / 3)}
-                      rowHeight={130}
-                      defaultWidth={400}
-                      className="custom-scrollbar"
-                      cellComponent={({ columnIndex, rowIndex, style }) => {
-                        const idx = rowIndex * 3 + columnIndex;
-                        if (idx >= mediaFiles.images.length) return null;
-                        const img = mediaFiles.images[idx];
-                        return (
-                          <div style={{ ...style, padding: '4px' }}>
-                            <MediaPreview
-                              key={img.id}
-                              mediaData={img}
-                              type="image"
-                              isBusiness={isBusiness}
-                              onPreview={openPreview}
-                              index={idx}
-                            />
-                          </div>
-                        );
-                      }}
-                    />
+                    <div className="grid grid-cols-3 gap-2">
+                      {mediaFiles.images.map((img, idx) => (
+                        <MediaPreview
+                          key={img.id}
+                          mediaData={img}
+                          type="image"
+                          isBusiness={isBusiness}
+                          onPreview={openPreview}
+                          index={idx}
+                        />
+                      ))}
+                    </div>
                   )
                 )}
 
@@ -2123,33 +2118,18 @@ export default function ContactSidebarV2({
                       <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum vídeo encontrado</p>
                     </div>
                   ) : (
-                    // 🚀 OTIMIZADO: Grid virtualizado - renderiza apenas itens visíveis
-                    <VirtualGrid
-                      columnCount={3}
-                      columnWidth={130}
-                      height={Math.min(500, Math.ceil(mediaFiles.videos.length / 3) * 130)}
-                      rowCount={Math.ceil(mediaFiles.videos.length / 3)}
-                      rowHeight={130}
-                      defaultWidth={400}
-                      className="custom-scrollbar"
-                      cellComponent={({ columnIndex, rowIndex, style }) => {
-                        const idx = rowIndex * 3 + columnIndex;
-                        if (idx >= mediaFiles.videos.length) return null;
-                        const vid = mediaFiles.videos[idx];
-                        return (
-                          <div style={{ ...style, padding: '4px' }}>
-                            <MediaPreview
-                              key={vid.id}
-                              mediaData={vid}
-                              type="video"
-                              isBusiness={isBusiness}
-                              onPreview={openPreview}
-                              index={idx}
-                            />
-                          </div>
-                        );
-                      }}
-                    />
+                    <div className="grid grid-cols-3 gap-2">
+                      {mediaFiles.videos.map((vid, idx) => (
+                        <MediaPreview
+                          key={vid.id}
+                          mediaData={vid}
+                          type="video"
+                          isBusiness={isBusiness}
+                          onPreview={openPreview}
+                          index={idx}
+                        />
+                      ))}
+                    </div>
                   )
                 )}
 
@@ -2166,7 +2146,7 @@ export default function ContactSidebarV2({
                       {mediaFiles.docs.map((doc) => (
                         <div
                           key={doc.id}
-                          className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
+                          className="flex items-center gap-3 p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
                         >
                           <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0">
                             <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
@@ -2225,15 +2205,13 @@ export default function ContactSidebarV2({
                     </div>
                   )
                 )}
-
               </div>
-            )}
           </div>
         ) : activeView === 'notas' ? (
           /* View de Notas */
           <div className="space-y-4">
             {/* Formulário para nova nota */}
-            <div className="bg-white dark:bg-gray-800/80 rounded-xl border border-gray-200/60 dark:border-gray-700/40 p-4 shadow-sm">
+            <div className="bg-white dark:bg-gray-900/80 rounded-xl border border-gray-200/60 dark:border-gray-700/40 p-4 shadow-sm">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Nova Nota</h3>
 
               <div className="relative mb-3">
@@ -2271,12 +2249,8 @@ export default function ContactSidebarV2({
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Histórico de Notas</h3>
 
-              {loadingNotes ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-                </div>
-              ) : notes.length === 0 ? (
-                <div className="text-center py-12 text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200/60 dark:border-gray-700/40">
+              {notes.length === 0 ? (
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900/50 rounded-xl border border-gray-200/60 dark:border-gray-700/40">
                   <StickyNote className="w-12 h-12 mx-auto mb-3 opacity-30" />
                   <p>Nenhuma nota registrada</p>
                 </div>
@@ -2286,7 +2260,7 @@ export default function ContactSidebarV2({
                     const noteUser = users.find(u => u.Id === note.id_usuario);
 
                     return (
-                      <div key={note.Id} className="bg-white dark:bg-gray-800/80 rounded-xl border border-gray-200/60 dark:border-gray-700/40 p-4 shadow-sm hover:shadow-md transition-all">
+                      <div key={note.Id} className="bg-white dark:bg-gray-900/80 rounded-xl border border-gray-200/60 dark:border-gray-700/40 p-4 shadow-sm hover:shadow-md transition-all">
                         {editingNote?.Id === note.Id ? (
                           <div className="space-y-3">
                             <div className="relative">
@@ -2380,7 +2354,7 @@ export default function ContactSidebarV2({
       {/* Modal de Criar Negociação - Aparece quando não há deal */}
       {showCreateDealModal && (
         <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-8 m-4 max-w-xs w-full">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-8 m-4 max-w-xs w-full">
             {/* Ícone */}
             <div className="flex justify-center mb-4">
               <div className="w-14 h-14 rounded-full bg-indigo-500 dark:bg-indigo-600 flex items-center justify-center">

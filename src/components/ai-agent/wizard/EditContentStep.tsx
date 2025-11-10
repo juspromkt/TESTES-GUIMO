@@ -265,7 +265,7 @@ export default function EditContentStep({ state, onNext, token }: StepComponentP
               {etapas.map((etapa, index) => (
                 <div
                   key={index}
-                  className="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+                  className="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900"
                 >
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div className="flex-1">
@@ -273,7 +273,7 @@ export default function EditContentStep({ state, onNext, token }: StepComponentP
                         type="text"
                         value={etapa.nome}
                         onChange={(e) => handleUpdateEtapa(index, 'nome', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-medium"
                         placeholder="Nome da etapa"
                       />
                     </div>
@@ -331,7 +331,7 @@ export default function EditContentStep({ state, onNext, token }: StepComponentP
               {faq.map((item, index) => (
                 <div
                   key={index}
-                  className="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+                  className="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900"
                 >
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div className="flex-1">
@@ -339,7 +339,7 @@ export default function EditContentStep({ state, onNext, token }: StepComponentP
                         type="text"
                         value={item.nome || ''}
                         onChange={(e) => handleUpdateFaq(index, 'nome', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-medium"
                         placeholder="Pergunta"
                       />
                     </div>

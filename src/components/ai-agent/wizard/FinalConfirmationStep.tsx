@@ -91,7 +91,7 @@ export default function FinalConfirmationStep({ state, onClose, onSuccess }: Ste
                 {specialistAgents.map((specialist, index) => (
                   <div
                     key={specialist.Id}
-                    className="p-5 bg-white dark:bg-gray-800 border-2 border-blue-200 dark:border-blue-800 rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                    className="p-5 bg-white dark:bg-gray-900 border-2 border-blue-200 dark:border-blue-800 rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
                   >
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold shadow-md flex-shrink-0">
@@ -256,21 +256,21 @@ export default function FinalConfirmationStep({ state, onClose, onSuccess }: Ste
 
         {/* Card de configurações */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
+          <div className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
             <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {content?.regras ? '✓' : '—'}
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Regras</p>
           </div>
 
-          <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
+          <div className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
             <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {content?.etapas && content.etapas.length > 0 ? '✓' : '—'}
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Etapas</p>
           </div>
 
-          <div className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
+          <div className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
             <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {content?.faq && content.faq.length > 0 ? '✓' : '—'}
             </p>

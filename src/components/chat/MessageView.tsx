@@ -438,13 +438,13 @@ function OfficialBinaryMedia({
             <FileText className="w-5 h-5 text-emerald-600" />
             <span className="text-sm font-medium">Documento</span>
           </div>
-          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 flex justify-center transition-colors duration-200">
+          <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-300 dark:border-gray-600 flex justify-center transition-colors duration-200">
             <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500" />
           </div>
           <a
             href={url}
             download
-            className="w-full inline-block px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm text-center"
+            className="w-full inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm text-center"
           >
             Baixar arquivo
           </a>
@@ -619,12 +619,12 @@ function EvoBinaryMedia({
             <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             <span className="text-sm font-medium">Documento</span>
           </div>
-          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 flex justify-center transition-colors duration-200">
+          <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-300 dark:border-gray-600 flex justify-center transition-colors duration-200">
             <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500" />
           </div>
           <button
             onClick={handleDownloadDocument}
-            className="w-full px-4 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors text-sm text-center"
+            className="w-full px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-sm text-center"
           >
             Baixar arquivo
           </button>
@@ -3287,10 +3287,10 @@ const renderTemplate = (templateName: string): JSX.Element => {
       </div>
       
       {/* Container do template com design especial */}
-      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 shadow-sm">
+      <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 rounded-xl p-4 shadow-sm">
         <div className="flex items-center space-x-3">
           {/* Ícone do template */}
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
+          <div className="w-10 h-10 bg-purple-600 dark:bg-purple-500 rounded-lg flex items-center justify-center shadow-sm">
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-1.586l-4 4z" />
             </svg>
@@ -3333,7 +3333,7 @@ const renderMessageContent = (message: Message) => {
         const el = document.getElementById(`msg-${quotedId}`);
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
       }}
-      className="text-xs border-l-4 border-emerald-400 dark:border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded mb-2 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors duration-200"
+      className="text-xs border-l-4 border-emerald-400 dark:border-blue-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded mb-2 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors duration-200"
     >
       {isAudioQuoted
         ? "Resposta a um áudio"
@@ -3423,7 +3423,7 @@ case "templateMessage":
       content = (
         <div className="space-y-2">
           {/* Indicador de que é um template */}
-          <div className="flex items-center space-x-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
+          <div className="flex items-center space-x-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -3434,9 +3434,9 @@ case "templateMessage":
           </div>
           
           {/* Container do template */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm overflow-hidden max-w-sm transition-colors duration-200">
+          <div className="bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm overflow-hidden max-w-sm transition-colors duration-200">
             {/* Header do template */}
-            <div className="bg-gradient-to-r from-gray-500 to-gray-600 dark:from-gray-600 dark:to-gray-700 text-white text-xs px-3 py-2">
+            <div className="bg-gray-600 dark:bg-gray-700 text-white text-xs px-3 py-2">
               Template do WhatsApp Business
             </div>
 
@@ -3508,9 +3508,9 @@ case "templateMessage":
           </div>
           
           {/* Container do template */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm overflow-hidden max-w-sm transition-colors duration-200">
+          <div className="bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm overflow-hidden max-w-sm transition-colors duration-200">
             {/* Header do template */}
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 text-white text-xs px-3 py-2">
+            <div className="bg-blue-600 dark:bg-blue-700 text-white text-xs px-3 py-2">
               Template Interativo WhatsApp
             </div>
 
@@ -3574,7 +3574,7 @@ case "templateMessage":
     } else {
       // Fallback para templates sem estrutura reconhecida
       content = (
-        <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
+        <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
           <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
@@ -3588,7 +3588,7 @@ case "templateMessage":
   } else {
     // Se não tem templateMessage, mostrar fallback
     content = (
-      <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
+      <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
         <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
@@ -3650,7 +3650,7 @@ case "imageMessage": {
 
   // Fallback se nenhuma condição foi atendida
   content = (
-    <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
+    <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
       <FileText className="w-5 h-5 text-gray-500 dark:text-gray-400" />
       <span className="text-sm text-gray-600 dark:text-gray-400">Imagem (carregando...)</span>
     </div>
@@ -3707,7 +3707,7 @@ case "videoMessage": {
 
   // Fallback
   content = (
-    <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
+    <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
       <FileText className="w-5 h-5 text-gray-500 dark:text-gray-400" />
       <span className="text-sm text-gray-600 dark:text-gray-400">Vídeo (carregando...)</span>
     </div>
@@ -3755,7 +3755,7 @@ case "audioMessage": {
 
   // Fallback
   content = (
-    <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
+    <div className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors duration-200">
       <FileText className="w-5 h-5 text-gray-500 dark:text-gray-400" />
       <span className="text-sm text-gray-600 dark:text-gray-400">Áudio (carregando...)</span>
     </div>
@@ -3874,12 +3874,12 @@ case "documentMessage": {
           <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           <span className="text-sm font-medium">Documento</span>
         </div>
-        <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 flex justify-center transition-colors duration-200">
+        <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-300 dark:border-gray-600 flex justify-center transition-colors duration-200">
           <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500" />
         </div>
         <button
           onClick={handleDirectDownload}
-          className="w-full px-4 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors text-sm text-center"
+          className="w-full px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-sm text-center"
         >
           Baixar arquivo
         </button>
@@ -3999,8 +3999,8 @@ case "stickerMessage": {
 
   if (loading) {
     return (
-      <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-200">
-        <div className="flex items-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+      <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+        <div className="flex items-center p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
           <button
             onClick={onBack}
             className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition mr-3 md:hidden"
@@ -4043,7 +4043,7 @@ return (
   <div className="h-full w-full flex relative overflow-hidden" data-message-view="true">
     <div
       className={`flex-1 flex flex-col min-h-0 min-w-0 transition-all duration-300 ${
-        sidebarOpen || searchOpen ? 'md:mr-[420px]' : 'mr-0'
+        sidebarOpen || searchOpen ? 'md:mr-[456px]' : 'mr-0'
       }`}
       style={{
         backgroundImage: isDarkMode
@@ -4080,7 +4080,7 @@ return (
       }}
     >
 {/* Header Premium */}
-<div className="fixed md:relative top-0 left-0 right-0 md:left-auto md:right-auto z-30 md:z-20 flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-white dark:bg-gray-800 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
+<div className="fixed md:relative top-0 left-0 right-0 md:left-auto md:right-auto z-30 md:z-20 flex items-center justify-between px-3 md:px-4 py-2.5 md:py-3 bg-white dark:bg-gray-900 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
   <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0">
     <button
       onClick={onBack}
@@ -4111,11 +4111,11 @@ return (
             className="h-9 w-9 md:h-10 md:w-10 rounded-full object-cover ring-1 ring-gray-200 dark:ring-gray-600"
           />
         ) : (
-          <div className="h-9 w-9 md:h-10 md:w-10 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold text-xs md:text-sm ring-1 ring-gray-200 dark:ring-gray-600">
+          <div className="h-9 w-9 md:h-10 md:w-10 rounded-full flex items-center justify-center bg-blue-600 dark:bg-blue-500 text-white font-semibold text-xs md:text-sm ring-1 ring-gray-200 dark:ring-gray-600">
             {getInitials(displayName)}
           </div>
         )}
-        <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 md:w-3 md:h-3 bg-emerald-400 border-2 border-white dark:border-gray-800 rounded-full"></div>
+        <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 dark:bg-green-400 border-2 border-white dark:border-gray-800 rounded-full"></div>
       </div>
 
       <div className="flex-1 text-left min-w-0">
@@ -4208,7 +4208,7 @@ return (
     {/* Messages Area */}
     <div
       ref={scrollAreaRef}
-      className="flex-1 overflow-y-auto px-3 md:px-8 py-3 pt-[112px] md:pt-3 min-h-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent bg-[url('/src/imgs/guimoo/tema-claro-chat.png')] dark:bg-[url('/src/imgs/guimoo/tema-escuro-chat.png')] bg-cover bg-center bg-fixed bg-no-repeat"
+      className="flex-1 overflow-y-auto px-3 md:px-8 py-3 pt-[112px] md:pt-3 min-h-0 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent relative chat-background"
       style={{
         WebkitOverflowScrolling: 'touch'
       }}
@@ -4217,7 +4217,7 @@ return (
       <div className="space-y-1.5 max-w-5xl mx-auto pb-[80px] md:pb-2">
         {loadingMore && (
           <div className="flex justify-center py-6">
-            <div className="flex items-center space-x-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm transition-colors duration-200">
+            <div className="flex items-center space-x-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm transition-colors duration-200">
               <div className="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 border-t-blue-500 rounded-full animate-spin"></div>
               <span className="text-sm text-gray-600 dark:text-gray-300 font-medium">Carregando mensagens...</span>
             </div>
@@ -4319,7 +4319,7 @@ return (
               <div key={message.id}>
                 {showDateSeparator && (
                   <div className="flex justify-center my-8">
-                    <div className="px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-full shadow-sm border border-gray-300/50 dark:border-gray-600/50 transition-colors duration-200">
+                    <div className="px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-full shadow-sm border border-gray-300/50 dark:border-gray-600/50 transition-colors duration-200">
                       {messageDateLabel}
                     </div>
                   </div>
@@ -4383,13 +4383,14 @@ return (
                 <div
                   className={`
                     max-w-[80%] md:max-w-[65%] rounded-lg shadow-md transition-all duration-200
+                    hover:shadow-lg hover:scale-[1.01] cursor-pointer
                     ${isFromMe ? 'order-1' : 'order-2'}
                     ${
                       message.isNote
-                        ? "bg-yellow-200 dark:bg-yellow-700 text-gray-900 dark:text-gray-100 mr-1 md:mr-2 ring-2 ring-yellow-400 dark:ring-yellow-500"
+                        ? "bg-yellow-200 dark:bg-yellow-700 text-gray-900 dark:text-gray-100 mr-1 md:mr-2 ring-2 ring-yellow-400 dark:ring-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-600"
                         : isFromMe
-                        ? "bg-[#dcf8c6] dark:bg-[#005c4b] text-[#111b21] dark:text-gray-100 mr-1 md:mr-2"
-                        : "bg-white dark:bg-[#202c33] text-[#111b21] dark:text-gray-100 ml-1 md:ml-2 border border-gray-200/50 dark:border-transparent"
+                        ? "bg-[#dcf8c6] dark:bg-[#005c4b] text-[#111b21] dark:text-gray-100 mr-1 md:mr-2 hover:bg-[#d1f4c1] dark:hover:bg-[#004d3f]"
+                        : "bg-white dark:bg-[#202c33] text-[#111b21] dark:text-gray-100 ml-1 md:ml-2 border border-gray-200/50 dark:border-transparent hover:bg-gray-50 dark:hover:bg-[#2a3942]"
                     }
                   `}
                 >
@@ -4408,30 +4409,28 @@ return (
 
                         <Popover.Portal>
                           <Popover.Content
-                            className="z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden min-w-[220px] border border-gray-200/50 dark:border-gray-700/50 animate-in fade-in-0 zoom-in-95 transition-all duration-200"
+                            className="z-50 bg-white dark:bg-gray-900 shadow-lg rounded-lg overflow-hidden min-w-[200px] border border-gray-200 dark:border-gray-700"
                             sideOffset={8}
                             align={isFromMe ? "end" : "start"}
                           >
-                            <div className="py-2 px-1">
+                            <div className="py-1.5">
                               {/* Responder */}
                               <Popover.Close asChild>
                                 <button
-                                  className="w-full px-4 py-2.5 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/20 dark:hover:to-indigo-900/20 text-gray-700 dark:text-gray-300 flex items-center space-x-3 transition-all duration-200 rounded-xl group"
+                                  className="w-full px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 flex items-center gap-3 transition-colors"
                                   onClick={() => {
                                     setReplyToMessage(message);
                                   }}
                                 >
-                                  <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30 group-hover:bg-blue-200 dark:group-hover:bg-blue-800/40 transition-colors">
-                                    <Reply className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                  </div>
-                                  <span className="font-medium text-sm">Responder</span>
+                                  <Reply className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                  <span className="text-sm">Responder</span>
                                 </button>
                               </Popover.Close>
 
                               {/* Copiar */}
                               <Popover.Close asChild>
                                 <button
-                                  className="w-full px-4 py-2.5 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 dark:hover:from-emerald-900/20 dark:hover:to-teal-900/20 text-gray-700 dark:text-gray-300 flex items-center space-x-3 transition-all duration-200 rounded-xl group"
+                                  className="w-full px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 flex items-center gap-3 transition-colors"
                                   onClick={() => {
                                     const textContent = message.message.conversation || message.message.extendedTextMessage?.text || '';
                                     if (textContent) {
@@ -4442,17 +4441,15 @@ return (
                                     }
                                   }}
                                 >
-                                  <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/30 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-800/40 transition-colors">
-                                    <Copy className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                                  </div>
-                                  <span className="font-medium text-sm">Copiar</span>
+                                  <Copy className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                  <span className="text-sm">Copiar</span>
                                 </button>
                               </Popover.Close>
 
                               {/* Encaminhar */}
                               <Popover.Close asChild>
                                 <button
-                                  className="w-full px-4 py-2.5 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/20 dark:hover:to-pink-900/20 text-gray-700 dark:text-gray-300 flex items-center space-x-3 transition-all duration-200 rounded-xl group"
+                                  className="w-full px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 flex items-center gap-3 transition-colors"
                                   onClick={() => {
                                     // Ativa modo de seleção e seleciona a mensagem atual
                                     setSelectionMode(true);
@@ -4461,10 +4458,8 @@ return (
                                     setSelectedMessages(newSelected);
                                   }}
                                 >
-                                  <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30 group-hover:bg-purple-200 dark:group-hover:bg-purple-800/40 transition-colors">
-                                    <Forward className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                                  </div>
-                                  <span className="font-medium text-sm">Encaminhar</span>
+                                  <Forward className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                  <span className="text-sm">Encaminhar</span>
                                 </button>
                               </Popover.Close>
 
@@ -4472,13 +4467,11 @@ return (
                               {isMediaMessage(message) && (
                                 <Popover.Close asChild>
                                   <button
-                                    className="w-full px-4 py-2.5 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 dark:hover:from-amber-900/20 dark:hover:to-orange-900/20 text-gray-700 dark:text-gray-300 flex items-center space-x-3 transition-all duration-200 rounded-xl group"
+                                    className="w-full px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 flex items-center gap-3 transition-colors"
                                     onClick={() => handleDownloadMedia(message)}
                                   >
-                                    <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30 group-hover:bg-amber-200 dark:group-hover:bg-amber-800/40 transition-colors">
-                                      <Download className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                                    </div>
-                                    <span className="font-medium text-sm">Baixar</span>
+                                    <Download className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                                    <span className="text-sm">Baixar</span>
                                   </button>
                                 </Popover.Close>
                               )}
@@ -4569,8 +4562,8 @@ return (
     {showScrollToBottom && (
       <button
         onClick={() => scrollToBottom(true)}
-        className={`fixed bottom-40 z-40 bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 ${
-          sidebarOpen || searchOpen ? 'right-[440px]' : 'right-6 md:right-8'
+        className={`fixed bottom-40 z-40 bg-white dark:bg-gray-900 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 ${
+          sidebarOpen || searchOpen ? 'right-[456px]' : 'right-6 md:right-8'
         }`}
         title="Rolar para o final"
       >
@@ -4582,7 +4575,7 @@ return (
 {showDeals && (
   <div
     id="deals-popup"
-    className="fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-2xl rounded-2xl w-96 max-h-[500px] overflow-hidden z-[9999] animate-in slide-in-from-top-2 transition-colors duration-200"
+    className="fixed bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 shadow-2xl rounded-2xl w-96 max-h-[500px] overflow-hidden z-[9999] animate-in slide-in-from-top-2 transition-colors duration-200"
     style={{ 
       boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
       top: dealsButtonRef.current ? 
@@ -4600,7 +4593,7 @@ return (
     }}
   >
     {/* Header */}
-    <div className="bg-gradient-to-r from-gray-50 to-indigo-50 dark:from-gray-700 dark:to-indigo-900/50 px-6 py-4 border-b border-gray-300/50 dark:border-gray-600/50 transition-colors duration-200">
+    <div className="bg-gray-50 dark:bg-gray-800 px-6 py-4 border-b border-gray-300/50 dark:border-gray-600/50 transition-colors duration-200">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center transition-colors duration-200">
@@ -4625,7 +4618,7 @@ return (
     <div className="p-6">
       {deals.length === 0 ? (
         <div className="text-center py-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -4637,7 +4630,7 @@ return (
           
           <button
             onClick={createNewDeal}
-            className="px-6 py-3 bg-gradient-to-r from-gray-500 to-indigo-600 text-white rounded-xl hover:from-gray-600 hover:to-indigo-700 transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center space-x-2 mx-auto"
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center space-x-2 mx-auto"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -4658,7 +4651,7 @@ return (
                     setShowDeals(false);
                     setSelectedDealId(deal.Id);
                   }}
-                  className="cursor-pointer p-4 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gradient-to-r hover:from-gray-50 hover:to-indigo-50 dark:hover:from-gray-700 dark:hover:to-indigo-900/50 hover:border-blue-200 dark:hover:border-blue-700 transition-all duration-200 group"
+                  className="cursor-pointer p-4 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-blue-200 dark:hover:border-blue-700 transition-all duration-200 group"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -4685,7 +4678,7 @@ return (
           <div className="border-t border-gray-300 dark:border-gray-600 pt-4">
             <button
               onClick={createNewDeal}
-              className="w-full px-4 py-3 bg-gradient-to-r from-gray-500 to-indigo-600 text-white rounded-xl hover:from-gray-600 hover:to-indigo-700 transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center justify-center space-x-2"
+              className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 font-medium shadow-sm hover:shadow-md flex items-center justify-center space-x-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -4708,8 +4701,8 @@ return (
     {/* Drag & Drop Overlay */}
     {dragActive && (
       <div className="absolute inset-0 bg-gray-500/10 dark:bg-gray-900/30 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg border-2 border-dashed border-blue-400 dark:border-blue-500 rounded-3xl p-12 text-center shadow-2xl transition-colors duration-200">
-          <div className="w-20 h-20 bg-gradient-to-br from-gray-500 to-indigo-600 dark:from-gray-600 dark:to-indigo-700 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border-2 border-dashed border-blue-400 dark:border-blue-500 rounded-3xl p-12 text-center shadow-2xl transition-colors duration-200">
+          <div className="w-20 h-20 bg-blue-600 dark:bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
             <Paperclip className="w-10 h-10 text-white" />
           </div>
           <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">
@@ -4724,8 +4717,8 @@ return (
     {/* Edit Modal */}
     {editModal.open && (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 transition-colors duration-200">
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 px-6 py-4 border-b border-gray-300 dark:border-gray-600">
+        <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 transition-colors duration-200">
+          <div className="bg-amber-50 dark:bg-amber-900/30 px-6 py-4 border-b border-gray-300 dark:border-gray-600">
             <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center space-x-3">
               <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900/50 rounded-lg flex items-center justify-center transition-colors duration-200">
                 <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4751,7 +4744,7 @@ return (
                 Cancelar
               </button>
               <button
-                className="px-6 py-2.5 bg-gradient-to-r from-gray-500 to-indigo-600 dark:from-gray-600 dark:to-indigo-700 text-white rounded-xl hover:from-gray-600 hover:to-indigo-700 dark:hover:from-gray-700 dark:hover:to-indigo-800 font-medium transition-all duration-200 shadow-sm hover:shadow-md"
+                className="px-6 py-2.5 bg-blue-600 dark:from-gray-600 dark:to-indigo-700 text-white rounded-xl hover:bg-blue-700 dark:hover:from-gray-700 dark:hover:to-indigo-800 font-medium transition-all duration-200 shadow-sm hover:shadow-md"
                 onClick={handleEditConfirm}
               >
                 Salvar alterações
@@ -4762,16 +4755,16 @@ return (
       </div>
     )}
 
-    {/* Forward Modal - WhatsApp Web Style */}
+    {/* Forward Modal */}
     {forwardModalOpen && (
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-[#202c33] w-full max-w-md h-[600px] rounded-lg shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 transition-colors duration-200">
+      <div className="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-900 w-full max-w-md h-[600px] rounded-lg shadow-xl overflow-hidden flex flex-col">
 
           {/* Header */}
-          <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-                Encaminhar mensagem para
+          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Encaminhar mensagem
               </h2>
               <button
                 onClick={() => {
@@ -4780,28 +4773,30 @@ return (
                   setForwardSearchQuery('');
                   setSelectedForwardChats(new Set());
                 }}
-                className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
-                <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </button>
             </div>
+          </div>
 
-            {/* Search input */}
+          {/* Search input */}
+          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
               <input
                 type="text"
                 placeholder="Pesquisar nome ou número"
                 value={forwardSearchQuery}
                 onChange={(e) => setForwardSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-transparent text-gray-900 dark:text-gray-100 text-sm focus:outline-none placeholder:text-gray-500"
+                className="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder:text-gray-500 dark:placeholder:text-gray-400"
               />
             </div>
           </div>
 
           {/* Conversas recentes label */}
-          <div className="px-6 py-3 bg-gray-50 dark:bg-[#111b21]">
-            <p className="text-xs uppercase text-gray-500 dark:text-gray-400 font-medium tracking-wide">
+          <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800/50">
+            <p className="text-xs uppercase text-gray-500 dark:text-gray-400 font-medium">
               Conversas recentes
             </p>
           </div>
@@ -4810,7 +4805,7 @@ return (
           <div className="flex-1 overflow-y-auto">
             {loadingForwardChats ? (
               <div className="flex items-center justify-center h-full">
-                <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+                <Loader2 className="w-6 h-6 animate-spin text-blue-600 dark:text-blue-400" />
               </div>
             ) : forwardChats.length === 0 ? (
               <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400 text-sm">
@@ -4858,19 +4853,17 @@ return (
                         }
                         setSelectedForwardChats(newSelected);
                       }}
-                      className="flex items-center px-6 py-3 hover:bg-gray-50 dark:hover:bg-[#2a3942] cursor-pointer transition-colors"
+                      className="flex items-center px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
                     >
                       {/* Checkbox */}
-                      <div className="mr-4">
-                        <div className={`w-5 h-5 rounded-sm border-2 flex items-center justify-center transition-all ${
+                      <div className="mr-3">
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                           isSelected
-                            ? 'bg-emerald-500 border-emerald-500'
-                            : 'border-gray-300 dark:border-gray-600'
+                            ? 'bg-blue-600 dark:bg-blue-500 border-blue-600 dark:border-blue-500'
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
                         }`}>
                           {isSelected && (
-                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
+                            <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
                           )}
                         </div>
                       </div>
@@ -4880,18 +4873,18 @@ return (
                         <img
                           src={chat.profilePicUrl}
                           alt={chat.pushName || 'Contato'}
-                          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                          className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-gray-700 dark:text-gray-300 font-medium text-lg">
+                        <div className="w-10 h-10 bg-blue-600 dark:bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-medium text-sm">
                             {chat.pushName?.charAt(0).toUpperCase() || chat.remoteJid?.charAt(0) || '?'}
                           </span>
                         </div>
                       )}
 
                       {/* Info */}
-                      <div className="ml-4 flex-1 min-w-0">
+                      <div className="ml-3 flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                           {(() => {
                             // Usa o mesmo padrão de busca do ChatList
@@ -4923,14 +4916,14 @@ return (
 
           {/* Footer com botão enviar */}
           {selectedForwardChats.size > 0 && (
-            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-[#202c33]">
+            <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
               <button
                 onClick={() => {
                   const selectedChats = forwardChats.filter(chat => selectedForwardChats.has(chat.id));
                   selectedChats.forEach(chat => handleForwardMessage(chat));
                   setSelectedForwardChats(new Set());
                 }}
-                className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full font-medium transition-colors flex items-center justify-center space-x-2"
+                className="w-full py-2.5 bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
               >
                 <Send className="w-4 h-4" />
                 <span>Enviar para {selectedForwardChats.size} {selectedForwardChats.size === 1 ? 'conversa' : 'conversas'}</span>
@@ -4944,7 +4937,7 @@ return (
     {/* Contact Modal */}
     {contactModalOpen && contactData && (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transition-colors duration-200">
+        <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transition-colors duration-200">
           <div className="px-6 py-4 border-b border-gray-300 dark:border-gray-600 flex items-center justify-between">
             <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center space-x-3">
               <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center transition-colors duration-200">
@@ -4995,14 +4988,14 @@ return (
           <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 flex justify-end space-x-3 border-t border-gray-300 dark:border-gray-600 transition-colors duration-200">
             <button
               onClick={() => setContactModalOpen(false)}
-              className="px-4 py-2 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="px-4 py-2 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={handleSaveContact}
               disabled={savingContact}
-              className="px-4 py-2 rounded-xl text-sm text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 rounded-xl text-sm text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 transition-colors"
             >
               {savingContact ? 'Salvando...' : 'Salvar'}
             </button>
@@ -5013,7 +5006,7 @@ return (
 
       {/* Selection Actions Bar */}
       {selectionMode && selectedMessages.size > 0 && (
-        <div className="fixed md:relative bottom-[96px] md:bottom-auto left-0 right-0 md:left-auto md:right-auto z-10 px-4 md:px-6 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 border-t border-b border-emerald-200 dark:border-emerald-800 shadow-lg transition-all duration-200">
+        <div className="fixed md:relative bottom-[96px] md:bottom-auto left-0 right-0 md:left-auto md:right-auto z-10 px-4 md:px-6 py-3 bg-green-50 dark:bg-green-900/30 border-t border-b border-emerald-200 dark:border-emerald-800 shadow-lg transition-all duration-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center">
@@ -5075,7 +5068,7 @@ return (
                     setLoadingForwardChats(false);
                   }
                 }}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md flex items-center space-x-2"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-600 text-white rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md flex items-center space-x-2"
               >
                 <Forward className="w-4 h-4" />
                 <span>Encaminhar</span>
@@ -5097,7 +5090,7 @@ return (
       )}
 
       {/* Message Input / Templates */}
-      <div className="fixed md:relative bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto z-20 px-2 md:px-4 py-2 border-t bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 transition-colors duration-200">
+      <div className="fixed md:relative bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto z-20 px-2 md:px-4 py-2 border-t bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 transition-colors duration-200">
         {(!isBusiness || isSessionActive) ? (
           <MessageInput
             remoteJid={selectedChat.remoteJid}
@@ -5171,7 +5164,7 @@ return (
             </p>
             <button
               onClick={() => setTemplateModalOpen(true)}
-              className="px-4 py-2 rounded-xl text-sm text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800 transition-colors"
+              className="px-4 py-2 rounded-xl text-sm text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors"
             >
               Selecionar template
             </button>
@@ -5217,7 +5210,7 @@ return (
           <a
             href={preview.url}
             download
-            className="inline-flex items-center px-4 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-800 transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
           >
             <Download className="w-4 h-4 mr-2" /> Baixar
           </a>
@@ -5266,7 +5259,7 @@ export default function ModernChatSystem() {
 
   if (isMobile) {
     return (
-      <div className="h-screen bg-gradient-to-br from-emerald-50 to-gray-50">
+      <div className="h-screen bg-gray-50 dark:bg-gray-900">
         {selectedChat ? (
           <MessageView selectedChat={selectedChat} onBack={handleBack} />
         ) : (
@@ -5280,7 +5273,7 @@ export default function ModernChatSystem() {
   }
 
   return (
-    <div className="h-screen flex bg-gradient-to-br from-emerald-50 to-gray-50">
+    <div className="h-screen flex bg-gray-50 dark:bg-gray-900">
       <div className="w-1/3 border-r border-emerald-200">
         <ChatList
           onChatSelect={handleChatSelect}
@@ -5291,9 +5284,9 @@ export default function ModernChatSystem() {
         {selectedChat ? (
           <MessageView selectedChat={selectedChat} onBack={handleBack} />
         ) : (
-          <div className="h-full flex items-center justify-center bg-gradient-to-br from-emerald-50 to-gray-50">
+          <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-gray-900">
             <div className="text-center">
-              <div className="w-24 h-24 bg-gradient-to-r from-emerald-400 to-gray-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+              <div className="w-24 h-24 bg-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
                 <MessageCircle className="w-12 h-12 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">

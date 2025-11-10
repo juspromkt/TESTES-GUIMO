@@ -26,7 +26,7 @@ export default function SelectModeStep({ state, onNext }: StepComponentProps) {
         {/* Opção: Agente Único */}
         <button
           onClick={() => handleSelectMode('single')}
-          className="group relative p-8 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg transition-all duration-200 text-left bg-white dark:bg-gray-800"
+          className="group relative p-8 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg transition-all duration-200 text-left bg-white dark:bg-gray-900"
         >
           <div className="flex flex-col items-center text-center space-y-4">
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-full group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
@@ -65,7 +65,7 @@ export default function SelectModeStep({ state, onNext }: StepComponentProps) {
         {/* Opção: Sistema de Multiagentes */}
         <button
           onClick={() => handleSelectMode('multi')}
-          className="group relative p-8 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg transition-all duration-200 text-left bg-white dark:bg-gray-800"
+          className="group relative p-8 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg transition-all duration-200 text-left bg-white dark:bg-gray-900"
         >
           <div className="flex flex-col items-center text-center space-y-4">
             <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-full group-hover:bg-purple-100 dark:group-hover:bg-purple-900/30 transition-colors">

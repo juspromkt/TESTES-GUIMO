@@ -174,14 +174,14 @@ export default function DiagnosticSection({ token }: DiagnosticSectionProps) {
         ...prev,
         agent: {
           status: data?.isAgenteAtivo ? 'active' : 'inactive',
-          message: data?.isAgenteAtivo ? 'Agente de IA ativo' : 'Agente de IA desativado'
+          message: data?.isAgenteAtivo ? 'Agente ativo' : 'Agente desativado'
         }
       }));
     } catch (err) {
       console.error('Erro ao verificar agente:', err);
       setDiagnosticData(prev => ({
         ...prev,
-        agent: { status: 'inactive', message: 'Agente de IA desativado' }
+        agent: { status: 'inactive', message: 'Agente desativado' }
       }));
     }
 
@@ -440,7 +440,7 @@ export default function DiagnosticSection({ token }: DiagnosticSectionProps) {
       case 'error':
         return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800';
       default:
-        return 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700';
+        return 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -454,7 +454,7 @@ export default function DiagnosticSection({ token }: DiagnosticSectionProps) {
     {
       id: 'agent',
       icon: Bot,
-      title: 'Agente de IA',
+      title: 'Agente',
       data: diagnosticData.agent,
     },
     {

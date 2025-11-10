@@ -1118,7 +1118,7 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, id
                   Notificações no WhatsApp
                 </h1>
                 <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1.5 font-light">
-                  Configure notificações automáticas inteligentes enviadas pela IA
+                  Configure notificações automáticas inteligentes enviadas pelo agente
                 </p>
               </div>
             </div>

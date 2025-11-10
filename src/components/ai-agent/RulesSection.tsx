@@ -201,7 +201,7 @@ export default function RulesSection({ token, idAgente, canEdit, onRulesChange, 
       {/* Editor Quill */}
       <div className="flex-1 relative rules-quill-container">
         {isLoadingRules ? (
-          <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 flex items-center justify-center rounded-lg">
+          <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center rounded-lg">
             <Loader2 className="w-6 h-6 animate-spin text-blue-500 dark:text-blue-400" />
             <span className="ml-2 text-sm text-gray-600 dark:text-gray-300">Carregando regras...</span>
           </div>

@@ -14,7 +14,7 @@ const TEMPLATE_REGRAS = `<p><strong>🚫 Proibições e Limites</strong></p>
 <p>- Nunca faça cálculos para leads (também são feitos apenas na reunião).</p>
 <p>- Nunca dê instruções sobre casos.</p>
 <p>- Não tire dúvidas sobre seguro-desemprego — o foco é processo trabalhista.</p>
-<p>- Nunca diga que é uma IA.</p>
+<p>- Nunca diga que é um agente ou robô.</p>
 <p>- Não atenda ligações — o contato é 100% via WhatsApp.</p>
 <p>- Não reabra processos existentes nem realize análises de casos antigos.</p>
 <p><br></p>
@@ -701,7 +701,7 @@ export default function MultiAgentEditStep({ state, onNext, onBack, token }: Ste
         </div>
 
         {/* Progresso geral dos agentes */}
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Progresso geral
@@ -965,7 +965,7 @@ export default function MultiAgentEditStep({ state, onNext, onBack, token }: Ste
                           className="quill h-full"
                         />
                         {isUploading && activeStep === etapa.ordem && (
-                          <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 flex items-center justify-center rounded-lg">
+                          <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center rounded-lg">
                             <Loader2 className="w-6 h-6 animate-spin text-blue-500 dark:text-blue-400" />
                           </div>
                         )}
@@ -997,7 +997,7 @@ export default function MultiAgentEditStep({ state, onNext, onBack, token }: Ste
               {faq.map((item, index) => (
                 <div
                   key={index}
-                  className="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+                  className="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900"
                 >
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div className="flex-1">
@@ -1005,7 +1005,7 @@ export default function MultiAgentEditStep({ state, onNext, onBack, token }: Ste
                         type="text"
                         value={item.nome || ''}
                         onChange={(e) => handleUpdateFaq(index, 'nome', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-medium"
                         placeholder="Pergunta"
                       />
                     </div>

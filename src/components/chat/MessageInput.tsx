@@ -40,6 +40,8 @@ export function MessageInput({
   const user = localStorage.getItem("user");
   const token = user ? JSON.parse(user).token : null;
   const [recording, setRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const [pendingFile, setPendingFile] = useState<{
@@ -87,6 +89,13 @@ reader.readAsDataURL(audioBlob);
 
       mediaRecorder.start();
       setRecording(true);
+      setRecordingTime(0);
+
+      // Iniciar contador de tempo
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+
       toast("Gravando... 🎙️ (clique para parar)");
 
     } catch (err) {
@@ -97,6 +106,12 @@ reader.readAsDataURL(audioBlob);
 
   // FUNÇÃO PARA PARAR A GRAVAÇÃO
   const stopRecording = () => {
+    // Parar o contador
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current);
+      recordingIntervalRef.current = null;
+    }
+
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
@@ -322,37 +337,54 @@ reader.readAsDataURL(audioBlob);
     const textarea = textareaRef.current;
     if (textarea) {
       // Reset para altura mínima primeiro
-      textarea.style.height = '44px';
+      textarea.style.height = '36px';
 
-      // Se há conteúdo e precisa de mais espaço, expande até no máximo ~2.5 linhas
-      if (message.trim() && textarea.scrollHeight > 44) {
-        textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+      // Se há conteúdo e precisa de mais espaço, expande até no máximo ~2 linhas
+      if (message.trim() && textarea.scrollHeight > 36) {
+        textarea.style.height = `${Math.min(textarea.scrollHeight, 100)}px`;
       }
     }
   }, [message]);
+
+  // Limpar intervalo de gravação ao desmontar
+  useEffect(() => {
+    return () => {
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Formatar tempo de gravação (mm:ss)
+  const formatRecordingTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
  return (
-    <div className="bg-[#f0f2f5] dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 relative z-[9998] transition-colors duration-200" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
+    <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 relative z-[9998] transition-colors">
       {/* Preview de arquivo selecionado */}
       {pendingFile && (
-        <div className="px-3 md:px-4 py-3 bg-white dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 transition-colors duration-200">
-          <div className="flex items-center space-x-3">
+        <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2">
             {pendingFile.mediatype === 'image' && (
               <img
                 src={`data:${pendingFile.mimetype};base64,${pendingFile.base64}`}
                 alt="preview"
-                className="w-16 h-16 object-cover rounded-lg"
+                className="w-12 h-12 object-cover rounded"
               />
             )}
             {pendingFile.mediatype === 'video' && (
               <video
                 src={`data:${pendingFile.mimetype};base64,${pendingFile.base64}`}
-                className="w-16 h-16 object-cover rounded-lg"
+                className="w-12 h-12 object-cover rounded"
                 controls={false}
               />
             )}
             {pendingFile.mediatype === 'document' && (
-              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center transition-colors duration-200">
-                <FileText className="w-8 h-8 text-gray-400 dark:text-gray-300" />
+              <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                <FileText className="w-6 h-6 text-gray-500 dark:text-gray-400" />
               </div>
             )}
             <div className="flex-1 min-w-0">
@@ -361,7 +393,8 @@ reader.readAsDataURL(audioBlob);
             </div>
             <button
               onClick={() => setPendingFile(null)}
-              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1"
+              className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+              title="Remover arquivo"
             >
               ✕
             </button>
@@ -371,12 +404,13 @@ reader.readAsDataURL(audioBlob);
 
       {/* Preview de áudio gravado */}
       {audioPreview && (
-        <div className="px-4 py-3 bg-white dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 transition-colors duration-200">
-          <div className="flex items-center space-x-3">
-            <audio controls src={audioPreview.url} className="flex-1" />
+        <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2">
+            <audio controls src={audioPreview.url} className="flex-1 h-8" />
             <button
               onClick={() => setAudioPreview(null)}
-              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1"
+              className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+              title="Remover áudio"
             >
               ✕
             </button>
@@ -386,17 +420,18 @@ reader.readAsDataURL(audioBlob);
 
       {/* Responder a mensagem */}
       {replyTo && (
-        <div className="px-4 py-2 bg-[#d1f4cc] dark:bg-emerald-900/40 border-b border-gray-200 dark:border-gray-600 transition-colors duration-200">
-          <div className="flex items-start justify-between">
+        <div className="px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-[#00a884] dark:text-emerald-400">Respondendo</p>
+              <p className="text-xs font-medium text-blue-600 dark:text-blue-400">Respondendo</p>
               <p className="text-sm text-gray-700 dark:text-gray-200 truncate">
                 {replyTo.message.conversation?.slice(0, 50)}...
               </p>
             </div>
             <button
               onClick={() => onClearReply?.()}
-              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 ml-2 p-1"
+              className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 rounded transition-colors"
+              title="Cancelar resposta"
             >
               ✕
             </button>
@@ -404,8 +439,8 @@ reader.readAsDataURL(audioBlob);
         </div>
       )}
 
-      {/* Input principal - estilo WhatsApp Web */}
-      <div className="flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-2">
+      {/* Input principal */}
+      <div className="flex items-center gap-2 px-3 py-2">
         <input
           ref={fileInputRef || internalRef}
           type="file"
@@ -415,23 +450,23 @@ reader.readAsDataURL(audioBlob);
         />
 
         {/* Lado esquerdo: Emoji + Anexo */}
-        <div className="flex items-center gap-0.5 md:gap-1 flex-shrink-0">
+        <div className="flex items-center gap-1 flex-shrink-0">
           {/* Botão Emoji com Popover */}
           <Popover.Root>
             <Popover.Trigger asChild>
               <button
                 type="button"
-                className="p-1.5 md:p-2 text-[#54656f] dark:text-gray-400 hover:text-[#00a884] dark:hover:text-emerald-400 active:text-[#008f6f] transition-colors rounded-full hover:bg-[#f0f2f5] dark:hover:bg-gray-700 active:bg-[#e1e3e5] dark:active:bg-gray-600 touch-manipulation"
+                className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
                 title="Emoji"
                 aria-label="Selecionar emoji"
               >
-                <Smile className="w-5 h-5 md:w-6 md:h-6" />
+                <Smile className="w-5 h-5" />
               </button>
             </Popover.Trigger>
 
             <Popover.Portal>
               <Popover.Content
-                className="z-50 bg-white dark:bg-gray-800 shadow-2xl rounded-lg overflow-hidden w-[300px] md:w-[350px] animate-in fade-in-0 zoom-in-95 transition-colors duration-200"
+                className="z-50 bg-white dark:bg-gray-900 shadow-2xl rounded-lg overflow-hidden w-[300px] md:w-[350px] animate-in fade-in-0 zoom-in-95 transition-colors duration-200"
                 sideOffset={8}
                 align="start"
               >
@@ -457,11 +492,11 @@ reader.readAsDataURL(audioBlob);
           <button
             type="button"
             onClick={() => (fileInputRef || internalRef).current?.click()}
-            className="p-1.5 md:p-2 text-[#54656f] dark:text-gray-400 hover:text-[#00a884] dark:hover:text-emerald-400 active:text-[#008f6f] transition-colors rounded-full hover:bg-[#f0f2f5] dark:hover:bg-gray-700 active:bg-[#e1e3e5] dark:active:bg-gray-600 touch-manipulation"
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             title="Anexar arquivo"
             aria-label="Anexar arquivo"
           >
-            <Paperclip className="w-5 h-5 md:w-6 md:h-6" />
+            <Paperclip className="w-5 h-5" />
           </button>
 
           {/* Botão Template (se business) */}
@@ -469,25 +504,28 @@ reader.readAsDataURL(audioBlob);
             <button
               type="button"
               onClick={onTemplateClick}
-              className="p-1.5 md:p-2 text-[#54656f] dark:text-gray-400 hover:text-[#00a884] dark:hover:text-emerald-400 active:text-[#008f6f] transition-colors rounded-full hover:bg-[#f0f2f5] dark:hover:bg-gray-700 active:bg-[#e1e3e5] dark:active:bg-gray-600 touch-manipulation"
+              className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               title="Template"
               aria-label="Selecionar template"
             >
-              <FileText className="w-4 h-4 md:w-5 md:h-5" />
+              <FileText className="w-5 h-5" />
             </button>
           )}
         </div>
 
         {/* Campo de input */}
         {recording ? (
-          <div className="flex-1 flex items-center justify-center bg-white dark:bg-gray-700 rounded-lg py-2.5 px-4 transition-colors duration-200">
-            <div className="flex items-center gap-2">
+          <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-lg py-2 px-3">
+            <div className="flex items-center gap-3">
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-              <span className="text-sm text-gray-600 dark:text-gray-300">Gravando áudio...</span>
+              <span className="text-sm font-medium text-red-600 dark:text-red-400">
+                {formatRecordingTime(recordingTime)}
+              </span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Gravando...</span>
             </div>
           </div>
         ) : (
-          <div className="flex-1 bg-white dark:bg-gray-700 rounded-lg transition-colors duration-200">
+          <div className="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <textarea
               ref={textareaRef}
               value={message}
@@ -495,11 +533,10 @@ reader.readAsDataURL(audioBlob);
               onKeyPress={handleKeyPress}
               placeholder="Digite uma mensagem"
               rows={1}
-              className="w-full resize-none rounded-lg bg-transparent px-3 py-2.5 text-base md:text-[15px] text-[#111b21] dark:text-gray-100 placeholder:text-[#667781] dark:placeholder:text-gray-400 focus:outline-none overflow-y-auto touch-manipulation"
+              className="w-full resize-none rounded-lg bg-transparent px-3 py-2 text-[15px] text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none overflow-y-auto"
               style={{
-                minHeight: '44px',
-                maxHeight: '120px',
-                WebkitOverflowScrolling: 'touch'
+                minHeight: '36px',
+                maxHeight: '100px'
               }}
             />
           </div>
@@ -510,25 +547,25 @@ reader.readAsDataURL(audioBlob);
           <button
             type="button"
             onClick={handleSendMessage}
-            className="p-2 md:p-2.5 text-white bg-[#00a884] dark:bg-emerald-600 hover:bg-[#008f6f] dark:hover:bg-emerald-700 active:bg-[#007a65] dark:active:bg-emerald-800 transition-colors rounded-full flex-shrink-0 touch-manipulation active:scale-95"
+            className="p-2 text-white bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 rounded-lg flex-shrink-0 transition-colors"
             title="Enviar"
             aria-label="Enviar mensagem"
           >
-            <Send className="w-5 h-5 md:w-6 md:h-6" />
+            <Send className="w-5 h-5" />
           </button>
         ) : (
           <button
             type="button"
             onClick={recording ? stopRecording : startRecording}
-            className={`p-2 md:p-2.5 transition-colors rounded-full flex-shrink-0 touch-manipulation active:scale-95 ${
+            className={`p-2 transition-colors rounded-lg flex-shrink-0 ${
               recording
-                ? 'text-white bg-red-500 hover:bg-red-600 active:bg-red-700'
-                : 'text-[#54656f] dark:text-gray-400 hover:text-[#00a884] dark:hover:text-emerald-400 active:text-[#008f6f] hover:bg-[#f0f2f5] dark:hover:bg-gray-700 active:bg-[#e1e3e5] dark:active:bg-gray-600'
+                ? 'text-white bg-red-500 hover:bg-red-600'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
             }`}
             title={recording ? "Parar gravação" : "Gravar áudio"}
             aria-label={recording ? "Parar gravação" : "Gravar áudio"}
           >
-            {recording ? <StopCircle className="w-5 h-5 md:w-6 md:h-6" /> : <Mic className="w-5 h-5 md:w-6 md:h-6" />}
+            {recording ? <StopCircle className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           </button>
         )}
       </div>

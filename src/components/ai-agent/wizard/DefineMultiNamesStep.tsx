@@ -221,7 +221,7 @@ export default function DefineMultiNamesStep({ state, onNext, onBack, token }: S
               value={principalAgentName}
               onChange={(e) => handlePrincipalNameChange(e.target.value)}
               onBlur={handlePrincipalBlur}
-              className={`w-full px-4 py-3 pr-10 border-2 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-colors ${
+              className={`w-full px-4 py-3 pr-10 border-2 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors ${
                 !principalAgentName.trim()
                   ? 'border-gray-300 dark:border-gray-600'
                   : principalNameValid
@@ -260,7 +260,7 @@ export default function DefineMultiNamesStep({ state, onNext, onBack, token }: S
           {nameStatuses.map((status, index) => (
             <div
               key={status.templateId}
-              className="p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
+              className="p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -283,7 +283,7 @@ export default function DefineMultiNamesStep({ state, onNext, onBack, token }: S
                     value={status.customName}
                     onChange={(e) => handleNameChange(index, e.target.value)}
                     onBlur={() => handleBlur(index)}
-                    className={`w-full px-4 py-2.5 pr-10 border-2 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-colors ${
+                    className={`w-full px-4 py-2.5 pr-10 border-2 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors ${
                       !status.customName.trim()
                         ? 'border-gray-300 dark:border-gray-600'
                         : status.isValid

@@ -382,7 +382,7 @@ export default function AgentConfigModal({
   return (
     <div className="fixed inset-y-0 left-16 right-0 z-[100] bg-white dark:bg-gray-900 transition-colors duration-200">
       {/* Header Fixo */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-4 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-8 py-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -426,7 +426,7 @@ export default function AgentConfigModal({
       </div>
 
       {/* Navegação de Abas */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8">
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-8">
         <nav className="flex gap-6">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -497,7 +497,7 @@ export default function AgentConfigModal({
         </div>
 
         {/* Coluna Direita (40%) - Painel de Configurações */}
-        <aside className="w-[40%] bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 overflow-y-auto p-6 transition-colors duration-200">
+        <aside className="w-[40%] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 overflow-y-auto p-6 transition-colors duration-200">
           {/* 1️⃣ CONTADOR DE CARACTERES */}
           <div className={`border-2 rounded-lg p-4 mb-6 transition-all duration-200 ${
             isOverLimit
@@ -576,7 +576,7 @@ export default function AgentConfigModal({
                             🧠 Por que há um limite de caracteres?
                           </p>
                           <p className="text-xs text-red-700 dark:text-red-400">
-                            Os agentes de IA funcionam com base em contexto — eles processam uma quantidade limitada de informações por vez.
+                            Os agentes funcionam com base em contexto — eles processam uma quantidade limitada de informações por vez.
                             Quando esse limite é ultrapassado, o agente pode se perder, ignorar partes importantes ou até gerar respostas incorretas ("alucinações").
                           </p>
                         </div>

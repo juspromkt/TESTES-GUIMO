@@ -76,14 +76,14 @@ export default function AIPromptGenerator({ token, onApplyModel, canEdit, idAgen
         </div>
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Gerar Prompt com IA</h2>
-          <p className="text-sm text-gray-500 mt-1">Crie um prompt personalizado para seu agente com ajuda da IA</p>
+          <p className="text-sm text-gray-500 mt-1">Crie um prompt personalizado para seu agente com ajuda do assistente</p>
         </div>
       </div>
 
       <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 mb-6 border border-indigo-100">
         <h3 className="text-lg font-medium text-indigo-800 mb-3">Como funciona?</h3>
         <p className="text-gray-700 mb-4">
-          Descreva seu negócio, serviços e necessidades em detalhes. Nossa IA irá gerar um prompt personalizado 
+          Descreva seu negócio, serviços e necessidades em detalhes. O assistente irá gerar um prompt personalizado
           para seu agente, incluindo personalidade, regras, etapas de atendimento e perguntas frequentes.
         </p>
         <div className="bg-amber-50 border-l-4 border-amber-500 p-4 text-amber-700">

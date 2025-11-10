@@ -116,7 +116,7 @@ Cada card contém:
 
 **Modo Escuro:**
 - Background: `bg-gray-900`
-- Cards: `bg-gray-800` com `border-gray-700`
+- Cards: `bg-gray-900` com `border-gray-700`
 - Sidebar ativa: `bg-gray-700 text-white`
 - Compatibilidade total com dark mode
 

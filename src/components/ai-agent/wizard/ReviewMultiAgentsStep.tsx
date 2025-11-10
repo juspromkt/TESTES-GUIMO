@@ -42,10 +42,10 @@ export default function ReviewMultiAgentsStep({ state, onNext, onBack }: StepCom
               Responsável por recepcionar leads, entender demandas e direcionar para o agente especialista adequado
             </p>
             <div className="flex gap-2">
-              <span className="px-2 py-1 bg-white dark:bg-gray-800 text-xs text-gray-700 dark:text-gray-300 rounded border border-purple-200 dark:border-purple-700">
+              <span className="px-2 py-1 bg-white dark:bg-gray-900 text-xs text-gray-700 dark:text-gray-300 rounded border border-purple-200 dark:border-purple-700">
                 ✓ Ativo por padrão
               </span>
-              <span className="px-2 py-1 bg-white dark:bg-gray-800 text-xs text-gray-700 dark:text-gray-300 rounded border border-purple-200 dark:border-purple-700">
+              <span className="px-2 py-1 bg-white dark:bg-gray-900 text-xs text-gray-700 dark:text-gray-300 rounded border border-purple-200 dark:border-purple-700">
                 ✓ Agente Principal
               </span>
             </div>
@@ -71,7 +71,7 @@ export default function ReviewMultiAgentsStep({ state, onNext, onBack }: StepCom
           {selectedTemplates.map((template, index) => (
             <div
               key={template.id}
-              className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+              className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg"
             >
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0">

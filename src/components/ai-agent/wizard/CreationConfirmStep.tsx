@@ -289,7 +289,7 @@ export default function CreationConfirmStep({ state, onNext, onSuccess, token }:
 
       {/* Informações do agente criado */}
       <div className="max-w-2xl mx-auto space-y-4">
-        <div className="p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg space-y-4">
+        <div className="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg space-y-4">
           <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
             Informações do Agente
           </h4>

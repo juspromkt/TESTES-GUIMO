@@ -71,7 +71,7 @@ const Login = () => {
     <div className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 text-gray-800 dark:text-gray-100 overflow-hidden transition-colors duration-300">
       {/* === Card de Login === */}
       <div
-        className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-3xl border border-gray-300 dark:border-gray-700
+        className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl border border-gray-300 dark:border-gray-700
         shadow-[0_40px_100px_-20px_rgba(0,0,0,0.25),0_0_40px_-10px_rgba(118,34,151,0.3)]
         dark:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5),0_0_40px_-10px_rgba(118,34,151,0.4)]
         p-10 backdrop-blur-xl transition-all duration-500 hover:shadow-[0_50px_120px_-20px_rgba(0,0,0,0.35)]
@@ -192,7 +192,7 @@ const Login = () => {
       {/* Botão de troca de tema - canto inferior direito */}
       <button
         onClick={toggleTheme}
-        className="fixed bottom-6 right-6 p-4 rounded-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 z-50"
+        className="fixed bottom-6 right-6 p-4 rounded-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 z-50"
         aria-label="Alternar tema"
       >
         {theme === 'dark' ? (

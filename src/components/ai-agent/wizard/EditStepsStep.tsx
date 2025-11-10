@@ -695,7 +695,7 @@ export default function EditStepsStep({ state, onNext, onBack, token }: StepComp
                       className="quill h-full"
                     />
                     {isUploading && activeStep === etapa.ordem && (
-                      <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 flex items-center justify-center rounded-lg">
+                      <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center rounded-lg">
                         <Loader2 className="w-6 h-6 animate-spin text-blue-500 dark:text-blue-400" />
                       </div>
                     )}

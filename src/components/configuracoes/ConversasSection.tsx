@@ -74,7 +74,7 @@ export default function ConversasSection({ isActive, canEdit }: ConversasSection
 
   return (
     <div className="mt-8">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-xl mx-auto transition-colors duration-200">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 max-w-xl mx-auto transition-colors duration-200">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Conversas</h2>
         <div className="flex items-center justify-between">
           <div>

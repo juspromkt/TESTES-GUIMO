@@ -553,7 +553,7 @@ const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
                 <span className="text-lg font-semibold">AI</span>
               </div>
               <div className="ml-3">
-                <p className="font-medium">Agente de IA</p>
+                <p className="font-medium">Agente</p>
                 <p className="text-xs text-white/80">Online</p>
               </div>
             </div>

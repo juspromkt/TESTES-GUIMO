@@ -47,7 +47,8 @@
       "Bash(node scripts/consolidate-agent-models.js:*)",
       "Bash(node scripts/consolidate-agent-models.cjs:*)",
       "Bash(lsof:*)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []

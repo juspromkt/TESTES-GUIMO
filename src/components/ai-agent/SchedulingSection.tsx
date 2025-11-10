@@ -313,10 +313,10 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
               }
               rows={2}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-              placeholder="Explique para a IA como definir o nome"
+              placeholder="Explique para o agente como definir o nome"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Descreva para a IA as regras para gerar o nome do agendamento.
+              Descreva para o agente as regras para gerar o nome do agendamento.
             </p>
           </div>
 
@@ -335,10 +335,10 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
               }
               rows={3}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-              placeholder="Explique para a IA como definir a descrição"
+              placeholder="Explique para o agente como definir a descrição"
             />
             <p className="text-xs text-gray-500 mt-1">
-              A IA usará estas instruções para preencher a descrição.
+              O agente usará estas instruções para preencher a descrição.
             </p>
           </div>
 
