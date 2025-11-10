@@ -98,6 +98,10 @@ export default function MultiAgentEditStep({ state, onNext, onBack, token }: Ste
     // Reset substep para 'regras' quando mudar de agente
     setCurrentSubStep('regras');
 
+    // Reset loading e error states
+    setLoading(false);
+    setError('');
+
     // Verificar se já tem conteúdo editado anteriormente
     const existingEdit = state.multiAgent.editedContents?.get(currentAgent.Id);
 
