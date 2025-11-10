@@ -1681,7 +1681,7 @@ function ensureKey(m: any, fallbackJid: string): any {
               const data = await apiClient.findMessages(
                 token,
                 target,
-                200, // Carregar 200 mensagens por página
+                50, // Carregar 50 mensagens por página
                 pageNum,
                 forceRefresh
               );
@@ -1760,9 +1760,9 @@ function ensureKey(m: any, fallbackJid: string): any {
 
         const noNewMessages = combinedMessages.length === 0;
 
-        // Se a API retornou 200 mensagens, pode haver mais
-        // Se retornou menos de 200, chegamos ao fim
-        const pageHasMore = totalRawMessages >= 200;
+        // Se a API retornou 50 mensagens, pode haver mais
+        // Se retornou menos de 50, chegamos ao fim
+        const pageHasMore = totalRawMessages >= 50;
 
         console.log('🔍 hasMore decision:', {
           pageNum,
@@ -3015,7 +3015,8 @@ useEffect(() => {
   cancelDeferredTasks();
   setNonEssentialReady(false);
   setPage(1);
-  setMessages([]);
+  // ✅ NÃO limpa messages - mantém para permitir troca rápida entre chats
+  // setMessages([]);  // REMOVIDO - mensagens são filtradas por chat no render
   setHasMore(true);
   setReplyToMessage(null);
   ignoreScrollRef.current = true;
@@ -3039,9 +3040,22 @@ useEffect(() => {
 
 useEffect(() => {
   if (initialLoadRef.current || !selectedChat?.id) return;
-  initialLoadRef.current = true;
-  fetchMessages(1, false);
-}, [selectedChat?.id, fetchMessages]);
+
+  // ✅ Verifica se já tem mensagens deste chat (incluindo as que chegaram via WebSocket)
+  const hasMessagesForThisChat = messages.some(
+    m => normalizeRemoteJid(m.key?.remoteJid) === normalizedSelectedChatJid
+  );
+
+  if (!hasMessagesForThisChat) {
+    // Primeira vez abrindo este chat - busca da API
+    initialLoadRef.current = true;
+    fetchMessages(1, false);
+  } else {
+    // Já tem mensagens (visitou antes ou chegaram via WebSocket) - não busca
+    initialLoadRef.current = true;
+    firstPageLoadedRef.current = true;
+  }
+}, [selectedChat?.id, fetchMessages, messages, normalizedSelectedChatJid]);
 
 // Carregar usuários uma vez
 useEffect(() => {
@@ -4255,8 +4269,13 @@ return (
             };
           });
 
-          // Mesclar mensagens e notas, ordenando por timestamp
-          const allMessages = [...messages, ...notesAsMessages].sort(
+          // ✅ Filtrar apenas mensagens do chat atual antes de mesclar
+          const currentChatMessages = messages.filter(
+            m => normalizeRemoteJid(m.key?.remoteJid) === normalizedSelectedChatJid
+          );
+
+          // Mesclar mensagens filtradas e notas, ordenando por timestamp
+          const allMessages = [...currentChatMessages, ...notesAsMessages].sort(
             (a, b) => a.messageTimestamp - b.messageTimestamp
           );
 

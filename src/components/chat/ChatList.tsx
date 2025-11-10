@@ -478,19 +478,10 @@ export function ChatList({
     }
   }, [token, manuallyMarkedUnread]);
 
-  // Atualiza mensagens não lidas a cada 3 segundos
+  // Carrega mensagens não lidas uma vez ao montar
   useEffect(() => {
     if (!token) return;
-
-    // Carrega imediatamente
     loadUnreadMessages();
-
-    // Atualiza a cada 3 segundos
-    const intervalId = setInterval(() => {
-      loadUnreadMessages();
-    }, 3000);
-
-    return () => clearInterval(intervalId);
   }, [token, loadUnreadMessages]);
 
   useEffect(() => {
@@ -2180,6 +2171,9 @@ useMessageEvents((msg) => {
       return newSet;
     });
   }
+
+  // 6. Atualizar contadores de mensagens não lidas quando nova mensagem chegar
+  loadUnreadMessages();
 });
 
 
@@ -2791,11 +2785,21 @@ const getLastMessageText = (chat) => {
                         prev.map(c => (c.id === chat.id ? { ...c, hasNewMessage: false } : c))
                       );
 
-                      if (token) {
-                        apiClient.visualizarMensagens(token, jid).catch(() => {});
-                      }
-
+                      // ✅ Chama onChatSelect IMEDIATAMENTE para troca instantânea
                       onChatSelect({ ...chat, id: jid, remoteJid: jid });
+
+                      // ✅ Marca mensagens como visualizadas de forma assíncrona (não bloqueante)
+                      if (token) {
+                        if (typeof requestIdleCallback !== 'undefined') {
+                          requestIdleCallback(() => {
+                            apiClient.visualizarMensagens(token, jid).catch(() => {});
+                          });
+                        } else {
+                          setTimeout(() => {
+                            apiClient.visualizarMensagens(token, jid).catch(() => {});
+                          }, 0);
+                        }
+                      }
                     }}
                     className="flex items-center gap-3 w-full cursor-pointer"
                   >

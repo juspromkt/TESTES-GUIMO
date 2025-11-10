@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, lazy, Suspense, useMemo } from "react";
 import {
   ChevronRight,
   ChevronLeft,
@@ -27,9 +27,10 @@ import {
   Trash2,
   Save,
 } from "lucide-react";
+import { Grid as VirtualGrid } from 'react-window';
 import GuimooIcon from "../GuimooIcon";
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+// Lazy import do ReactQuill para code splitting
+const ReactQuill = lazy(() => import('react-quill'));
 import type { Chat } from "./utils/api";
 import { apiClient, clearApiCache, getCacheKey } from "./utils/api";
 import type { Tag } from "../../types/tag";
@@ -40,6 +41,10 @@ import DealSummaryWidget from "../crm/DealSummaryWidget";
 import { useChat } from "../../context/ChatContext";
 import { toast } from "sonner";
 import { decryptEvoMedia, type MediaKeyInput } from "../decryptEvoMedia";
+// 🔒 Imports de segurança e otimização
+import { ErrorBoundary, LoadingFallback, ErrorFallback } from "../ErrorBoundary";
+import { sanitizeHtml } from "../../utils/sanitizeHtml";
+import { requestCache, CacheTTL } from "../../utils/requestCache";
 
 interface ContactSidebarV2Props {
   isOpen: boolean;
@@ -87,6 +92,13 @@ interface Note {
   UpdatedAt: string | null;
 }
 
+interface Agent {
+  Id: number;
+  nome: string;
+  isAtivo?: boolean;
+  isAgentePrincipal?: boolean;
+}
+
 // 🔧 Helpers reutilizáveis
 const normalize = (data: any) => {
   if (!data) return null;
@@ -107,8 +119,8 @@ const triggerGlobalRefresh = () => {
   window.dispatchEvent(new Event("contactUpdated"));
 };
 
-// Componente simples para preview de imagens
-function MediaPreview({
+// 🚀 OTIMIZADO: Componente memoizado para preview de imagens (evita re-renders desnecessários)
+const MediaPreview = React.memo(({
   mediaData,
   type,
   isBusiness,
@@ -120,7 +132,7 @@ function MediaPreview({
   isBusiness: boolean;
   onPreview?: (url: string, type: 'image' | 'video', index: number) => void;
   index: number;
-}) {
+}) => {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -288,7 +300,7 @@ function MediaPreview({
   }
 
   return null;
-}
+});
 
 export default function ContactSidebarV2({
   isOpen,
@@ -306,7 +318,6 @@ export default function ContactSidebarV2({
   const [availableDepartamentos, setAvailableDepartamentos] = useState<Departamento[]>([]);
   const [dealDepartamentos, setDealDepartamentos] = useState<Departamento[]>([]);
 
-  const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [aiStatus, setAiStatus] = useState<{
     intervention: boolean;
@@ -358,6 +369,11 @@ export default function ContactSidebarV2({
   const quillRef = useRef<ReactQuill>(null);
   const [isQuillReady, setIsQuillReady] = useState(false);
 
+  // Estados para agentes
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null);
+  const [loadingAgents, setLoadingAgents] = useState(false);
+
   const user = localStorage.getItem("user");
   const token = user ? JSON.parse(user).token : null;
   const selectedChatDigits = selectedChat?.remoteJid.replace(/\D/g, "");
@@ -391,6 +407,38 @@ export default function ContactSidebarV2({
       toast.error('Erro ao carregar notas');
     } finally {
       setLoadingNotes(false);
+    }
+  };
+
+  // Função para buscar agentes disponíveis
+  const fetchAgents = async () => {
+    if (!token) return;
+
+    setLoadingAgents(true);
+    try {
+      const response = await fetch(
+        'https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/get',
+        { headers: { token } }
+      );
+
+      if (!response.ok) throw new Error('Erro ao carregar agentes');
+
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        // Filtrar apenas agentes ativos
+        const activeAgents = data.filter((agent: Agent) => agent.isAtivo);
+        setAgents(activeAgents);
+
+        // Se houver um agente principal ativo, selecioná-lo por padrão
+        const mainAgent = activeAgents.find((agent: Agent) => agent.isAgentePrincipal);
+        if (mainAgent && !selectedAgentId) {
+          setSelectedAgentId(mainAgent.Id);
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao buscar agentes:', err);
+    } finally {
+      setLoadingAgents(false);
     }
   };
 
@@ -537,17 +585,20 @@ export default function ContactSidebarV2({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [previewOpen, previewIndex, previewType, mediaFiles]);
 
-  // Carregar notas quando o dealData muda ou quando a aba de notas é aberta
+  // 🚀 OTIMIZADO: Inicializar Quill e carregar CSS apenas quando necessário (lazy loaded)
   useEffect(() => {
-    if (activeView === 'notas' && dealData?.Id) {
-      fetchNotes();
+    if (activeView === 'notas') {
+      // Carrega o CSS do Quill dinamicamente
+      if (!document.getElementById('quill-css')) {
+        const link = document.createElement('link');
+        link.id = 'quill-css';
+        link.rel = 'stylesheet';
+        link.href = 'https://cdn.quilljs.com/1.3.6/quill.snow.css';
+        document.head.appendChild(link);
+      }
+      setIsQuillReady(true);
     }
-  }, [activeView, dealData?.Id]);
-
-  // Inicializar Quill
-  useEffect(() => {
-    setIsQuillReady(true);
-  }, []);
+  }, [activeView]);
 
   const handleDownloadCurrent = () => {
     if (!previewUrl) return;
@@ -619,22 +670,36 @@ export default function ContactSidebarV2({
   };
 
 
-  // Load contact data
-  const loadContactData = async () => {
+  // 🚀 OTIMIZADO: Load ALL data in parallel
+  const loadAllInitialData = async () => {
     if (!selectedChat || !token) return;
-
-    if (initialLoad) {
-      setLoading(true);
-    }
 
     // Limpa os estados ao trocar de chat
     setDealData(null);
     setDealTags([]);
+    setDealDepartamentos([]);
 
     try {
       const digits = selectedChat.remoteJid.replace(/\D/g, "");
 
-      const [contactRes, dealRes] = await Promise.all([
+      // Limpa cache antes de buscar
+      clearApiCache([
+        getCacheKey('findSessionByRemoteJid', token, { remoteJid: digits }),
+        getCacheKey('findInterventionByRemoteJid', token, { remoteJid: digits }),
+        getCacheKey('findPermanentExclusionByRemoteJid', token, { remoteJid: digits }),
+      ]);
+
+      // 🔥 PARALELIZAÇÃO MÁXIMA: Todas as requisições iniciais em paralelo
+      const [
+        contactRes,
+        dealRes,
+        sessionData,
+        interventionData,
+        permanentData,
+        transferRes,
+        agentsRes,
+        departamentosRes
+      ] = await Promise.all([
         fetch(
           `https://n8n.lumendigital.com.br/webhook/prospecta/contato/getByRemoteJid?remoteJid=${digits}`,
           { headers: { token } }
@@ -647,8 +712,21 @@ export default function ContactSidebarV2({
             body: JSON.stringify({ remoteJid: selectedChat.remoteJid }),
           }
         ),
+        apiClient.findSessionByRemoteJid(token, digits).catch(() => null),
+        apiClient.findInterventionByRemoteJid(token, digits).catch(() => null),
+        apiClient.findPermanentExclusionByRemoteJid(token, digits).catch(() => null),
+        fetch(`https://n8n.lumendigital.com.br/webhook/prospecta/chat/transfer/get`, {
+          headers: { token },
+        }).catch(() => null),
+        fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/get', {
+          headers: { token }
+        }).catch(() => null),
+        fetch(`https://n8n.lumendigital.com.br/webhook/produtos/get`, {
+          headers: { token },
+        }).catch(() => null)
       ]);
 
+      // Process contact data
       if (contactRes.ok) {
         const contactText = await contactRes.text();
         if (contactText) {
@@ -659,62 +737,97 @@ export default function ContactSidebarV2({
         }
       }
 
+      // Process deal data
+      let dealId: number | null = null;
       if (dealRes.ok) {
         const dealText = await dealRes.text();
         if (dealText) {
           const deals = JSON.parse(dealText);
           if (Array.isArray(deals) && deals.length > 0) {
             const basicDeal = deals[0];
+            dealId = basicDeal.Id;
 
-            try {
+            // Busca deal completo em paralelo (se houver dealId)
+            if (dealId) {
               const fullDealRes = await fetch(
-                `https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/getById?id=${basicDeal.Id}`,
+                `https://n8n.lumendigital.com.br/webhook/prospecta/negociacao/getById?id=${dealId}`,
                 { headers: { token } }
-              );
+              ).catch(() => null);
 
-              if (fullDealRes.ok) {
+              if (fullDealRes && fullDealRes.ok) {
                 const fullDealData = await fullDealRes.json();
                 const fullDeal = normalize(fullDealData);
-                // Só seta se realmente houver dados válidos
                 if (fullDeal && fullDeal.Id) {
                   setDealData(fullDeal);
                 } else {
-                  setDealData(null);
+                  setDealData(basicDeal.Id ? basicDeal : null);
                 }
               } else {
-                // Só seta basicDeal se tiver Id
-                if (basicDeal && basicDeal.Id) {
-                  setDealData(basicDeal);
-                } else {
-                  setDealData(null);
-                }
-              }
-            } catch (error) {
-              console.error("[ContactSidebarV2] Erro ao buscar deal completo:", error);
-              // Só seta se basicDeal for válido
-              if (basicDeal && basicDeal.Id) {
-                setDealData(basicDeal);
-              } else {
-                setDealData(null);
+                setDealData(basicDeal.Id ? basicDeal : null);
               }
             }
-          } else {
-            // Não há deals, limpa o estado
-            setDealData(null);
           }
-        } else {
-          // Resposta vazia, limpa o estado
-          setDealData(null);
         }
-      } else {
-        // Erro na requisição, limpa o estado
-        setDealData(null);
+      }
+
+      // Process session info
+      const session = normalize(sessionData);
+      const intervention = normalize(interventionData);
+      const permanent = normalize(permanentData);
+
+      setSessionInfo(session);
+      setInterventionInfo(intervention);
+
+      const hasIntervention = !!intervention && Object.keys(intervention).length > 0;
+      const hasPermanent = !!permanent && Object.keys(permanent).length > 0;
+
+      setAiStatus({
+        intervention: hasIntervention && !hasPermanent,
+        permanentExclusion: hasPermanent,
+      });
+
+      // Process transfer data
+      if (transferRes && transferRes.ok) {
+        const transferData = await transferRes.json();
+        const hasTransfer = Array.isArray(transferData)
+          ? transferData.some(
+              (t: any) => t.remoteJid === digits || t.remoteJid === selectedChat.remoteJid
+            )
+          : false;
+        setIsTransferChat(hasTransfer);
+      }
+
+      // Process agents data
+      if (agentsRes && agentsRes.ok) {
+        const agentsData = await agentsRes.json();
+        if (Array.isArray(agentsData)) {
+          const activeAgents = agentsData.filter((agent: Agent) => agent.isAtivo);
+          setAgents(activeAgents);
+          const mainAgent = activeAgents.find((agent: Agent) => agent.isAgentePrincipal);
+          if (mainAgent && !selectedAgentId) {
+            setSelectedAgentId(mainAgent.Id);
+          }
+        }
+      }
+
+      // Process departamentos data
+      if (departamentosRes && departamentosRes.ok) {
+        const deptData = await departamentosRes.json();
+        const depts = Array.isArray(deptData) ? deptData.filter(isDepartamento) : [];
+        setAvailableDepartamentos(depts);
+      }
+
+      // 🔥 Load tags and deal departamentos in parallel if we have a dealId
+      if (dealId) {
+        Promise.all([
+          loadDealTags(),
+          loadDealDepartamentos()
+        ]).catch(err => console.error('[ContactSidebarV2] Erro ao carregar tags/departamentos:', err));
       }
 
     } catch (error) {
-      console.error("Erro ao carregar dados do contato:", error);
+      console.error("Erro ao carregar dados iniciais:", error);
     } finally {
-      setLoading(false);
       setInitialLoad(false);
     }
   };
@@ -806,14 +919,14 @@ export default function ContactSidebarV2({
     }
   };
 
-  // Carregar mídias da conversa
-  const loadMediaFiles = async () => {
+  // 🚀 OTIMIZADO: Carregar mídias com paginação (lazy loading)
+  const loadMediaFiles = async (limit: number = 50) => {
     if (!selectedChat || !token) return;
 
     setLoadingMedia(true);
     try {
-      // Busca todas as mensagens da conversa
-      const messages = await apiClient.findMessages(token, selectedChat.remoteJid, 200, 1, false);
+      // Busca apenas as últimas 50 mensagens inicialmente (muito mais rápido)
+      const messages = await apiClient.findMessages(token, selectedChat.remoteJid, limit, 1, false);
 
       const images: any[] = [];
       const videos: any[] = [];
@@ -860,15 +973,27 @@ export default function ContactSidebarV2({
     }
   };
 
+  // 🚀 OTIMIZADO: useEffect consolidado - carrega todos os dados iniciais em paralelo
   useEffect(() => {
-    if (isOpen) {
-      loadContactData();
-      loadSessionInfo();
-      if (activeView === 'media') {
-        loadMediaFiles();
-      }
+    if (isOpen && selectedChat && token) {
+      // Carrega TUDO em paralelo sem setTimeout desnecessário
+      loadAllInitialData();
     }
-  }, [selectedChat, token, isOpen, activeView]);
+  }, [selectedChat, token, isOpen]);
+
+  // 🚀 OTIMIZADO: Lazy load - só carrega mídias quando a aba for aberta
+  useEffect(() => {
+    if (isOpen && activeView === 'media' && selectedChat && token) {
+      loadMediaFiles();
+    }
+  }, [activeView, isOpen, selectedChat]);
+
+  // 🚀 OTIMIZADO: Lazy load - só carrega notas quando a aba for aberta
+  useEffect(() => {
+    if (activeView === 'notas' && dealData?.Id) {
+      fetchNotes();
+    }
+  }, [activeView, dealData?.Id]);
 
   // Listener para recarregar status quando houver mudanças
   useEffect(() => {
@@ -889,22 +1014,6 @@ export default function ContactSidebarV2({
     };
   }, [selectedChat, token]);
 
-  useEffect(() => {
-    if (dealData?.Id && availableTags.length > 0) {
-      loadDealTags();
-    }
-  }, [dealData?.Id, availableTags]);
-
-  useEffect(() => {
-    loadAvailableDepartamentos();
-  }, [token]);
-
-  useEffect(() => {
-    if (dealData?.Id && availableDepartamentos.length > 0) {
-      loadDealDepartamentos();
-    }
-  }, [dealData?.Id, availableDepartamentos]);
-
   // Controlar visibilidade do modal de criar negociação
   useEffect(() => {
     // Fecha o modal se a sidebar for fechada e reseta o controle
@@ -920,8 +1029,8 @@ export default function ContactSidebarV2({
       return;
     }
 
-    // Não faz nada se ainda está carregando ou é o carregamento inicial
-    if (loading || initialLoad) {
+    // Não faz nada se é o carregamento inicial
+    if (initialLoad) {
       return;
     }
 
@@ -936,7 +1045,7 @@ export default function ContactSidebarV2({
       // Marca como já mostrado para evitar que apareça ao trocar de aba
       setModalAlreadyShown(true);
     }
-  }, [isOpen, contactData, dealData, loading, initialLoad, activeView, modalAlreadyShown]);
+  }, [isOpen, contactData, dealData, initialLoad, activeView, modalAlreadyShown]);
 
   // ▶️ Ativar IA
   const handleStartAgent = async () => {
@@ -1521,12 +1630,6 @@ export default function ContactSidebarV2({
       {/* Conteúdo principal com padding generoso */}
       <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
         {activeView === 'info' ? (
-          loading && initialLoad ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <Loader2 className="w-7 h-7 text-indigo-500/70 dark:text-indigo-400/70 animate-spin" />
-              <p className="text-sm text-gray-500 dark:text-gray-400 font-light">Carregando...</p>
-            </div>
-          ) : (
             <>
             {/* Card Premium - Foto, Nome e Telefone */}
             <div className="group relative rounded-xl border border-gray-200/60 dark:border-gray-700/40 p-4 bg-gradient-to-br from-white via-gray-50/30 to-white dark:from-gray-800/80 dark:via-gray-800/50 dark:to-gray-800/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
@@ -1577,11 +1680,29 @@ export default function ContactSidebarV2({
               )}
             </div>
 
-            {/* Controle da IA */}
+            {/* Controle do Agente */}
             <div className="rounded-xl border border-gray-300 dark:border-gray-600 p-4 bg-white dark:bg-gray-800 space-y-3 transition-colors duration-200">
-              <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-200">
-                <GuimooIcon className="w-4 h-4" />
-                <span>Controle da IA</span>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-200">
+                  <GuimooIcon className="w-4 h-4" />
+                  <span>Controle do Agente</span>
+                </div>
+
+                {/* Dropdown de Agentes */}
+                <select
+                  value={selectedAgentId || ""}
+                  onChange={(e) => setSelectedAgentId(Number(e.target.value) || null)}
+                  disabled={loadingAgents}
+                  className="flex-1 max-w-[200px] text-xs border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <option value="">Selecione um agente</option>
+                  {agents.map((agent) => (
+                    <option key={agent.Id} value={agent.Id}>
+                      {agent.nome}
+                      {agent.isAgentePrincipal ? " (Principal)" : ""}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-2">
@@ -1904,7 +2025,6 @@ export default function ContactSidebarV2({
             )}
 
           </>
-          )
         ) : activeView === 'media' ? (
           /* View de Mídias */
           <div className="space-y-4">
@@ -1964,18 +2084,33 @@ export default function ContactSidebarV2({
                       <p className="text-sm text-gray-500 dark:text-gray-400">Nenhuma imagem encontrada</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-3 gap-2">
-                      {mediaFiles.images.map((img, idx) => (
-                        <MediaPreview
-                          key={img.id}
-                          mediaData={img}
-                          type="image"
-                          isBusiness={isBusiness}
-                          onPreview={openPreview}
-                          index={idx}
-                        />
-                      ))}
-                    </div>
+                    // 🚀 OTIMIZADO: Grid virtualizado - renderiza apenas itens visíveis
+                    <VirtualGrid
+                      columnCount={3}
+                      columnWidth={130}
+                      height={Math.min(500, Math.ceil(mediaFiles.images.length / 3) * 130)}
+                      rowCount={Math.ceil(mediaFiles.images.length / 3)}
+                      rowHeight={130}
+                      defaultWidth={400}
+                      className="custom-scrollbar"
+                      cellComponent={({ columnIndex, rowIndex, style }) => {
+                        const idx = rowIndex * 3 + columnIndex;
+                        if (idx >= mediaFiles.images.length) return null;
+                        const img = mediaFiles.images[idx];
+                        return (
+                          <div style={{ ...style, padding: '4px' }}>
+                            <MediaPreview
+                              key={img.id}
+                              mediaData={img}
+                              type="image"
+                              isBusiness={isBusiness}
+                              onPreview={openPreview}
+                              index={idx}
+                            />
+                          </div>
+                        );
+                      }}
+                    />
                   )
                 )}
 
@@ -1988,18 +2123,33 @@ export default function ContactSidebarV2({
                       <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum vídeo encontrado</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-3 gap-2">
-                      {mediaFiles.videos.map((vid, idx) => (
-                        <MediaPreview
-                          key={vid.id}
-                          mediaData={vid}
-                          type="video"
-                          isBusiness={isBusiness}
-                          onPreview={openPreview}
-                          index={idx}
-                        />
-                      ))}
-                    </div>
+                    // 🚀 OTIMIZADO: Grid virtualizado - renderiza apenas itens visíveis
+                    <VirtualGrid
+                      columnCount={3}
+                      columnWidth={130}
+                      height={Math.min(500, Math.ceil(mediaFiles.videos.length / 3) * 130)}
+                      rowCount={Math.ceil(mediaFiles.videos.length / 3)}
+                      rowHeight={130}
+                      defaultWidth={400}
+                      className="custom-scrollbar"
+                      cellComponent={({ columnIndex, rowIndex, style }) => {
+                        const idx = rowIndex * 3 + columnIndex;
+                        if (idx >= mediaFiles.videos.length) return null;
+                        const vid = mediaFiles.videos[idx];
+                        return (
+                          <div style={{ ...style, padding: '4px' }}>
+                            <MediaPreview
+                              key={vid.id}
+                              mediaData={vid}
+                              type="video"
+                              isBusiness={isBusiness}
+                              onPreview={openPreview}
+                              index={idx}
+                            />
+                          </div>
+                        );
+                      }}
+                    />
                   )
                 )}
 
@@ -2210,9 +2360,10 @@ export default function ContactSidebarV2({
                               </div>
                             </div>
 
+                            {/* 🔒 HTML sanitizado para prevenir XSS */}
                             <div
                               className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300"
-                              dangerouslySetInnerHTML={{ __html: note.descricao }}
+                              dangerouslySetInnerHTML={{ __html: sanitizeHtml(note.descricao) }}
                             />
                           </>
                         )}

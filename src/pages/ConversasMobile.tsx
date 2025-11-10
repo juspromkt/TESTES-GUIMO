@@ -184,10 +184,8 @@ const ConversasMobile = () => {
     setShowMobileChat(true);
     setIsInConversation(true);
 
-    // Força reload completo das mensagens ao abrir nova conversa
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('force_reload_messages', { detail: { chatId: chat.id } }));
-    }, 50);
+    // ✅ REMOVIDO force_reload - MessageView agora mantém mensagens em cache
+    // Troca de chat é instantânea, sem reload desnecessário
   };
 
   const handleBackToList = () => {
