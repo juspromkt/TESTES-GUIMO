@@ -41,7 +41,7 @@ export const artigo18: Article = {
         <section>
           <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3">🧱 Estrutura de um Funil</h2>
           <p class="mb-3">
-            Um funil é composto por <strong>etapas</strong> que representam os estágios do processo comercial.
+            Um funil é composto por <strong>etapas</strong> que representam as etapas do processo comercial.
             Exemplo prático de funil trabalhista:
           </p>
 
@@ -180,7 +180,7 @@ export const artigo18: Article = {
           <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3">🏷️ Dica de Boas Práticas</h2>
           <ul class="list-disc list-inside space-y-2 ml-4">
             <li>✅ <strong>Nomeie claramente</strong> cada etapa (ex: "Oferta do Contrato" é melhor que "Etapa 3").</li>
-            <li>🎨 <strong>Use cores diferentes</strong> para cada estágio — ajuda a visualizar o progresso no CRM.</li>
+            <li>🎨 <strong>Use cores diferentes</strong> para cada etapa — ajuda a visualizar o progresso no CRM.</li>
             <li>🔄 <strong>Mantenha o funil limpo:</strong> evite criar vários funis desnecessários.</li>
             <li>🧠 <strong>Lembre-se:</strong> o funil padrão é o que a IA usará para entender e automatizar as movimentações.</li>
           </ul>

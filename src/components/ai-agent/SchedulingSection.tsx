@@ -1,7 +1,7 @@
-﻿import React from "react";
-import { Save, Loader2 } from "lucide-react";
+﻿import React, { useEffect } from "react";
+import { Save } from "lucide-react";
 import Modal from "../Modal";
-import ScheduleWindowsSection from "./ScheduleWindowsSection";
+import { Loader2 } from "lucide-react";
 
 interface Scheduling {
   isAtivo: boolean;
@@ -21,9 +21,7 @@ interface SchedulingSectionProps {
   scheduling: Scheduling;
   setScheduling: (scheduling: Scheduling) => void;
   token: string;
-  canEdit: boolean;
-  isLoading: boolean;
-  idAgente: number;
+  canEdit: boolean; // ✅ nova prop
 }
 
 const SchedulingSection: React.FC<SchedulingSectionProps> = ({
@@ -31,13 +29,35 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
   setScheduling,
   token,
   canEdit,
-  isLoading,
-  idAgente,
 }) => {
   const [modalOpen, setModalOpen] = React.useState(false);
   const [modalLoading, setModalLoading] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
-  const isEditable = canEdit && !isLoading;
+  const [loading, setLoading] = React.useState(true);
+
+  // 🔹 Carregar dados da API quando o componente é montado
+  useEffect(() => {
+    const fetchScheduling = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(
+          'https://n8n.lumendigital.com.br/webhook/prospecta/agente/agendamento/get',
+          { headers: { token } }
+        );
+        const text = await response.text();
+        const data = text ? JSON.parse(text) : [];
+        if (Array.isArray(data) && data.length > 0) {
+          setScheduling(data[0]);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar configurações de agendamento:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchScheduling();
+  }, [token, setScheduling]);
 
   const handleSaveWithModal = async () => {
     try {
@@ -45,14 +65,14 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
       setModalLoading(true);
 
       const response = await fetch(
-        "https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/agendamento/create",
+        "https://n8n.lumendigital.com.br/webhook/prospecta/agente/agendamento/create",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             token,
           },
-          body: JSON.stringify({ ...scheduling, id_agente: idAgente }),
+          body: JSON.stringify(scheduling),
         }
       );
 
@@ -77,9 +97,13 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
     setScheduling({
       ...scheduling,
       prompt_consulta_horarios:
-        "Você deve chamar esse prompt todas as vezes que o usuário informar um dia para realizar uma reunião. Seu papel é consultar um dia inteiro de horários para ver a lista de horários marcados para aquele dia.\n\nEscolha até 6 horários para retornar para o cliente.",
+        "Sempre que o usuário mencionar uma data ou pedir para agendar uma reunião, você deve:\n\n1. Consultar os próximos 3 dias disponíveis para agendamento.\n2. Selecionar 3 horários disponíveis para cada dia.\n3. Apresentar a lista de forma clara e organizada, no seguinte formato:\n\nAqui estão os próximos horários disponíveis:\n\n📅 [Data 1]\n- 09h00\n- 14h00\n- 16h30\n\n📅 [Data 2]\n- 10h00\n- 13h30\n- 17h00\n\n📅 [Data 3]\n- 09h30\n- 15h00\n- 18h00\n\nNunca agende mais de uma reunião no mesmo horário.\nNão agende em horários que não estão disponíveis.\nNão agende em horários que já tenham outros compromissos.\n\nHorários que podem ser agendados:\nSegunda à sexta-feira, das 9:30 às 16:30 (com intervalo das 12h às 13h).\n❌ NUNCA agendar em outros horários além desses disponíveis.",
       prompt_marcar_horario:
-        "Use essa tool para criar um agendamento no Google Calendar quando você tiver os dados de agendamento do cliente, como dia, horário e email do cliente para reunião.",
+        "Use essa tool para criar um agendamento no Google Calendar quando você tiver os dados de agendamento do cliente, como dia, horário e e-mail do cliente para reunião.\n\nSempre que o usuário confirmar uma data e horário para reunião, você deve:\n\n1. Criar o evento no Google Calendar com:\n   - Nome do cliente\n   - Data e horário definidos\n   - E-mail do cliente (para convite)\n   - Descrição breve da reunião\n\n2. Confirmar o agendamento enviando uma resposta clara:\n\"✅ Reunião agendada com sucesso para [data] às [horário]. Um convite foi enviado para o e-mail do cliente.\"\n\n⚠️ Importante:\n- Nunca criar agendamento sem confirmação do horário.\n- Sempre verificar se o horário está dentro do intervalo permitido (segunda a sexta, das 9:30 às 16:30, com pausa entre 12h e 13h).\n- Caso o horário esteja fora do intervalo, solicite ao cliente que escolha outro horário disponível.",
+      nome:
+        "Reunião de Peticionamento (nome do cliente)",
+      descricao:
+        "Sempre leia toda a conversa e produza a descrição seguindo exatamente este formato, sem alterar títulos ou a ordem:\n\nResumo da conversa com [NOME DO CLIENTE] sobre atendimento jurídico [ÁREA JURÍDICA]:\n\nResumo objetivo e insights para fechamento:\n\n• [Listar em tópicos os principais fatos relatados pelo cliente: situação de trabalho/etc.]\n• [Incluir pontos de interesse na ação: valores, expectativas, intenção de fechar, etc.]\n• [Registrar dores e motivações para processar ou prosseguir.]\n\nDados extraídos de documentos:\n\n• [Nome completo extraído, se houver.]\n• [Contrato ou documentos assinados.]\n• [Plataforma utilizada para assinatura/envio de documentos.]\n• [Links para consulta, quando existirem.]\n\nRiscos potenciais envolvidos:\n\n• [Listar em tópicos os riscos ou pontos de atenção que podem atrapalhar o caso ou a relação com o cliente.]\n\nObjeções e dúvidas expressas pelo cliente:\n\n• [Listar em tópicos os medos, inseguranças, questionamentos ou resistências do cliente.]\n\nConclusão:\n\n[Parágrafo consolidando: status atual do atendimento, decisão do cliente até o momento, próximos passos esperados.]\n\nObservação de uso:\n\nEste resumo é útil para o time jurídico que irá conduzir o processo, garantindo entendimento consolidado do caso e do estágio atual do atendimento.\n\n⚡ Importante:\n\nSempre use frases claras e objetivas.\n\nResuma sem inventar informações que não existam no histórico.\n\nSe algum item não existir na conversa, apenas omita.",
     });
   };
 
@@ -90,137 +114,164 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
     { value: "120", label: "2 horas" },
   ];
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
+      </div>
+    );
+  }
+
   return (
-    <>
-      <section
-        className="relative bg-white rounded-lg shadow-sm border border-gray-200 p-6"
-        aria-busy={isLoading}
-      >
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">
+    <div>
+      {/* Configurações de Agendamento */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
           Configurações de Agendamento
         </h2>
+        {canEdit && (
+          <button
+            onClick={applyDefaultTexts}
+            className="text-sm px-4 py-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors border border-blue-200 dark:border-blue-800"
+          >
+            Aplicar textos padrão
+          </button>
+        )}
+      </div>
 
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={scheduling.isAtivo}
-                onChange={(e) =>
-                  setScheduling({ ...scheduling, isAtivo: e.target.checked })
-                }
-                disabled={!isEditable}
-              />
-              <div
-                className={`
-      w-11 h-6 bg-gray-200 rounded-full relative transition-all
-      peer-focus:ring-4 peer-focus:ring-emerald-300
-      peer-checked:bg-emerald-500
-      after:content-[''] after:absolute after:top-[2px] after:left-[2px]
-      after:h-5 after:w-5 after:rounded-full after:bg-white after:border after:border-gray-300
-      after:transition-all peer-checked:after:translate-x-5 peer-checked:after:border-white
-      ${!isEditable ? 'opacity-50 cursor-not-allowed' : ''}
-    `}
-              />
-              <span className="ml-3 text-gray-700">Ativar agendamento automático</span>
-            </label>
-
-            {canEdit && (
-              <button
-                onClick={applyDefaultTexts}
-                className="text-xs text-gray-500 hover:text-gray-700 underline disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isLoading}
-              >
-                Aplicar textos padrão
-              </button>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Agenda Padrão
-            </label>
-            <select
-              value={scheduling.agenda_padrao}
-              disabled={!isEditable}
-              onChange={(e) =>
-                setScheduling({ ...scheduling, agenda_padrao: e.target.value as Scheduling['agenda_padrao'] })
-              }
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-            >
-              <option value="GOOGLE_MEET">Google Agenda</option>
-              <option value="AGENDA_INTERNA">Agenda Interna</option>
-              <option value="SISTEMA_EXTERNO">Sistema Externo</option>
-            </select>
-          </div>
-
-          {scheduling.agenda_padrao === 'GOOGLE_MEET' && (
+      <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                ID da Agenda
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Agenda Padrão
               </label>
-              <input
-                type="text"
-                disabled={!isEditable}
-                value={scheduling.id_agenda}
+              <select
+                value={scheduling.agenda_padrao}
+                disabled={!canEdit}
                 onChange={(e) =>
-                  setScheduling({ ...scheduling, id_agenda: e.target.value })
+                  setScheduling({ ...scheduling, agenda_padrao: e.target.value as Scheduling['agenda_padrao'] })
                 }
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-                placeholder="Digite o ID da agenda"
-              />
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                <option value="GOOGLE_MEET">Google Agenda</option>
+                <option value="AGENDA_INTERNA">Agenda Interna</option>
+              </select>
             </div>
-          )}
 
-          {scheduling.agenda_padrao === 'SISTEMA_EXTERNO' && (
-            <>
+            {scheduling.agenda_padrao === 'GOOGLE_MEET' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  URL do Webhook para Consulta Externa
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  ID da Agenda
                 </label>
                 <input
                   type="text"
-                  disabled={!isEditable}
-                  value={scheduling.url_consulta_externa || ''}
+                  disabled={!canEdit}
+                  value={scheduling.id_agenda}
                   onChange={(e) =>
-                    setScheduling({
-                      ...scheduling,
-                      url_consulta_externa: e.target.value,
-                    })
+                    setScheduling({ ...scheduling, id_agenda: e.target.value })
                   }
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-                  placeholder="Informe a URL de consulta"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-400"
+                  placeholder="Digite o ID da agenda"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  URL do Webhook para Marcação Externa
-                </label>
-                <input
-                  type="text"
-                  disabled={!isEditable}
-                  value={scheduling.url_marcacao_externa || ''}
-                  onChange={(e) =>
-                    setScheduling({
-                      ...scheduling,
-                      url_marcacao_externa: e.target.value,
-                    })
-                  }
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-                  placeholder="Informe a URL de marcação"
-                />
-              </div>
-            </>
-          )}
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Duração do Horário
+              </label>
+              <select
+                value={scheduling.duracao_horario || ""}
+                disabled={!canEdit}
+                onChange={(e) =>
+                  setScheduling({ ...scheduling, duracao_horario: e.target.value })
+                }
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                <option value="">Selecione</option>
+                {durationOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Limite por horário
+              </label>
+              <select
+                disabled={!canEdit}
+                value={scheduling.limite_agendamento_horario ?? ''}
+                onChange={(e) =>
+                  setScheduling({
+                    ...scheduling,
+                    limite_agendamento_horario: e.target.value
+                      ? Number(e.target.value)
+                      : null,
+                  })
+                }
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                <option value="">Selecione</option>
+                <option value="1">1 agendamento</option>
+                <option value="2">2 agendamentos</option>
+                <option value="3">3 agendamentos</option>
+                <option value="4">4 agendamentos</option>
+                <option value="5">5 agendamentos</option>
+              </select>
+            </div>
+          </div>
+
+      {scheduling.agenda_padrao === 'SISTEMA_EXTERNO' && (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              URL do Webhook para Consulta Externa
+            </label>
+            <input
+              type="text"
+              disabled={!canEdit}
+              value={scheduling.url_consulta_externa || ''}
+              onChange={(e) =>
+                setScheduling({
+                  ...scheduling,
+                  url_consulta_externa: e.target.value,
+                })
+              }
+              className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500 dark:focus:ring-emerald-400 placeholder:text-gray-400 dark:placeholder:text-gray-400"
+              placeholder="Informe a URL de consulta"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              URL do Webhook para Marcação Externa
+            </label>
+            <input
+              type="text"
+              disabled={!canEdit}
+              value={scheduling.url_marcacao_externa || ''}
+              onChange={(e) =>
+                setScheduling({
+                  ...scheduling,
+                  url_marcacao_externa: e.target.value,
+                })
+              }
+              className="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-emerald-500 dark:focus:ring-emerald-400 placeholder:text-gray-400 dark:placeholder:text-gray-400"
+              placeholder="Informe a URL de marcação"
+            />
+          </div>
+        </>
+      )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Prompt para Consulta de Horários
             </label>
             <textarea
               value={scheduling.prompt_consulta_horarios}
-              disabled={!isEditable}
+              disabled={!canEdit}
               onChange={(e) =>
                 setScheduling({
                   ...scheduling,
@@ -228,18 +279,18 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
                 })
               }
               rows={3}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-400 resize-y"
               placeholder="Digite o prompt para consulta de horários"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Prompt para Marcar Horário
             </label>
             <textarea
               value={scheduling.prompt_marcar_horario}
-              disabled={!isEditable}
+              disabled={!canEdit}
               onChange={(e) =>
                 setScheduling({
                   ...scheduling,
@@ -247,64 +298,18 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
                 })
               }
               rows={3}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-400 resize-y"
               placeholder="Digite o prompt para marcar horário"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Duração do Horário
-            </label>
-            <select
-              value={scheduling.duracao_horario || ""}
-              disabled={!isEditable}
-              onChange={(e) =>
-                setScheduling({ ...scheduling, duracao_horario: e.target.value })
-              }
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-            >
-              <option value="">Selecione a duração</option>
-              {durationOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Limite de agendamentos por horário
-            </label>
-            <input
-              type="number"
-              min={1}
-              disabled={!isEditable}
-              value={scheduling.limite_agendamento_horario ?? ''}
-              onChange={(e) =>
-                setScheduling({
-                  ...scheduling,
-                  limite_agendamento_horario: e.target.value
-                    ? Number(e.target.value)
-                    : null,
-                })
-              }
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-              placeholder="Quantos agendamentos podem ocorrer no mesmo horário?"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Define a quantidade máxima de reuniões simultâneas para um mesmo horário.
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Instruções para Nome do Agendamento
             </label>
             <textarea
               value={scheduling.nome}
-              disabled={!isEditable}
+              disabled={!canEdit}
               onChange={(e) =>
                 setScheduling({
                   ...scheduling,
@@ -312,21 +317,21 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
                 })
               }
               rows={2}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-              placeholder="Explique para o agente como definir o nome"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-400 resize-y"
+              placeholder="Explique para a IA como definir o nome"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Descreva para o agente as regras para gerar o nome do agendamento.
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
+              Descreva para a IA as regras para gerar o nome do agendamento.
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Instruções para Descrição do Agendamento
             </label>
             <textarea
               value={scheduling.descricao}
-              disabled={!isEditable}
+              disabled={!canEdit}
               onChange={(e) =>
                 setScheduling({
                   ...scheduling,
@@ -334,32 +339,32 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
                 })
               }
               rows={3}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
-              placeholder="Explique para o agente como definir a descrição"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-400 resize-y"
+              placeholder="Explique para a IA como definir a descrição"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              O agente usará estas instruções para preencher a descrição.
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
+              A IA usará estas instruções para preencher a descrição.
             </p>
           </div>
 
           {canEdit && (
-            <div className="flex justify-end">
+            <div className="flex justify-end pt-2">
               <button
                 onClick={handleSaveWithModal}
-                disabled={saving || isLoading}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={saving}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                     Salvando...
                   </>
                 ) : (
                   <>
-                    <Save className="w-4 h-4 mr-2" />
+                    <Save className="w-4 h-4" />
                     Salvar configurações
                   </>
-                )}{" "}
+                )}
               </button>
             </div>
           )}
@@ -370,29 +375,20 @@ const SchedulingSection: React.FC<SchedulingSectionProps> = ({
           >
             {modalLoading ? (
               <div className="flex items-center justify-center gap-2 py-4">
-                <Loader2 className="w-5 h-5 animate-spin text-emerald-500" />
-                <p className="text-sm text-gray-600">
+                <Loader2 className="w-5 h-5 animate-spin text-emerald-500 dark:text-emerald-400" />
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Processando agendamento...
                 </p>
               </div>
             ) : (
-              <p className="text-gray-700">
+              <p className="text-gray-700 dark:text-gray-300">
                 Configurações de agendamento salvas com sucesso!
               </p>
             )}
           </Modal>
-        </div>
-        {isLoading && (
-          <div className="pointer-events-auto absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/70 backdrop-blur-sm">
-            <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
-          </div>
-        )}
-      </section>
-      <ScheduleWindowsSection token={token} idAgente={idAgente} canEdit={canEdit && !isLoading} />
-    </>
+      </div>
+    </div>
   );
 };
 
 export default SchedulingSection;
-
-

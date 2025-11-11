@@ -35,6 +35,7 @@ import { isDemoAccount } from './components/DemoBanner';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = localStorage.getItem('user');
+  const location = useLocation();
 
   useEffect(() => {
     const loadPermissions = async () => {
@@ -46,7 +47,14 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     loadPermissions();
   }, [isAuthenticated]);
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/" />;
+  // Se não autenticado, redireciona para login apropriado
+  if (!isAuthenticated) {
+    // Verifica se é uma rota mobile
+    const isMobileRoute = location.pathname.startsWith('/app/');
+    return <Navigate to={isMobileRoute ? "/app/login" : "/"} />;
+  }
+
+  return <>{children}</>;
 };
 
 // Componente para redirecionar URLs antigas /crm/:id para /crm/deal/:id

@@ -1,0 +1,67 @@
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/AutoMovementTab.tsx:211:                  Estágio do Funil
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/AutoMovementTab.tsx:219:                  <option value="">Selecione um estágio</option>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/AutoMovementTab.tsx:255:            A movimentação automática permite que os leads sejam movidos automaticamente entre funis e estágios
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/AutoMovementTab.tsx:259:            Configure qual etapa do agente dispara a movimentação e para qual funil/estágio o lead deve ser movido.
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/DiagnosticSection.tsx:391:              message: `Funil padrão configurado: ${stageCount} estágio${stageCount !== 1 ? 's' : ''}`
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/QuickCommandMenu.tsx:22:  { type: 'transfer_stage' as DecisionType, icon: KanbanSquare, label: 'Mudar Estágio no CRM', color: 'text-cyan-600 dark:text-cyan-400', bgColor: '#E0F2FE', borderColor: '#BAE6FD', textColor: '#075985' },
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/QuickCommandMenu.tsx:165:      // Se já selecionou funil, insere o estágio
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/QuickCommandMenu.tsx:186:      transfer_stage: 'Mudar Estágio no CRM',
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/QuickCommandMenu.tsx:355:                ? 'Selecione o Estágio'
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/QuickCommandMenu.tsx:422:                    {selectedCommand === 'transfer_stage' && selectedFunnelId && 'Adicione estágios ao funil selecionado'}
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/ServiceStepsSection.tsx:328:            transfer_stage: { bg:'#DBEAFE', border:'#93C5FD', color:'#1E3A8A', text:'Transferir para estágio' },
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/ServiceStepsSection.tsx:921:              const chipPattern = /Ação: (Transferir para Agente|Transferir para Usuário|Transferir para o estágio|Notificação|Atribuir Produto|Interromper Agente|Adicionar Tag|Atribuir Fonte) #?(\d+)?\s*-?\s*([^\n\r]*?)(?=(?:Ação:|$))/g;
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/ServiceStepsSection.tsx:941:                else if (actionType === 'Transferir para o estágio') chipType = 'transfer_stage';
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/SmartDecisionModal.tsx:184:      const text = `Mudar Estágio no CRM: ${label}`;
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/SmartDecisionModal.tsx:251:    { type: 'transfer_stage', icon: KanbanSquare, label: 'Mudar Estágio no CRM', color: 'text-cyan-600' },
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/SmartDecisionModal.tsx:403:                          Selecione o Estágio
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/SmartDecisionModal.tsx:414:                          <option value="">Selecione um estágio...</option>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/wizard/EditStepsStep.tsx:81:            transfer_stage: { bg:'#DBEAFE', border:'#93C5FD', color:'#1E3A8A', text:'Transferir para estágio' },
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/ai-agent/wizard/MultiAgentEditStep.tsx:153:            transfer_stage: { bg:'#DBEAFE', border:'#93C5FD', color:'#1E3A8A', text:'Transferir para estágio' },
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/chat/ChatList.tsx:1915:      // Verifica se o chat tem um dos estágios selecionados
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/chat/ContactSidebarV2.tsx:1945:                {/* Estágio - full width */}
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/chat/ContactSidebarV2.tsx:1949:                      Estágio
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/chat/ContactSidebarV2.tsx:1958:                      <option value="">Selecione um estágio</option>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/configuracoes/FunisSection.tsx:121:      throw new Error(`Erro ao ${stage.Id ? 'atualizar' : 'criar'} estágio`);
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/configuracoes/FunisSection.tsx:141:      throw new Error('Erro ao excluir estágio');
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/configuracoes/FunisSection.tsx:209:      if (!response.ok) throw new Error('Erro ao atualizar configuração do estágio');
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/configuracoes/FunisSection.tsx:216:      setError('Erro ao atualizar configuração do estágio');
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/configuracoes/FunisSection.tsx:275:            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Gerencie os estágios do seu funil de vendas</p>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/configuracoes/FunnelModal.tsx:225:      console.error('Erro ao atualizar ordem dos estágios:', err);
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/crm/AnuncioModal.tsx:21:  // Agrupa deals por estágio
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/crm/KanbanBoard.tsx:281:            // Filtra deals deste estágio e aplica limite de itemsPerPage
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/crm/ListView.tsx:417:            <span className="text-xs text-gray-600 dark:text-gray-400">Estágio:</span>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/crm/ListView.tsx:524:                    <span className="flex-1">Estágio</span>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/crm/ListView.tsx:623:              Selecione o novo estágio
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/components/crm/ListView.tsx:632:              <option value="">Selecione um estágio...</option>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-13.ts:48:                <li><strong>Selecionar todas:</strong> exporta todos os leads de todos os estágios.</li>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-13.ts:89:                  <td class="py-2">Em qual estágio o lead está</td>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-13.ts:175:            <li>🔎 Se precisar apenas de um estágio, filtre antes de exportar — o sistema respeitará o filtro aplicado.</li>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-13.ts:182:            Com o novo botão <strong>Exportar</strong> no <strong>modo Kanban</strong>, ficou ainda mais fácil <strong>baixar leads diretamente de qualquer estágio do funil</strong>.
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:16:            <strong>mova automaticamente os leads entre os estágios do funil do CRM</strong>, conforme o atendimento avança.
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:19:            Você pode configurar uma <strong>vinculação direta entre cada estágio do Agente de IA</strong> (exemplo: "Apresentando solução", "Negociação", "Fechamento")
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:36:            <h3 class="font-bold text-gray-900 dark:text-white mb-2">📋 Etapa 1 – Vincule cada estágio da IA a um estágio do CRM</h3>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:38:              <li>Na seção <strong>Movimentação Automática</strong>, você verá todos os estágios configurados na sua <strong>IA</strong> (etapas do fluxo de conversa).</li>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:39:              <li>Ao lado de cada estágio da IA, existe um menu suspenso (dropdown) que lista <strong>todos os estágios do seu CRM</strong>.</li>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:40:              <li>📌 Selecione em qual etapa do CRM você quer que o lead seja movido quando o Agente de IA avançar para aquele estágio.</li>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:61:              Isso é feito uma única vez. Após vincular, todos os estágios do CRM ficam disponíveis para mapeamento.
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:69:              <strong>cada vez que a IA avançar um lead para um novo estágio, ele será movido automaticamente no CRM correspondente</strong>.
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:80:                <th class="border border-gray-300 dark:border-neutral-700 px-4 py-2 text-left">Estágio da IA</th>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:81:                <th class="border border-gray-300 dark:border-neutral-700 px-4 py-2 text-left">Estágio do CRM</th>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:122:            <li>A IA move automaticamente o card desse lead no CRM para o estágio <strong>vinculado</strong> (ex: "Negociação").</li>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:126:            ✅ Isso <strong>elimina a necessidade de mover leads manualmente</strong> e garante que o CRM esteja sempre atualizado, refletindo o real estágio de cada negociação.
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:141:            <h3 class="font-bold text-green-900 dark:text-green-300 mb-2">♻️ Atualizar lista de estágios do CRM</h3>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:143:              Se você criou novos estágios no CRM recentemente, clique em <strong>"Atualizar"</strong> para carregar as novas opções na lista.
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:151:            <li>✅ Certifique-se de que os nomes dos estágios da IA e do CRM estão <strong>claros e organizados</strong>, para facilitar o mapeamento.</li>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:162:            sua equipe de vendas sempre saberá <strong>exatamente em qual estágio cada lead está</strong>, sem precisar atualizar manualmente.
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-14.ts:184:                <td class="border border-gray-300 dark:border-neutral-700 px-4 py-2">Mover leads automaticamente no CRM conforme estágio da IA</td>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-16.ts:149:                <td class="border border-gray-300 dark:border-neutral-700 px-4 py-2">🧩 <strong>Funil e Estágio</strong></td>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-16.ts:251:              <li>Por fim, abre o lead no CRM para atualizar o estágio.</li>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-18.ts:44:            Um funil é composto por <strong>etapas</strong> que representam os estágios do processo comercial.
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/data/articles/artigo-18.ts:183:            <li>🎨 <strong>Use cores diferentes</strong> para cada estágio — ajuda a visualizar o progresso no CRM.</li>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/pages/AutoMovement.tsx:217:          <p className="text-sm text-gray-500 mt-1">Configure a movimentação automática entre etapas e estágios</p>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/pages/AutoMovement.tsx:280:                      Estágio do Funil
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/pages/AutoMovement.tsx:288:                      <option value="">Selecione um estágio</option>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/pages/CRM.tsx:312:    // O itemsPerPage será aplicado por estágio no KanbanBoard
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/pages/DealDetails.tsx:1740:                <h2 className="text-base font-semibold text-gray-900 dark:text-white">Funil e Estágio</h2>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/pages/DealDetails.tsx:1768:                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Estágio</label>
+d:\GUIMOO - VERSÃO TESTE\lumen-guimoo\src/pages/DealDetails.tsx:1781:                      <option value="">Selecione um estágio</option>

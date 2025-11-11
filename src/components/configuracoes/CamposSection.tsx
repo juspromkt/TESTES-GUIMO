@@ -161,19 +161,19 @@ export default function CamposSection({ isActive, canEdit }: CamposSectionProps)
     <div className="mt-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-  <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Campos personalizados</h2>
+  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Campos personalizados</h2>
 
   {/* Botão de informação */}
   <div className="relative group">
     <button
-      className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 dark:border-neutral-600 text-gray-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
+      className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
       title=""
     >
       ?
     </button>
 
     {/* Tooltip */}
-    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-900 dark:bg-neutral-900 text-white dark:text-neutral-100 text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10 border border-gray-700 dark:border-neutral-700">
+    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-900 dark:bg-gray-900 text-white dark:text-gray-100 text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10 border border-gray-700 dark:border-gray-700">
       Os <strong>campos personalizados</strong> servem para armazenar informações específicas que a IA coleta durante o atendimento com o lead. Durante a conversa, a IA identifica as respostas do lead e preenche esses campos automaticamente no sistema - por exemplo: O lead tem carteira assinada?
     </div>
   </div>
@@ -200,48 +200,48 @@ export default function CamposSection({ isActive, canEdit }: CamposSectionProps)
           {error}
         </div>
       ) : (
-        <div className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-            <thead className="bg-gray-50 dark:bg-neutral-900">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   ID
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Nome
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Tipo
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Ativo
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Ações
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
+            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
               {campos.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center text-gray-500 dark:text-neutral-400 py-6 text-sm">
+                  <td colSpan={5} className="text-center text-gray-500 dark:text-gray-400 py-6 text-sm">
                     Não há campos cadastrados.
                   </td>
                 </tr>
               ) : (
                 campos.map((campo) => (
-                  <tr key={campo.Id} className="hover:bg-gray-50 dark:hover:bg-neutral-700">
+                  <tr key={campo.Id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500 dark:text-neutral-400">#{campo.Id}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">#{campo.Id}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{campo.nome}</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{campo.nome}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-neutral-200">{campo.tipo}</div>
+                      <div className="text-sm text-gray-900 dark:text-gray-200">{campo.tipo}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-neutral-200">{campo.isAtivo ? 'Sim' : 'Não'}</div>
+                      <div className="text-sm text-gray-900 dark:text-gray-200">{campo.isAtivo ? 'Sim' : 'Não'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       {canEdit && (
@@ -267,39 +267,39 @@ export default function CamposSection({ isActive, canEdit }: CamposSectionProps)
           onClick={() => setIsModalOpen(false)}
         >
           <div
-            className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg w-full max-w-md p-6 border border-gray-200 dark:border-neutral-700"
+            className="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-md p-6 border border-gray-200 dark:border-gray-700"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Novo Campo</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Novo Campo</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Nome
                 </label>
                 <input
                   type="text"
                   value={newNome}
                   onChange={(e) => setNewNome(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
+                  className="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-colors"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Tipo
                 </label>
                 <select
                   value={newTipo}
                   onChange={(e) => setNewTipo(e.target.value as CampoPersonalizado['tipo'])}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
+                  className="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors"
                 >
                   {tipoOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -307,7 +307,7 @@ export default function CamposSection({ isActive, canEdit }: CamposSectionProps)
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {tipoDescriptions[newTipo]}
                 </p>
               </div>
@@ -317,9 +317,9 @@ export default function CamposSection({ isActive, canEdit }: CamposSectionProps)
                   type="checkbox"
                   checked={newAtivo}
                   onChange={(e) => setNewAtivo(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-neutral-600 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                 />
-                <label htmlFor="ativo" className="text-sm text-gray-700 dark:text-neutral-300">
+                <label htmlFor="ativo" className="text-sm text-gray-700 dark:text-gray-300">
                   Campo ativo
                 </label>
               </div>
@@ -330,14 +330,14 @@ export default function CamposSection({ isActive, canEdit }: CamposSectionProps)
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-600"
+                  className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 text-sm text-white bg-blue-600 dark:bg-blue-700 rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
+                  className="px-4 py-2 text-sm text-white bg-blue-600 dark:bg-blue-700 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 transition-colors"
                 >
                   {submitting ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -358,39 +358,39 @@ export default function CamposSection({ isActive, canEdit }: CamposSectionProps)
           onClick={() => setIsEditModalOpen(false)}
         >
           <div
-            className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg w-full max-w-md p-6 border border-gray-200 dark:border-neutral-700"
+            className="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-md p-6 border border-gray-200 dark:border-gray-700"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Editar Campo</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Editar Campo</h3>
               <button
                 onClick={() => setIsEditModalOpen(false)}
-                className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleEdit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Nome
                 </label>
                 <input
                   type="text"
                   value={editNome}
                   onChange={(e) => setEditNome(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
+                  className="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-colors"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Tipo
                 </label>
-                <div className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-md bg-gray-50 dark:bg-neutral-900 text-gray-700 dark:text-neutral-300">
+                <div className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300">
                   {editCampo.tipo}
                 </div>
-                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   O tipo do campo não pode ser alterado.
                 </p>
               </div>
@@ -400,9 +400,9 @@ export default function CamposSection({ isActive, canEdit }: CamposSectionProps)
                   type="checkbox"
                   checked={editAtivo}
                   onChange={(e) => setEditAtivo(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-neutral-600 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                 />
-                <label htmlFor="editAtivo" className="text-sm text-gray-700 dark:text-neutral-300">
+                <label htmlFor="editAtivo" className="text-sm text-gray-700 dark:text-gray-300">
                   Campo ativo
                 </label>
               </div>
@@ -413,14 +413,14 @@ export default function CamposSection({ isActive, canEdit }: CamposSectionProps)
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-600"
+                  className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={editSubmitting}
-                  className="px-4 py-2 text-sm text-white bg-blue-600 dark:bg-blue-700 rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
+                  className="px-4 py-2 text-sm text-white bg-blue-600 dark:bg-blue-700 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 transition-colors"
                 >
                   {editSubmitting ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

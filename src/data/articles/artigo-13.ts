@@ -45,7 +45,7 @@ export const artigo13: Article = {
               </p>
               <p class="mb-2">Você pode escolher o que deseja exportar:</p>
               <ul class="list-disc list-inside space-y-2 ml-4">
-                <li><strong>Selecionar todas:</strong> exporta todos os leads de todos os estágios.</li>
+                <li><strong>Selecionar todas:</strong> exporta todos os leads de todas as etapas.</li>
                 <li><strong>Desmarcar todas:</strong> limpa a seleção.</li>
                 <li>Ou selecione manualmente apenas as etapas que quiser (ex: <em>Contrato assinado</em>, <em>Oferta do contrato</em>).</li>
               </ul>
@@ -86,7 +86,7 @@ export const artigo13: Article = {
                 </tr>
                 <tr class="border-b border-gray-200 dark:border-neutral-700">
                   <td class="py-2">🗂️ Etapa do funil</td>
-                  <td class="py-2">Em qual estágio o lead está</td>
+                  <td class="py-2">Em qual etapa o lead está</td>
                 </tr>
                 <tr class="border-b border-gray-200 dark:border-neutral-700">
                   <td class="py-2">🧩 Funil</td>
@@ -172,14 +172,14 @@ export const artigo13: Article = {
             <li>💾 Faça exportações regulares como <strong>backup de segurança</strong>.</li>
             <li>📊 Use os dados exportados para <strong>análises de conversão</strong> por etapa do funil.</li>
             <li>🧩 Combine com relatórios da IA e métricas de automação para medir desempenho.</li>
-            <li>🔎 Se precisar apenas de um estágio, filtre antes de exportar — o sistema respeitará o filtro aplicado.</li>
+            <li>🔎 Se precisar apenas de uma etapa, filtre antes de exportar — o sistema respeitará o filtro aplicado.</li>
           </ul>
         </section>
 
         <section>
           <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3">🧩 Conclusão</h2>
           <p class="mb-3">
-            Com o novo botão <strong>Exportar</strong> no <strong>modo Kanban</strong>, ficou ainda mais fácil <strong>baixar leads diretamente de qualquer estágio do funil</strong>.
+            Com o novo botão <strong>Exportar</strong> no <strong>modo Kanban</strong>, ficou ainda mais fácil <strong>baixar leads diretamente de qualquer etapa do funil</strong>.
             Agora, você pode gerar relatórios personalizados com agilidade, sem precisar mudar de visualização.
           </p>
         </section>

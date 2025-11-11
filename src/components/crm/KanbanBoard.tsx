@@ -128,9 +128,9 @@ export default function KanbanBoard({
   };
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col min-w-0 relative bg-gray-50 dark:bg-neutral-900 transition-theme">
+    <div className="flex-1 overflow-hidden flex flex-col min-w-0 relative bg-gray-50 dark:bg-gray-900 transition-theme">
       {/* Header Ultra Compacto */}
-      <div className="bg-white dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700 mb-2 transition-theme">
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 mb-2 transition-theme">
         <div className="px-3 py-2">
           <div className="flex items-center justify-between gap-3">
             {/* Título e Info */}
@@ -139,11 +139,11 @@ export default function KanbanBoard({
                 <Layers className="w-4 h-4 text-white" />
               </div>
               <div className="flex items-center gap-3">
-                <h2 className="text-base font-semibold text-gray-900 dark:text-neutral-100">
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white">
                   Quadro de Negociações - {funil.nome}
                 </h2>
-                <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-neutral-400">
-                  <span className="font-semibold text-gray-900 dark:text-neutral-100 min-w-[3ch]">{deals.length > 99999 ? '99999+' : deals.length}</span>
+                <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+                  <span className="font-semibold text-gray-900 dark:text-white min-w-[3ch]">{deals.length > 99999 ? '99999+' : deals.length}</span>
                   <span>negociações</span>
                 </div>
               </div>
@@ -153,22 +153,22 @@ export default function KanbanBoard({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowExportModal(true)}
-                className="flex items-center gap-1.5 bg-white dark:bg-neutral-800 px-2 py-1 rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+                className="flex items-center gap-1.5 bg-white dark:bg-gray-900 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
-                <Download className="w-3.5 h-3.5 text-gray-500 dark:text-neutral-400" />
-                <span className="text-xs text-gray-700 dark:text-neutral-300">Exportar</span>
+                <Download className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+                <span className="text-xs text-gray-700 dark:text-gray-300">Exportar</span>
               </button>
               <button
                 ref={itemsButtonRef}
                 onClick={() => setShowItemsDropdown(!showItemsDropdown)}
-                className="flex items-center gap-1.5 bg-white dark:bg-neutral-800 px-2 py-1 rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 bg-white dark:bg-gray-900 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
               >
-                <Settings2 className="w-3.5 h-3.5 text-gray-500 dark:text-neutral-400" />
-                <span className="text-xs text-gray-700 dark:text-neutral-300">Exibir:</span>
-                <span className="text-xs font-medium text-gray-900 dark:text-neutral-100">
+                <Settings2 className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+                <span className="text-xs text-gray-700 dark:text-gray-300">Exibir:</span>
+                <span className="text-xs font-medium text-gray-900 dark:text-white">
                   {itemOptions.find(opt => opt.value === itemsPerPage)?.label || '50 itens'}
                 </span>
-                <ChevronDown className={`w-3.5 h-3.5 text-gray-500 dark:text-neutral-400 transition-transform ${showItemsDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-gray-500 dark:text-gray-400 transition-transform ${showItemsDropdown ? 'rotate-180' : ''}`} />
               </button>
 
               {showItemsDropdown && createPortal(
@@ -180,7 +180,7 @@ export default function KanbanBoard({
                   />
                   {/* Dropdown */}
                   <div
-                    className="fixed z-[9999] bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-600 rounded-lg shadow-lg overflow-hidden"
+                    className="fixed z-[9999] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg overflow-hidden"
                     style={{
                       top: `${dropdownPosition.top}px`,
                       left: `${dropdownPosition.left}px`,
@@ -202,7 +202,7 @@ export default function KanbanBoard({
                               flex items-center justify-between transition-colors
                               ${isSelected
                                 ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                                : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700'
+                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                               }
                             `}
                           >
@@ -225,7 +225,7 @@ export default function KanbanBoard({
         {/* Barra de rolagem superior simples */}
         <div
           id="kanban-scroll-top"
-          className="overflow-x-auto h-2 cursor-ew-resize bg-gray-200 dark:bg-neutral-700 transition-theme"
+          className="overflow-x-auto h-2 cursor-ew-resize bg-gray-200 dark:bg-gray-700 transition-theme"
           onScroll={handleTopScroll}
         >
           <div className="h-2" style={{ width: '400%' }}></div>
@@ -309,35 +309,35 @@ export default function KanbanBoard({
       {/* Modal de Exportação */}
       {showExportModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg w-full max-w-md p-6">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-md p-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Exportar Leads</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Exportar Leads</h3>
               <button
                 onClick={() => {
                   setShowExportModal(false);
                   setSelectedStages([]);
                 }}
-                className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="mb-4">
-              <p className="text-sm text-gray-600 dark:text-neutral-400 mb-3">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                 Selecione as etapas que deseja exportar:
               </p>
 
               <div className="flex gap-2 mb-3">
                 <button
                   onClick={selectAllStages}
-                  className="flex-1 px-3 py-1.5 text-sm text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-600"
+                  className="flex-1 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
                 >
                   Selecionar Todas
                 </button>
                 <button
                   onClick={deselectAllStages}
-                  className="flex-1 px-3 py-1.5 text-sm text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-600"
+                  className="flex-1 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
                 >
                   Desmarcar Todas
                 </button>
@@ -351,18 +351,18 @@ export default function KanbanBoard({
                   return (
                     <label
                       key={stage.Id}
-                      className="flex items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-neutral-700/50 rounded cursor-pointer"
+                      className="flex items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded cursor-pointer"
                     >
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => toggleStage(stage.Id)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-neutral-600 rounded"
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                       />
-                      <span className="flex-1 text-sm text-gray-700 dark:text-neutral-300">
+                      <span className="flex-1 text-sm text-gray-700 dark:text-gray-300">
                         {stage.nome}
                       </span>
-                      <span className="text-xs text-gray-500 dark:text-neutral-400">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         ({stageDeals.length})
                       </span>
                     </label>
@@ -378,7 +378,7 @@ export default function KanbanBoard({
                   setShowExportModal(false);
                   setSelectedStages([]);
                 }}
-                className="px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 rounded-md hover:bg-gray-200 dark:hover:bg-neutral-600"
+                className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
               >
                 Cancelar
               </button>

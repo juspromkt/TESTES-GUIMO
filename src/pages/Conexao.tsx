@@ -29,8 +29,8 @@ const Conexao = () => {
             <LinkIcon className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-neutral-100">Conexões</h1>
-            <p className="text-sm text-gray-600 dark:text-neutral-400 mt-0.5">Gerencie suas conexões do WhatsApp</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Conexões</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">Gerencie suas conexões do WhatsApp</p>
           </div>
         </div>
       </div>

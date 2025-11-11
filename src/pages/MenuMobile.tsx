@@ -226,7 +226,7 @@ export default function MenuMobile() {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
-    navigate('/');
+    navigate('/app/login');
   };
 
   const handleChangePassword = async () => {

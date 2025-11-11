@@ -264,7 +264,7 @@ export default function ListView({
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
       return (
-        <ChevronUp className="w-4 h-4 text-gray-400 dark:text-neutral-500 opacity-0 group-hover:opacity-100" />
+        <ChevronUp className="w-4 h-4 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100" />
       );
     }
     return sortDirection === 'asc' ? (
@@ -313,17 +313,17 @@ export default function ListView({
         }
       `}</style>
 
-      <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden w-full transition-theme">
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden w-full transition-theme">
       {canEdit && (
-        <div className="px-4 py-3 bg-gray-50 dark:bg-neutral-700/50 border-b border-gray-200 dark:border-neutral-700 flex items-center justify-between transition-theme">
-          <div className="text-sm text-gray-700 dark:text-neutral-300">
+        <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between transition-theme">
+          <div className="text-sm text-gray-700 dark:text-gray-300">
             {selectedDeals.length > 0 ? `${selectedDeals.length} negociação(ões) selecionada(s)` : 'Nenhuma negociação selecionada'}
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handleExportCSV}
               disabled={selectedDeals.length === 0}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-700 dark:text-neutral-200 bg-white dark:bg-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-500 border border-gray-300 dark:border-neutral-500 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 hover:bg-gray-50 dark:hover:bg-gray-500 border border-gray-300 dark:border-gray-500 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="w-4 h-4" />
               Exportar Selecionados
@@ -357,14 +357,14 @@ export default function ListView({
         </div>
       )}
 
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-neutral-700 transition-theme">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 transition-theme">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-neutral-400">Itens por página:</span>
+            <span className="text-xs text-gray-600 dark:text-gray-400">Itens por página:</span>
             <select
               value={localItemsPerPage}
               onChange={(e) => setLocalItemsPerPage(Number(e.target.value))}
-              className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-2 py-1.5 transition-colors"
+              className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-2 py-1.5 transition-colors"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
@@ -375,22 +375,22 @@ export default function ListView({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-neutral-400">Página:</span>
+            <span className="text-xs text-gray-600 dark:text-gray-400">Página:</span>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="px-2 py-1 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors"
+                className="px-2 py-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               >
                 ‹
               </button>
-              <span className="text-xs text-gray-700 dark:text-neutral-300 px-2">
+              <span className="text-xs text-gray-700 dark:text-gray-300 px-2">
                 {currentPage} de {totalPages}
               </span>
               <button
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-                className="px-2 py-1 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors"
+                className="px-2 py-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               >
                 ›
               </button>
@@ -398,7 +398,7 @@ export default function ListView({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-neutral-400">Funil:</span>
+            <span className="text-xs text-gray-600 dark:text-gray-400">Funil:</span>
             <select
               value={filterFunnelId || ''}
               onChange={(e) => {
@@ -406,7 +406,7 @@ export default function ListView({
                 setFilterFunnelId(value);
                 setFilterStageId('');
               }}
-              className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-2 py-1.5 transition-colors"
+              className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-2 py-1.5 transition-colors"
             >
               <option value="">Todos</option>
               {funil && <option value={funil.id}>{funil.nome}</option>}
@@ -414,11 +414,11 @@ export default function ListView({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-neutral-400">Estágio:</span>
+            <span className="text-xs text-gray-600 dark:text-gray-400">Etapa:</span>
             <select
               value={filterStageId}
               onChange={(e) => setFilterStageId(e.target.value)}
-              className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-2 py-1.5 disabled:opacity-50 transition-colors"
+              className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-2 py-1.5 disabled:opacity-50 transition-colors"
               disabled={!filterFunnelId}
             >
               <option value="">Todos</option>
@@ -432,27 +432,27 @@ export default function ListView({
         </div>
 
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-4 h-4" />
+          <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
           <input
             type="text"
             placeholder="Buscar por título ou contato..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8 pr-3 py-1.5 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64 transition-colors"
+            className="pl-8 pr-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64 transition-colors"
           />
         </div>
       </div>
 
       <div className="overflow-x-auto w-full">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700 table-fixed">
-            <thead className="bg-gray-50 dark:bg-neutral-800/50 transition-theme">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed">
+            <thead className="bg-gray-50 dark:bg-gray-900/50 transition-theme">
               <tr>
                 <th scope="col" className="w-[48px] px-3 py-2 relative">
                 {canEdit && (
                   <div ref={selectMenuRef} className="relative inline-block">
                     <button
                       onClick={() => setShowSelectMenu(!showSelectMenu)}
-                      className="w-4 h-4 rounded border-2 border-gray-300 dark:border-neutral-600 flex items-center justify-center hover:border-blue-500 transition-colors"
+                      className="w-4 h-4 rounded border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center hover:border-blue-500 transition-colors"
                       style={{
                         backgroundColor: areAllDisplayedDealsSelected ? '#3B82F6' : 'transparent',
                         borderColor: areAllDisplayedDealsSelected ? '#3B82F6' : undefined
@@ -466,25 +466,25 @@ export default function ListView({
                     </button>
 
                     {showSelectMenu && (
-                      <div className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-lg z-50 py-1">
+                      <div className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 py-1">
                         <button
                           onClick={handleSelectCurrentPage}
-                          className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                          className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                         >
                           Selecionar página atual ({displayedDeals.length})
                         </button>
                         <button
                           onClick={handleSelectAllPages}
-                          className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                          className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                         >
                           Selecionar todas as páginas ({sortedDeals.length})
                         </button>
                         {selectedDeals.length > 0 && (
                           <>
-                            <div className="border-t border-gray-200 dark:border-neutral-700 my-1"></div>
+                            <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                             <button
                               onClick={handleDeselectAll}
-                              className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                              className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                             >
                               Desmarcar todos
                             </button>
@@ -497,7 +497,7 @@ export default function ListView({
                 </th>
                 <th
                   scope="col"
-                  className="w-[300px] px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-neutral-400 uppercase tracking-wide cursor-pointer group"
+                  className="w-[300px] px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide cursor-pointer group"
                   onClick={() => handleSort('titulo')}
                 >
                   <div className="flex items-center gap-1">
@@ -507,7 +507,7 @@ export default function ListView({
                 </th>
                 <th
                   scope="col"
-                  className="w-[200px] px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-neutral-400 uppercase tracking-wide cursor-pointer group"
+                  className="w-[200px] px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide cursor-pointer group"
                   onClick={() => handleSort('contato')}
                 >
                   <div className="flex items-center gap-1">
@@ -517,17 +517,17 @@ export default function ListView({
                 </th>
                 <th
                   scope="col"
-                  className="w-[180px] px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-neutral-400 uppercase tracking-wide cursor-pointer group"
+                  className="w-[180px] px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide cursor-pointer group"
                   onClick={() => handleSort('estagio')}
                 >
                   <div className="flex items-center gap-1">
-                    <span className="flex-1">Estágio</span>
+                    <span className="flex-1">Etapa</span>
                     <SortIcon field="estagio" />
                   </div>
                 </th>
                 <th
                   scope="col"
-                  className="w-[140px] px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-neutral-400 uppercase tracking-wide cursor-pointer group"
+                  className="w-[140px] px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide cursor-pointer group"
                   onClick={() => handleSort('UpdatedAt')}
                 >
                   <div className="flex items-center gap-1">
@@ -535,19 +535,19 @@ export default function ListView({
                     <SortIcon field="UpdatedAt" />
                   </div>
                 </th>
-                <th scope="col" className="w-[100px] px-3 py-2 text-right text-xs font-medium text-gray-600 dark:text-neutral-400 uppercase tracking-wide">
+                <th scope="col" className="w-[100px] px-3 py-2 text-right text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
                   Ações
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700 transition-theme">
+            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700 transition-theme">
               {displayedDeals.map((deal) => {
                 const stage = funil.estagios?.find(s => parseInt(s.Id) === deal.id_estagio);
                 return (
                   <tr
                     key={deal.Id}
                     onClick={() => onDealClick(deal)}
-                    className="hover:bg-gray-50 dark:hover:bg-neutral-700/50 cursor-pointer transition-colors"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
                   >
                     <td className="w-[48px] px-3 py-2.5" onClick={e => e.stopPropagation()}>
                       {canEdit && (
@@ -555,27 +555,27 @@ export default function ListView({
                         type="checkbox"
                         checked={selectedDeals.includes(deal.Id)}
                         onChange={(e) => handleSelectDeal(deal.Id, e)}
-                        className="w-4 h-4 rounded border-gray-300 dark:border-neutral-600 text-blue-600 focus:ring-blue-500"
+                        className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
                       />
                       )}
                     </td>
                     <td className="w-[300px] px-3 py-2.5">
-                      <div className="text-sm text-gray-900 dark:text-neutral-100 max-w-[280px] truncate" title={deal.titulo}>
+                      <div className="text-sm text-gray-900 dark:text-white max-w-[280px] truncate" title={deal.titulo}>
                         {deal.titulo}
                       </div>
                     </td>
                     <td className="w-[200px] px-3 py-2.5">
-                      <div className="text-sm text-gray-900 dark:text-neutral-100 max-w-[180px] truncate" title={deal.contato?.nome}>
+                      <div className="text-sm text-gray-900 dark:text-white max-w-[180px] truncate" title={deal.contato?.nome}>
                         {deal.contato?.nome}
                       </div>
                     </td>
                     <td className="w-[180px] px-3 py-2.5">
-                      <div className="text-sm text-gray-900 dark:text-neutral-100 max-w-[160px] truncate" title={stage?.nome}>
+                      <div className="text-sm text-gray-900 dark:text-white max-w-[160px] truncate" title={stage?.nome}>
                         {stage?.nome}
                       </div>
                     </td>
                     <td className="w-[140px] px-3 py-2.5">
-                      <div className="text-sm text-gray-500 dark:text-neutral-400 truncate">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
                         {formatDate(deal.UpdatedAt ?? deal.CreatedAt)}
                       </div>
                     </td>
@@ -619,17 +619,17 @@ export default function ListView({
       >
         <div className="p-5">
           <div>
-            <label htmlFor="stage" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">
-              Selecione o novo estágio
+            <label htmlFor="stage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Selecione a nova etapa
             </label>
             <select
               id="stage"
               value={selectedStageId}
               onChange={(e) => setSelectedStageId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               required
             >
-              <option value="">Selecione um estágio...</option>
+              <option value="">Selecione uma etapa...</option>
               {funil.estagios?.map((stage) => (
                 <option key={stage.Id} value={stage.Id}>
                   {stage.nome}
@@ -657,7 +657,7 @@ export default function ListView({
                 setSelectedStageId('');
                 setError('');
               }}
-              className="px-3 py-1.5 text-sm text-gray-700 dark:text-neutral-200 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
+              className="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
             >
               Cancelar
             </button>

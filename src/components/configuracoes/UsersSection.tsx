@@ -618,19 +618,19 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
     <div className="mt-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Usuários</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Usuários</h2>
 
           {/* Botão de informação */}
           <div className="relative group">
             <button
-              className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 dark:border-neutral-600 text-gray-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-400 dark:hover:border-blue-400 transition-colors"
+              className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-400 dark:hover:border-blue-400 transition-colors"
               title=""
             >
               ?
             </button>
 
             {/* Tooltip */}
-            <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-900 dark:bg-neutral-700 text-white dark:text-neutral-100 text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10">
+            <div className="absolute left-6 top-1/2 -translate-y-1/2 w-64 p-3 bg-gray-900 dark:bg-gray-700 text-white dark:text-gray-100 text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10">
               A <strong>gestão de usuários</strong> permite que você adicione, edite e gerencie os usuários que têm acesso ao sistema.
             </div>
           </div>
@@ -640,7 +640,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsAssinaturaPanelOpen(true)}
-              className="flex items-center gap-2 bg-white dark:bg-neutral-800 text-gray-700 dark:text-neutral-300 border border-gray-300 dark:border-neutral-600 rounded-lg px-4 py-2 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+              className="flex items-center gap-2 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               <Pencil size={18} />
               Assinatura de Mensagens
@@ -669,48 +669,48 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
       )}
 
       {/* Desktop Table View */}
-      <div className="hidden md:block bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-neutral-700">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-          <thead className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-900 dark:to-neutral-800 border-b-2 border-gray-200 dark:border-neutral-700">
+      <div className="hidden md:block bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-gray-700">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 border-b-2 border-gray-200 dark:border-gray-700">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                 Nome
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                 Email
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                 Telefone
               </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                 Tipo
               </th>
               {canEdit && (
-                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
+                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                   Ações
                 </th>
               )}
             </tr>
           </thead>
-          <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-100 dark:divide-neutral-700">
+          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-700">
             {activeUsers.map((user) => (
               <tr
                 key={user.Id}
-                className="hover:bg-blue-50/50 dark:hover:bg-neutral-700/50 transition-all duration-200"
+                className="hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-all duration-200"
               >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                       {user.nome.charAt(0).toUpperCase()}
                     </div>
-                    <div className="text-sm font-semibold text-gray-900 dark:text-neutral-100">{user.nome}</div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user.nome}</div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-600 dark:text-neutral-400">{user.email}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{user.email}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-600 dark:text-neutral-400">{user.telefone || '-'}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{user.telefone || '-'}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getTypeStyle(user.tipo)} shadow-sm`}>
@@ -751,12 +751,12 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
           <div
             key={user.Id}
             onClick={() => handleOpenUserPanel(user)}
-            className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+            className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             {/* Header with Name */}
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
-                <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">{user.nome}</h3>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{user.nome}</h3>
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${getTypeStyle(user.tipo)}`}>
                   {user.tipo}
                 </span>
@@ -766,12 +766,12 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
             {/* Info Fields */}
             <div className="space-y-2">
               <div>
-                <span className="text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Email</span>
-                <p className="text-sm text-gray-900 dark:text-neutral-100 break-all">{user.email}</p>
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Email</span>
+                <p className="text-sm text-gray-900 dark:text-gray-100 break-all">{user.email}</p>
               </div>
               <div>
-                <span className="text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Telefone</span>
-                <p className="text-sm text-gray-900 dark:text-neutral-100">{user.telefone || '-'}</p>
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Telefone</span>
+                <p className="text-sm text-gray-900 dark:text-gray-100">{user.telefone || '-'}</p>
               </div>
             </div>
           </div>
@@ -783,7 +783,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
         <div className="mt-4">
           <button
             onClick={() => setShowInactive(!showInactive)}
-            className="flex items-center gap-2 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-100 transition-colors"
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
           >
             {showInactive ? (
               <ChevronUp className="w-5 h-5" />
@@ -798,44 +798,44 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
           {showInactive && (
             <>
               {/* Desktop Table View - Inactive Users */}
-              <div className="hidden md:block mt-4 bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-neutral-700">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-900 dark:to-neutral-800 border-b-2 border-gray-200 dark:border-neutral-700">
+              <div className="hidden md:block mt-4 bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-gray-700">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 border-b-2 border-gray-200 dark:border-gray-700">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                         Nome
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                         Email
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                         Telefone
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                         Tipo
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-100 dark:divide-neutral-700">
+                  <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-700">
                     {inactiveUsers.map((user) => (
                       <tr
                         key={user.Id}
                         onClick={() => handleOpenUserPanel(user)}
-                        className="hover:bg-blue-50/50 dark:hover:bg-neutral-700/50 opacity-60 cursor-pointer transition-all duration-200"
+                        className="hover:bg-blue-50/50 dark:hover:bg-gray-700/50 opacity-60 cursor-pointer transition-all duration-200"
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                               {user.nome.charAt(0).toUpperCase()}
                             </div>
-                            <div className="text-sm font-semibold text-gray-900 dark:text-neutral-100">{user.nome}</div>
+                            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user.nome}</div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600 dark:text-neutral-400">{user.email}</div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400">{user.email}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600 dark:text-neutral-400">{user.telefone || '-'}</div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400">{user.telefone || '-'}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getTypeStyle(user.tipo)} shadow-sm`}>
@@ -854,12 +854,12 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                   <div
                     key={user.Id}
                     onClick={() => handleOpenUserPanel(user)}
-                    className="bg-white dark:bg-neutral-800 rounded-lg shadow border border-gray-200 dark:border-neutral-700 p-4 opacity-60 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+                    className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 opacity-60 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     {/* Header with Name */}
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
-                        <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100">{user.nome}</h3>
+                        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{user.nome}</h3>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${getTypeStyle(user.tipo)}`}>
                           {user.tipo}
                         </span>
@@ -869,12 +869,12 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                     {/* Info Fields */}
                     <div className="space-y-2">
                       <div>
-                        <span className="text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Email</span>
-                        <p className="text-sm text-gray-900 dark:text-neutral-100 break-all">{user.email}</p>
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Email</span>
+                        <p className="text-sm text-gray-900 dark:text-gray-100 break-all">{user.email}</p>
                       </div>
                       <div>
-                        <span className="text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Telefone</span>
-                        <p className="text-sm text-gray-900 dark:text-neutral-100">{user.telefone || '-'}</p>
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Telefone</span>
+                        <p className="text-sm text-gray-900 dark:text-gray-100">{user.telefone || '-'}</p>
                       </div>
                     </div>
                   </div>
@@ -894,13 +894,13 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
       >
         <div className="px-6">
           {/* Tab Navigation */}
-          <div className="flex gap-2 mb-6 p-1 bg-gray-100 dark:bg-neutral-800 rounded-lg">
+          <div className="flex gap-2 mb-6 p-1 bg-gray-100 dark:bg-gray-900 rounded-lg">
           <button
             onClick={() => setActiveTab('edit')}
             className={`flex items-center gap-2 px-5 py-2.5 font-medium text-sm transition-all rounded-md ${
               activeTab === 'edit'
-                ? 'bg-white dark:bg-neutral-700 text-blue-600 dark:text-blue-400 shadow-md'
-                : 'text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-200 hover:bg-white/50 dark:hover:bg-neutral-700/50'
+                ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-md'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
             }`}
           >
             <UserIcon className="w-4 h-4" />
@@ -910,8 +910,8 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
             onClick={() => setActiveTab('reset')}
             className={`flex items-center gap-2 px-5 py-2.5 font-medium text-sm transition-all rounded-md ${
               activeTab === 'reset'
-                ? 'bg-white dark:bg-neutral-700 text-orange-600 dark:text-orange-400 shadow-md'
-                : 'text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-200 hover:bg-white/50 dark:hover:bg-neutral-700/50'
+                ? 'bg-white dark:bg-gray-700 text-orange-600 dark:text-orange-400 shadow-md'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
             }`}
           >
             <Key className="w-4 h-4" />
@@ -935,14 +935,14 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
 
             <form onSubmit={handleUpdateUser} className="space-y-5">
               {/* Status Toggle */}
-              <div className="bg-white dark:bg-neutral-800 rounded-lg p-4 border border-gray-200 dark:border-neutral-700">
+              <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       <Activity className="w-4 h-4 text-green-600 dark:text-green-400" />
                       Status do Usuário
                     </label>
-                    <p className="text-xs text-gray-500 dark:text-neutral-400">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       {selectedUser?.isAtivo
                         ? 'Este usuário está ativo e pode acessar o sistema'
                         : 'Este usuário está inativo e não pode acessar o sistema'}
@@ -956,7 +956,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                       onChange={canEdit ? () => selectedUser && handleToggleStatus(selectedUser.Id) : undefined}
                       disabled={!canEdit || togglingUser === selectedUser?.Id}
                     />
-                    <div className="w-14 h-7 bg-gray-200 dark:bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600 dark:peer-checked:bg-green-500"></div>
+                    <div className="w-14 h-7 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-gray-600 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600 dark:peer-checked:bg-green-500"></div>
                   </label>
                 </div>
                 {togglingUser === selectedUser?.Id && (
@@ -967,8 +967,8 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                 )}
               </div>
               {/* Nome Field */}
-              <div className="bg-white dark:bg-neutral-800 rounded-lg p-4 border border-gray-200 dark:border-neutral-700">
-                <label htmlFor="edit-nome" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">
+              <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <label htmlFor="edit-nome" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                   <UserIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   Nome do Usuário
                 </label>
@@ -977,7 +977,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                   id="edit-nome"
                   value={editFormData.nome}
                   onChange={(e) => setEditFormData({ ...editFormData, nome: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
                   placeholder="Ex: Dr. João da Silva"
                   required
                   disabled={!canEdit}
@@ -985,8 +985,8 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
               </div>
 
               {/* Telefone Field */}
-              <div className="bg-white dark:bg-neutral-800 rounded-lg p-4 border border-gray-200 dark:border-neutral-700">
-                <label htmlFor="edit-telefone" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">
+              <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <label htmlFor="edit-telefone" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                   <Phone className="w-4 h-4 text-green-600 dark:text-green-400" />
                   Telefone
                 </label>
@@ -995,16 +995,16 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                     <button
                       type="button"
                       onClick={() => canEdit && setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                      className="h-[42px] w-[120px] pl-3 pr-2 py-2 flex items-center gap-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="h-[42px] w-[120px] pl-3 pr-2 py-2 flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={!canEdit}
                     >
                       <span className="text-2xl">{selectedCountry.flag}</span>
-                      <span className="text-sm text-gray-900 dark:text-neutral-100">{selectedCountry.code}</span>
-                      <ChevronDown className="w-4 h-4 ml-auto text-gray-400 dark:text-neutral-500" />
+                      <span className="text-sm text-gray-900 dark:text-gray-100">{selectedCountry.code}</span>
+                      <ChevronDown className="w-4 h-4 ml-auto text-gray-400 dark:text-gray-500" />
                     </button>
 
                     {isCountryDropdownOpen && canEdit && (
-                      <div className="absolute top-full left-0 mt-1 w-[240px] max-h-[300px] overflow-y-auto bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg shadow-lg z-50">
+                      <div className="absolute top-full left-0 mt-1 w-[240px] max-h-[300px] overflow-y-auto bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50">
                         {countries.map((country) => (
                           <button
                             key={country.country}
@@ -1013,12 +1013,12 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                               setSelectedCountry(country);
                               setIsCountryDropdownOpen(false);
                             }}
-                            className="w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-neutral-600 text-left transition-colors"
+                            className="w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-600 text-left transition-colors"
                           >
                             <span className="text-2xl">{country.flag}</span>
                             <div className="flex-1">
-                              <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{country.name}</div>
-                              <div className="text-xs text-gray-500 dark:text-neutral-400">{country.code}</div>
+                              <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{country.name}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">{country.code}</div>
                             </div>
                           </button>
                         ))}
@@ -1037,7 +1037,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                       })
                     }
                     placeholder="(11) 98888-8888"
-                    className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 transition-all"
+                    className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all"
                     required
                     disabled={!canEdit}
                   />
@@ -1045,8 +1045,8 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
               </div>
 
               {/* Tipo Field */}
-              <div className="bg-white dark:bg-neutral-800 rounded-lg p-4 border border-gray-200 dark:border-neutral-700">
-                <label htmlFor="edit-tipo" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">
+              <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <label htmlFor="edit-tipo" className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                   <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   Tipo de Usuário
                 </label>
@@ -1056,25 +1056,25 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                   onChange={(e) =>
                     setEditFormData({ ...editFormData, tipo: e.target.value as UpdateUserPayload['tipo'] })
                   }
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
                   required
                   disabled={!canEdit}
                 >
                   <option value="USER">Usuário Padrão</option>
                   <option value="ADMIN">Administrador</option>
                 </select>
-                <p className="mt-2 text-xs text-gray-500 dark:text-neutral-400">
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                   {editFormData.tipo === 'ADMIN' ? '⚡ Administradores têm acesso total ao sistema' : '👤 Usuários padrão têm acesso limitado'}
                 </p>
               </div>
 
               {/* Action Buttons */}
               {canEdit && (
-                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-neutral-700">
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <button
                     type="button"
                     onClick={handleCloseUserPanel}
-                    className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-600 rounded-lg transition-colors"
+                    className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-lg transition-colors"
                   >
                     Cancelar
                   </button>
@@ -1129,16 +1129,16 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                       <Key className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                         Resetar Senha
                       </h3>
-                      <p className="text-sm text-gray-700 dark:text-neutral-300 leading-relaxed">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                         Você está prestes a resetar a senha do usuário{' '}
                         <span className="font-bold text-orange-700 dark:text-orange-300">{selectedUser.nome}</span>.
                       </p>
-                      <div className="mt-4 bg-white dark:bg-neutral-800 rounded-lg p-4 border border-orange-200 dark:border-orange-700">
-                        <p className="text-xs font-medium text-gray-900 dark:text-neutral-100 mb-2">⚠️ Atenção:</p>
-                        <ul className="text-xs text-gray-700 dark:text-neutral-300 space-y-1.5 list-disc list-inside">
+                      <div className="mt-4 bg-white dark:bg-gray-900 rounded-lg p-4 border border-orange-200 dark:border-orange-700">
+                        <p className="text-xs font-medium text-gray-900 dark:text-gray-100 mb-2">⚠️ Atenção:</p>
+                        <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1.5 list-disc list-inside">
                           <li>Uma nova senha aleatória será gerada automaticamente</li>
                           <li>A senha atual do usuário será invalidada imediatamente</li>
                           <li>Você deverá compartilhar a nova senha com o usuário</li>
@@ -1155,7 +1155,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                     <button
                       type="button"
                       onClick={handleCloseUserPanel}
-                      className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-600 rounded-lg transition-colors"
+                      className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-lg transition-colors"
                       disabled={isResetConfirming}
                     >
                       Cancelar
@@ -1205,7 +1205,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                       </p>
 
                       {/* Password Display */}
-                      <div className="bg-white dark:bg-neutral-800 rounded-lg border-2 border-green-200 dark:border-green-700 overflow-hidden">
+                      <div className="bg-white dark:bg-gray-900 rounded-lg border-2 border-green-200 dark:border-green-700 overflow-hidden">
                         <div className="bg-green-100 dark:bg-green-900/50 px-4 py-2 border-b border-green-200 dark:border-green-700">
                           <p className="text-xs font-medium text-green-900 dark:text-green-100 flex items-center gap-2">
                             <Key className="w-3.5 h-3.5" />
@@ -1214,7 +1214,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                         </div>
                         <div className="p-4">
                           <div className="flex items-center gap-3">
-                            <code className="flex-1 font-mono text-xl font-bold text-gray-900 dark:text-neutral-100 tracking-wider break-all bg-gray-50 dark:bg-neutral-700 px-4 py-3 rounded-lg border border-gray-200 dark:border-neutral-600">
+                            <code className="flex-1 font-mono text-xl font-bold text-gray-900 dark:text-gray-100 tracking-wider break-all bg-gray-50 dark:bg-gray-700 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600">
                               {resetPassword}
                             </code>
                             <button
@@ -1297,13 +1297,13 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
             </div>
 
             {/* === VISIBILIDADE DE MENUS === */}
-            <section className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
-              <div className="px-4 py-3 border-b border-gray-200 dark:border-neutral-700">
+            <section className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2">
-                  <Eye className="w-4 h-4 text-gray-600 dark:text-neutral-400" />
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">Visibilidade de Menus</h3>
+                  <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Visibilidade de Menus</h3>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">Controle quais menus este usuário pode visualizar</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Controle quais menus este usuário pode visualizar</p>
               </div>
               <div className="p-4 space-y-2">
                 {[
@@ -1316,10 +1316,10 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                   ['can_view_menu_prospect', 'Envios em Massa', Send],
                   ['can_view_menu_settings', 'Configurações', Cog],
                 ].map(([key, label, Icon]) => (
-                  <div key={key} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-700/30 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700/50 transition-colors">
+                  <div key={key} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
                     <div className="flex items-center gap-3">
-                      <Icon className="w-4 h-4 text-gray-600 dark:text-neutral-400" />
-                      <span className="text-sm font-medium text-gray-900 dark:text-neutral-100">{label}</span>
+                      <Icon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</span>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -1330,7 +1330,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                         }
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-500"></div>
+                      <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-gray-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-500"></div>
                     </label>
                   </div>
                 ))}
@@ -1338,13 +1338,13 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
             </section>
 
             {/* === PERMISSÕES DE EDIÇÃO === */}
-            <section className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
-              <div className="px-4 py-3 border-b border-gray-200 dark:border-neutral-700">
+            <section className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2">
-                  <Pencil className="w-4 h-4 text-gray-600 dark:text-neutral-400" />
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">Permissões de Edição</h3>
+                  <Pencil className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Permissões de Edição</h3>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">Defina quais seções este usuário pode editar</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Defina quais seções este usuário pode editar</p>
               </div>
               <div className="p-4 space-y-2">
                 {[
@@ -1355,10 +1355,10 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                   ['can_edit_connection', 'Editar Conexão', Link],
                   ['can_edit_settings', 'Editar Configurações', Cog],
                 ].map(([key, label, Icon]) => (
-                  <div key={key} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-700/30 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700/50 transition-colors">
+                  <div key={key} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
                     <div className="flex items-center gap-3">
-                      <Icon className="w-4 h-4 text-gray-600 dark:text-neutral-400" />
-                      <span className="text-sm font-medium text-gray-900 dark:text-neutral-100">{label}</span>
+                      <Icon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</span>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -1369,7 +1369,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                         }
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 dark:bg-neutral-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-neutral-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-500"></div>
+                      <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-gray-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-500"></div>
                     </label>
                   </div>
                 ))}
@@ -1377,13 +1377,13 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
             </section>
 
             {/* === VISIBILIDADE DE LEADS === */}
-            <section className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
-              <div className="px-4 py-3 border-b border-gray-200 dark:border-neutral-700">
+            <section className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2">
-                  <Users2 className="w-4 h-4 text-gray-600 dark:text-neutral-400" />
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">Visibilidade de Leads</h3>
+                  <Users2 className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Visibilidade de Leads</h3>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">Escolha quais leads este usuário pode visualizar</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Escolha quais leads este usuário pode visualizar</p>
               </div>
               <div className="p-4 space-y-2">
                 <button
@@ -1392,14 +1392,14 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                   className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all ${
                     leadVisibility === 'all'
                       ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
-                      : 'border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-700/30 hover:bg-gray-100 dark:hover:bg-neutral-700/50'
+                      : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30 hover:bg-gray-100 dark:hover:bg-gray-700/50'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                       leadVisibility === 'all'
                         ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 dark:bg-neutral-600 text-gray-500 dark:text-neutral-400'
+                        : 'bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400'
                     }`}>
                       <Users2 className="w-4 h-4" />
                     </div>
@@ -1407,11 +1407,11 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                       <p className={`text-sm font-medium ${
                         leadVisibility === 'all'
                           ? 'text-blue-900 dark:text-blue-100'
-                          : 'text-gray-700 dark:text-neutral-300'
+                          : 'text-gray-700 dark:text-gray-300'
                       }`}>
                         Ver Todos os Leads
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-neutral-400">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         Acesso completo a todos os leads do sistema
                       </p>
                     </div>
@@ -1427,14 +1427,14 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                   className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all ${
                     leadVisibility === 'assigned'
                       ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
-                      : 'border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-700/30 hover:bg-gray-100 dark:hover:bg-neutral-700/50'
+                      : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30 hover:bg-gray-100 dark:hover:bg-gray-700/50'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                       leadVisibility === 'assigned'
                         ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 dark:bg-neutral-600 text-gray-500 dark:text-neutral-400'
+                        : 'bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400'
                     }`}>
                       <UserIcon className="w-4 h-4" />
                     </div>
@@ -1442,11 +1442,11 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                       <p className={`text-sm font-medium ${
                         leadVisibility === 'assigned'
                           ? 'text-blue-900 dark:text-blue-100'
-                          : 'text-gray-700 dark:text-neutral-300'
+                          : 'text-gray-700 dark:text-gray-300'
                       }`}>
                         Ver Apenas Leads Atribuídos
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-neutral-400">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         Visualiza somente os leads que foram atribuídos a ele
                       </p>
                     </div>
@@ -1459,7 +1459,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
             </section>
 
             {/* === BOTÕES === */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-neutral-700">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="button"
                 onClick={() => {
@@ -1467,7 +1467,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                   setSelectedUser(null);
                   setUserPermissions(null);
                 }}
-                className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-600 rounded-lg transition-colors"
+                className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-lg transition-colors"
               >
                 Cancelar
               </button>
@@ -1513,7 +1513,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
         >
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="nome" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+              <label htmlFor="nome" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Nome
               </label>
               <input
@@ -1521,13 +1521,13 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                 id="nome"
                 value={formData.nome}
                 onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Email
               </label>
               <input
@@ -1535,13 +1535,13 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                 id="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="senha" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+              <label htmlFor="senha" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Senha
               </label>
               <div className="relative">
@@ -1550,13 +1550,13 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                   id="senha"
                   value={formData.senha}
                   onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
-                  className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                   title={showPassword ? "Ocultar senha" : "Mostrar senha"}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -1565,7 +1565,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
             </div>
 
             <div>
-              <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+              <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Telefone
               </label>
               <div className="flex gap-2">
@@ -1573,15 +1573,15 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                   <button
                     type="button"
                     onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                    className="h-[42px] w-[120px] pl-3 pr-2 py-2 flex items-center gap-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors"
+                    className="h-[42px] w-[120px] pl-3 pr-2 py-2 flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                   >
                     <span className="text-2xl">{selectedCountry.flag}</span>
-                    <span className="text-sm text-gray-900 dark:text-neutral-100">{selectedCountry.code}</span>
-                    <ChevronDown className="w-4 h-4 ml-auto text-gray-400 dark:text-neutral-500" />
+                    <span className="text-sm text-gray-900 dark:text-gray-100">{selectedCountry.code}</span>
+                    <ChevronDown className="w-4 h-4 ml-auto text-gray-400 dark:text-gray-500" />
                   </button>
 
                   {isCountryDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-[240px] max-h-[300px] overflow-y-auto bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg shadow-lg z-50">
+                    <div className="absolute top-full left-0 mt-1 w-[240px] max-h-[300px] overflow-y-auto bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50">
                       {countries.map((country) => (
                         <button
                           key={country.country}
@@ -1590,12 +1590,12 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                             setSelectedCountry(country);
                             setIsCountryDropdownOpen(false);
                           }}
-                          className="w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-neutral-600 text-left transition-colors"
+                          className="w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-600 text-left transition-colors"
                         >
                           <span className="text-2xl">{country.flag}</span>
                           <div className="flex-1">
-                            <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{country.name}</div>
-                            <div className="text-xs text-gray-500 dark:text-neutral-400">{country.code}</div>
+                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{country.name}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{country.code}</div>
                           </div>
                         </button>
                       ))}
@@ -1609,21 +1609,21 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                   value={formData.telefone}
                   onChange={(e) => setFormData({ ...formData, telefone: e.target.value.replace(/\D/g, "") })}
                   placeholder="(11) 98888-8888"
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500 text-sm"
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="tipo" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+              <label htmlFor="tipo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Tipo
               </label>
               <select
                 id="tipo"
                 value={formData.tipo}
                 onChange={(e) => setFormData({ ...formData, tipo: e.target.value as CreateUserPayload['tipo'] })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 required
               >
                 <option value="USER">Usuário</option>
@@ -1644,7 +1644,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                     tipo: 'USER'
                   });
                 }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md"
               >
                 Cancelar
               </button>
@@ -1694,15 +1694,15 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
             </div>
 
             {/* Status Card */}
-            <div className="bg-white dark:bg-neutral-800 rounded-xl border-2 border-gray-200 dark:border-neutral-700 p-6 shadow-sm">
+            <div className="bg-white dark:bg-gray-900 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <h4 className="text-base font-semibold text-gray-900 dark:text-neutral-100 mb-2">
+                  <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     Status Atual
                   </h4>
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${assinaturaAtiva ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                    <p className={`text-sm font-medium ${assinaturaAtiva ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-neutral-400'}`}>
+                    <p className={`text-sm font-medium ${assinaturaAtiva ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
                       {assinaturaAtiva ? 'Ativada para todos os usuários' : 'Desativada'}
                     </p>
                   </div>
@@ -1715,12 +1715,12 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                     onChange={toggleAssinatura}
                     disabled={!canEdit || loadingAssinatura}
                   />
-                  <div className={`w-16 h-8 bg-gray-200 dark:bg-neutral-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 dark:after:border-neutral-600 after:border after:rounded-full after:h-[26px] after:w-[26px] after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-500 shadow-sm ${(!canEdit || loadingAssinatura) ? 'opacity-50 cursor-not-allowed' : ''}`}></div>
+                  <div className={`w-16 h-8 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 dark:after:border-gray-600 after:border after:rounded-full after:h-[26px] after:w-[26px] after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-500 shadow-sm ${(!canEdit || loadingAssinatura) ? 'opacity-50 cursor-not-allowed' : ''}`}></div>
                 </label>
               </div>
 
               {loadingAssinatura && (
-                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-neutral-700 text-sm text-gray-600 dark:text-neutral-400">
+                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400">
                   <Loader2 className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
                   <span>Atualizando configuração...</span>
                 </div>
@@ -1730,15 +1730,15 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
             {/* Examples Section */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-3">
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-neutral-700 to-transparent"></div>
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wide">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
                   Exemplos
                 </h4>
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-neutral-700 to-transparent"></div>
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>
               </div>
 
               {/* With Signature */}
-              <div className="bg-white dark:bg-neutral-800 rounded-xl border-2 border-green-200 dark:border-green-800/50 overflow-hidden shadow-sm">
+              <div className="bg-white dark:bg-gray-900 rounded-xl border-2 border-green-200 dark:border-green-800/50 overflow-hidden shadow-sm">
                 <div className="bg-green-50 dark:bg-green-900/20 px-4 py-3 border-b border-green-200 dark:border-green-800/50">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-green-500 dark:bg-green-600 flex items-center justify-center shadow-sm">
@@ -1748,14 +1748,14 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
                   </div>
                 </div>
                 <div className="p-4">
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-neutral-900/50 dark:to-neutral-900/30 rounded-lg p-4 border border-gray-200 dark:border-neutral-700">
-                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-300 dark:border-neutral-600">
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-900/50 dark:to-gray-900/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-300 dark:border-gray-600">
                       <div className="w-1 h-8 bg-blue-600 dark:bg-blue-500 rounded-full"></div>
                       <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
                         João Silva
                       </p>
                     </div>
-                    <p className="text-sm text-gray-900 dark:text-neutral-100 leading-relaxed">
+                    <p className="text-sm text-gray-900 dark:text-gray-100 leading-relaxed">
                       Olá! Como posso ajudá-lo?
                     </p>
                   </div>
@@ -1763,18 +1763,18 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
               </div>
 
               {/* Without Signature */}
-              <div className="bg-white dark:bg-neutral-800 rounded-xl border-2 border-gray-200 dark:border-neutral-700 overflow-hidden shadow-sm">
-                <div className="bg-gray-50 dark:bg-neutral-900/30 px-4 py-3 border-b border-gray-200 dark:border-neutral-700">
+              <div className="bg-white dark:bg-gray-900 rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+                <div className="bg-gray-50 dark:bg-gray-900/30 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-gray-400 dark:bg-neutral-600 flex items-center justify-center shadow-sm">
+                    <div className="w-6 h-6 rounded-full bg-gray-400 dark:bg-gray-600 flex items-center justify-center shadow-sm">
                       <X className="w-4 h-4 text-white" />
                     </div>
-                    <span className="text-sm font-bold text-gray-600 dark:text-neutral-400 uppercase tracking-wide">Sem Assinatura</span>
+                    <span className="text-sm font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Sem Assinatura</span>
                   </div>
                 </div>
                 <div className="p-4">
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-neutral-900/50 dark:to-neutral-900/30 rounded-lg p-4 border border-gray-200 dark:border-neutral-700">
-                    <p className="text-sm text-gray-900 dark:text-neutral-100 leading-relaxed">
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-900/50 dark:to-gray-900/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                    <p className="text-sm text-gray-900 dark:text-gray-100 leading-relaxed">
                       Olá! Como posso ajudá-lo?
                     </p>
                   </div>
@@ -1806,7 +1806,7 @@ export default function UsersSection({ isActive, canEdit }: UsersSectionProps) {
             <div className="flex justify-end pt-2">
               <button
                 onClick={() => setIsAssinaturaPanelOpen(false)}
-                className="px-6 py-2.5 text-sm font-semibold text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border-2 border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 hover:border-gray-400 dark:hover:border-neutral-500 transition-all shadow-sm"
+                className="px-6 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-all shadow-sm"
               >
                 Fechar
               </button>

@@ -118,7 +118,7 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
     });
 
     if (!response.ok) {
-      throw new Error(`Erro ao ${stage.Id ? 'atualizar' : 'criar'} estágio`);
+      throw new Error(`Erro ao ${stage.Id ? 'atualizar' : 'criar'} etapa`);
     }
 
     // Fetch updated data
@@ -138,7 +138,7 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
     });
 
     if (!response.ok) {
-      throw new Error('Erro ao excluir estágio');
+      throw new Error('Erro ao excluir etapa');
     }
 
     await fetchFunis();
@@ -206,14 +206,14 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
         })
       });
 
-      if (!response.ok) throw new Error('Erro ao atualizar configuração do estágio');
+      if (!response.ok) throw new Error('Erro ao atualizar configuração da etapa');
 
       await fetchFunis();
       setSuccess('Configuração atualizada com sucesso!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       console.error('Erro ao atualizar configuração:', err);
-      setError('Erro ao atualizar configuração do estágio');
+      setError('Erro ao atualizar configuração da etapa');
     } finally {
       setLoadingField(null);
     }
@@ -271,8 +271,8 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
         {/* Header Section */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Funis de Vendas</h2>
-            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">Gerencie os estágios do seu funil de vendas</p>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Funis de Vendas</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Gerencie as etapas do seu funil de vendas</p>
           </div>
 
           {canEdit && (
@@ -309,10 +309,10 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
 
         {/* Content */}
         {funis.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 bg-gray-50 dark:bg-neutral-900 rounded-lg border-2 border-dashed border-gray-200 dark:border-neutral-700">
-            <GitBranch className="w-12 h-12 text-gray-400 dark:text-neutral-500 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-neutral-300 mb-2">Nenhum funil encontrado</h3>
-            <p className="text-gray-500 dark:text-neutral-400 text-sm text-center max-w-md">
+          <div className="flex flex-col items-center justify-center py-16 bg-gray-50 dark:bg-gray-900 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700">
+            <GitBranch className="w-12 h-12 text-gray-400 dark:text-gray-500 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">Nenhum funil encontrado</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-sm text-center max-w-md">
               Comece criando seu primeiro funil de vendas para organizar seus leads.
             </p>
           </div>
@@ -321,31 +321,31 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
             {funis.map((funil) => {
               const isCollapsed = collapsedFunis.has(funil.id);
               return (
-                <div key={funil.id} className="bg-gray-50 dark:bg-neutral-900/50 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
+                <div key={funil.id} className="bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                   {/* Funil Header */}
                   <div
-                    className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+                    className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                     onClick={() => toggleFunilCollapse(funil.id)}
                   >
                     <div className="flex items-center gap-2.5 flex-1">
-                      <div className="text-gray-400 dark:text-neutral-500">
+                      <div className="text-gray-400 dark:text-gray-500">
                         {isCollapsed ? (
                           <ChevronDown className="w-4 h-4" />
                         ) : (
                           <ChevronUp className="w-4 h-4" />
                         )}
                       </div>
-                      <GitBranch className="w-4 h-4 text-gray-600 dark:text-neutral-400" />
+                      <GitBranch className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">{funil.nome}</h3>
+                          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{funil.nome}</h3>
                           {funil.isFunilPadrao && (
                             <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
                               Padrão
                             </span>
                           )}
                         </div>
-                        <span className="text-xs text-gray-500 dark:text-neutral-400">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           ID: {funil.id}
                         </span>
                       </div>
@@ -367,12 +367,12 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
 
                   {/* Pipeline Stages */}
                   {!isCollapsed && (
-                    <div className="p-3 bg-white dark:bg-neutral-800">
+                    <div className="p-3 bg-white dark:bg-gray-900">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         {funil.estagios?.map((estagio) => (
                           <div
                             key={estagio.Id}
-                            className="rounded-lg p-3 border bg-white dark:bg-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+                            className="rounded-lg p-3 border bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                             style={{ borderColor: estagio.cor || '#e5e7eb' }}
                           >
                             {/* Stage Header */}
@@ -387,18 +387,18 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
                                 {estagio.ordem}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-semibold truncate text-gray-900 dark:text-neutral-100">
+                                <h4 className="text-sm font-semibold truncate text-gray-900 dark:text-gray-100">
                                   {estagio.nome}
                                 </h4>
-                                <span className="text-xs text-gray-500 dark:text-neutral-400">
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
                                   ID: {estagio.Id}
                                 </span>
                               </div>
                             </div>
 
                             {/* Follow-up Toggle */}
-                            <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-neutral-900 rounded">
-                              <span className="text-xs text-gray-700 dark:text-neutral-300">
+                            <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded">
+                              <span className="text-xs text-gray-700 dark:text-gray-300">
                                 Ativar follow-up para esta etapa?
                               </span>
                               {loadingField?.id === estagio.Id && loadingField?.field === 'isFollowUp' ? (
@@ -414,7 +414,7 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
                                       : undefined
                                   }
                                   className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                                    estagio.isFollowUp ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-300 dark:bg-neutral-600'
+                                    estagio.isFollowUp ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
                                   } ${canEdit ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
                                   disabled={!canEdit}
                                 >
@@ -444,14 +444,14 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
             onClick={handleCloseModals}
           >
             <div
-              className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-md border border-gray-200 dark:border-neutral-700"
+              className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md border border-gray-200 dark:border-gray-700"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-neutral-700">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">Criar Novo Funil</h3>
+              <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Criar Novo Funil</h3>
                 <button
                   onClick={handleCloseModals}
-                  className="p-1 text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+                  className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -459,7 +459,7 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
 
               <form onSubmit={handleCreateFunil} className="p-5">
                 <div className="mb-4">
-                  <label htmlFor="funilName" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                  <label htmlFor="funilName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Nome do Funil
                   </label>
                   <input
@@ -467,7 +467,7 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
                     id="funilName"
                     value={newFunilName}
                     onChange={(e) => setNewFunilName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
+                    className="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-colors"
                     placeholder="Ex: Funil Trabalhista"
                     required
                     autoFocus
@@ -478,7 +478,7 @@ export default function FunisSection({ isActive, canEdit }: FunisSectionProps) {
                   <button
                     type="button"
                     onClick={handleCloseModals}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
                   >
                     Cancelar
                   </button>

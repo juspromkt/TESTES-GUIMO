@@ -1437,66 +1437,14 @@ const [templateModalOpen, setTemplateModalOpen] = useState(false);
   );
 
 const loadSessionInfo = useCallback(async () => {
-  if (!token || !selectedChat) return; // <- deixa rodar mesmo sem saber ainda se é business
-
-  // helper para evitar que uma chamada derrube tudo
-  const safeCall = async <T,>(fn: () => Promise<T>): Promise<T | null> => {
-    try {
-      const r = await fn();
-      return r as any;
-    } catch {
-      return null;
-    }
-  };
-
-  // normaliza: aceita objeto, ou primeiro objeto válido de um array; ignora vazio/strings
-  const normalizeObj = (v: any) => {
-    if (!v) return null;
-    if (Array.isArray(v)) {
-      const firstValid = v.find(
-        (x) => x && typeof x === "object" && Object.keys(x).length > 0
-      );
-      return firstValid || null;
-    }
-    if (typeof v === "object" && Object.keys(v).length > 0) return v;
-    return null;
-  };
+  if (!token || !selectedChat) return;
 
   try {
-    const digits = selectedChatDigits;
-    if (!digits) return;
-
-    // limpa caches relacionados (opcional, igual ao seu código)
-    clearApiCache([
-      getCacheKey("findSessionByRemoteJid", token, { remoteJid: digits }),
-      getCacheKey("findInterventionByRemoteJid", token, { remoteJid: digits }),
-      getCacheKey("findPermanentExclusionByRemoteJid", token, { remoteJid: digits }),
-    ]);
-
-    const [sessRaw, intervRaw, permRaw] = await Promise.all([
-      safeCall(() => apiClient.findSessionByRemoteJid(token, digits)),
-      safeCall(() => apiClient.findInterventionByRemoteJid(token, digits)),
-      safeCall(() => apiClient.findPermanentExclusionByRemoteJid(token, digits)),
-    ]);
-
-    const sess = normalizeObj(sessRaw);
-    const interv = normalizeObj(intervRaw);
-    const perm = normalizeObj(permRaw);
-
-    setSessionInfo(sess);
-    setPermanentInterventionInfo(perm);
-    setInterventionInfo(perm ? null : interv);
-
-    // atualiza listas globais sem explodir quando vazio
-    clearApiCache([
-      getCacheKey("findSessions", token),
-      getCacheKey("findInterventions", token),
-      getCacheKey("findPermanentExclusions", token),
-    ]);
-    localStorage.setItem("sessions_updated", Date.now().toString());
-    window.dispatchEvent(new Event("sessions_updated"));
+    // Não fazemos mais requisições para as APIs de sessão/exclusão
+    setSessionInfo(null);
+    setPermanentInterventionInfo(null);
+    setInterventionInfo(null);
   } catch (err) {
-    // Se ainda assim algo der errado, não quebra a UI
     console.error("Erro ao carregar sessões (tolerado):", err);
     setSessionInfo(null);
     setInterventionInfo(null);
@@ -1505,7 +1453,7 @@ const loadSessionInfo = useCallback(async () => {
   finally {
     setSessionInfoLoaded(true);
   }
-}, [token, selectedChat, isBusiness, selectedChatDigits]);
+}, [token, selectedChat]);
 
 function isValidMsg(m: any): m is Message {
   return (
@@ -4593,7 +4541,7 @@ return (
     }}
   >
     {/* Header */}
-    <div className="bg-gray-50 dark:bg-gray-800 px-6 py-4 border-b border-gray-300/50 dark:border-gray-600/50 transition-colors duration-200">
+    <div className="bg-gray-50 dark:bg-gray-900 px-6 py-4 border-b border-gray-300/50 dark:border-gray-600/50 transition-colors duration-200">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center transition-colors duration-200">
@@ -4618,7 +4566,7 @@ return (
     <div className="p-6">
       {deals.length === 0 ? (
         <div className="text-center py-8">
-          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -4789,13 +4737,13 @@ return (
                 placeholder="Pesquisar nome ou número"
                 value={forwardSearchQuery}
                 onChange={(e) => setForwardSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                className="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder:text-gray-500 dark:placeholder:text-gray-400"
               />
             </div>
           </div>
 
           {/* Conversas recentes label */}
-          <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800/50">
+          <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900/50">
             <p className="text-xs uppercase text-gray-500 dark:text-gray-400 font-medium">
               Conversas recentes
             </p>
@@ -4860,7 +4808,7 @@ return (
                         <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                           isSelected
                             ? 'bg-blue-600 dark:bg-blue-500 border-blue-600 dark:border-blue-500'
-                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900'
                         }`}>
                           {isSelected && (
                             <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />

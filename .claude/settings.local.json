@@ -48,7 +48,11 @@
       "Bash(node scripts/consolidate-agent-models.cjs:*)",
       "Bash(lsof:*)",
       "Bash(xargs kill:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(for file in CamposSection.tsx DepartamentosSection.tsx FontesSection.tsx FunisSection.tsx FunnelModal.tsx ModelosSection.tsx ParametrosSection.tsx TagsSection.tsx UsersSection.tsx)",
+      "Bash(do sed -i 's/neutral-/gray-/g' \"$file\")",
+      "Bash(del \"d:\\GUIMOO - VERSÃO TESTE\\lumen-guimoo\\src\\pages\\IconComparison.tsx\")",
+      "Bash(\"d:\\GUIMOO - VERSÃO TESTE\\lumen-guimoo\\lista_completa_estagios.txt\")"
     ],
     "deny": [],
     "ask": []

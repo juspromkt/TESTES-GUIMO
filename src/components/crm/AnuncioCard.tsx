@@ -22,9 +22,9 @@ export default function AnuncioCard({ anuncio, expanded = false }: AnuncioCardPr
 
   if (expanded) {
     return (
-      <div className="border border-gray-300 dark:border-neutral-600 rounded-xl overflow-hidden bg-white dark:bg-neutral-800 shadow-md hover:shadow-lg transition-all">
+      <div className="border border-gray-300 dark:border-gray-600 rounded-xl overflow-hidden bg-white dark:bg-gray-900 shadow-md hover:shadow-lg transition-all">
         {/* Imagem/Vídeo grande */}
-        <div className="w-full h-64 flex items-center justify-center bg-gray-100 dark:bg-neutral-700 relative overflow-hidden">
+        <div className="w-full h-64 flex items-center justify-center bg-gray-100 dark:bg-gray-700 relative overflow-hidden">
           {hasMedia ? (
             <>
               {anuncio.mediaType === 'IMAGE' && imageUrl && (
@@ -45,7 +45,7 @@ export default function AnuncioCard({ anuncio, expanded = false }: AnuncioCardPr
                       const parent = target.parentElement;
                       if (parent && parent.querySelector('img') === target) {
                         const fallback = document.createElement('div');
-                        fallback.className = 'flex flex-col items-center justify-center w-full h-full text-gray-400 dark:text-neutral-500';
+                        fallback.className = 'flex flex-col items-center justify-center w-full h-full text-gray-400 dark:text-gray-500';
                         fallback.innerHTML = `
                           <svg class="w-16 h-16 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -76,8 +76,8 @@ export default function AnuncioCard({ anuncio, expanded = false }: AnuncioCardPr
                       }}
                     />
                   ) : (
-                    <div className="w-full h-full bg-gray-200 dark:bg-neutral-600 flex items-center justify-center">
-                      <Video className="w-16 h-16 text-gray-400 dark:text-neutral-500" />
+                    <div className="w-full h-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                      <Video className="w-16 h-16 text-gray-400 dark:text-gray-500" />
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors flex items-center justify-center">
@@ -89,7 +89,7 @@ export default function AnuncioCard({ anuncio, expanded = false }: AnuncioCardPr
               )}
             </>
           ) : (
-            <ImageIcon className="w-16 h-16 text-gray-400 dark:text-neutral-500" />
+            <ImageIcon className="w-16 h-16 text-gray-400 dark:text-gray-500" />
           )}
 
           {/* Badge do tipo */}
@@ -106,10 +106,10 @@ export default function AnuncioCard({ anuncio, expanded = false }: AnuncioCardPr
 
         {/* Conteúdo */}
         <div className="p-5">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-neutral-100 mb-2">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
             {anuncio.title}
           </h3>
-          <p className="text-sm text-gray-600 dark:text-neutral-400 leading-relaxed mb-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
             {anuncio.body || 'Sem descrição'}
           </p>
 
@@ -131,9 +131,9 @@ export default function AnuncioCard({ anuncio, expanded = false }: AnuncioCardPr
 
   // Versão compacta (para preview)
   return (
-    <div className="flex flex-col max-w-sm border border-gray-300 dark:border-neutral-600 rounded-xl overflow-hidden bg-white dark:bg-neutral-800 shadow-md hover:shadow-lg transition-all">
+    <div className="flex flex-col max-w-sm border border-gray-300 dark:border-gray-600 rounded-xl overflow-hidden bg-white dark:bg-gray-900 shadow-md hover:shadow-lg transition-all">
       {/* Imagem/Vídeo */}
-      <div className="w-full h-48 flex items-center justify-center bg-gray-100 dark:bg-neutral-700 relative overflow-hidden">
+      <div className="w-full h-48 flex items-center justify-center bg-gray-100 dark:bg-gray-700 relative overflow-hidden">
         {hasMedia ? (
           <>
             {anuncio.mediaType === 'IMAGE' && imageUrl && (
@@ -152,7 +152,7 @@ export default function AnuncioCard({ anuncio, expanded = false }: AnuncioCardPr
                   const parent = (e.target as HTMLImageElement).parentElement;
                   if (parent && !parent.querySelector('.fallback-icon')) {
                     const fallback = document.createElement('div');
-                    fallback.className = 'fallback-icon flex flex-col items-center justify-center w-full h-full text-gray-400 dark:text-neutral-500';
+                    fallback.className = 'fallback-icon flex flex-col items-center justify-center w-full h-full text-gray-400 dark:text-gray-500';
                     fallback.innerHTML = `
                       <svg class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -182,8 +182,8 @@ export default function AnuncioCard({ anuncio, expanded = false }: AnuncioCardPr
                     }}
                   />
                 ) : (
-                  <div className="w-full h-full bg-gray-200 dark:bg-neutral-600 flex items-center justify-center">
-                    <Video className="w-12 h-12 text-gray-400 dark:text-neutral-500" />
+                  <div className="w-full h-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                    <Video className="w-12 h-12 text-gray-400 dark:text-gray-500" />
                   </div>
                 )}
                 <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors flex items-center justify-center">
@@ -195,7 +195,7 @@ export default function AnuncioCard({ anuncio, expanded = false }: AnuncioCardPr
             )}
           </>
         ) : (
-          <ImageIcon className="w-12 h-12 text-gray-400 dark:text-neutral-500" />
+          <ImageIcon className="w-12 h-12 text-gray-400 dark:text-gray-500" />
         )}
 
         {/* Badge do tipo */}
@@ -213,10 +213,10 @@ export default function AnuncioCard({ anuncio, expanded = false }: AnuncioCardPr
       {/* Conteúdo */}
       <div className="p-4 flex flex-col gap-3">
         <div>
-          <h4 className="text-sm font-bold text-gray-900 dark:text-neutral-100 line-clamp-2">
+          <h4 className="text-sm font-bold text-gray-900 dark:text-white line-clamp-2">
             {anuncio.title}
           </h4>
-          <p className="text-xs text-gray-600 dark:text-neutral-400 line-clamp-2 mt-1">
+          <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">
             {anuncio.body || 'Sem descrição'}
           </p>
         </div>

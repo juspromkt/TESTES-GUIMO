@@ -91,18 +91,18 @@ export default function ParametrosSection({ isActive, canEdit }: ParametrosSecti
 
   return (
     <div className="mt-8">
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6 max-w-2xl mx-auto border border-gray-200 dark:border-neutral-700">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 mb-6">Configurações de envio</h2>
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 max-w-2xl mx-auto border border-gray-200 dark:border-gray-700">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Configurações de envio</h2>
 
         <div className="space-y-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <label htmlFor="maxDisparos" className="block text-sm font-medium text-gray-700 dark:text-neutral-300">
+              <label htmlFor="maxDisparos" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Máximo de disparos
               </label>
               <div className="relative group">
-                <Info className="w-4 h-4 text-gray-400 dark:text-neutral-400 cursor-help" />
-                <div className="absolute left-6 top-1/2 -translate-y-1/2 w-80 p-3 bg-gray-900 dark:bg-neutral-800 text-white dark:text-neutral-100 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10 border border-gray-700 dark:border-neutral-600">
+                <Info className="w-4 h-4 text-gray-400 dark:text-gray-400 cursor-help" />
+                <div className="absolute left-6 top-1/2 -translate-y-1/2 w-80 p-3 bg-gray-900 dark:bg-gray-900 text-white dark:text-gray-100 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10 border border-gray-700 dark:border-gray-600">
                   <p className="font-semibold mb-2">Como configurar:</p>
                   <p className="mb-1">• Se sua lista tem <strong>2000 contatos</strong>, coloque <strong>2000</strong> aqui</p>
                   <p>• Este valor define quantos disparos serão feitos por vez</p>
@@ -116,19 +116,19 @@ export default function ParametrosSection({ isActive, canEdit }: ParametrosSecti
               disabled={!canEdit}
               value={maxDisparos}
               onChange={(e) => setMaxDisparos(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-600 shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400 p-2 border bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400 p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               required
             />
           </div>
 
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <label htmlFor="delayDisparos" className="block text-sm font-medium text-gray-700 dark:text-neutral-300">
+              <label htmlFor="delayDisparos" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Delay entre disparos (segundos)
               </label>
               <div className="relative group">
-                <Info className="w-4 h-4 text-gray-400 dark:text-neutral-400 cursor-help" />
-                <div className="absolute left-6 top-1/2 -translate-y-1/2 w-72 p-3 bg-gray-900 dark:bg-neutral-800 text-white dark:text-neutral-100 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10 border border-gray-700 dark:border-neutral-600">
+                <Info className="w-4 h-4 text-gray-400 dark:text-gray-400 cursor-help" />
+                <div className="absolute left-6 top-1/2 -translate-y-1/2 w-72 p-3 bg-gray-900 dark:bg-gray-900 text-white dark:text-gray-100 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg z-10 border border-gray-700 dark:border-gray-600">
                   <p className="font-semibold mb-2">Recomendações de delay:</p>
                   <p className="mb-1">• <strong>Chip aquecido:</strong> 15 a 45 segundos</p>
                   <p>• <strong>Chip novo:</strong> 60 a 120 segundos</p>
@@ -141,7 +141,7 @@ export default function ParametrosSection({ isActive, canEdit }: ParametrosSecti
               disabled={!canEdit}
               value={delayDisparos}
               onChange={(e) => setDelayDisparos(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:border-neutral-600 shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400 p-2 border bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400 p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               required
             />
           </div>

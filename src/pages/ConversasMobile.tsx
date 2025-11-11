@@ -397,7 +397,7 @@ const ConversasMobile = () => {
     (startDate !== null ? 1 : 0);
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="h-screen flex flex-col bg-white dark:bg-gray-900">
       {/* Header */}
       {!showMobileChat && (
         <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-4 sticky top-0 z-10">

@@ -26,11 +26,11 @@ export default function ConfigLayout({
   children,
 }: ConfigLayoutProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 p-4 sm:p-6 transition-theme">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 transition-theme">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
         {/* Sidebar */}
-        <aside className="w-full lg:w-72 bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-300 dark:border-neutral-700 p-6 transition-theme">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-neutral-100 mb-6">
+        <aside className="w-full lg:w-72 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-300 dark:border-gray-700 p-6 transition-theme">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-6">
             {title}
           </h2>
 
@@ -99,12 +99,12 @@ export default function ConfigLayout({
                     className={`w-full flex items-center gap-3 px-5 py-3 rounded-xl text-[15px] font-medium transition-all ${
                       isActive
                         ? "bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 shadow-sm"
-                        : "text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                     }`}
                   >
                     <Icon
                       className={`w-5 h-5 flex-shrink-0 ${
-                        isActive ? "text-indigo-600 dark:text-indigo-400" : "text-gray-500 dark:text-neutral-500"
+                        isActive ? "text-indigo-600 dark:text-indigo-400" : "text-gray-500 dark:text-gray-500"
                       }`}
                     />
                     <span className="truncate">{section.label}</span>
@@ -115,7 +115,7 @@ export default function ConfigLayout({
         </aside>
 
         {/* Conteúdo principal */}
-        <main className="flex-1 bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-300 dark:border-neutral-700 p-8 transition-theme">
+        <main className="flex-1 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-300 dark:border-gray-700 p-8 transition-theme">
           {children}
         </main>
       </div>

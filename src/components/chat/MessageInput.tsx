@@ -366,7 +366,7 @@ reader.readAsDataURL(audioBlob);
     <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 relative z-[9998] transition-colors">
       {/* Preview de arquivo selecionado */}
       {pendingFile && (
-        <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2">
             {pendingFile.mediatype === 'image' && (
               <img
@@ -404,7 +404,7 @@ reader.readAsDataURL(audioBlob);
 
       {/* Preview de áudio gravado */}
       {audioPreview && (
-        <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-3 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2">
             <audio controls src={audioPreview.url} className="flex-1 h-8" />
             <button
@@ -515,7 +515,7 @@ reader.readAsDataURL(audioBlob);
 
         {/* Campo de input */}
         {recording ? (
-          <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-lg py-2 px-3">
+          <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900 rounded-lg py-2 px-3">
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
               <span className="text-sm font-medium text-red-600 dark:text-red-400">
@@ -525,7 +525,7 @@ reader.readAsDataURL(audioBlob);
             </div>
           </div>
         ) : (
-          <div className="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <div className="flex-1 bg-gray-50 dark:bg-gray-900 rounded-lg">
             <textarea
               ref={textareaRef}
               value={message}

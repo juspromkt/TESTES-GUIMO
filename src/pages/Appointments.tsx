@@ -103,19 +103,19 @@ export default function Appointments() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950 p-4 sm:p-6 transition-theme">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-4 sm:p-6 transition-theme">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
         {/* Sidebar */}
-        <aside className="w-full lg:w-72 bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-300 dark:border-neutral-700 p-6 transition-theme">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-neutral-100 mb-4">
+        <aside className="w-full lg:w-72 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-300 dark:border-gray-700 p-6 transition-theme">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
             Agendamentos
           </h2>
 
           {/* Toggle de Ativação */}
           <div className="mb-4">
-            <div className="flex items-center justify-between bg-gray-50 dark:bg-neutral-700/50 border border-gray-300 dark:border-neutral-600 rounded-lg px-3 py-2">
+            <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700 dark:text-neutral-300">
+                <span className="text-sm text-gray-700 dark:text-gray-300">
                   {toggling
                     ? isSchedulingEnabled
                       ? 'Desativando...'
@@ -125,7 +125,7 @@ export default function Appointments() {
                     : 'Agendamento Desativado'}
                 </span>
                 {toggling && (
-                  <Loader2 className="w-4 h-4 animate-spin text-gray-400 dark:text-neutral-500" />
+                  <Loader2 className="w-4 h-4 animate-spin text-gray-400 dark:text-gray-500" />
                 )}
               </div>
 
@@ -144,7 +144,7 @@ export default function Appointments() {
               </button>
             </div>
 
-            <p className="text-[11px] text-gray-500 dark:text-neutral-400 ml-1 mt-1">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 ml-1 mt-1">
               {toggling
                 ? 'Aguarde... aplicando alteração'
                 : isSchedulingEnabled
@@ -164,12 +164,12 @@ export default function Appointments() {
                   className={`w-full flex items-center gap-3 px-5 py-3 rounded-xl text-[15px] font-medium transition-all ${
                     isActive
                       ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 shadow-sm'
-                      : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-700'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
                   <Icon
                     className={`w-5 h-5 flex-shrink-0 ${
-                      isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-neutral-500'
+                      isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-500'
                     }`}
                   />
                   <span className="truncate">{tab.label}</span>
@@ -180,7 +180,7 @@ export default function Appointments() {
         </aside>
 
         {/* Conteúdo principal */}
-        <main className="flex-1 bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-300 dark:border-neutral-700 transition-theme overflow-y-auto">
+        <main className="flex-1 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-300 dark:border-gray-700 transition-theme overflow-y-auto">
           <div className="p-6 sm:p-8">
             {activeTab === 'calendar' && <AppointmentsCalendar />}
             {activeTab === 'appointments' && <AppointmentsList canEdit={canEdit} />}

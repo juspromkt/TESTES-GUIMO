@@ -24,7 +24,7 @@ export default function CRMLayout({
   return (
     <div className="flex flex-col h-full">
       {/* Header horizontal ultra-compacto */}
-      <div className="flex-none bg-white dark:bg-neutral-800 px-3 pt-0 pb-1.5">
+      <div className="flex-none bg-white dark:bg-gray-900 px-3 pt-0 pb-1.5 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-center gap-3">
           {/* Navegação */}
           <div className="flex items-center gap-2">
@@ -39,7 +39,7 @@ export default function CRMLayout({
                     className={`flex items-center gap-2.5 px-3.5 py-1.5 rounded text-base font-medium transition-all ${
                       isActive
                         ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                        : "text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-700"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
                     }`}
                   >
                     <Icon className="w-5 h-5" />

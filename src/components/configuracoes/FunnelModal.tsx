@@ -222,7 +222,7 @@ export default function FunnelModal({
         body: JSON.stringify({ estagios: updated.map(s => ({ Id: s.Id, ordem: s.ordem })) })
       });
     } catch (err) {
-      console.error('Erro ao atualizar ordem dos estágios:', err);
+      console.error('Erro ao atualizar ordem das etapas:', err);
     }
   };
 
@@ -292,7 +292,7 @@ const handleDragEnd = () => {
     >
       <div className="relative -mt-4">
         {/* Layout 16:9 com 2 colunas */}
-        <div className="h-[600px] flex overflow-hidden bg-white dark:bg-neutral-900 rounded-2xl">
+        <div className="h-[600px] flex overflow-hidden bg-white dark:bg-gray-900 rounded-2xl">
           {/* Coluna Esquerda - Info do Funil */}
           <div className="w-1/4 relative overflow-hidden rounded-l-2xl flex flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600">
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/10"></div>
@@ -338,7 +338,7 @@ const handleDragEnd = () => {
           </div>
 
           {/* Coluna Direita - Etapas */}
-          <div className="flex-1 overflow-hidden bg-gradient-to-br from-gray-50/50 to-white dark:from-neutral-900 dark:to-neutral-900 flex flex-col rounded-r-2xl">
+          <div className="flex-1 overflow-hidden bg-gradient-to-br from-gray-50/50 to-white dark:from-gray-900 dark:to-gray-900 flex flex-col rounded-r-2xl">
             {/* Error Message */}
             {error && (
               <div className="m-4 mb-0 p-2.5 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded">
@@ -353,10 +353,10 @@ const handleDragEnd = () => {
             <div className="flex-1 flex gap-4 p-4 overflow-hidden">
               {/* Coluna Esquerda - Lista de Etapas */}
               <div className="flex-1 flex flex-col overflow-hidden">
-                <h4 className="text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wide mb-3">Etapas do Funil</h4>
+                <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">Etapas do Funil</h4>
                 <div className="flex-1 overflow-y-auto pr-2">
                   {stages.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 dark:text-neutral-400 bg-gray-50 dark:bg-neutral-900 rounded-lg border-2 border-dashed border-gray-200 dark:border-neutral-700">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700">
                 <p className="text-sm">Nenhuma etapa configurada</p>
               </div>
             ) : (
@@ -371,9 +371,9 @@ const handleDragEnd = () => {
                     onDrop={(e) => handleDrop(e, index)}
                     onDragEnd={handleDragEnd}
                     className={`
-                      border rounded-lg p-3.5 cursor-move transition-all bg-white dark:bg-neutral-800
+                      border rounded-lg p-3.5 cursor-move transition-all bg-white dark:bg-gray-900
                       ${draggedIndex === index ? 'opacity-50' : ''}
-                      ${dragOverIndex === index && draggedIndex !== index ? 'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-950' : 'hover:bg-gray-50 dark:hover:bg-neutral-700'}
+                      ${dragOverIndex === index && draggedIndex !== index ? 'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-950' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}
                     `}
                     style={{ borderColor: stage.cor || '#e5e7eb' }}
                   >
@@ -383,13 +383,13 @@ const handleDragEnd = () => {
                           type="text"
                           value={editingStage.nome}
                           onChange={(e) => setEditingStage({ ...editingStage, nome: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                           placeholder="Nome da etapa"
                           autoFocus
                         />
 
                         <div>
-                          <label className="block text-xs font-medium text-gray-700 dark:text-neutral-300 mb-2">Selecione uma cor</label>
+                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Selecione uma cor</label>
                           <div className="flex flex-wrap gap-2">
                             {PRESET_COLORS.map((color, idx) => (
                               <button
@@ -406,8 +406,8 @@ const handleDragEnd = () => {
                                 }}
                                 className={`w-10 h-10 rounded-lg border-2 transition-all ${
                                   editingStage.cor === color.bg
-                                    ? 'border-gray-900 dark:border-neutral-100 ring-2 ring-gray-300 dark:ring-neutral-500'
-                                    : 'border-gray-200 dark:border-neutral-600 hover:border-gray-400 dark:hover:border-neutral-400'
+                                    ? 'border-gray-900 dark:border-gray-100 ring-2 ring-gray-300 dark:ring-gray-500'
+                                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-400'
                                 }`}
                                 style={{ backgroundColor: color.bg }}
                                 title={color.name}
@@ -427,7 +427,7 @@ const handleDragEnd = () => {
                           </button>
                           <button
                             onClick={() => setEditingStage(null)}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 text-gray-700 dark:text-neutral-300 text-sm rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm rounded-lg transition-colors"
                           >
                             <X className="w-4 h-4" />
                             Cancelar
@@ -437,7 +437,7 @@ const handleDragEnd = () => {
                     ) : (
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <GripVertical className="w-4 h-4 text-gray-400 dark:text-neutral-500" />
+                          <GripVertical className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                           <div className="flex items-center gap-3">
                             <span
                               className="w-7 h-7 text-sm font-semibold rounded-full flex items-center justify-center"
@@ -447,7 +447,7 @@ const handleDragEnd = () => {
                               }}>
                               {stage.ordem}
                             </span>
-                            <h5 className="font-medium text-base text-gray-900 dark:text-neutral-100">
+                            <h5 className="font-medium text-base text-gray-900 dark:text-gray-100">
                               {stage.nome}
                             </h5>
                           </div>
@@ -461,14 +461,14 @@ const handleDragEnd = () => {
                               const colorIdx = PRESET_COLORS.findIndex(c => c.bg === stage.cor);
                               setEditingColorIndex(colorIdx >= 0 ? colorIdx : 0);
                             }}
-                            className="p-1.5 text-gray-600 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded transition-colors"
+                            className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteStage(stage.Id)}
                             disabled={saving}
-                            className="p-1.5 text-gray-600 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded disabled:opacity-50 transition-colors"
+                            className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded disabled:opacity-50 transition-colors"
                           >
                             {saving ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
@@ -488,21 +488,21 @@ const handleDragEnd = () => {
 
               {/* Coluna Direita - Adicionar Nova Etapa */}
               <div className="w-80 flex flex-col overflow-hidden">
-                <h4 className="text-xs font-semibold text-gray-700 dark:text-neutral-300 uppercase tracking-wide mb-3">Adicionar Nova Etapa</h4>
+                <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">Adicionar Nova Etapa</h4>
                 <div className="flex-1 overflow-y-auto pr-2">
-                  <div className="bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg p-4">
+                  <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                     <div className="space-y-3">
                       <input
                         type="text"
                         value={newStageName}
                         onChange={(e) => setNewStageName(e.target.value)}
                         placeholder="Nome da nova etapa"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                         onKeyPress={(e) => e.key === 'Enter' && handleAddStage()}
                       />
 
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 dark:text-neutral-300 mb-2">Selecione uma cor</label>
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Selecione uma cor</label>
                         <div className="flex flex-wrap gap-2 mb-3">
                           {PRESET_COLORS.map((color, idx) => (
                             <button
@@ -511,8 +511,8 @@ const handleDragEnd = () => {
                               onClick={() => setSelectedColorIndex(idx)}
                               className={`w-10 h-10 rounded-lg border-2 transition-all ${
                                 selectedColorIndex === idx
-                                  ? 'border-gray-900 dark:border-neutral-100 ring-2 ring-gray-300 dark:ring-neutral-500'
-                                  : 'border-gray-200 dark:border-neutral-600 hover:border-gray-400 dark:hover:border-neutral-400'
+                                  ? 'border-gray-900 dark:border-gray-100 ring-2 ring-gray-300 dark:ring-gray-500'
+                                  : 'border-gray-200 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-400'
                               }`}
                               style={{ backgroundColor: color.bg }}
                               title={color.name}
@@ -556,7 +556,7 @@ const handleDragEnd = () => {
       onClick={() => setIsDeleteModalOpen(false)}
     >
       <div
-        className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-md border border-gray-200 dark:border-neutral-700"
+        className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md border border-gray-200 dark:border-gray-700"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">
@@ -565,10 +565,10 @@ const handleDragEnd = () => {
               <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                 Confirmar Exclusão
               </h3>
-              <p className="text-sm text-gray-600 dark:text-neutral-400 mb-2">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                 Tem certeza que deseja excluir este funil? Esta ação não pode ser desfeita.
               </p>
               <p className="text-xs text-red-600 dark:text-red-400">
@@ -580,7 +580,7 @@ const handleDragEnd = () => {
           <div className="flex justify-end gap-3">
             <button
               onClick={() => setIsDeleteModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
             >
               Cancelar
             </button>

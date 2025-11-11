@@ -147,16 +147,16 @@ export default function CreateDealPanel({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-[480px] bg-white dark:bg-neutral-800 shadow-2xl transform transition-transform duration-300 ease-in-out translate-x-0 transition-theme">
+    <div className="fixed inset-y-0 right-0 w-[480px] bg-white dark:bg-gray-900 shadow-2xl transform transition-transform duration-300 ease-in-out translate-x-0 transition-theme">
       <div className="h-full flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-neutral-700">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Nova Negociação</h2>
-            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">Preencha os dados da negociação</p>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Nova Negociação</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Preencha os dados da negociação</p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 dark:text-neutral-500 hover:text-gray-500 dark:hover:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 p-2 rounded-full transition-colors"
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-full transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -166,7 +166,7 @@ export default function CreateDealPanel({
           <form onSubmit={handleSubmit} className="p-6 space-y-8">
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Funil
                 </label>
                 <SearchableSelect
@@ -178,7 +178,7 @@ export default function CreateDealPanel({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Contato
                 </label>
                 <div className="flex items-center gap-2">
@@ -201,7 +201,7 @@ export default function CreateDealPanel({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Fonte
                 </label>
                 <SearchableSelect
@@ -213,7 +213,7 @@ export default function CreateDealPanel({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Usuário Responsável
                 </label>
                 <SearchableSelect
@@ -225,16 +225,16 @@ export default function CreateDealPanel({
               </div>
             </div>
 
-            <div className="border-t border-gray-200 dark:border-neutral-700 pt-6 space-y-6">
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-6 space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Título da Negociação
                 </label>
                 <input
                   type="text"
                   value={formData.titulo}
                   onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-                  className="w-full px-4 py-3 text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                  className="w-full px-4 py-3 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
                   placeholder="Ex: Projeto de Marketing Digital"
                   required
                 />
@@ -247,7 +247,7 @@ export default function CreateDealPanel({
               </div>
             )}
 
-            <div className="border-t border-gray-200 dark:border-neutral-700 pt-6">
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <button
   type="submit"
   disabled={submitting || !formData.id_contato}
@@ -279,7 +279,7 @@ export default function CreateDealPanel({
         >
           <form onSubmit={handleContactSubmit} className="space-y-4">
             <div>
-              <label htmlFor="nome" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+              <label htmlFor="nome" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Nome *
               </label>
               <input
@@ -287,14 +287,14 @@ export default function CreateDealPanel({
                 id="nome"
                 value={contactForm.nome}
                 onChange={(e) => setContactForm({ ...contactForm, nome: e.target.value })}
-                className="w-full px-4 py-3 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
+                className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
                 placeholder="Digite o nome do contato..."
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email
               </label>
               <input
@@ -302,13 +302,13 @@ export default function CreateDealPanel({
                 id="email"
                 value={contactForm.Email}
                 onChange={(e) => setContactForm({ ...contactForm, Email: e.target.value })}
-                className="w-full px-4 py-3 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
+                className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
                 placeholder="Digite o email do contato..."
               />
             </div>
 
             <div>
-              <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+              <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Telefone
               </label>
               <input
@@ -316,7 +316,7 @@ export default function CreateDealPanel({
                 id="telefone"
                 value={contactForm.telefone}
                 onChange={(e) => setContactForm({ ...contactForm, telefone: e.target.value })}
-                className="w-full px-4 py-3 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
+                className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400"
                 placeholder="Digite o telefone do contato..."
               />
             </div>
@@ -331,7 +331,7 @@ export default function CreateDealPanel({
               <button
                 type="button"
                 onClick={() => setIsContactModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-md"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md"
               >
                 Cancelar
               </button>

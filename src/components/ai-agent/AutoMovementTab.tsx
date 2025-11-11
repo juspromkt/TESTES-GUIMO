@@ -208,7 +208,7 @@ export default function AutoMovementTab({ token, canViewAgent, idAgente }: AutoM
 
               <div>
                 <label className="block text-xs font-medium text-neutral-700 mb-1.5">
-                  Estágio do Funil
+                  Etapa do Funil
                 </label>
                 <select
                   disabled={!canViewAgent || !movement.id_funil}
@@ -216,7 +216,7 @@ export default function AutoMovementTab({ token, canViewAgent, idAgente }: AutoM
                   onChange={(e) => handleUpdateMovement(movement.ordem, 'id_estagio', e.target.value ? parseInt(e.target.value) : null)}
                   className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-lg focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 disabled:bg-neutral-100 disabled:text-neutral-500"
                 >
-                  <option value="">Selecione um estágio</option>
+                  <option value="">Selecione uma etapa</option>
                   {funnels.find(f => f.id === movement.id_funil)?.estagios?.map(stage => (
                     <option key={stage.Id} value={stage.Id}>{stage.nome}</option>
                   ))}
@@ -252,11 +252,11 @@ export default function AutoMovementTab({ token, canViewAgent, idAgente }: AutoM
       <Modal isOpen={infoOpen} onClose={() => setInfoOpen(false)} title="Como funciona?">
         <div className="space-y-3 text-sm text-gray-700">
           <p>
-            A movimentação automática permite que os leads sejam movidos automaticamente entre funis e estágios
+            A movimentação automática permite que os leads sejam movidos automaticamente entre funis e etapas
             quando o agente completar determinadas etapas de atendimento.
           </p>
           <p>
-            Configure qual etapa do agente dispara a movimentação e para qual funil/estágio o lead deve ser movido.
+            Configure qual etapa do agente dispara a movimentação e para qual funil/etapa o lead deve ser movido.
           </p>
         </div>
       </Modal>

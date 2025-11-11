@@ -146,7 +146,7 @@ export const artigo16: Article = {
                 <td class="border border-gray-300 dark:border-neutral-700 px-4 py-2">Atribuir o atendimento a um membro da equipe</td>
               </tr>
               <tr class="bg-gray-50 dark:bg-neutral-800/50">
-                <td class="border border-gray-300 dark:border-neutral-700 px-4 py-2">🧩 <strong>Funil e Estágio</strong></td>
+                <td class="border border-gray-300 dark:border-neutral-700 px-4 py-2">🧩 <strong>Funil e Etapa</strong></td>
                 <td class="border border-gray-300 dark:border-neutral-700 px-4 py-2">Definir manualmente em qual etapa do funil o lead está</td>
               </tr>
               <tr>
@@ -248,7 +248,7 @@ export const artigo16: Article = {
               <li>A IA está ativa e responde automaticamente.</li>
               <li>Você decide pausar a IA e assumir o atendimento.</li>
               <li>Depois, adiciona a etiqueta "Aguardando documentação" e gera um resumo.</li>
-              <li>Por fim, abre o lead no CRM para atualizar o estágio.</li>
+              <li>Por fim, abre o lead no CRM para atualizar a etapa.</li>
             </ul>
             <br>
             Tudo isso é feito diretamente na aba <strong>Conversas</strong>, sem precisar sair da tela.

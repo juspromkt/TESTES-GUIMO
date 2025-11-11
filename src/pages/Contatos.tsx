@@ -466,7 +466,7 @@ useEffect(() => {
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortConfig.field !== field) {
-      return <ChevronUp className="w-4 h-4 text-gray-400 dark:text-neutral-500 opacity-0 group-hover:opacity-100" />;
+      return <ChevronUp className="w-4 h-4 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100" />;
     }
     return sortConfig.direction === 'asc' ? (
       <ChevronUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -480,14 +480,14 @@ useEffect(() => {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto" />
-          <p className="mt-3 text-sm text-gray-600 dark:text-neutral-400">Carregando contatos...</p>
+          <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">Carregando contatos...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 transition-theme">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-theme">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
         {/* Header Minimalista */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -496,10 +496,10 @@ useEffect(() => {
               <Users className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900 dark:text-neutral-100">
+              <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                 Contatos
               </h1>
-              <p className="text-sm text-gray-600 dark:text-neutral-400">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Gerencie sua base de contatos
               </p>
             </div>
@@ -510,7 +510,7 @@ useEffect(() => {
               <button
                 onClick={handleDeleteMultiple}
                 disabled={selectedIds.size === 0 || isDeletingMultiple}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-600 text-red-600 dark:text-red-400 rounded-lg hover:border-red-400 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-red-600 dark:text-red-400 rounded-lg hover:border-red-400 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isDeletingMultiple ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -529,7 +529,7 @@ useEffect(() => {
 
               <button
                 onClick={handleExportContacts}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-200 rounded-lg hover:border-gray-400 dark:hover:border-neutral-500 transition-colors text-sm font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:border-gray-400 dark:hover:border-gray-600 transition-colors text-sm font-medium"
               >
                 <FileDown className="w-4 h-4" />
                 <span>Exportar</span>
@@ -537,7 +537,7 @@ useEffect(() => {
 
               <button
                 onClick={() => setIsImportModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-200 rounded-lg hover:border-gray-400 dark:hover:border-neutral-500 transition-colors text-sm font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:border-gray-400 dark:hover:border-gray-600 transition-colors text-sm font-medium"
               >
                 <FileUp className="w-4 h-4" />
                 <span>Importar</span>
@@ -574,15 +574,15 @@ useEffect(() => {
 
         {/* Estado Vazio ou Lista de Contatos */}
         {contatos.length === 0 ? (
-          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 p-12 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
             <div className="bg-blue-100 dark:bg-blue-900/30 p-5 rounded-full inline-flex mb-4">
               <Users className="w-12 h-12 text-blue-600 dark:text-blue-400" />
             </div>
 
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 mb-2">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
               Nenhum contato cadastrado
             </h2>
-            <p className="text-sm text-gray-600 dark:text-neutral-400 max-w-md mx-auto mb-6">
+            <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-6">
               Comece adicionando seu primeiro contato para gerenciar sua base de relacionamentos
             </p>
 
@@ -600,35 +600,35 @@ useEffect(() => {
             )}
           </div>
         ) : (
-          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             {/* Filtro Mobile - Campo único de busca */}
-            <div className="p-4 border-b border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50 lg:hidden">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 lg:hidden">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar contato..."
-                  className="pl-9 pr-3 py-2.5 w-full bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
+                  className="pl-9 pr-3 py-2.5 w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
                 />
               </div>
             </div>
 
             {/* Filtro Desktop - Campo único unificado */}
-            <div className="hidden lg:block p-4 border-b border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50">
+            <div className="hidden lg:block p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
               <div className="flex items-center gap-2 mb-3">
-                <Filter className="w-4 h-4 text-gray-600 dark:text-neutral-400" />
-                <h3 className="text-xs font-semibold text-gray-700 dark:text-neutral-200 uppercase tracking-wide">Filtro</h3>
+                <Filter className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Filtro</h3>
               </div>
               <div className="relative max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar por nome, email ou telefone..."
-                  className="pl-9 pr-3 py-2 w-full bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
+                  className="pl-9 pr-3 py-2 w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
                 />
               </div>
             </div>
@@ -669,67 +669,67 @@ useEffect(() => {
 
             {/* Tabela Minimalista */}
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead>
-                  <tr className="bg-gray-50 dark:bg-neutral-700/50">
+                  <tr className="bg-gray-50 dark:bg-gray-900/50">
                     {canEditContacts && (
                       <th className="hidden lg:table-cell px-3 py-2.5 text-left w-12">
                         <input
                           type="checkbox"
                           checked={selectedIds.size === paginatedContatos.length && paginatedContatos.length > 0}
                           onChange={handleSelectAllCurrentPage}
-                          className="w-4 h-4 text-blue-600 bg-white dark:bg-neutral-700 border-gray-300 dark:border-neutral-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                          className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
                         />
                       </th>
                     )}
                     <th
-                      className="px-3 py-2.5 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                      className="px-3 py-2.5 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors"
                       onClick={() => handleSort('nome')}
                     >
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-semibold text-gray-700 dark:text-neutral-200 uppercase tracking-wide">Nome</span>
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Nome</span>
                         <SortIcon field="nome" />
                       </div>
                     </th>
                     <th
-                      className="hidden lg:table-cell px-3 py-2.5 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                      className="hidden lg:table-cell px-3 py-2.5 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors"
                       onClick={() => handleSort('Email')}
                     >
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-semibold text-gray-700 dark:text-neutral-200 uppercase tracking-wide">Email</span>
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Email</span>
                         <SortIcon field="Email" />
                       </div>
                     </th>
                     <th
-                      className="hidden lg:table-cell px-3 py-2.5 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                      className="hidden lg:table-cell px-3 py-2.5 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors"
                       onClick={() => handleSort('telefone')}
                     >
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-semibold text-gray-700 dark:text-neutral-200 uppercase tracking-wide">Telefone</span>
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Telefone</span>
                         <SortIcon field="telefone" />
                       </div>
                     </th>
                     <th
-                      className="hidden lg:table-cell px-3 py-2.5 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                      className="hidden lg:table-cell px-3 py-2.5 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors"
                       onClick={() => handleSort('createdAt')}
                     >
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-semibold text-gray-700 dark:text-neutral-200 uppercase tracking-wide">Data de Criação</span>
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Data de Criação</span>
                         <SortIcon field="createdAt" />
                       </div>
                     </th>
                     {canEditContacts && (
                       <th className="hidden lg:table-cell px-3 py-2.5 text-right">
-                        <span className="text-xs font-semibold text-gray-700 dark:text-neutral-200 uppercase tracking-wide">Ações</span>
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Ações</span>
                       </th>
                     )}
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
+                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                   {paginatedContatos.map((contato) => (
                     <tr
                       key={contato.Id}
-                      className={`hover:bg-gray-50 dark:hover:bg-neutral-700/30 transition-colors ${selectedIds.has(contato.Id) ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                      className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${selectedIds.has(contato.Id) ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
                     >
                       {canEditContacts && (
                         <td className="hidden lg:table-cell px-3 py-2.5 whitespace-nowrap w-12">
@@ -741,7 +741,7 @@ useEffect(() => {
                               handleSelectContact(contato.Id);
                             }}
                             onClick={(e) => e.stopPropagation()}
-                            className="w-4 h-4 text-blue-600 bg-white dark:bg-neutral-700 border-gray-300 dark:border-neutral-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                            className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
                           />
                         </td>
                       )}
@@ -764,7 +764,7 @@ useEffect(() => {
                           <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
                             {contato.nome?.charAt(0).toUpperCase() || '?'}
                           </div>
-                          <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">
+                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {contato.nome || '-'}
                           </div>
                         </div>
@@ -784,7 +784,7 @@ useEffect(() => {
                           setIsModalOpen(true);
                         }}
                       >
-                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-neutral-400">
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                           <Mail className="w-3.5 h-3.5" />
                           <span>{contato.Email || '-'}</span>
                         </div>
@@ -804,7 +804,7 @@ useEffect(() => {
                           setIsModalOpen(true);
                         }}
                       >
-                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-neutral-400">
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                           <Phone className="w-3.5 h-3.5" />
                           <span>{formatPhoneNumber(contato.telefone)}</span>
                         </div>
@@ -824,7 +824,7 @@ useEffect(() => {
                           setIsModalOpen(true);
                         }}
                       >
-                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-neutral-400">
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                           <Calendar className="w-3.5 h-3.5" />
                           <span>{formatDate(contato.createdAt)}</span>
                         </div>
@@ -845,7 +845,7 @@ useEffect(() => {
                               });
                               setIsModalOpen(true);
                             }}
-                            className="inline-flex items-center justify-center w-8 h-8 text-gray-400 dark:text-neutral-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                            className="inline-flex items-center justify-center w-8 h-8 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
@@ -858,7 +858,7 @@ useEffect(() => {
             </div>
 
             {/* Paginação */}
-            <div className="border-t border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-700/50 px-4 py-3">
+            <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 px-4 py-3">
               <Pagination
                 totalItems={filteredAndSortedContacts.length}
                 itemsPerPage={itemsPerPage}
@@ -873,17 +873,17 @@ useEffect(() => {
         {/* Modal Minimalista */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 w-full max-w-lg overflow-hidden">
+            <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 w-full max-w-lg overflow-hidden">
               {/* Cabeçalho Minimalista */}
-              <div className="px-5 py-4 border-b border-gray-200 dark:border-neutral-700">
+              <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     {selectedContato ? (
-                      <Pencil className="w-5 h-5 text-gray-700 dark:text-neutral-300" />
+                      <Pencil className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                     ) : (
-                      <UserPlus className="w-5 h-5 text-gray-700 dark:text-neutral-300" />
+                      <UserPlus className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                     )}
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                       {selectedContato ? 'Editar Contato' : 'Novo Contato'}
                     </h2>
                   </div>
@@ -892,7 +892,7 @@ useEffect(() => {
                       setIsModalOpen(false);
                       resetForm();
                     }}
-                    className="w-8 h-8 flex items-center justify-center text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+                    className="w-8 h-8 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -907,11 +907,11 @@ useEffect(() => {
                       <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100 mb-1">
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
                         Confirmar Exclusão
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-neutral-400">
-                        Tem certeza que deseja excluir o contato <span className="font-medium text-gray-900 dark:text-neutral-100">"{selectedContato?.nome}"</span>? Esta ação não pode ser desfeita.
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Tem certeza que deseja excluir o contato <span className="font-medium text-gray-900 dark:text-gray-100">"{selectedContato?.nome}"</span>? Esta ação não pode ser desfeita.
                       </p>
                     </div>
                   </div>
@@ -919,7 +919,7 @@ useEffect(() => {
                   <div className="flex justify-end gap-2.5">
                     <button
                       onClick={() => setIsConfirmingDelete(false)}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg transition-colors"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors"
                     >
                       Cancelar
                     </button>
@@ -935,17 +935,17 @@ useEffect(() => {
                 <form onSubmit={handleSubmit} className="p-5 space-y-4">
                   {/* Nome */}
                   <div>
-                    <label htmlFor="nome" className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1.5">
+                    <label htmlFor="nome" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
                       Nome Completo <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-4 h-4" />
+                      <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
                       <input
                         type="text"
                         id="nome"
                         value={formData.nome}
                         onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                        className="w-full pl-9 pr-3 py-2 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 text-sm"
+                        className="w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 text-sm"
                         placeholder="Digite o nome completo..."
                         required
                       />
@@ -954,17 +954,17 @@ useEffect(() => {
 
                   {/* Email */}
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1.5">
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
                       Email
                     </label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-4 h-4" />
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
                       <input
                         type="email"
                         id="email"
                         value={formData.Email}
                         onChange={(e) => setFormData({ ...formData, Email: e.target.value })}
-                        className="w-full pl-9 pr-3 py-2 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 text-sm"
+                        className="w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 text-sm"
                         placeholder="exemplo@email.com"
                       />
                     </div>
@@ -972,7 +972,7 @@ useEffect(() => {
 
                   {/* Telefone com Seletor de País */}
                   <div>
-                    <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 dark:text-neutral-200 mb-1.5">
+                    <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
                       Telefone WhatsApp
                     </label>
                     <div className="flex gap-2">
@@ -981,15 +981,15 @@ useEffect(() => {
                         <button
                           type="button"
                           onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                          className="h-[42px] w-[110px] px-2.5 flex items-center gap-1.5 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 cursor-pointer hover:border-gray-400 dark:hover:border-neutral-500 text-sm font-medium"
+                          className="h-[42px] w-[110px] px-2.5 flex items-center gap-1.5 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 cursor-pointer hover:border-gray-400 dark:hover:border-gray-600 text-sm font-medium"
                         >
                           <span className="text-lg">{selectedCountry.flag}</span>
                           <span className="text-sm">{selectedCountry.code}</span>
-                          <ChevronDown className={`w-3.5 h-3.5 text-gray-500 dark:text-neutral-400 ml-auto transition-transform ${isCountryDropdownOpen ? 'rotate-180' : ''}`} />
+                          <ChevronDown className={`w-3.5 h-3.5 text-gray-500 dark:text-gray-400 ml-auto transition-transform ${isCountryDropdownOpen ? 'rotate-180' : ''}`} />
                         </button>
 
                         {isCountryDropdownOpen && (
-                          <div className="absolute top-full left-0 mt-1 w-[220px] bg-white dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 rounded-lg shadow-lg z-50 max-h-[280px] overflow-y-auto">
+                          <div className="absolute top-full left-0 mt-1 w-[220px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-[280px] overflow-y-auto">
                             {countries.map((country) => (
                               <button
                                 key={country.code}
@@ -1001,13 +1001,13 @@ useEffect(() => {
                                   setFormData({ ...formData, telefone: fullNumber });
                                   setIsCountryDropdownOpen(false);
                                 }}
-                                className={`w-full px-3 py-2 flex items-center gap-2.5 hover:bg-gray-100 dark:hover:bg-neutral-600 transition-colors text-left ${
-                                  countryCode === country.code ? 'bg-gray-100 dark:bg-neutral-600' : ''
+                                className={`w-full px-3 py-2 flex items-center gap-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left ${
+                                  countryCode === country.code ? 'bg-gray-100 dark:bg-gray-700' : ''
                                 }`}
                               >
                                 <span className="text-lg">{country.flag}</span>
-                                <span className="flex-1 text-sm font-medium text-gray-900 dark:text-neutral-100">{country.name}</span>
-                                <span className="text-sm text-gray-600 dark:text-neutral-400">{country.code}</span>
+                                <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">{country.name}</span>
+                                <span className="text-sm text-gray-600 dark:text-gray-400">{country.code}</span>
                               </button>
                             ))}
                           </div>
@@ -1016,7 +1016,7 @@ useEffect(() => {
 
                       {/* Campo de Número */}
                       <div className="flex-1 relative">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-4 h-4" />
+                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
                         <input
                           type="tel"
                           id="telefone"
@@ -1038,7 +1038,7 @@ useEffect(() => {
                               setPhoneNumber(phoneOnly);
                             }
                           }}
-                          className="w-full pl-9 pr-3 py-2 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 text-sm"
+                          className="w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 text-sm"
                           placeholder={countryCode === '+55' ? '11999999999' : 'Número do telefone'}
                         />
                       </div>
@@ -1062,7 +1062,7 @@ useEffect(() => {
                   </div>
 
                   {/* Botões */}
-                  <div className="flex justify-between items-center gap-2.5 pt-3 border-t border-gray-200 dark:border-neutral-700">
+                  <div className="flex justify-between items-center gap-2.5 pt-3 border-t border-gray-200 dark:border-gray-700">
                     {selectedContato && (
                       <button
                         type="button"
@@ -1080,7 +1080,7 @@ useEffect(() => {
                           setIsModalOpen(false);
                           resetForm();
                         }}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-200 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                       >
                         Cancelar
                       </button>
@@ -1118,33 +1118,33 @@ useEffect(() => {
         >
           <div className="p-5">
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-lg p-4 mb-5">
-              <h4 className="font-medium text-gray-900 dark:text-neutral-100 mb-2 flex items-center gap-2 text-sm">
+              <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-2 text-sm">
                 <FileUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 Formato do Arquivo CSV
               </h4>
-              <p className="text-sm text-gray-700 dark:text-neutral-300 mb-2.5">
+              <p className="text-sm text-gray-700 dark:text-gray-300 mb-2.5">
                 Prepare um arquivo CSV com as seguintes colunas:
               </p>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2 text-sm">
                   <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full"></div>
-                  <span className="font-medium text-gray-900 dark:text-neutral-100">nome</span>
-                  <span className="text-gray-600 dark:text-neutral-400 text-xs">(obrigatório)</span>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">nome</span>
+                  <span className="text-gray-600 dark:text-gray-400 text-xs">(obrigatório)</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-neutral-500 rounded-full"></div>
-                  <span className="font-medium text-gray-900 dark:text-neutral-100">email</span>
-                  <span className="text-gray-600 dark:text-neutral-400 text-xs">(opcional)</span>
+                  <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-full"></div>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">email</span>
+                  <span className="text-gray-600 dark:text-gray-400 text-xs">(opcional)</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-neutral-500 rounded-full"></div>
-                  <span className="font-medium text-gray-900 dark:text-neutral-100">telefone</span>
-                  <span className="text-gray-600 dark:text-neutral-400 text-xs">(opcional)</span>
+                  <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-full"></div>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">telefone</span>
+                  <span className="text-gray-600 dark:text-gray-400 text-xs">(opcional)</span>
                 </div>
               </div>
             </div>
 
-            <div className="border-2 border-dashed border-gray-300 dark:border-neutral-600 rounded-lg p-8 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
               <input
                 type="file"
                 accept=".csv"
@@ -1165,13 +1165,13 @@ useEffect(() => {
                 <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-3">
                   <FileUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
-                <span className="text-sm font-medium text-gray-900 dark:text-neutral-100 mb-1">
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
                   Selecione um arquivo CSV
                 </span>
-                <span className="text-xs text-gray-500 dark:text-neutral-400">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
                   ou arraste e solte aqui
                 </span>
-                <span className="text-xs text-gray-400 dark:text-neutral-500 mt-1.5">
+                <span className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
                   Usar vírgula (,) como separador
                 </span>
               </label>
@@ -1187,7 +1187,7 @@ useEffect(() => {
             {uploading && (
               <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center gap-2.5">
                 <Loader2 className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
-                <span className="text-sm text-gray-700 dark:text-neutral-200">Processando arquivo...</span>
+                <span className="text-sm text-gray-700 dark:text-gray-200">Processando arquivo...</span>
               </div>
             )}
           </div>
@@ -1196,16 +1196,16 @@ useEffect(() => {
         {/* Modal de Confirmação de Exclusão em Lote */}
         {showDeleteConfirmModal && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 dark:border-neutral-700">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 dark:border-gray-700">
               {/* Ícone e Header */}
               <div className="p-6 text-center">
                 <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                   <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100 mb-2">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                   Confirmar Exclusão
                 </h3>
-                <p className="text-gray-600 dark:text-neutral-400 text-sm mb-1">
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">
                   {selectAllPages ? (
                     <>
                       Você está prestes a excluir <span className="font-bold text-red-600 dark:text-red-400">{filteredAndSortedContacts.length} contatos</span>
@@ -1238,7 +1238,7 @@ useEffect(() => {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowDeleteConfirmModal(false)}
-                    className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-neutral-200 bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 border border-gray-300 dark:border-neutral-600 rounded-lg transition-colors"
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-700 rounded-lg transition-colors"
                   >
                     Cancelar
                   </button>

@@ -117,13 +117,13 @@ export default function BrazilMapSection({ stateData = [], isLoading = false }: 
   // Skeleton de loading
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden flex flex-col h-full">
-        <div className="px-3 py-2.5 flex items-center justify-between border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
-          <div className="h-5 bg-gray-300 dark:bg-neutral-600 rounded w-48 animate-pulse"></div>
-          <div className="h-7 bg-gray-200 dark:bg-neutral-700 rounded w-24 animate-pulse"></div>
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 transition-theme overflow-hidden flex flex-col h-full">
+        <div className="px-3 py-2.5 flex items-center justify-between border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+          <div className="h-5 bg-gray-300 dark:bg-gray-600 rounded w-48 animate-pulse"></div>
+          <div className="h-7 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
         </div>
         <div className="p-8">
-          <div className="h-96 bg-gray-100 dark:bg-neutral-700/50 rounded-lg animate-pulse"></div>
+          <div className="h-96 bg-gray-100 dark:bg-gray-700/50 rounded-lg animate-pulse"></div>
         </div>
       </div>
     );
@@ -132,13 +132,13 @@ export default function BrazilMapSection({ stateData = [], isLoading = false }: 
   // Se houver erro, mostra mensagem
   if (hasError) {
     return (
-      <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden flex flex-col h-full">
-        <div className="px-3 py-2.5 flex items-center justify-between border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 transition-theme overflow-hidden flex flex-col h-full">
+        <div className="px-3 py-2.5 flex items-center justify-between border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 rounded-lg flex items-center justify-center flex-shrink-0">
               <MapPin className="w-4 h-4 text-green-600 dark:text-green-400" />
             </div>
-            <h3 className="text-sm font-bold text-gray-900 dark:text-neutral-100">Total de contatos por estado</h3>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white">Total de contatos por estado</h3>
           </div>
           <div className="flex items-center gap-1.5 px-2.5 py-1 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
             <span className="text-xs font-semibold text-green-700 dark:text-green-300">Total:</span>
@@ -146,7 +146,7 @@ export default function BrazilMapSection({ stateData = [], isLoading = false }: 
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center p-6">
-          <p className="text-sm text-gray-500 dark:text-neutral-400 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
             Erro ao carregar o mapa do Brasil. Por favor, tente novamente mais tarde.
           </p>
         </div>
@@ -155,13 +155,13 @@ export default function BrazilMapSection({ stateData = [], isLoading = false }: 
   }
 
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden flex flex-col h-full">
-      <div className="px-3 py-2.5 flex items-center justify-between border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
+    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 transition-theme overflow-hidden flex flex-col h-full">
+      <div className="px-3 py-2.5 flex items-center justify-between border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 rounded-lg flex items-center justify-center flex-shrink-0">
             <MapPin className="w-4 h-4 text-green-600 dark:text-green-400" />
           </div>
-          <h3 className="text-sm font-bold text-gray-900 dark:text-neutral-100">Total de contatos por estado</h3>
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white">Total de contatos por estado</h3>
         </div>
         <div className="flex items-center gap-1.5 px-2.5 py-1 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
           <span className="text-xs font-semibold text-green-700 dark:text-green-300">Total:</span>
@@ -236,7 +236,7 @@ export default function BrazilMapSection({ stateData = [], isLoading = false }: 
           {/* Tooltip */}
           {hoveredState && (
             <div
-              className="fixed z-50 bg-gray-900 dark:bg-neutral-800 text-white px-3 py-2 rounded-lg shadow-lg pointer-events-none"
+              className="fixed z-50 bg-gray-900 dark:bg-gray-900 text-white px-3 py-2 rounded-lg shadow-lg pointer-events-none"
               style={{
                 left: `${tooltipPosition.x + 10}px`,
                 top: `${tooltipPosition.y + 10}px`,
@@ -245,7 +245,7 @@ export default function BrazilMapSection({ stateData = [], isLoading = false }: 
               <div className="text-sm font-bold">
                 {getStateData(hoveredState)?.nome || hoveredState}
               </div>
-              <div className="text-xs text-gray-300 dark:text-neutral-400">
+              <div className="text-xs text-gray-300 dark:text-gray-400">
                 {getStateData(hoveredState)?.leads || 0} leads
               </div>
             </div>
@@ -256,7 +256,7 @@ export default function BrazilMapSection({ stateData = [], isLoading = false }: 
         <div className="w-full px-3 pb-3 space-y-2">
           {!hasRealData || sortedStates.length === 0 ? (
             <div className="flex items-center justify-center py-6">
-              <p className="text-sm text-gray-500 dark:text-neutral-400 text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
                 Nenhuma conversa por estado registrada no período selecionado
               </p>
             </div>
@@ -285,7 +285,7 @@ export default function BrazilMapSection({ stateData = [], isLoading = false }: 
                   <span className={`${color.text} text-[10px] font-bold opacity-50 flex-shrink-0`}>
                     {index + 1}º
                   </span>
-                  <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${color.gradient} flex-shrink-0 shadow-lg ring-2 ring-white/50 dark:ring-neutral-800/50`} />
+                  <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${color.gradient} flex-shrink-0 shadow-lg ring-2 ring-white/50 dark:ring-gray-800/50`} />
                   <div className="flex items-baseline gap-1.5 flex-1 min-w-0">
                     <span className={`${color.text} text-xs font-semibold truncate`}>
                       {state.nome}
@@ -325,7 +325,7 @@ export default function BrazilMapSection({ stateData = [], isLoading = false }: 
                       <span className={`${color.text} text-[10px] font-bold opacity-50 flex-shrink-0`}>
                         {index + 1}º
                       </span>
-                      <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${color.gradient} flex-shrink-0 shadow-lg ring-2 ring-white/50 dark:ring-neutral-800/50`} />
+                      <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${color.gradient} flex-shrink-0 shadow-lg ring-2 ring-white/50 dark:ring-gray-800/50`} />
                       <div className="flex items-baseline gap-1.5 flex-1 min-w-0">
                         <span className={`${color.text} text-xs font-semibold truncate`}>
                           {state.nome}

@@ -181,7 +181,7 @@ export default function SmartDecisionModal({
       const stage = funnel?.estagios?.find(s => s.Id === selectedStageId);
       const icon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>';
       const label = `${stage?.nome || ''}`;
-      const text = `Mudar Estágio no CRM: ${label}`;
+      const text = `Mudar Etapa no CRM: ${label}`;
       html = build('#E0F2FE','#075985',icon,text,`data-type="transfer_stage" data-id="${selectedStageId}" data-label="${label}"`);
     } else if (decisionType === 'notify' && selectedFunctionId !== null) {
       const func = functions.find(f => f.id === selectedFunctionId);
@@ -248,7 +248,7 @@ export default function SmartDecisionModal({
     { type: 'transfer_agent', icon: Bot, label: 'Transferir para Agente', color: 'text-blue-600' },
     { type: 'transfer_user', icon: UserCircle, label: 'Transferir para Usuário', color: 'text-green-600' },
     { type: 'assign_source', icon: Folder, label: 'Atribuir Origem', color: 'text-purple-600' },
-    { type: 'transfer_stage', icon: KanbanSquare, label: 'Mudar Estágio no CRM', color: 'text-cyan-600' },
+    { type: 'transfer_stage', icon: KanbanSquare, label: 'Mudar Etapa no CRM', color: 'text-cyan-600' },
     { type: 'notify', icon: Bell, label: 'Notificar Equipe', color: 'text-amber-600' },
     { type: 'assign_product', icon: Package, label: 'Atribuir Departamento', color: 'text-pink-600' },
     { type: 'stop_agent', icon: StopCircle, label: 'Desativar Agente', color: 'text-red-600' },
@@ -400,7 +400,7 @@ export default function SmartDecisionModal({
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                          Selecione o Estágio
+                          Selecione a Etapa
                         </label>
                         <select
                           className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all disabled:bg-gray-100 dark:disabled:bg-gray-900 disabled:cursor-not-allowed"
@@ -411,7 +411,7 @@ export default function SmartDecisionModal({
                           }}
                           disabled={!selectedFunnelId}
                         >
-                          <option value="">Selecione um estágio...</option>
+                          <option value="">Selecione uma etapa...</option>
                           {funnels.find(f => f.id === selectedFunnelId)?.estagios?.map((s) => (
                             <option key={s.Id} value={s.Id}>{s.nome}</option>
                           ))}

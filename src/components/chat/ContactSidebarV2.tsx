@@ -27,6 +27,7 @@ import {
   Trash2,
   Save,
   Briefcase,
+  AlertTriangle,
 } from "lucide-react";
 import GuimooIcon from "../GuimooIcon";
 // Lazy import do ReactQuill para code splitting
@@ -364,6 +365,8 @@ export default function ContactSidebarV2({
   const [agents, setAgents] = useState<Agent[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null);
   const [loadingAgents, setLoadingAgents] = useState(false);
+  const [showAgentChangeConfirm, setShowAgentChangeConfirm] = useState(false);
+  const [pendingAgentId, setPendingAgentId] = useState<number | null>(null);
 
   const user = localStorage.getItem("user");
   const token = user ? JSON.parse(user).token : null;
@@ -1019,6 +1022,29 @@ export default function ContactSidebarV2({
     }
   }, [isOpen, contactData, dealData, initialLoad, activeView, modalAlreadyShown]);
 
+  // 🔄 Mostrar confirmação antes de trocar agente
+  const handleAgentChangeRequest = (newAgentId: number | null) => {
+    if (!newAgentId || newAgentId === selectedAgentId) return;
+
+    setPendingAgentId(newAgentId);
+    setShowAgentChangeConfirm(true);
+  };
+
+  // 🔄 Confirmar troca de agente
+  const confirmAgentChange = () => {
+    if (pendingAgentId) {
+      handleUpdateAgent(pendingAgentId);
+    }
+    setShowAgentChangeConfirm(false);
+    setPendingAgentId(null);
+  };
+
+  // 🔄 Cancelar troca de agente
+  const cancelAgentChange = () => {
+    setShowAgentChangeConfirm(false);
+    setPendingAgentId(null);
+  };
+
   // 🔄 Atualizar agente da sessão
   const handleUpdateAgent = async (newAgentId: number | null) => {
     console.log('[handleUpdateAgent] Iniciando atualização de agente', {
@@ -1038,18 +1064,20 @@ export default function ContactSidebarV2({
     setSelectedAgentId(newAgentId);
 
     try {
-      console.log('[handleUpdateAgent] Chamando API /conversa/agente/ativar');
+      console.log('[handleUpdateAgent] Chamando API /whatsapp/sesssoes/update');
 
-      // Usa o endpoint /conversa/agente/ativar com id_agente para atribuir/trocar o agente
+      // Extrai apenas os dígitos do número do remoteJid
+      const numero = selectedChat.remoteJid.split('@')[0];
+
+      // Usa o endpoint correto para atualizar o agente da sessão
       const response = await fetch(
-        `https://n8n.lumendigital.com.br/webhook/prospecta/conversa/agente/ativar`,
+        `https://n8n.lumendigital.com.br/webhook/prospecta/whatsapp/sesssoes/update`,
         {
-          method: "POST",
+          method: "PUT",
           headers: { "Content-Type": "application/json", token },
           body: JSON.stringify({
-            pushName: selectedChat.pushName,
-            remoteJid: selectedChat.remoteJid,
-            id_agente: newAgentId
+            id_agente: newAgentId,
+            numero: numero
           }),
         }
       );
@@ -1613,7 +1641,7 @@ export default function ContactSidebarV2({
         toast.success('Negociação criada com sucesso!');
 
         // Recarrega os dados para pegar a nova negociação
-        await loadContactData();
+        await loadAllInitialData();
 
         // Fecha o modal
         setShowCreateDealModal(false);
@@ -1688,12 +1716,11 @@ export default function ContactSidebarV2({
         </nav>
       </div>
 
-      {/* Conteúdo principal */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar">
-        {activeView === 'info' ? (
-            <div className="space-y-6">
-            {/* Foto, Nome e Telefone */}
-            <div className="flex items-center gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
+      {activeView === 'info' && (
+        <>
+          {/* Foto, Nome e Telefone - FIXO */}
+          <div className="px-6 py-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+            <div className="flex items-center gap-4">
               {selectedChat.profilePicUrl ? (
                 <img
                   src={selectedChat.profilePicUrl}
@@ -1726,7 +1753,31 @@ export default function ContactSidebarV2({
                 )}
               </div>
             </div>
+          </div>
+        </>
+      )}
 
+      {/* Conteúdo principal - ROLÁVEL */}
+      <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar">
+        {activeView === 'info' ? (
+            <div className="space-y-6">
+
+            {/* Loading skeleton para info */}
+            {loadingAgents && !dealData ? (
+              <div className="space-y-4 animate-pulse">
+                {/* Skeleton para Agente */}
+                <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+
+                {/* Skeleton para campos */}
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
             {/* Controle do Agente */}
             <div className="space-y-4 pb-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-3">
@@ -1737,7 +1788,7 @@ export default function ContactSidebarV2({
                   value={selectedAgentId || ""}
                   onChange={(e) => {
                     const newAgentId = Number(e.target.value) || null;
-                    handleUpdateAgent(newAgentId);
+                    handleAgentChangeRequest(newAgentId);
                   }}
                   disabled={loadingAgents}
                   className="flex-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1858,7 +1909,15 @@ export default function ContactSidebarV2({
             </div>
 
             {/* Informações de CRM */}
-            {dealData && (
+            {!dealData ? (
+              /* Loading spinner para informações de CRM */
+              <div className="flex flex-col items-center justify-center py-12 pb-6 border-b border-gray-200 dark:border-gray-700">
+                <Loader2 className="w-8 h-8 text-blue-500 dark:text-blue-400 animate-spin mb-3" />
+                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                  Atualizando Informações...
+                </p>
+              </div>
+            ) : dealData && (
               <div className="space-y-4 pb-6 border-b border-gray-200 dark:border-gray-700">
                 {/* Grid 2 colunas: Responsável e Funil */}
                 <div className="grid grid-cols-2 gap-4">
@@ -1911,11 +1970,11 @@ export default function ContactSidebarV2({
                   </div>
                 </div>
 
-                {/* Estágio - full width */}
+                {/* Etapa - full width */}
                 {currentFunnel && (
                   <div className="space-y-1.5">
                     <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
-                      Estágio
+                      Etapa
                     </label>
                     <select
                       value={dealData.id_estagio || ""}
@@ -1924,7 +1983,7 @@ export default function ContactSidebarV2({
                       }
                       className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                     >
-                      <option value="">Selecione um estágio</option>
+                      <option value="">Selecione uma etapa</option>
                       {currentFunnel.estagios?.map((stage) => (
                         <option key={stage.Id} value={stage.Id}>
                           {stage.nome}
@@ -2039,6 +2098,8 @@ export default function ContactSidebarV2({
                 contactPhone={contactData?.telefone}
               />
             )}
+            </>
+            )}
           </div>
         ) : activeView === 'media' ? (
           /* View de Mídias */
@@ -2046,6 +2107,7 @@ export default function ContactSidebarV2({
 
             {/* Sub-tabs de Mídias */}
             <div className="grid grid-cols-3 gap-2 p-1 bg-gray-100 dark:bg-gray-900 rounded-lg">
+
               <button
                 onClick={() => setActiveMediaTab('images')}
                 className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -2085,7 +2147,14 @@ export default function ContactSidebarV2({
 
             {/* Conteúdo das mídias */}
             <div className="space-y-2">
-                {activeMediaTab === 'images' && (
+                {loadingMedia ? (
+                  /* Loading skeleton */
+                  <div className="grid grid-cols-3 gap-2">
+                    {[...Array(9)].map((_, i) => (
+                      <div key={i} className="aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : activeMediaTab === 'images' && (
                   mediaFiles.images.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-3">
@@ -2219,7 +2288,7 @@ export default function ContactSidebarV2({
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
                   placeholder="Escreva uma nova nota..."
-                  className="w-full min-h-[100px] p-3 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-600 rounded-lg text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 resize-y"
+                  className="w-full min-h-[100px] p-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 resize-y"
                   rows={4}
                 />
               </div>
@@ -2249,7 +2318,28 @@ export default function ContactSidebarV2({
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Histórico de Notas</h3>
 
-              {notes.length === 0 ? (
+              {loadingNotes ? (
+                /* Loading skeleton para notas */
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="bg-white dark:bg-gray-900/80 rounded-xl border border-gray-200/60 dark:border-gray-700/40 p-4 space-y-3 animate-pulse">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                          <div className="space-y-1">
+                            <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                            <div className="h-3 w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-3 w-full bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        <div className="h-3 w-3/4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : notes.length === 0 ? (
                 <div className="text-center py-12 text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900/50 rounded-xl border border-gray-200/60 dark:border-gray-700/40">
                   <StickyNote className="w-12 h-12 mx-auto mb-3 opacity-30" />
                   <p>Nenhuma nota registrada</p>
@@ -2271,7 +2361,7 @@ export default function ContactSidebarV2({
                                   onChange={(value) => setEditingNote({...editingNote, descricao: value})}
                                   modules={modules}
                                   formats={formats}
-                                  className="bg-white dark:bg-neutral-800 rounded-lg [&_.ql-toolbar]:dark:bg-neutral-700 [&_.ql-toolbar]:dark:border-neutral-600 [&_.ql-container]:dark:bg-neutral-800 [&_.ql-container]:dark:border-neutral-600 [&_.ql-editor]:dark:text-white [&_.ql-editor.ql-blank::before]:dark:text-neutral-400 [&_.ql-stroke]:dark:stroke-neutral-200 [&_.ql-fill]:dark:fill-neutral-200 [&_.ql-picker-label]:dark:text-neutral-200"
+                                  className="bg-white dark:bg-gray-900 rounded-lg [&_.ql-toolbar]:dark:bg-gray-700 [&_.ql-toolbar]:dark:border-gray-600 [&_.ql-container]:dark:bg-gray-900 [&_.ql-container]:dark:border-gray-600 [&_.ql-editor]:dark:text-white [&_.ql-editor.ql-blank::before]:dark:text-gray-400 [&_.ql-stroke]:dark:stroke-gray-200 [&_.ql-fill]:dark:fill-gray-200 [&_.ql-picker-label]:dark:text-gray-200"
                                 />
                               )}
                             </div>
@@ -2473,6 +2563,49 @@ export default function ContactSidebarV2({
               >
                 <ChevronRight className="w-10 h-10 text-white" />
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Troca de Agente */}
+      {showAgentChangeConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={cancelAgentChange}>
+          <div
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-yellow-600 dark:text-yellow-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Confirmar troca de agente
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Você tem certeza que deseja trocar o agente desta conversa?
+                  {pendingAgentId && (
+                    <span className="block mt-2 font-medium text-gray-900 dark:text-white">
+                      Novo agente: {agents.find(a => a.Id === pendingAgentId)?.nome}
+                    </span>
+                  )}
+                </p>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={cancelAgentChange}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={confirmAgentChange}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
+                  >
+                    Confirmar
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

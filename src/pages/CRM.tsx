@@ -644,12 +644,12 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
       <style>{`
         /* Estilos para o dropdown do select no dark mode */
         .dark select {
-          background-color: #404040 !important;
+          background-color: #111827 !important;
           color: #f5f5f5 !important;
         }
 
         .dark select option {
-          background-color: #262626 !important;
+          background-color: #111827 !important;
           color: #f5f5f5 !important;
           padding: 8px !important;
         }
@@ -661,9 +661,9 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
         }
       `}</style>
 
-      <div className="w-full overflow-x-hidden bg-gray-50 dark:bg-neutral-900 h-full flex flex-col transition-theme">
+      <div className="w-full overflow-x-hidden bg-gray-50 dark:bg-gray-900 h-full flex flex-col transition-theme">
         {/* Header Ultra-Compacto - Tudo numa linha */}
-        <div className="flex-none bg-white dark:bg-neutral-800 px-3 py-1.5">
+        <div className="flex-none bg-white dark:bg-gray-900 px-3 py-1.5">
           <div className="flex items-center justify-center gap-2">
             {/* Controles principais */}
             <div className="flex items-center gap-2 flex-wrap">
@@ -672,16 +672,16 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                 ref={funilFilterButtonRef}
                 type="button"
                 onClick={() => setShowFunilFilter(!showFunilFilter)}
-                className={`flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-neutral-700 border rounded text-sm focus:ring-1 focus:ring-blue-500 transition-colors ${
-                  selectedFunil ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-neutral-600'
+                className={`flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-gray-900 border rounded text-sm focus:ring-1 focus:ring-blue-500 transition-colors ${
+                  selectedFunil ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-300 dark:border-gray-600'
                 }`}
               >
-                <span className={`text-xs font-medium ${selectedFunil ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-neutral-300'}`}>
+                <span className={`text-xs font-medium ${selectedFunil ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
                   {selectedFunil ? selectedFunil.nome : 'Funil'}
                 </span>
                 {selectedFunil && (
                   <X
-                    className="w-3.5 h-3.5 text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200"
+                    className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedFunil(null);
@@ -691,13 +691,13 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
               </button>
 
               {/* View Toggle - Compacto */}
-              <div className="flex items-center gap-0.5 bg-gray-100 dark:bg-neutral-700 p-0.5 rounded">
+              <div className="flex items-center gap-0.5 bg-gray-100 dark:bg-gray-900 p-0.5 rounded">
                 <button
                   onClick={() => setViewMode('kanban')}
                   className={`px-2 py-0.5 rounded transition-colors text-xs font-medium ${
                     viewMode === 'kanban'
-                      ? 'bg-white dark:bg-neutral-600 text-blue-600 dark:text-blue-400'
-                      : 'text-gray-600 dark:text-neutral-400'
+                      ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400'
+                      : 'text-gray-600 dark:text-gray-400'
                   }`}
                 >
                   Kanban
@@ -706,119 +706,110 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                   onClick={() => setViewMode('list')}
                   className={`px-2 py-0.5 rounded transition-colors text-xs font-medium ${
                     viewMode === 'list'
-                      ? 'bg-white dark:bg-neutral-600 text-blue-600 dark:text-blue-400'
-                      : 'text-gray-600 dark:text-neutral-400'
+                      ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400'
+                      : 'text-gray-600 dark:text-gray-400'
                   }`}
                 >
                   Lista
                 </button>
               </div>
 
-              <div className="h-3 w-px bg-gray-300 dark:bg-neutral-600"></div>
+              <div className="h-3 w-px bg-gray-300 dark:bg-gray-700"></div>
 
               {/* Filtros compactos */}
               <div className="flex items-center gap-1.5 flex-1">
               {/* Busca - Expandida */}
               <div className="relative" style={{ minWidth: '400px' }}>
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 w-3.5 h-3.5" />
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-3.5 h-3.5" />
                 <input
                   type="text"
                   placeholder="Buscar por título ou contato..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-7 pr-2 py-1 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded focus:ring-1 focus:ring-blue-500 transition-colors placeholder-gray-400 dark:placeholder-neutral-500 text-sm text-gray-900 dark:text-neutral-100"
+                  className="w-full pl-7 pr-2 py-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 transition-colors placeholder-gray-400 dark:placeholder-gray-500 text-sm text-gray-900 dark:text-white"
                 />
               </div>
 
-              {/* Filtro de Data - Compacto */}
+              {/* Filtro de Data */}
               <button
                 ref={dateFilterButtonRef}
                 type="button"
                 onClick={() => setShowDateFilter(!showDateFilter)}
-                className={`flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-neutral-700 border rounded text-sm focus:ring-1 focus:ring-blue-500 transition-colors ${
-                  startDate || endDate ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-neutral-600'
+                className={`inline-flex h-8 items-center gap-1.5 px-2.5 rounded-lg border transition-colors ${
+                  startDate || endDate
+                    ? 'border-blue-300 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
+                title="Filtrar por data"
               >
-                <span className={`text-xs font-medium ${startDate || endDate ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-neutral-300'}`}>
-                  Data
-                </span>
-                {(startDate || endDate) && (
-                  <X
-                    className="w-3.5 h-3.5 text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setStartDate('');
-                      setEndDate('');
-                    }}
-                  />
-                )}
+                <Calendar className="w-4 h-4" />
+                <span className="text-xs font-medium">Período</span>
               </button>
 
-              {/* Filtro de Etiquetas - Compacto */}
+              {/* Filtro de Etiquetas */}
               <button
                 ref={tagFilterButtonRef}
                 type="button"
                 onClick={() => setShowTagFilter(!showTagFilter)}
-                className={`flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-neutral-700 border rounded text-sm focus:ring-1 focus:ring-blue-500 transition-colors ${
-                  selectedTagIds.length > 0 ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-neutral-600'
+                className={`inline-flex h-8 items-center gap-1.5 px-2.5 rounded-lg border transition-colors relative ${
+                  selectedTagIds.length > 0
+                    ? 'border-purple-300 dark:border-purple-400 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
+                title="Filtrar por etiquetas"
               >
-                <span className={`text-xs font-medium ${selectedTagIds.length > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-neutral-300'}`}>
-                  Etiquetas
-                </span>
+                <Tags className="w-4 h-4" />
+                <span className="text-xs font-medium">Etiquetas</span>
                 {selectedTagIds.length > 0 && (
-                  <span className="px-1.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
+                  <span className="ml-0.5 px-1.5 min-w-[18px] h-[18px] bg-purple-600 dark:bg-purple-500 text-white rounded-full text-[10px] font-semibold flex items-center justify-center">
                     {selectedTagIds.length}
                   </span>
                 )}
               </button>
 
-              {/* Filtro de Usuário - Compacto */}
+              {/* Filtro de Usuário */}
               <button
                 ref={userFilterButtonRef}
                 type="button"
                 onClick={() => setShowUserFilter(!showUserFilter)}
-                className={`flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-neutral-700 border rounded text-sm focus:ring-1 focus:ring-blue-500 transition-colors ${
-                  selectedUserIds.length > 0 ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-neutral-600'
+                className={`inline-flex h-8 items-center gap-1.5 px-2.5 rounded-lg border transition-colors relative ${
+                  selectedUserIds.length > 0
+                    ? 'border-blue-300 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
+                title="Filtrar por responsável"
               >
-                <span className={`text-xs font-medium ${selectedUserIds.length > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-neutral-300'}`}>
-                  Responsável
-                </span>
+                <UserCircle2 className="w-4 h-4" />
+                <span className="text-xs font-medium">Responsável</span>
                 {selectedUserIds.length > 0 && (
-                  <span className="px-1.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
+                  <span className="ml-0.5 px-1.5 min-w-[18px] h-[18px] bg-blue-600 dark:bg-blue-500 text-white rounded-full text-[10px] font-semibold flex items-center justify-center">
                     {selectedUserIds.length}
                   </span>
                 )}
               </button>
 
-              {/* Filtro de Fontes - Compacto */}
+              {/* Filtro de Fontes */}
               <button
                 ref={fonteFilterButtonRef}
                 type="button"
                 onClick={() => setShowFonteFilter(!showFonteFilter)}
-                className={`flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-neutral-700 border rounded text-sm focus:ring-1 focus:ring-blue-500 transition-colors ${
-                  selectedFonteId !== null ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-neutral-600'
+                className={`inline-flex h-8 items-center gap-1.5 px-2.5 rounded-lg border transition-colors ${
+                  selectedFonteId !== null
+                    ? 'border-emerald-300 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
+                title="Filtrar por fonte"
               >
-                <span className={`text-xs font-medium ${selectedFonteId !== null ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-neutral-300'}`}>
-                  {selectedFonteId !== null ? fontes.find(f => f.Id === selectedFonteId)?.nome || 'Fontes' : 'Fontes'}
-                </span>
-                {selectedFonteId !== null && (
-                  <X
-                    className="w-3.5 h-3.5 text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedFonteId(null);
-                    }}
-                  />
-                )}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                <span className="text-xs font-medium">Fontes</span>
               </button>
 
               {/* Botão Anúncios - Compacto */}
               <button
                 onClick={() => setShowAnuncioModal(true)}
-                className="px-2 py-1 bg-neutral-800 dark:bg-neutral-700 text-white rounded hover:bg-neutral-700 dark:hover:bg-neutral-600 transition-colors text-sm font-medium flex items-center gap-1"
+                className="px-2 py-1 bg-gray-800 dark:bg-gray-700 text-white rounded hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors text-sm font-medium flex items-center gap-1"
                 title="Ver anúncios"
               >
                 <Play className="w-3.5 h-3.5" />
@@ -833,7 +824,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="p-1 text-gray-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded transition-colors disabled:opacity-50"
+                className="p-1 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors disabled:opacity-50"
                 title="Atualizar"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -917,10 +908,10 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
           <div className="p-6">
             {anuncios.length === 0 ? (
               <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-100 dark:bg-neutral-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Play className="w-8 h-8 text-gray-400 dark:text-neutral-500" />
+                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Play className="w-8 h-8 text-gray-400 dark:text-gray-500" />
                 </div>
-                <p className="text-gray-600 dark:text-neutral-400 font-medium">Nenhum anúncio cadastrado</p>
+                <p className="text-gray-600 dark:text-gray-400 font-medium">Nenhum anúncio cadastrado</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -946,7 +937,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                           setSelectedAnuncioForModal(anuncio);
                           setShowAnuncioModal(false);
                         }}
-                        className="group relative flex items-center gap-4 p-5 bg-white dark:bg-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-750 border border-gray-100 dark:border-neutral-700 rounded-xl hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
+                        className="group relative flex items-center gap-4 p-5 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-750 border border-gray-100 dark:border-gray-700 rounded-xl hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
                       >
                         {/* Gradient Border Left para Top 3 */}
                         {isTop3 && (
@@ -958,14 +949,14 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                           {isTop3 ? (
                             <span className="text-2xl">{medals[index]}</span>
                           ) : (
-                            <span className="text-sm font-bold text-gray-400 dark:text-neutral-500">
+                            <span className="text-sm font-bold text-gray-400 dark:text-gray-500">
                               #{index + 1}
                             </span>
                           )}
                         </div>
 
                         {/* Thumbnail */}
-                        <div className="flex-shrink-0 w-20 h-14 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-neutral-700 dark:to-neutral-600 rounded-lg overflow-hidden shadow-sm">
+                        <div className="flex-shrink-0 w-20 h-14 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-lg overflow-hidden shadow-sm">
                           {anuncio.thumbnailUrl || anuncio.mediaUrl ? (
                             <img
                               src={anuncio.thumbnailUrl || anuncio.mediaUrl}
@@ -977,7 +968,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                              <Play className="w-5 h-5 text-gray-400 dark:text-neutral-500" />
+                              <Play className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                             </div>
                           )}
                         </div>
@@ -985,7 +976,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                         {/* Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-gray-900 dark:text-neutral-100 truncate text-sm">
+                            <h3 className="font-semibold text-gray-900 dark:text-white truncate text-sm">
                               {anuncio.title}
                             </h3>
                             <span className={`flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide ${
@@ -996,24 +987,24 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                               {anuncio.mediaType === 'VIDEO' ? 'Video' : 'Img'}
                             </span>
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-neutral-400 line-clamp-1">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
                             {anuncio.body || 'Sem descrição'}
                           </p>
                         </div>
 
                         {/* Stats */}
                         <div className="flex-shrink-0 text-right">
-                          <p className="text-2xl font-bold text-gray-900 dark:text-neutral-100 tabular-nums">
+                          <p className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
                             {dealsCount}
                           </p>
-                          <p className="text-[10px] text-gray-500 dark:text-neutral-400 uppercase tracking-wide">
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                             Leads
                           </p>
                         </div>
 
                         {/* Hover Arrow */}
                         <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <ChevronDown className="w-5 h-5 text-gray-400 dark:text-neutral-500 -rotate-90" />
+                          <ChevronDown className="w-5 h-5 text-gray-400 dark:text-gray-500 -rotate-90" />
                         </div>
                       </div>
                     );
@@ -1056,28 +1047,28 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
           <div className="p-4 w-64">
             <div className="flex flex-col gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-neutral-300 mb-1.5">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Data Inicial
                 </label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                  className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-neutral-300 mb-1.5">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Data Final
                 </label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                  className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
                 />
               </div>
-              <div className="flex justify-end gap-2 pt-2 border-t border-gray-200 dark:border-neutral-700">
+              <div className="flex justify-end gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                 <button
                   type="button"
                   onClick={() => {
@@ -1085,7 +1076,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                     setEndDate('');
                     setShowDateFilter(false);
                   }}
-                  className="text-sm text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-100 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
                   Limpar
                 </button>
@@ -1130,8 +1121,8 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
             })}
             <div className="space-y-2">
               {/* Header */}
-              <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-neutral-700">
-                <span className="text-xs font-semibold text-gray-700 dark:text-neutral-300">
+              <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-gray-700">
+                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                   Filtrar por Responsável
                 </span>
                 <div className="flex gap-1.5">
@@ -1139,7 +1130,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                     <button
                       type="button"
                       onClick={() => setSelectedUserIds([])}
-                      className="text-[10px] font-medium text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-100 px-1.5 py-0.5 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded transition-all"
+                      className="text-[10px] font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 px-1.5 py-0.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all"
                     >
                       Limpar
                     </button>
@@ -1147,7 +1138,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                   <button
                     type="button"
                     onClick={() => setSelectedUserIds(users.map(u => (u as any).Id || (u as any).id))}
-                    className="text-[10px] font-medium text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-100 px-1.5 py-0.5 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded transition-all"
+                    className="text-[10px] font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 px-1.5 py-0.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all"
                   >
                     Todos
                   </button>
@@ -1157,7 +1148,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
               {/* Lista de usuários */}
               <div className="space-y-1 max-h-64 overflow-y-auto">
                 {users.length === 0 ? (
-                  <p className="text-xs text-gray-500 dark:text-neutral-400 text-center py-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-3">
                     Nenhum usuário disponível
                   </p>
                 ) : (
@@ -1200,7 +1191,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                           border transition-all duration-150
                           ${isSelected
                             ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                            : 'border-gray-200 dark:border-neutral-700 hover:border-gray-300 dark:hover:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-800'
+                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
                           }
                         `}
                       >
@@ -1208,7 +1199,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                           <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
                             isSelected
                               ? 'border-blue-600 dark:border-blue-400 bg-blue-600 dark:bg-blue-400'
-                              : 'border-gray-300 dark:border-neutral-600'
+                              : 'border-gray-300 dark:border-gray-600'
                           }`}>
                             {isSelected && (
                               <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1216,7 +1207,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                               </svg>
                             )}
                           </div>
-                          <span className={`text-xs truncate ${isSelected ? 'text-gray-900 dark:text-neutral-100 font-medium' : 'text-gray-700 dark:text-neutral-300'}`}>
+                          <span className={`text-xs truncate ${isSelected ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
                             {user.nome}
                           </span>
                         </div>
@@ -1224,7 +1215,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                           text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0
                           ${isSelected
                             ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                            : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-400'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                           }
                         `}>
                           {userDeals.length}
@@ -1246,15 +1237,15 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
           <div className="p-3 w-64">
             <div className="space-y-2">
               {/* Header */}
-              <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-neutral-700">
-                <span className="text-xs font-semibold text-gray-700 dark:text-neutral-300">
+              <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-gray-700">
+                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                   Selecionar Funil
                 </span>
                 {selectedFunil && (
                   <button
                     type="button"
                     onClick={() => setSelectedFunil(null)}
-                    className="text-[10px] font-medium text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-100 px-1.5 py-0.5 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded transition-all"
+                    className="text-[10px] font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 px-1.5 py-0.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all"
                   >
                     Limpar
                   </button>
@@ -1264,7 +1255,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
               {/* Lista de funis */}
               <div className="space-y-1 max-h-64 overflow-y-auto">
                 {funis.length === 0 ? (
-                  <p className="text-xs text-gray-500 dark:text-neutral-400 text-center py-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-3">
                     Nenhum funil disponível
                   </p>
                 ) : (
@@ -1284,11 +1275,11 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                           border transition-all duration-150
                           ${isSelected
                             ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                            : 'border-gray-200 dark:border-neutral-700 hover:border-gray-300 dark:hover:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-800'
+                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
                           }
                         `}
                       >
-                        <span className={`text-xs truncate ${isSelected ? 'text-gray-900 dark:text-neutral-100 font-medium' : 'text-gray-700 dark:text-neutral-300'}`}>
+                        <span className={`text-xs truncate ${isSelected ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
                           {funil.nome}
                         </span>
                       </button>
@@ -1308,15 +1299,15 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
           <div className="p-3 w-64">
             <div className="space-y-2">
               {/* Header */}
-              <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-neutral-700">
-                <span className="text-xs font-semibold text-gray-700 dark:text-neutral-300">
+              <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-gray-700">
+                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                   Selecionar Fonte
                 </span>
                 {selectedFonteId !== null && (
                   <button
                     type="button"
                     onClick={() => setSelectedFonteId(null)}
-                    className="text-[10px] font-medium text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-neutral-100 px-1.5 py-0.5 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded transition-all"
+                    className="text-[10px] font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 px-1.5 py-0.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all"
                   >
                     Limpar
                   </button>
@@ -1326,7 +1317,7 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
               {/* Lista de fontes */}
               <div className="space-y-1 max-h-64 overflow-y-auto">
                 {fontes.length === 0 ? (
-                  <p className="text-xs text-gray-500 dark:text-neutral-400 text-center py-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-3">
                     Nenhuma fonte disponível
                   </p>
                 ) : (
@@ -1347,18 +1338,18 @@ const handleCreateDeal = async (dealData: Record<string, unknown>) => {
                           border transition-all duration-150
                           ${isSelected
                             ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                            : 'border-gray-200 dark:border-neutral-700 hover:border-gray-300 dark:hover:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-800'
+                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
                           }
                         `}
                       >
-                        <span className={`text-xs truncate ${isSelected ? 'text-gray-900 dark:text-neutral-100 font-medium' : 'text-gray-700 dark:text-neutral-300'}`}>
+                        <span className={`text-xs truncate ${isSelected ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
                           {fonte.source ? `${fonte.nome} (${fonte.source})` : fonte.nome}
                         </span>
                         <span className={`
                           text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0
                           ${isSelected
                             ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                            : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-400'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                           }
                         `}>
                           {fonteDeals.length}

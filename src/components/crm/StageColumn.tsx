@@ -54,8 +54,8 @@ export default function StageColumn({
   }, []);
 
   // Define cor de fundo baseada no tema
-  const bgColor = isDark ? '#262626' : (estagio.cor || '#f9fafb'); // neutral-800
-  const borderColor = isDark ? '#404040' : '#e5e7eb'; // neutral-700
+  const bgColor = isDark ? '#111827' : (estagio.cor || '#f9fafb'); // gray-900
+  const borderColor = isDark ? '#4b5563' : '#e5e7eb'; // gray-600
 
   return (
     <div
@@ -77,15 +77,15 @@ export default function StageColumn({
             }`}
           >
             {/* Cabeçalho Minimalista */}
-            <div className="flex items-center justify-between px-4 py-3 rounded-t-lg border-b bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700">
+            <div className="flex items-center justify-between px-4 py-3 rounded-t-lg border-b bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                <h3 className="text-sm font-medium text-gray-900 dark:text-neutral-100">
+                <h3 className="text-sm font-medium text-gray-900 dark:text-white">
                   {estagio.nome}
                 </h3>
               </div>
 
-              <span className="text-xs font-medium px-2 py-1 rounded-md bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-neutral-300">
+              <span className="text-xs font-medium px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300">
                 {deals.length}
               </span>
             </div>
@@ -113,13 +113,13 @@ export default function StageColumn({
                 <div className="space-y-2">
                   {deals.length === 0 ? (
                     <div className="text-center py-8 px-4">
-                      <div className="w-10 h-10 bg-gray-100 dark:bg-neutral-700 rounded-lg flex items-center justify-center mx-auto mb-2">
-                        <svg className="w-5 h-5 text-gray-400 dark:text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-900 rounded-lg flex items-center justify-center mx-auto mb-2">
+                        <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                         </svg>
                       </div>
-                      <p className="text-sm text-gray-500 dark:text-neutral-400">Nenhum negócio</p>
-                      <p className="text-xs text-gray-400 dark:text-neutral-500 mt-1">Arraste cards para cá</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum negócio</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Arraste cards para cá</p>
                     </div>
                   ) : (
                     deals.map((deal, index) =>
@@ -144,7 +144,7 @@ export default function StageColumn({
                                   : 'transform 0.25s ease',
                                 zIndex: snapshot.isDragging ? 9999 : 'auto',
                               }}
-                              className={`rounded-lg bg-white dark:bg-neutral-800 transition-all duration-200 cursor-grab active:cursor-grabbing ${
+                              className={`rounded-lg transition-all duration-200 cursor-grab active:cursor-grabbing ${
                                 snapshot.isDragging
                                   ? 'shadow-lg ring-2 ring-blue-400'
                                   : 'hover:shadow-sm'

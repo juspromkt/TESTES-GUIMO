@@ -195,7 +195,7 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
       {/* Header - sempre visível */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
       >
         <div className="flex items-center gap-2">
           <GuimooIcon className="w-4 h-4" />
@@ -222,7 +222,7 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
           ) : summary ? (
             <div className="space-y-3">
               {/* Texto do resumo */}
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600 max-h-[200px] overflow-y-auto transition-colors duration-200">
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-600 max-h-[200px] overflow-y-auto transition-colors duration-200">
                 <pre className="whitespace-pre-wrap text-xs text-gray-700 dark:text-gray-200 font-sans">
                   {summary}
                 </pre>
@@ -232,7 +232,7 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
               <div className="flex flex-col gap-2">
                 <button
                   onClick={handleCopy}
-                  className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-100 text-sm font-medium rounded-lg transition-colors"
+                  className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-100 text-sm font-medium rounded-lg transition-colors"
                 >
                   {copied ? (
                     <>
@@ -250,7 +250,7 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
                 <div className="flex gap-2">
                   <button
                     onClick={handleDownloadTXT}
-                    className="flex items-center justify-center gap-2 flex-1 px-3 py-2 bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
+                    className="flex items-center justify-center gap-2 flex-1 px-3 py-2 bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
                   >
                     <FileText className="w-4 h-4" />
                     <span>TXT</span>
@@ -258,7 +258,7 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
 
                   <button
                     onClick={handleDownloadPDF}
-                    className="flex items-center justify-center gap-2 flex-1 px-3 py-2 bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors"
+                    className="flex items-center justify-center gap-2 flex-1 px-3 py-2 bg-red-600 dark:bg-red-500 hover:bg-red-700 dark:hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors"
                   >
                     <Download className="w-4 h-4" />
                     <span>PDF</span>
@@ -269,7 +269,7 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
                 <button
                   onClick={handleCreateSummary}
                   disabled={creating}
-                  className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-violet-600 dark:bg-violet-700 hover:bg-violet-700 dark:hover:bg-violet-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-violet-600 dark:bg-violet-500 hover:bg-violet-700 dark:hover:bg-violet-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {creating ? (
                     <>
@@ -297,7 +297,7 @@ export default function DealSummaryWidget({ dealId, contactName, contactPhone }:
               <button
                 onClick={handleCreateSummary}
                 disabled={creating}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-violet-600 dark:bg-violet-700 hover:bg-violet-700 dark:hover:bg-violet-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-violet-600 dark:bg-violet-500 hover:bg-violet-700 dark:hover:bg-violet-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {creating ? (
                   <>

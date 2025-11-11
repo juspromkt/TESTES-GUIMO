@@ -78,7 +78,7 @@ export default function EditStepsStep({ state, onNext, onBack, token }: StepComp
             transfer_agent: { bg:'#EFF6FF', border:'#BFDBFE', color:'#1E40AF', text:'Transferir para agente' },
             transfer_user: { bg:'#ECFDF5', border:'#BBF7D0', color:'#065F46', text:'Transferir para usuário' },
             assign_source: { bg:'#F5F3FF', border:'#DDD6FE', color:'#5B21B6', text:'Atribuir fonte' },
-            transfer_stage: { bg:'#DBEAFE', border:'#93C5FD', color:'#1E3A8A', text:'Transferir para estágio' },
+            transfer_stage: { bg:'#DBEAFE', border:'#93C5FD', color:'#1E3A8A', text:'Transferir para o estágio' },
             notify: { bg:'#FEF3C7', border:'#FCD34D', color:'#92400E', text:'Enviar notificação' },
             assign_product: { bg:'#FCE7F3', border:'#F9A8D4', color:'#831843', text:'Atribuir produto' },
             stop_agent: { bg:'#FEF2F2', border:'#FECACA', color:'#991B1B', text:'Interromper agente' },

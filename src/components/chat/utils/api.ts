@@ -477,7 +477,7 @@ async findMessages(
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 5000);
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   const body = { remoteJid: ensureDomain(remoteJid), limit, page };
   console.log("[findMessages][FETCH]", { url: `${BASE_URL}/findMessages`, body });

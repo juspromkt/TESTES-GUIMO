@@ -19,7 +19,7 @@ const commands = [
   { type: 'transfer_agent' as DecisionType, icon: GuimooIcon, label: 'Transferir para Agente', color: 'text-blue-600 dark:text-blue-400', bgColor: '#EFF6FF', borderColor: '#BFDBFE', textColor: '#1E40AF' },
   { type: 'transfer_user' as DecisionType, icon: UserCircle, label: 'Transferir para Usuário', color: 'text-green-600 dark:text-green-400', bgColor: '#ECFDF5', borderColor: '#BBF7D0', textColor: '#065F46' },
   { type: 'assign_source' as DecisionType, icon: Folder, label: 'Atribuir Origem', color: 'text-purple-600 dark:text-purple-400', bgColor: '#F5F3FF', borderColor: '#DDD6FE', textColor: '#5B21B6' },
-  { type: 'transfer_stage' as DecisionType, icon: KanbanSquare, label: 'Mudar Estágio no CRM', color: 'text-cyan-600 dark:text-cyan-400', bgColor: '#E0F2FE', borderColor: '#BAE6FD', textColor: '#075985' },
+  { type: 'transfer_stage' as DecisionType, icon: KanbanSquare, label: 'Mudar Etapa no CRM', color: 'text-cyan-600 dark:text-cyan-400', bgColor: '#E0F2FE', borderColor: '#BAE6FD', textColor: '#075985' },
   { type: 'notify' as DecisionType, icon: Bell, label: 'Notificar Equipe', color: 'text-amber-600 dark:text-amber-400', bgColor: '#FEF9C3', borderColor: '#FDE68A', textColor: '#92400E' },
   { type: 'assign_product' as DecisionType, icon: Package, label: 'Atribuir Departamento', color: 'text-pink-600 dark:text-pink-400', bgColor: '#FCE7F3', borderColor: '#FBCFE8', textColor: '#9D174D' },
   { type: 'stop_agent' as DecisionType, icon: StopCircle, label: 'Desativar Agente', color: 'text-red-600 dark:text-red-400', bgColor: '#FEF2F2', borderColor: '#FECACA', textColor: '#991B1B' },
@@ -352,7 +352,7 @@ export default function QuickCommandMenu({ isOpen, position, onInsert, onClose, 
               {selectedCommand === 'transfer_stage' && !selectedFunnelId
                 ? 'Selecione o Funil'
                 : selectedCommand === 'transfer_stage' && selectedFunnelId
-                ? 'Selecione o Estágio'
+                ? 'Selecione a Etapa'
                 : commands.find(c => c.type === selectedCommand)?.label}
             </p>
           </div>
@@ -419,7 +419,7 @@ export default function QuickCommandMenu({ isOpen, position, onInsert, onClose, 
                     {selectedCommand === 'transfer_user' && 'Adicione usuários no sistema'}
                     {selectedCommand === 'assign_source' && 'Cadastre fontes nas configurações do CRM'}
                     {selectedCommand === 'transfer_stage' && !selectedFunnelId && 'Crie funis nas configurações do CRM'}
-                    {selectedCommand === 'transfer_stage' && selectedFunnelId && 'Adicione estágios ao funil selecionado'}
+                    {selectedCommand === 'transfer_stage' && selectedFunnelId && 'Adicione etapas ao funil selecionado'}
                     {selectedCommand === 'notify' && 'Configure notificações no agente principal'}
                     {selectedCommand === 'assign_product' && 'Cadastre departamentos nas configurações'}
                   </p>

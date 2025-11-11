@@ -134,6 +134,32 @@ export function ChatList({
     return saved !== null ? JSON.parse(saved) : true;
   });
 
+  // Escuta mudanças no localStorage para sincronizar o estado do som
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'chat_sound_enabled' && e.newValue !== null) {
+        setSoundEnabled(JSON.parse(e.newValue));
+      }
+    };
+
+    // Escuta mudanças de outras abas/janelas
+    window.addEventListener('storage', handleStorageChange);
+
+    // Escuta mudanças da mesma aba (custom event)
+    const handleCustomChange = () => {
+      const saved = localStorage.getItem('chat_sound_enabled');
+      if (saved !== null) {
+        setSoundEnabled(JSON.parse(saved));
+      }
+    };
+    window.addEventListener('chat_sound_changed', handleCustomChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('chat_sound_changed', handleCustomChange);
+    };
+  }, []);
+
   // Usa valores externos se fornecidos, senão usa internos
   const searchTerm = externalSearchTerm !== undefined ? externalSearchTerm : internalSearchTerm;
   const setSearchTerm = externalSearchTerm !== undefined ? () => {} : setInternalSearchTerm;
@@ -224,6 +250,8 @@ export function ChatList({
     const newValue = !soundEnabled;
     setSoundEnabled(newValue);
     localStorage.setItem('chat_sound_enabled', JSON.stringify(newValue));
+    // Dispara evento customizado para sincronizar com outros componentes
+    window.dispatchEvent(new Event('chat_sound_changed'));
   };
 
   const normalizedSelectedChatId = useMemo(

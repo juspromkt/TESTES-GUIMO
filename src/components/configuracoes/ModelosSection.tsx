@@ -152,7 +152,7 @@ setModelos(sanitized);
   return (
     <div className="mt-8">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100">Modelos</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Modelos</h2>
 {canEdit && (
   <button
     onClick={() => {
@@ -180,33 +180,33 @@ setModelos(sanitized);
         </div>
       )}
 
-      <div className="bg-white dark:bg-neutral-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-neutral-700">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-          <thead className="bg-gray-50 dark:bg-neutral-900">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-gray-700">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-900">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Nome
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Texto
               </th>
               {canEdit && (
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Ações
               </th>
               )}
             </tr>
           </thead>
-          <tbody className="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
+          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             {paginatedModelos.map((modelo) => (
-              <tr key={modelo.id} className="hover:bg-gray-50 dark:hover:bg-neutral-700">
+              <tr key={modelo.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">{modelo.nome}</div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{modelo.nome}</div>
                 </td>
 
 <td className="px-6 py-4">
   <div
-    className="text-sm text-gray-500 dark:text-neutral-400 truncate max-w-md"
+    className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-md"
     dangerouslySetInnerHTML={{
       __html: (modelo.texto || "")
         .replace(/{{primeiroNome}}/g, '<span class="text-blue-600 dark:text-blue-400 font-semibold">{{primeiroNome}}</span>')
@@ -272,11 +272,11 @@ setModelos(sanitized);
           }}
         >
           <div
-            className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-lg border border-gray-200 dark:border-neutral-700"
+            className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-lg border border-gray-200 dark:border-gray-700"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-6 border-b border-gray-300 dark:border-neutral-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
+            <div className="flex items-center justify-between p-6 border-b border-gray-300 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 {selectedModelo ? 'Editar Modelo' : 'Novo Modelo'}
               </h3>
               <button
@@ -285,7 +285,7 @@ setModelos(sanitized);
                   setSelectedModelo(null);
                   setFormData({ nome: '', texto: '' });
                 }}
-                className="text-gray-400 dark:text-neutral-500 hover:text-gray-500 dark:hover:text-neutral-400"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -294,7 +294,7 @@ setModelos(sanitized);
             <form onSubmit={handleSubmit} className="p-6">
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="nome" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                  <label htmlFor="nome" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Nome do Modelo
                   </label>
                   <input
@@ -302,13 +302,13 @@ setModelos(sanitized);
                     id="nome"
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="texto" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+                  <label htmlFor="texto" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Texto do Modelo
                   </label>
                   <textarea
@@ -316,10 +316,10 @@ setModelos(sanitized);
                     value={formData.texto}
                     onChange={(e) => setFormData({ ...formData, texto: e.target.value })}
                     rows={6}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     required
                   />
-<div className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
+<div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
   Você pode usar as variáveis:
   <span className="text-blue-600 dark:text-blue-400 font-semibold"> {'{{primeiroNome}}'} </span>
   e
@@ -357,7 +357,7 @@ setModelos(sanitized);
                       setSelectedModelo(null);
                       setFormData({ nome: '', texto: '' });
                     }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md"
                   >
                     Cancelar
                   </button>
@@ -396,7 +396,7 @@ setModelos(sanitized);
           }}
         >
           <div
-            className="bg-white dark:bg-neutral-800 rounded-lg shadow-xl w-full max-w-md border border-gray-200 dark:border-neutral-700"
+            className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md border border-gray-200 dark:border-gray-700"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
@@ -405,10 +405,10 @@ setModelos(sanitized);
                   <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-neutral-100">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                     Confirmar Exclusão
                   </h3>
-                  <p className="text-gray-500 dark:text-neutral-400 mt-1">
+                  <p className="text-gray-500 dark:text-gray-400 mt-1">
                     Tem certeza que deseja excluir o modelo "{selectedModelo.nome}"?
                   </p>
                 </div>
@@ -420,7 +420,7 @@ setModelos(sanitized);
                     setIsDeleteModalOpen(false);
                     setSelectedModelo(null);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-md"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md"
                 >
                   Cancelar
                 </button>

@@ -72,6 +72,32 @@ const ChatProprio = () => {
     return saved !== null ? JSON.parse(saved) : true;
   });
 
+  // Escuta mudanças no localStorage para sincronizar o estado do som
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'chat_sound_enabled' && e.newValue !== null) {
+        setSoundEnabled(JSON.parse(e.newValue));
+      }
+    };
+
+    // Escuta mudanças de outras abas/janelas
+    window.addEventListener('storage', handleStorageChange);
+
+    // Escuta mudanças da mesma aba (custom event)
+    const handleCustomChange = () => {
+      const saved = localStorage.getItem('chat_sound_enabled');
+      if (saved !== null) {
+        setSoundEnabled(JSON.parse(saved));
+      }
+    };
+    window.addEventListener('chat_sound_changed', handleCustomChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('chat_sound_changed', handleCustomChange);
+    };
+  }, []);
+
   const user = localStorage.getItem('user');
   const token = user ? JSON.parse(user).token : null;
 
@@ -112,6 +138,8 @@ const ChatProprio = () => {
     const newValue = !soundEnabled;
     setSoundEnabled(newValue);
     localStorage.setItem('chat_sound_enabled', JSON.stringify(newValue));
+    // Dispara evento customizado para sincronizar com outros componentes
+    window.dispatchEvent(new Event('chat_sound_changed'));
   };
 
   // Carregar agentes disponíveis
@@ -446,7 +474,7 @@ const ChatProprio = () => {
                   placeholder="Pesquisar..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
+                  className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
                 />
               </div>
 
@@ -476,7 +504,7 @@ const ChatProprio = () => {
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                     startDate || endDate
                       ? 'bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                      : 'bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
                   <Calendar className="w-4 h-4" />
@@ -491,7 +519,7 @@ const ChatProprio = () => {
               className={`flex items-center justify-center p-2 rounded-lg transition-colors ${
                 soundEnabled
                   ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/40'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  : 'bg-gray-100 dark:bg-gray-900 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
               title={soundEnabled ? 'Som de notificação ativado' : 'Som de notificação desativado'}
               aria-label={soundEnabled ? 'Desativar som de notificação' : 'Ativar som de notificação'}
@@ -739,7 +767,7 @@ const ChatProprio = () => {
                     setToday();
                     setShowDateModal(false);
                   }}
-                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   Hoje
                 </button>
@@ -748,7 +776,7 @@ const ChatProprio = () => {
                     setLast7();
                     setShowDateModal(false);
                   }}
-                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   Últimos 7 dias
                 </button>
@@ -757,7 +785,7 @@ const ChatProprio = () => {
                     setLast30();
                     setShowDateModal(false);
                   }}
-                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   Últimos 30 dias
                 </button>
@@ -766,7 +794,7 @@ const ChatProprio = () => {
                     setThisMonth();
                     setShowDateModal(false);
                   }}
-                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   Este mês
                 </button>
@@ -775,14 +803,14 @@ const ChatProprio = () => {
                     setLastMonth();
                     setShowDateModal(false);
                   }}
-                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   Mês passado
                 </button>
               </div>
 
               {/* Coluna de seleção manual */}
-              <div className="md:col-span-2 bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+              <div className="md:col-span-2 bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5 block">
@@ -793,7 +821,7 @@ const ChatProprio = () => {
                       onChange={(date: Date | null) => setStartDate(date)}
                       dateFormat="dd/MM/yyyy"
                       locale="pt-BR"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
                       placeholderText="Selecione a data inicial"
                       dropdownMode="select"
                       popperClassName="z-[9999]"
@@ -810,7 +838,7 @@ const ChatProprio = () => {
                       onChange={(date: Date | null) => setEndDate(date)}
                       dateFormat="dd/MM/yyyy"
                       locale="pt-BR"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400"
                       placeholderText="Selecione a data final"
                       dropdownMode="select"
                       popperClassName="z-[9999]"

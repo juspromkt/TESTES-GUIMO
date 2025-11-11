@@ -214,7 +214,7 @@ export default function AutoMovement() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Movimentação Automática</h1>
-          <p className="text-sm text-gray-500 mt-1">Configure a movimentação automática entre etapas e estágios</p>
+          <p className="text-sm text-gray-500 mt-1">Configure a movimentação automática entre etapas dos agentes e etapas dos funis</p>
         </div>
       </div>
 
@@ -277,7 +277,7 @@ export default function AutoMovement() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Estágio do Funil
+                      Etapa do Funil
                     </label>
                     <select
                       value={movement.id_estagio || ''}
@@ -285,7 +285,7 @@ export default function AutoMovement() {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                       disabled={!movement.id_funil}
                     >
-                      <option value="">Selecione um estágio</option>
+                      <option value="">Selecione uma etapa</option>
                       {funnels.find(f => f.id === movement.id_funil)?.estagios?.map((stage) => (
                         <option key={stage.Id} value={stage.Id}>
                           {stage.nome}

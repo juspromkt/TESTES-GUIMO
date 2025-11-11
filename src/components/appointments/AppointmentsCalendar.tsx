@@ -45,10 +45,10 @@ interface CalendarEvent {
 // Skeleton Loading Component
 const CalendarSkeleton = () => (
   <div className="animate-pulse space-y-4">
-    <div className="h-10 bg-gray-200 dark:bg-neutral-700 rounded w-full"></div>
+    <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
     <div className="grid grid-cols-7 gap-2">
       {[...Array(35)].map((_, i) => (
-        <div key={i} className="h-20 bg-gray-100 dark:bg-neutral-700/50 rounded"></div>
+        <div key={i} className="h-20 bg-gray-100 dark:bg-gray-700/50 rounded"></div>
       ))}
     </div>
   </div>
@@ -494,16 +494,16 @@ return (
         maxWidth="lg"
         maxHeight="90vh"
       >
-        <div className="rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <form onSubmit={handleCreateAppointment} className="space-y-4 p-5 overflow-y-auto max-h-[70vh]">
             {/* Deal Selection */}
             <div className="space-y-2">
-              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-200">
                 <Handshake className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 Negociação (Opcional)
               </label>
               {loadingDeals ? (
-                <div className="flex items-center justify-center h-12 text-gray-500 dark:text-neutral-400 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm">
+                <div className="flex items-center justify-center h-12 text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm">
                   <CalendarIcon className="w-4 h-4 animate-spin mr-2" />
                   Carregando...
                 </div>
@@ -514,12 +514,12 @@ return (
                     placeholder="Buscar por nome, telefone ou título..."
                     value={dealsSearchTerm}
                     onChange={(e) => setDealsSearchTerm(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400 text-sm transition-colors"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 text-sm transition-colors"
                   />
                   <select
                     value={selectedDealId || ''}
                     onChange={(e) => setSelectedDealId(e.target.value ? Number(e.target.value) : null)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-colors"
                     size={8}
                   >
                     <option value="">Nenhuma negociação</option>
@@ -539,7 +539,7 @@ return (
                   </select>
                 </div>
               )}
-              <p className="text-xs text-gray-500 dark:text-neutral-400">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 Você pode vincular este agendamento a uma negociação existente ou deixar sem vínculo
               </p>
             </div>
@@ -547,7 +547,7 @@ return (
             {/* Date/Time Inputs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-200">
                   <Clock className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
                   Data e Hora de Início
                 </label>
@@ -555,13 +555,13 @@ return (
                   type="datetime-local"
                   value={selectedStart}
                   onChange={(e) => setSelectedStart(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-colors"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-200">
                   <Clock className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
                   Data e Hora de Término
                 </label>
@@ -569,7 +569,7 @@ return (
                   type="datetime-local"
                   value={selectedEnd}
                   onChange={(e) => setSelectedEnd(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-colors"
                   min={selectedStart}
                   max={selectedStart ? `${selectedStart.slice(0, 10)}T23:59` : undefined}
                   required
@@ -579,7 +579,7 @@ return (
 
             {/* Client Name */}
             <div className="space-y-1.5">
-              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-200">
                 <User className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                 Nome do Cliente
               </label>
@@ -587,7 +587,7 @@ return (
                 type="text"
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400 text-sm transition-colors"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 text-sm transition-colors"
                 placeholder="Digite o nome do cliente"
                 required
               />
@@ -595,7 +595,7 @@ return (
 
             {/* Appointment Name */}
             <div className="space-y-1.5">
-              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-200">
                 <CalendarIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 Nome do Agendamento
               </label>
@@ -603,20 +603,20 @@ return (
                 type="text"
                 value={appointmentName}
                 onChange={(e) => setAppointmentName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-colors"
               />
             </div>
 
             {/* Appointment Description */}
             <div className="space-y-1.5">
-              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-200">
                 <CalendarIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 Descrição
               </label>
               <textarea
                 value={appointmentDesc}
                 onChange={(e) => setAppointmentDesc(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-colors"
                 rows={3}
               />
             </div>
@@ -632,14 +632,14 @@ return (
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-2 pt-3 border-t border-gray-200 dark:border-neutral-700">
+            <div className="flex justify-end gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="button"
                 onClick={() => {
                   setIsCreateModalOpen(false);
                   resetForm();
                 }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
               >
                 Cancelar
               </button>
@@ -662,7 +662,7 @@ return (
         title="Detalhes do Agendamento"
       >
         {summaryAppointment && (
-          <div className="rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
             <div className="p-5 space-y-4">
               {/* Header */}
               <div className="flex items-start justify-between">
@@ -671,15 +671,15 @@ return (
                     <Handshake className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold text-gray-900 dark:text-neutral-100 mb-1">
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
                       {summaryAppointment.nome || summaryAppointment.nomeCliente}
                     </h3>
                     {summaryAppointment.descricao && (
-                      <p className="text-sm text-gray-600 dark:text-neutral-400 mb-1">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                         {summaryAppointment.descricao}
                       </p>
                     )}
-                    <span className="text-xs text-gray-500 dark:text-neutral-400 bg-gray-100 dark:bg-neutral-700 px-2 py-0.5 rounded">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
                       ID: {summaryAppointment.Id}
                     </span>
                   </div>
@@ -703,7 +703,7 @@ return (
                     <User className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                     <div>
                       <p className="text-xs font-medium text-blue-600 dark:text-blue-400">CLIENTE</p>
-                      <p className="text-xs font-medium text-gray-900 dark:text-neutral-100">{summaryAppointment.nomeCliente}</p>
+                      <p className="text-xs font-medium text-gray-900 dark:text-white">{summaryAppointment.nomeCliente}</p>
                     </div>
                   </div>
                 </div>
@@ -713,7 +713,7 @@ return (
                     <CalendarIcon className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
                     <div>
                       <p className="text-xs font-medium text-green-600 dark:text-green-400">DATA</p>
-                      <p className="text-xs font-medium text-gray-900 dark:text-neutral-100">
+                      <p className="text-xs font-medium text-gray-900 dark:text-white">
                         {format(parseISO(summaryAppointment.dataInicio), 'dd/MM/yyyy')}
                       </p>
                     </div>
@@ -725,7 +725,7 @@ return (
                     <Clock className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                     <div>
                       <p className="text-xs font-medium text-purple-600 dark:text-purple-400">HORÁRIO</p>
-                      <p className="text-xs font-medium text-gray-900 dark:text-neutral-100">
+                      <p className="text-xs font-medium text-gray-900 dark:text-white">
                         {format(parseISO(summaryAppointment.dataInicio), 'HH:mm')} - {format(parseISO(summaryAppointment.dataFinal), 'HH:mm')}
                       </p>
                     </div>
@@ -735,7 +735,7 @@ return (
 
               {/* Actions */}
               {summaryAppointment.id_negociacao && (
-                <div className="flex justify-end pt-3 border-t border-gray-200 dark:border-neutral-700">
+                <div className="flex justify-end pt-3 border-t border-gray-200 dark:border-gray-700">
                   <button
                     onClick={() => {
                       setSelectedDealForPanel(summaryAppointment.id_negociacao);
@@ -762,16 +762,16 @@ return (
         maxWidth="lg"
         maxHeight="90vh"
       >
-        <div className="rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <form onSubmit={handleEditAppointment} className="space-y-4 p-5 overflow-y-auto max-h-[70vh]">
             {/* Deal Selection */}
             <div className="space-y-2">
-              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-200">
                 <Handshake className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 Negociação (Opcional)
               </label>
               {loadingDeals ? (
-                <div className="flex items-center justify-center h-12 text-gray-500 dark:text-neutral-400 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700">
+                <div className="flex items-center justify-center h-12 text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700">
                   <CalendarIcon className="w-4 h-4 animate-spin mr-2" />
                   Carregando...
                 </div>
@@ -782,12 +782,12 @@ return (
                     placeholder="Buscar por nome, telefone ou título..."
                     value={dealsSearchTerm}
                     onChange={(e) => setDealsSearchTerm(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400 text-sm transition-colors"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 text-sm transition-colors"
                   />
                   <select
                     value={selectedDealId || ''}
                     onChange={(e) => setSelectedDealId(e.target.value ? Number(e.target.value) : null)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-colors"
                     size={8}
                   >
                     <option value="">Nenhuma negociação</option>
@@ -807,7 +807,7 @@ return (
                   </select>
                 </div>
               )}
-              <p className="text-xs text-gray-500 dark:text-neutral-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 Você pode vincular este agendamento a uma negociação existente ou deixar sem vínculo
               </p>
             </div>
@@ -815,7 +815,7 @@ return (
             {/* Date/Time Inputs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-2">
-                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-200">
                   <Clock className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
                   Data e Hora de Início
                 </label>
@@ -823,12 +823,12 @@ return (
                   type="datetime-local"
                   value={selectedStart}
                   onChange={(e) => setSelectedStart(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-colors"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-200">
                   <Clock className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
                   Data e Hora de Término
                 </label>
@@ -836,7 +836,7 @@ return (
                   type="datetime-local"
                   value={selectedEnd}
                   onChange={(e) => setSelectedEnd(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-colors"
                   min={selectedStart}
                   max={selectedStart ? `${selectedStart.slice(0, 10)}T23:59` : undefined}
                 />
@@ -845,7 +845,7 @@ return (
 
             {/* Client Name */}
             <div className="space-y-2">
-              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-200">
                 <User className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                 Nome do Cliente
               </label>
@@ -853,14 +853,14 @@ return (
                 type="text"
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-colors"
                 placeholder="Digite o nome do cliente"
               />
             </div>
 
             {/* Appointment Name */}
             <div className="space-y-2">
-              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-200">
                 <CalendarIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 Nome do Agendamento
               </label>
@@ -868,20 +868,20 @@ return (
                 type="text"
                 value={appointmentName}
                 onChange={(e) => setAppointmentName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-colors"
               />
             </div>
 
             {/* Appointment Description */}
             <div className="space-y-2">
-              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-neutral-200">
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-200">
                 <CalendarIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 Descrição
               </label>
               <textarea
                 value={appointmentDesc}
                 onChange={(e) => setAppointmentDesc(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 text-sm transition-colors"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm transition-colors"
                 rows={3}
               />
             </div>
@@ -897,14 +897,14 @@ return (
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-between pt-3 border-t border-gray-200 dark:border-neutral-700">
+            <div className="flex justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="button"
                 onClick={() => {
                   setIsEditModalOpen(false);
                   setErrorMessage('');
                 }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
               >
                 Cancelar
               </button>
@@ -968,7 +968,7 @@ return (
             <div className="flex justify-end gap-3 pt-4 border-t border-red-200/50 dark:border-red-800/50">
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
-                className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-neutral-300 bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 rounded-xl border border-gray-300 dark:border-neutral-600 transition-all duration-200"
+                className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-xl border border-gray-300 dark:border-gray-600 transition-all duration-200"
               >
                 Cancelar
               </button>

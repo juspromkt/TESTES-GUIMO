@@ -67,22 +67,22 @@ ChartJS.register(
 
 // ==================== Skeleton Components ====================
 const SkeletonKPI = () => (
-  <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-gray-200 dark:border-neutral-700 animate-pulse">
-    <div className="h-3 bg-gray-200 dark:bg-neutral-700 rounded w-20 mb-2"></div>
-    <div className="h-10 bg-gray-300 dark:bg-neutral-600 rounded w-32 mb-1"></div>
-    <div className="h-3 bg-gray-200 dark:bg-neutral-700 rounded w-24"></div>
+  <div className="bg-white dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700 animate-pulse">
+    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20 mb-2"></div>
+    <div className="h-10 bg-gray-300 dark:bg-gray-600 rounded w-32 mb-1"></div>
+    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
   </div>
 );
 
 const SkeletonChart = () => (
-  <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
-    <div className="px-4 py-3 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
-      <div className="h-5 bg-gray-300 dark:bg-neutral-600 rounded w-40 animate-pulse"></div>
+  <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+      <div className="h-5 bg-gray-300 dark:bg-gray-600 rounded w-40 animate-pulse"></div>
     </div>
     <div className="p-4">
-      <div className="h-64 bg-gray-100 dark:bg-neutral-700/50 rounded animate-pulse flex items-end justify-around gap-2 px-4 pb-4">
+      <div className="h-64 bg-gray-100 dark:bg-gray-700/50 rounded animate-pulse flex items-end justify-around gap-2 px-4 pb-4">
         {[...Array(7)].map((_, i) => (
-          <div key={i} className="bg-gray-300 dark:bg-neutral-600 rounded-t" style={{ height: `${Math.random() * 60 + 40}%`, width: '12%' }}></div>
+          <div key={i} className="bg-gray-300 dark:bg-gray-600 rounded-t" style={{ height: `${Math.random() * 60 + 40}%`, width: '12%' }}></div>
         ))}
       </div>
     </div>
@@ -90,21 +90,21 @@ const SkeletonChart = () => (
 );
 
 const SkeletonFunnel = () => (
-  <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
-    <div className="px-4 py-3 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
-      <div className="h-5 bg-gray-300 dark:bg-neutral-600 rounded w-36 mb-1 animate-pulse"></div>
-      <div className="h-3 bg-gray-200 dark:bg-neutral-700 rounded w-28 animate-pulse"></div>
+  <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+      <div className="h-5 bg-gray-300 dark:bg-gray-600 rounded w-36 mb-1 animate-pulse"></div>
+      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-28 animate-pulse"></div>
     </div>
     <div className="p-4 space-y-2">
       {[...Array(5)].map((_, i) => (
-        <div key={i} className="bg-gray-50 dark:bg-neutral-700/30 border border-gray-200 dark:border-neutral-600 rounded-lg p-3 animate-pulse">
+        <div key={i} className="bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600 rounded-lg p-3 animate-pulse">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gray-300 dark:bg-neutral-600 rounded-lg"></div>
+            <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-lg"></div>
             <div className="flex-1">
-              <div className="h-4 bg-gray-300 dark:bg-neutral-600 rounded w-32 mb-1"></div>
-              <div className="h-3 bg-gray-200 dark:bg-neutral-700 rounded w-24"></div>
+              <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-32 mb-1"></div>
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
             </div>
-            <div className="h-6 bg-gray-300 dark:bg-neutral-600 rounded w-12"></div>
+            <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-12"></div>
           </div>
         </div>
       ))}
@@ -113,15 +113,15 @@ const SkeletonFunnel = () => (
 );
 
 const SkeletonTags = () => (
-  <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
-    <div className="px-4 py-3 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
-      <div className="h-5 bg-gray-300 dark:bg-neutral-600 rounded w-28 animate-pulse"></div>
+  <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+      <div className="h-5 bg-gray-300 dark:bg-gray-600 rounded w-28 animate-pulse"></div>
     </div>
     <div className="p-8 flex items-center gap-6">
-      <div className="w-48 h-48 bg-gray-100 dark:bg-neutral-700/50 rounded-full animate-pulse"></div>
+      <div className="w-48 h-48 bg-gray-100 dark:bg-gray-700/50 rounded-full animate-pulse"></div>
       <div className="flex-1 space-y-2">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-10 bg-gray-100 dark:bg-neutral-700/50 rounded-lg animate-pulse"></div>
+          <div key={i} className="h-10 bg-gray-100 dark:bg-gray-700/50 rounded-lg animate-pulse"></div>
         ))}
       </div>
     </div>
@@ -129,12 +129,12 @@ const SkeletonTags = () => (
 );
 
 const SkeletonMap = () => (
-  <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
-    <div className="px-4 py-3 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
-      <div className="h-5 bg-gray-300 dark:bg-neutral-600 rounded w-32 animate-pulse"></div>
+  <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+      <div className="h-5 bg-gray-300 dark:bg-gray-600 rounded w-32 animate-pulse"></div>
     </div>
     <div className="p-8">
-      <div className="h-96 bg-gray-100 dark:bg-neutral-700/50 rounded-lg animate-pulse"></div>
+      <div className="h-96 bg-gray-100 dark:bg-gray-700/50 rounded-lg animate-pulse"></div>
     </div>
   </div>
 );
@@ -179,7 +179,7 @@ function SortableFunnelCard({ stage, index, percentFromFirst, color }: SortableF
               {...listeners}
               className="flex items-center gap-2 flex-shrink-0 cursor-grab active:cursor-grabbing"
             >
-              <GripVertical className="w-4 h-4 xl:w-5 xl:h-5 text-gray-400 dark:text-neutral-500" />
+              <GripVertical className="w-4 h-4 xl:w-5 xl:h-5 text-gray-400 dark:text-gray-500" />
               <div className={`w-7 h-7 xl:w-8 xl:h-8 2xl:w-9 2xl:h-9 rounded-lg bg-gradient-to-br ${color.from} ${color.to} flex items-center justify-center`}>
                 <span className="text-white font-bold text-xs xl:text-sm">{index + 1}</span>
               </div>
@@ -190,19 +190,19 @@ function SortableFunnelCard({ stage, index, percentFromFirst, color }: SortableF
                 {stage.estagio}
               </h4>
               <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-[10px] xl:text-xs text-gray-500 dark:text-neutral-400">Taxa de conversão:</span>
+                <span className="text-[10px] xl:text-xs text-gray-500 dark:text-gray-400">Taxa de conversão:</span>
                 <span className={`text-[10px] xl:text-xs font-bold ${color.text}`}>{percentFromFirst}%</span>
               </div>
             </div>
 
             <div className="flex-shrink-0 text-right">
-              <div className="text-base xl:text-lg 2xl:text-xl font-bold text-gray-900 dark:text-neutral-100">{stage.quantidade}</div>
-              <div className="text-[9px] xl:text-[10px] text-gray-500 dark:text-neutral-400">contatos</div>
+              <div className="text-base xl:text-lg 2xl:text-xl font-bold text-gray-900 dark:text-white">{stage.quantidade}</div>
+              <div className="text-[9px] xl:text-[10px] text-gray-500 dark:text-gray-400">contatos</div>
             </div>
           </div>
 
           <div className="mt-2">
-            <div className="relative h-1.5 xl:h-2 bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+            <div className="relative h-1.5 xl:h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
                 className={`absolute inset-y-0 left-0 bg-gradient-to-r ${color.from} ${color.to} rounded-full transition-all duration-500`}
                 style={{ width: `${percentFromFirst}%` }}
@@ -809,16 +809,16 @@ export default function Dashboard() {
 
   // ==================== RENDER ====================
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 pb-4 transition-theme">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-4 transition-theme">
       {/* Header Compacto */}
-      <div className="px-3 md:px-4 pt-3 md:pt-4 pb-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 bg-white dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700 transition-theme">
+      <div className="px-3 md:px-4 pt-3 md:pt-4 pb-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 transition-theme">
         <div className="flex items-center gap-2 w-full md:w-auto">
           <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg md:text-xl font-bold text-gray-900 dark:text-neutral-100">Dashboard</h1>
-            <p className="text-xs text-gray-500 dark:text-neutral-400 -mt-0.5">Visão geral das conversas e contatos</p>
+            <h1 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400 -mt-0.5">Visão geral das conversas e contatos</p>
           </div>
           {isRefreshing && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 whitespace-nowrap">
@@ -830,8 +830,8 @@ export default function Dashboard() {
         <div className="flex items-center gap-3">
           {/* Período Selecionado */}
           <div className="hidden md:flex items-center gap-2 text-sm">
-            <Calendar className="w-4 h-4 text-gray-400 dark:text-neutral-500" />
-            <span className="text-gray-600 dark:text-neutral-400 font-medium">
+            <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+            <span className="text-gray-600 dark:text-gray-400 font-medium">
               {startDate && endDate
                 ? `${new Date(startDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} - ${new Date(endDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}`
                 : 'Nenhum período selecionado'}
@@ -841,7 +841,7 @@ export default function Dashboard() {
           {/* Botão Selecionar Data */}
           <button
             onClick={() => setShowDateModal(true)}
-            className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-neutral-600 px-3 py-2 bg-white dark:bg-neutral-700 hover:bg-blue-50 dark:hover:bg-neutral-600 transition-theme text-sm font-medium text-gray-700 dark:text-neutral-200"
+            className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-gray-600 transition-theme text-sm font-medium text-gray-700 dark:text-gray-200"
           >
             <Filter className="w-4 h-4 text-blue-600" />
             <span>Selecionar Data</span>
@@ -863,9 +863,9 @@ export default function Dashboard() {
           ) : (
             <>
               {/* Total de Contatos com comparação */}
-              <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-gray-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-600 transition-theme">
+              <div className="bg-white dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-theme">
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wide">Total</p>
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total</p>
                   {growthRate !== 0 && (
                     <div className={`flex items-center gap-0.5 ${growthRate > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                       {growthRate > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
@@ -873,29 +873,29 @@ export default function Dashboard() {
                     </div>
                   )}
                 </div>
-                <p className="text-2xl md:text-3xl xl:text-4xl font-bold text-gray-900 dark:text-neutral-100">{dealMetrics.quantidade.toLocaleString()}</p>
-                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
+                <p className="text-2xl md:text-3xl xl:text-4xl font-bold text-gray-900 dark:text-white">{dealMetrics.quantidade.toLocaleString()}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {growthRate > 0 ? '+' : ''}{(dealMetrics.quantidade - previousPeriodMetrics.quantidade).toLocaleString()} vs anterior
                 </p>
               </div>
 
               {/* Média Diária */}
-              <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-gray-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-600 transition-theme">
+              <div className="bg-white dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-theme">
                 <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">Média Diária</p>
-                <p className="text-2xl md:text-3xl xl:text-4xl font-bold text-gray-900 dark:text-neutral-100">{dealMetrics.quantidadeMedia.toFixed(2)}</p>
+                <p className="text-2xl md:text-3xl xl:text-4xl font-bold text-gray-900 dark:text-white">{dealMetrics.quantidadeMedia.toFixed(2)}</p>
                 <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Contatos/dia</p>
               </div>
 
               {/* Pico de Atividade */}
-              <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-gray-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-600 transition-theme">
+              <div className="bg-white dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-theme">
                 <div className="flex items-center gap-1 mb-1">
                   <Activity className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                   <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide">Pico</p>
                 </div>
-                <p className="text-2xl md:text-3xl xl:text-4xl font-bold text-gray-900 dark:text-neutral-100">
+                <p className="text-2xl md:text-3xl xl:text-4xl font-bold text-gray-900 dark:text-white">
                   {peakDay ? peakDay.qtdLeads : 0}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {peakDay ? `${formatBR(peakDay.dia)}` : 'Sem dados'}
                 </p>
               </div>
@@ -912,12 +912,12 @@ export default function Dashboard() {
             {loadingChart ? (
               <SkeletonChart />
             ) : (
-              <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden">
-                <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
+              <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 transition-theme overflow-hidden">
+                <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                   <div className="w-7 h-7 bg-blue-50 dark:bg-blue-950 rounded-lg flex items-center justify-center flex-shrink-0">
                     <BarIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <h3 className="text-base font-bold text-gray-900 dark:text-neutral-100">Volume de conversas</h3>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white">Volume de conversas</h3>
                 </div>
                 <div className="p-3 sm:p-4">
                   <div className="h-48 sm:h-56 md:h-64 xl:h-72 2xl:h-80">
@@ -931,12 +931,12 @@ export default function Dashboard() {
           {loadingTags ? (
             <SkeletonTags />
           ) : (
-            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme flex flex-col overflow-visible">
-              <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
+            <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 transition-theme flex flex-col overflow-visible">
+              <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                 <div className="w-7 h-7 bg-gradient-to-tr from-pink-100 to-blue-50 dark:from-pink-950 dark:to-blue-950 rounded-lg flex items-center justify-center flex-shrink-0">
                   <Tags className="w-5 h-5 text-pink-600 dark:text-pink-400" />
                 </div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-neutral-100">Etiquetas</h3>
+                <h3 className="text-base font-bold text-gray-900 dark:text-white">Etiquetas</h3>
               </div>
 
               <div className="p-8 flex-1 flex items-center justify-center overflow-visible">
@@ -947,8 +947,8 @@ export default function Dashboard() {
                       <div className="relative w-48 h-48 xl:w-56 xl:h-56">
                         <Doughnut data={tagsData} options={tagsOptions} />
                         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                          <p className="text-xs text-gray-500 dark:text-neutral-400 font-semibold uppercase tracking-wide">Total</p>
-                          <p className="text-3xl xl:text-4xl font-bold text-gray-800 dark:text-neutral-100 mt-1">{totalTags.toLocaleString()}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wide">Total</p>
+                          <p className="text-3xl xl:text-4xl font-bold text-gray-800 dark:text-white mt-1">{totalTags.toLocaleString()}</p>
                         </div>
                       </div>
                     </div>
@@ -960,20 +960,20 @@ export default function Dashboard() {
                         return (
                           <div
                             key={tag.id_tag}
-                            className="flex items-center justify-between gap-3 px-3 py-2.5 bg-gray-50 dark:bg-neutral-700/50 border border-gray-200 dark:border-neutral-600 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-600/50 hover:border-gray-300 dark:hover:border-neutral-500 transition-all group"
+                            className="flex items-center justify-between gap-3 px-3 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600/50 hover:border-gray-300 dark:hover:border-gray-500 transition-all group"
                           >
                             <div className="flex items-center gap-2.5 min-w-0 flex-1">
                               <span
-                                className="w-3.5 h-3.5 rounded-full flex-shrink-0 ring-2 ring-white dark:ring-neutral-800 shadow-sm"
+                                className="w-3.5 h-3.5 rounded-full flex-shrink-0 ring-2 ring-white dark:ring-gray-800 shadow-sm"
                                 style={{ backgroundColor: tagColors[i] }}
                               />
-                              <span className="text-gray-800 dark:text-neutral-200 text-sm font-medium truncate group-hover:text-gray-900 dark:group-hover:text-neutral-100 transition-colors">
+                              <span className="text-gray-800 dark:text-gray-200 text-sm font-medium truncate group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
                                 {tag.nome}
                               </span>
                             </div>
-                            <div className="flex items-baseline gap-1.5 text-gray-700 dark:text-neutral-300 font-semibold whitespace-nowrap">
+                            <div className="flex items-baseline gap-1.5 text-gray-700 dark:text-gray-300 font-semibold whitespace-nowrap">
                               <span className="text-base">{tag.quantidade}</span>
-                              <span className="text-xs text-gray-400 dark:text-neutral-500">({percent}%)</span>
+                              <span className="text-xs text-gray-400 dark:text-gray-500">({percent}%)</span>
                             </div>
                           </div>
                         );
@@ -981,7 +981,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500 dark:text-neutral-400 text-center py-6">Nenhuma etiqueta disponível.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-6">Nenhuma etiqueta disponível.</p>
                 )}
               </div>
             </div>
@@ -992,14 +992,14 @@ export default function Dashboard() {
           {loadingFunnel ? (
             <SkeletonFunnel />
           ) : (
-            <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden">
-              <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
+            <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 transition-theme overflow-hidden">
+              <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                 <div className="w-7 h-7 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 rounded-lg flex items-center justify-center flex-shrink-0">
                   <GitBranch className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-base font-bold text-gray-900 dark:text-neutral-100">Funil de Conversão</h3>
-                  <p className="text-xs text-gray-500 dark:text-neutral-400">De {dealMetrics.quantidade} leads totais</p>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white">Funil de Conversão</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">De {dealMetrics.quantidade} leads totais</p>
                 </div>
               </div>
 
@@ -1050,7 +1050,7 @@ export default function Dashboard() {
                 </DndContext>
               ) : (
                 <div className="p-6 flex items-center justify-center">
-                  <p className="text-sm text-gray-500 dark:text-neutral-400 text-center">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
                     Nenhum dado de funil disponível no período selecionado
                   </p>
                 </div>
@@ -1067,33 +1067,33 @@ export default function Dashboard() {
       {/* ==================== MODAL DE PERÍODO ==================== */}
       {showDateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 transition-theme p-4">
-          <div className="w-full max-w-3xl max-h-[90vh] bg-white dark:bg-neutral-800 rounded-2xl transition-theme shadow-2xl border border-gray-300 dark:border-neutral-600 overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between px-4 md:px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-neutral-900 dark:to-neutral-900 border-b border-gray-300 dark:border-neutral-700 transition-theme flex-shrink-0">
+          <div className="w-full max-w-3xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-2xl transition-theme shadow-2xl border border-gray-300 dark:border-gray-600 overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-4 md:px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-900 border-b border-gray-300 dark:border-gray-700 transition-theme flex-shrink-0">
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-blue-700 dark:text-blue-400 flex-shrink-0" />
-                <h3 className="text-base md:text-lg font-semibold text-gray-800 dark:text-neutral-100 truncate">
+                <h3 className="text-base md:text-lg font-semibold text-gray-800 dark:text-white truncate">
                   Selecionar Período
                 </h3>
               </div>
               <button
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 active:bg-gray-200 dark:active:bg-neutral-600 transition-theme transition-colors touch-manipulation flex-shrink-0"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600 transition-theme transition-colors touch-manipulation flex-shrink-0"
                 onClick={() => setShowDateModal(false)}
                 aria-label="Fechar modal"
               >
-                <X className="w-5 h-5 text-gray-600 dark:text-neutral-300" />
+                <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 px-4 md:px-6 py-4 md:py-6 bg-gray-50 dark:bg-neutral-900 transition-theme overflow-y-auto flex-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 px-4 md:px-6 py-4 md:py-6 bg-gray-50 dark:bg-gray-900 transition-theme overflow-y-auto flex-1" style={{ WebkitOverflowScrolling: 'touch' }}>
               {/* Coluna de filtros rápidos */}
               <div className="flex flex-col gap-2">
-                <p className="text-xs md:text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">Filtro rápido</p>
+                <p className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filtro rápido</p>
                 <button
                   onClick={() => {
                     setToday();
                     setShowDateModal(false);
                   }}
-                  className="px-3 py-2.5 text-sm text-gray-700 dark:text-neutral-200 rounded-xl border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 hover:bg-blue-50 dark:hover:bg-neutral-600 transition-theme active:bg-blue-100 dark:active:bg-neutral-500 hover:border-blue-200 active:scale-[0.98] transition-all touch-manipulation text-left"
+                  className="px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-gray-600 transition-theme active:bg-blue-100 dark:active:bg-gray-500 hover:border-blue-200 active:scale-[0.98] transition-all touch-manipulation text-left"
                 >
                   Hoje
                 </button>
@@ -1102,7 +1102,7 @@ export default function Dashboard() {
                     setLast7();
                     setShowDateModal(false);
                   }}
-                  className="px-3 py-2.5 text-sm text-gray-700 dark:text-neutral-200 rounded-xl border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 hover:bg-blue-50 dark:hover:bg-neutral-600 transition-theme active:bg-blue-100 dark:active:bg-neutral-500 hover:border-blue-200 active:scale-[0.98] transition-all touch-manipulation text-left"
+                  className="px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-gray-600 transition-theme active:bg-blue-100 dark:active:bg-gray-500 hover:border-blue-200 active:scale-[0.98] transition-all touch-manipulation text-left"
                 >
                   Últimos 7 dias
                 </button>
@@ -1111,7 +1111,7 @@ export default function Dashboard() {
                     setLast30();
                     setShowDateModal(false);
                   }}
-                  className="px-3 py-2.5 text-sm text-gray-700 dark:text-neutral-200 rounded-xl border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 hover:bg-blue-50 dark:hover:bg-neutral-600 transition-theme active:bg-blue-100 dark:active:bg-neutral-500 hover:border-blue-200 active:scale-[0.98] transition-all touch-manipulation text-left"
+                  className="px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-gray-600 transition-theme active:bg-blue-100 dark:active:bg-gray-500 hover:border-blue-200 active:scale-[0.98] transition-all touch-manipulation text-left"
                 >
                   Últimos 30 dias
                 </button>
@@ -1120,7 +1120,7 @@ export default function Dashboard() {
                     setThisMonth();
                     setShowDateModal(false);
                   }}
-                  className="px-3 py-2.5 text-sm text-gray-700 dark:text-neutral-200 rounded-xl border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 hover:bg-blue-50 dark:hover:bg-neutral-600 transition-theme active:bg-blue-100 dark:active:bg-neutral-500 hover:border-blue-200 active:scale-[0.98] transition-all touch-manipulation text-left"
+                  className="px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-gray-600 transition-theme active:bg-blue-100 dark:active:bg-gray-500 hover:border-blue-200 active:scale-[0.98] transition-all touch-manipulation text-left"
                 >
                   Este mês
                 </button>
@@ -1129,13 +1129,13 @@ export default function Dashboard() {
                     setLastMonth();
                     setShowDateModal(false);
                   }}
-                  className="px-3 py-2.5 text-sm text-gray-700 dark:text-neutral-200 rounded-xl border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 hover:bg-blue-50 dark:hover:bg-neutral-600 transition-theme active:bg-blue-100 dark:active:bg-neutral-500 hover:border-blue-200 active:scale-[0.98] transition-all touch-manipulation text-left"
+                  className="px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-gray-600 transition-theme active:bg-blue-100 dark:active:bg-gray-500 hover:border-blue-200 active:scale-[0.98] transition-all touch-manipulation text-left"
                 >
                   Mês passado
                 </button>
 
                 {/* Separador */}
-                <div className="border-t border-gray-300 dark:border-neutral-600 my-1"></div>
+                <div className="border-t border-gray-300 dark:border-gray-600 my-1"></div>
 
                 {/* Botão Limpar Filtros */}
                 <button
@@ -1147,10 +1147,10 @@ export default function Dashboard() {
               </div>
 
               {/* Coluna de seleção manual */}
-              <div className="md:col-span-2 bg-white dark:bg-neutral-800 rounded-xl p-4 md:p-5 border border-gray-300 dark:border-neutral-600 transition-theme shadow-sm">
+              <div className="md:col-span-2 bg-white dark:bg-gray-900 rounded-xl p-4 md:p-5 border border-gray-300 dark:border-gray-600 transition-theme shadow-sm">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-medium text-gray-600 dark:text-neutral-300 mb-1.5 block">
+                    <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5 block">
                       Data inicial
                     </label>
                     <DatePicker
@@ -1162,13 +1162,13 @@ export default function Dashboard() {
                       }
                       dateFormat="dd/MM/yyyy"
                       locale="pt-BR"
-                      className="w-full px-3 py-2.5 text-sm md:text-base text-gray-900 dark:text-neutral-100 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
+                      className="w-full px-3 py-2.5 text-sm md:text-base text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
                       placeholderText="Selecione a data inicial"
                       dropdownMode="select"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600 dark:text-neutral-300 mb-1.5 block">
+                    <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5 block">
                       Data final
                     </label>
                     <DatePicker
@@ -1180,7 +1180,7 @@ export default function Dashboard() {
                       }
                       dateFormat="dd/MM/yyyy"
                       locale="pt-BR"
-                      className="w-full px-3 py-2.5 text-sm md:text-base text-gray-900 dark:text-neutral-100 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
+                      className="w-full px-3 py-2.5 text-sm md:text-base text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
                       placeholderText="Selecione a data final"
                       dropdownMode="select"
                     />
