@@ -371,7 +371,7 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
                   editing && editing.day === day && editing.window.Id === w.Id ? (
                     <React.Fragment key={w.Id}>{renderEditRow()}</React.Fragment>
                   ) : (
-                  <div key={w.Id} className="flex items-center justify-between bg-white dark:bg-gray-800 px-3 py-2 rounded border border-gray-200 dark:border-gray-700">
+                  <div key={w.Id} className="flex items-center justify-between bg-white dark:bg-gray-900 px-3 py-2 rounded border border-gray-200 dark:border-gray-700">
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {w.horarioInicio} - {w.horarioFinal}
                     </span>
@@ -409,7 +409,7 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
       {/* Modal de Confirmação de Exclusão */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
                 <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
@@ -444,7 +444,7 @@ export default function ScheduleWindowsSection({ token, canEdit }: ScheduleWindo
       {/* Modal de Confirmação de Replicação */}
       {replicateConfirm && (
         <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
                 <Check className="w-6 h-6 text-blue-600 dark:text-blue-400" />

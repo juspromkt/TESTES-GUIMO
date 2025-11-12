@@ -939,7 +939,7 @@ export default function Dashboard() {
                 <h3 className="text-base font-bold text-gray-900 dark:text-white">Etiquetas</h3>
               </div>
 
-              <div className="p-8 flex-1 flex items-center justify-center overflow-visible">
+              <div className="p-8 flex-1 flex items-center justify-center overflow-visible bg-white dark:bg-gray-900">
                 {tagCounts.length > 0 ? (
                   <div className="flex items-center gap-6 w-full">
                     {/* Pizza à esquerda */}
@@ -960,11 +960,11 @@ export default function Dashboard() {
                         return (
                           <div
                             key={tag.id_tag}
-                            className="flex items-center justify-between gap-3 px-3 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600/50 hover:border-gray-300 dark:hover:border-gray-500 transition-all group"
+                            className="flex items-center justify-between gap-3 px-3 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600 transition-all group"
                           >
                             <div className="flex items-center gap-2.5 min-w-0 flex-1">
                               <span
-                                className="w-3.5 h-3.5 rounded-full flex-shrink-0 ring-2 ring-white dark:ring-gray-800 shadow-sm"
+                                className="w-3.5 h-3.5 rounded-full flex-shrink-0 ring-2 ring-white dark:ring-gray-900 shadow-sm"
                                 style={{ backgroundColor: tagColors[i] }}
                               />
                               <span className="text-gray-800 dark:text-gray-200 text-sm font-medium truncate group-hover:text-gray-900 dark:group-hover:text-white transition-colors">

@@ -210,6 +210,11 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, id
   // Campos de edição
   const [newFunctionName, setNewFunctionName] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<string>(''); // '' = personalizado, ou key do template
+  const [selectedTemplates, setSelectedTemplates] = useState<string[]>([]); // Templates selecionados para criação múltipla
+  const [isCreatingCustom, setIsCreatingCustom] = useState(false); // Controla se está criando notificação personalizada
+  const [createModalStep, setCreateModalStep] = useState<1 | 2>(1); // Step do modal de criação
+  const [createdNotificationsIds, setCreatedNotificationsIds] = useState<number[]>([]); // IDs das notificações criadas
+  const [addedRecipients, setAddedRecipients] = useState<Array<{tipo: string, valor: string, label: string}>>([]); // Lista de destinatários adicionados
   const [editingMessage, setEditingMessage] = useState('');
 
   // Destinatários
@@ -515,6 +520,212 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, id
     } catch (err) {
       console.error('Erro ao criar função:', err);
       showMessage('Erro ao criar notificação. Tente novamente.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCreateMultipleNotifications = async () => {
+    if (selectedTemplates.length === 0) {
+      showMessage('Selecione pelo menos uma notificação', 'error');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const createdNotifications = [];
+      const createdIds: number[] = [];
+      let failedCount = 0;
+
+      for (const templateKey of selectedTemplates) {
+        const template = NOTIFICATION_TEMPLATES.find(t => t.key === templateKey);
+        if (!template) continue;
+
+        try {
+          const res = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/funcao/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              token
+            },
+            body: JSON.stringify({
+              id_agente: idAgente,
+              nome: template.nome,
+              url: '',
+              descricao: template.descricao_ia,
+              isAtivo: true,
+              tipo: 'NOTIFICACAO',
+              mensagem: template.mensagem
+            })
+          });
+
+          if (!res.ok) throw new Error(`Erro HTTP: ${res.status}`);
+
+          const newFunction = await res.json();
+          createdNotifications.push({
+            ...newFunction,
+            atributos: []
+          });
+          createdIds.push(newFunction.id);
+        } catch (err) {
+          console.error(`Erro ao criar notificação ${template.nome}:`, err);
+          failedCount++;
+        }
+      }
+
+      // Atualizar lista local
+      if (createdNotifications.length > 0) {
+        setFunctions(prev => [...prev, ...createdNotifications]);
+        setCreatedNotificationsIds(createdIds);
+      }
+
+      setSelectedTemplates([]);
+
+      if (failedCount === 0) {
+        showMessage(`${createdNotifications.length} notificação(ões) criada(s) com sucesso!`, 'success');
+        // Avançar para o step 2 (adicionar destinatários)
+        setCreateModalStep(2);
+      } else if (createdNotifications.length > 0) {
+        showMessage(`${createdNotifications.length} criada(s), ${failedCount} falharam`, 'error');
+        // Avançar para o step 2 mesmo com falhas parciais
+        setCreateModalStep(2);
+      } else {
+        showMessage('Erro ao criar notificações', 'error');
+      }
+    } catch (err) {
+      console.error('Erro ao criar notificações:', err);
+      showMessage('Erro ao criar notificações. Tente novamente.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddRecipientToList = () => {
+    if (!bulkRecipientType) {
+      showMessage('Selecione o tipo de destinatário', 'error');
+      return;
+    }
+
+    if (bulkRecipientType === 'numero' && !bulkRecipientPhone) {
+      showMessage('Digite o número de telefone', 'error');
+      return;
+    }
+
+    if (bulkRecipientType === 'usuario' && !bulkRecipientUserId) {
+      showMessage('Selecione um usuário', 'error');
+      return;
+    }
+
+    // Montar label do destinatário
+    let label = '';
+    let valor = '';
+
+    if (bulkRecipientType === 'numero') {
+      const numbers = bulkRecipientPhone.replace(/\D/g, '');
+      valor = numbers;
+      label = `${numbers.slice(0, 2)} (${numbers.slice(2, 4)}) ${numbers.slice(4, 9)}-${numbers.slice(9, 13)}`;
+    } else if (bulkRecipientType === 'usuario') {
+      valor = bulkRecipientUserId;
+      const usuario = usuarios.find(u => u.Id === parseInt(bulkRecipientUserId));
+      label = usuario?.nome || bulkRecipientUserId;
+    } else {
+      valor = 'responsavel';
+      label = 'Responsável pelo lead';
+    }
+
+    // Verificar duplicatas
+    const isDuplicate = addedRecipients.some(r => r.tipo === bulkRecipientType && r.valor === valor);
+    if (isDuplicate) {
+      showMessage('Este destinatário já foi adicionado', 'error');
+      return;
+    }
+
+    // Adicionar à lista
+    setAddedRecipients(prev => [...prev, {
+      tipo: bulkRecipientType,
+      valor: valor,
+      label: label
+    }]);
+
+    // Limpar campos
+    setBulkRecipientPhone('');
+    setBulkRecipientUserId('');
+    setBulkRecipientType('');
+
+    showMessage('Destinatário adicionado à lista', 'success');
+  };
+
+  const handleRemoveRecipientFromList = (index: number) => {
+    setAddedRecipients(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddRecipientsToCreatedNotifications = async () => {
+    if (addedRecipients.length === 0) {
+      showMessage('Adicione pelo menos um destinatário', 'error');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      let totalSuccess = 0;
+      let totalError = 0;
+
+      for (const recipient of addedRecipients) {
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (const functionId of createdNotificationsIds) {
+          try {
+            const res = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/funcao/atributo/create', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                token
+              },
+              body: JSON.stringify({
+                id_funcao: functionId,
+                nome: 'destinatario',
+                descricao: recipient.valor,
+                tipo: recipient.tipo
+              })
+            });
+
+            if (res.ok) {
+              successCount++;
+            } else {
+              errorCount++;
+            }
+          } catch (err) {
+            console.error('Erro ao adicionar destinatário:', err);
+            errorCount++;
+          }
+        }
+
+        if (successCount > 0) totalSuccess++;
+        if (errorCount > 0) totalError++;
+      }
+
+      // Recarregar dados
+      await fetchFunctions();
+
+      if (totalSuccess > 0) {
+        showMessage(`${totalSuccess} destinatário(s) adicionado(s) em todas as notificações!`, 'success');
+      }
+      if (totalError > 0) {
+        showMessage(`Falha ao adicionar ${totalError} destinatário(s)`, 'error');
+      }
+
+      // Limpar campos e fechar modal
+      setBulkRecipientPhone('');
+      setBulkRecipientUserId('');
+      setBulkRecipientType('');
+      setCreatedNotificationsIds([]);
+      setAddedRecipients([]);
+      setShowCreateModal(false);
+      setCreateModalStep(1);
+    } catch (err) {
+      console.error('Erro ao adicionar destinatários:', err);
+      showMessage('Erro ao adicionar destinatários. Tente novamente.', 'error');
     } finally {
       setSaving(false);
     }
@@ -1284,100 +1495,484 @@ const AgentFunctionsSection: React.FC<AgentFunctionsSectionProps> = ({ token, id
         )}
       </div>
 
-      {/* Modal: Criar Notificação */}
+      {/* Side Panel: Criar Notificação */}
       {showCreateModal && createPortal(
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}
-             onClick={() => setShowCreateModal(false)}>
-          <div className="bg-white dark:bg-neutral-800 rounded-xl max-w-md w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100">Nova Notificação</h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-400">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
-                  Modelo
-                </label>
-                <select
-                  value={selectedTemplate}
-                  onChange={(e) => {
-                    const templateKey = e.target.value;
-                    setSelectedTemplate(templateKey);
-
-                    // Se selecionou um template, preenche o nome automaticamente
-                    if (templateKey) {
-                      const template = NOTIFICATION_TEMPLATES.find(t => t.key === templateKey);
-                      if (template) {
-                        setNewFunctionName(template.nome);
-                      }
-                    } else {
-                      setNewFunctionName('');
-                    }
-                  }}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400"
-                >
-                  <option value="">Personalizado (criar do zero)</option>
-                  <optgroup label="Modelos Prontos">
-                    {NOTIFICATION_TEMPLATES.map((template) => (
-                      <option key={template.key} value={template.key}>
-                        {template.nome}
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
-                {selectedTemplate && (
-                  <p className="text-xs text-gray-500 dark:text-neutral-400 mt-2">
-                    {NOTIFICATION_TEMPLATES.find(t => t.key === selectedTemplate)?.descricao_curta}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
-                  Nome da Notificação
-                </label>
-                <input
-                  type="text"
-                  value={newFunctionName}
-                  onChange={(e) => setNewFunctionName(e.target.value)}
-                  placeholder="Ex: Contrato Enviado"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
-                  maxLength={100}
-                />
-                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-2">
-                  {selectedTemplate ? 'Você pode editar o nome sugerido' : 'Digite um nome para sua notificação personalizada'}
-                </p>
-              </div>
-              <div className="flex gap-2">
+        <div className="fixed inset-0 bg-black bg-opacity-50" style={{ zIndex: 9999 }}
+             onClick={() => {
+               setShowCreateModal(false);
+               setSelectedTemplates([]);
+               setSelectedTemplate('');
+               setNewFunctionName('');
+               setIsCreatingCustom(false);
+               setCreateModalStep(1);
+               setCreatedNotificationsIds([]);
+               setAddedRecipients([]);
+               setBulkRecipientType('');
+               setBulkRecipientPhone('');
+               setBulkRecipientUserId('');
+             }}>
+          <div
+            className="fixed top-0 right-0 h-full w-[40%] bg-white dark:bg-neutral-800 shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-6 border-b border-gray-200 dark:border-neutral-700">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-neutral-100">
+                  {createModalStep === 1 ? 'Criar Notificações' : 'Adicionar Destinatários'}
+                </h3>
                 <button
                   onClick={() => {
                     setShowCreateModal(false);
+                    setSelectedTemplates([]);
                     setSelectedTemplate('');
                     setNewFunctionName('');
+                    setIsCreatingCustom(false);
+                    setCreateModalStep(1);
+                    setCreatedNotificationsIds([]);
+                    setAddedRecipients([]);
+                    setBulkRecipientType('');
+                    setBulkRecipientPhone('');
+                    setBulkRecipientUserId('');
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+                  className="text-gray-400 dark:text-neutral-500 hover:text-gray-600 dark:hover:text-neutral-400"
                 >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleCreateFunction}
-                  disabled={saving || !newFunctionName.trim()}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 disabled:opacity-50 transition-colors"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Criando...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />
-                      Criar
-                    </>
-                  )}
+                  <X className="w-6 h-6" />
                 </button>
               </div>
+
+              {/* Step Indicator */}
+              <div className="flex items-center gap-2">
+                <div className={`flex items-center gap-2 ${createModalStep === 1 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-neutral-500'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    createModalStep === 1
+                      ? 'bg-emerald-600 dark:bg-emerald-500 text-white'
+                      : 'bg-gray-300 dark:bg-neutral-600 text-white'
+                  }`}>
+                    {createModalStep > 1 ? <Check className="w-5 h-5" strokeWidth={3} /> : '1'}
+                  </div>
+                  <span className="text-sm font-medium">Criar</span>
+                </div>
+
+                <div className={`flex-1 h-0.5 ${createModalStep === 2 ? 'bg-emerald-600 dark:bg-emerald-500' : 'bg-gray-300 dark:bg-neutral-600'}`}></div>
+
+                <div className={`flex items-center gap-2 ${createModalStep === 2 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-neutral-500'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    createModalStep === 2
+                      ? 'bg-emerald-600 dark:bg-emerald-500 text-white'
+                      : 'bg-gray-300 dark:bg-neutral-600 text-white'
+                  }`}>
+                    2
+                  </div>
+                  <span className="text-sm font-medium">Destinatários</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {createModalStep === 1 ? (
+                <div className="space-y-6">
+                  {/* Botão Criar Notificação Personalizada */}
+                  <div>
+                  <button
+                    onClick={() => setIsCreatingCustom(!isCreatingCustom)}
+                    className="w-full flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-dashed border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all group"
+                  >
+                    <Plus className="w-6 h-6 text-blue-600 dark:text-blue-400 group-hover:rotate-90 transition-transform duration-300" strokeWidth={2.5} />
+                    <div className="text-left">
+                      <div className="font-bold text-blue-700 dark:text-blue-300 text-base">
+                        Criar Notificação Personalizada
+                      </div>
+                      <div className="text-xs text-blue-600 dark:text-blue-400">
+                        Crie uma notificação customizada do zero
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Formulário de Criação Personalizada */}
+                  {isCreatingCustom && (
+                    <div className="mt-4 p-4 bg-gray-50 dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-700 space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                          Nome da Notificação
+                        </label>
+                        <input
+                          type="text"
+                          value={newFunctionName}
+                          onChange={(e) => setNewFunctionName(e.target.value)}
+                          placeholder="Ex: Proposta Aceita"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
+                          maxLength={100}
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setIsCreatingCustom(false);
+                            setNewFunctionName('');
+                          }}
+                          className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleCreateFunction();
+                            setIsCreatingCustom(false);
+                          }}
+                          disabled={saving || !newFunctionName.trim()}
+                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                        >
+                          {saving ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              Criando...
+                            </>
+                          ) : (
+                            <>
+                              <Check className="w-3.5 h-3.5" />
+                              Criar
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Separador */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300 dark:border-neutral-600"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="px-2 bg-white dark:bg-neutral-800 text-gray-500 dark:text-neutral-400">
+                      ou escolha modelos prontos
+                    </span>
+                  </div>
+                </div>
+
+                {/* Seleção Múltipla de Templates */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">
+                      Selecione as notificações que deseja criar
+                    </label>
+                    {selectedTemplates.length > 0 && (
+                      <button
+                        onClick={() => setSelectedTemplates([])}
+                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        Limpar seleção
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {NOTIFICATION_TEMPLATES.map((template) => {
+                      const isSelected = selectedTemplates.includes(template.key);
+                      const IconComponent = template.icon;
+
+                      return (
+                        <button
+                          key={template.key}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedTemplates(prev => prev.filter(k => k !== template.key));
+                            } else {
+                              setSelectedTemplates(prev => [...prev, template.key]);
+                            }
+                          }}
+                          className={`flex items-start gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                            isSelected
+                              ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                              : 'border-gray-200 dark:border-neutral-700 hover:border-gray-300 dark:hover:border-neutral-600 bg-white dark:bg-neutral-900'
+                          }`}
+                        >
+                          {/* Checkbox */}
+                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                            isSelected
+                              ? 'bg-emerald-600 border-emerald-600'
+                              : 'border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                          </div>
+
+                          {/* Icon */}
+                          <div className={`p-1.5 rounded-lg flex-shrink-0 ${template.bgClass}`}>
+                            <IconComponent className={`w-4 h-4 ${template.colorClass}`} />
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-gray-900 dark:text-neutral-100 text-xs leading-tight">
+                              {template.nome}
+                            </div>
+                            <div className="text-[10px] text-gray-500 dark:text-neutral-400 mt-0.5 line-clamp-2">
+                              {template.descricao_curta}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {selectedTemplates.length > 0 && (
+                    <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        {selectedTemplates.length} notificação(ões) selecionada(s)
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* Step 2: Adicionar Destinatários */
+              <div className="space-y-6">
+                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                  <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">
+                    {createdNotificationsIds.length} notificação(ões) criada(s) com sucesso!
+                  </p>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
+                    Agora você pode adicionar destinatários a todas elas de uma vez.
+                  </p>
+                </div>
+
+                {/* Formulário de destinatários */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-neutral-100 mb-4">Dados do Destinatário</h3>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                        Quem deve ser notificado?
+                      </label>
+                      <select
+                        value={bulkRecipientType}
+                        onChange={e => setBulkRecipientType(e.target.value as any)}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400"
+                      >
+                        <option value="">Selecione...</option>
+                        <option value="numero">Número de telefone</option>
+                        <option value="usuario">Usuário específico</option>
+                        <option value="responsavel">Responsável pelo lead</option>
+                      </select>
+                    </div>
+
+                    {bulkRecipientType === 'numero' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                          Número de telefone
+                        </label>
+                        <input
+                          type="tel"
+                          placeholder="55 (11) 99999-9999"
+                          value={(() => {
+                            const numbers = bulkRecipientPhone.replace(/\D/g, '');
+                            if (numbers.length === 0) return '';
+                            if (numbers.length <= 2) return numbers;
+                            if (numbers.length <= 4) return `${numbers.slice(0, 2)} (${numbers.slice(2)}`;
+                            if (numbers.length <= 9) return `${numbers.slice(0, 2)} (${numbers.slice(2, 4)}) ${numbers.slice(4)}`;
+                            return `${numbers.slice(0, 2)} (${numbers.slice(2, 4)}) ${numbers.slice(4, 9)}-${numbers.slice(9, 13)}`;
+                          })()}
+                          onChange={e => {
+                            const value = e.target.value.replace(/\D/g, '');
+                            setBulkRecipientPhone(value);
+                          }}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
+                          maxLength={19}
+                        />
+                        <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
+                          Formato: 55 (DD) 99999-9999
+                        </p>
+                      </div>
+                    )}
+
+                    {bulkRecipientType === 'usuario' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                          Usuário
+                        </label>
+                        {loadingUsuarios ? (
+                          <div className="flex items-center justify-center py-4">
+                            <Loader2 className="w-5 h-5 animate-spin text-emerald-500" />
+                          </div>
+                        ) : (
+                          <select
+                            value={bulkRecipientUserId}
+                            onChange={e => setBulkRecipientUserId(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-emerald-500 dark:focus:border-emerald-400"
+                            disabled={loadingUsuarios || usuarios.length === 0}
+                          >
+                            <option value="">Selecione um usuário</option>
+                            {usuarios.filter(user => user.isAtivo).map(user => (
+                              <option key={user.Id} value={user.Id}>
+                                {user.nome}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                        {loadingUsuarios && (
+                          <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">Carregando usuários...</p>
+                        )}
+                        {!loadingUsuarios && usuarios.length === 0 && (
+                          <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">Nenhum usuário disponível</p>
+                        )}
+                      </div>
+                    )}
+
+                    {bulkRecipientType === 'responsavel' && (
+                      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          O responsável pelo lead será notificado automaticamente quando estas notificações forem acionadas.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Botão Adicionar Destinatário */}
+                    {bulkRecipientType && (
+                      <button
+                        onClick={handleAddRecipientToList}
+                        disabled={!bulkRecipientType || (bulkRecipientType === 'numero' && !bulkRecipientPhone) || (bulkRecipientType === 'usuario' && !bulkRecipientUserId)}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Adicionar à Lista
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Lista de Destinatários Adicionados */}
+                {addedRecipients.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 dark:text-neutral-100 mb-3">
+                      Destinatários Adicionados ({addedRecipients.length})
+                    </h3>
+                    <div className="space-y-2">
+                      {addedRecipients.map((recipient, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${
+                              recipient.tipo === 'numero'
+                                ? 'bg-blue-100 dark:bg-blue-900/30'
+                                : recipient.tipo === 'usuario'
+                                ? 'bg-purple-100 dark:bg-purple-900/30'
+                                : 'bg-orange-100 dark:bg-orange-900/30'
+                            }`}>
+                              <Bell className={`w-4 h-4 ${
+                                recipient.tipo === 'numero'
+                                  ? 'text-blue-600 dark:text-blue-400'
+                                  : recipient.tipo === 'usuario'
+                                  ? 'text-purple-600 dark:text-purple-400'
+                                  : 'text-orange-600 dark:text-orange-400'
+                              }`} />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900 dark:text-neutral-100">
+                                {recipient.label}
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-neutral-400">
+                                {recipient.tipo === 'numero' ? 'Número' : recipient.tipo === 'usuario' ? 'Usuário' : 'Responsável'}
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveRecipientFromList(index)}
+                            className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            </div>
+
+            {/* Footer com botões */}
+            <div className="p-6 border-t border-gray-200 dark:border-neutral-700">
+              {createModalStep === 1 ? (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowCreateModal(false);
+                      setSelectedTemplates([]);
+                      setSelectedTemplate('');
+                      setNewFunctionName('');
+                      setIsCreatingCustom(false);
+                      setCreateModalStep(1);
+                      setCreatedNotificationsIds([]);
+                    }}
+                    className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors font-medium"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleCreateMultipleNotifications}
+                    disabled={saving || selectedTemplates.length === 0}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Criando {selectedTemplates.length > 1 ? `${selectedTemplates.length} notificações...` : 'notificação...'}
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4" />
+                        Criar {selectedTemplates.length > 0 ? `${selectedTemplates.length} notificação(ões)` : 'notificações'}
+                      </>
+                    )}
+                  </button>
+                </div>
+              ) : (
+                /* Step 2 Footer */
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowCreateModal(false);
+                      setSelectedTemplates([]);
+                      setSelectedTemplate('');
+                      setNewFunctionName('');
+                      setIsCreatingCustom(false);
+                      setCreateModalStep(1);
+                      setCreatedNotificationsIds([]);
+                      setAddedRecipients([]);
+                      setBulkRecipientType('');
+                      setBulkRecipientPhone('');
+                      setBulkRecipientUserId('');
+                    }}
+                    className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors font-medium"
+                  >
+                    Pular esta etapa
+                  </button>
+                  <button
+                    onClick={handleAddRecipientsToCreatedNotifications}
+                    disabled={saving || addedRecipients.length === 0}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 dark:bg-emerald-700 text-white rounded-lg hover:bg-emerald-700 dark:hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Adicionando...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Concluir ({addedRecipients.length} destinatário{addedRecipients.length !== 1 ? 's' : ''})
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>,

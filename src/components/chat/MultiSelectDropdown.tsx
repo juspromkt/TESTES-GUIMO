@@ -72,6 +72,7 @@ export function MultiSelectDropdown({
   const clearAll = (e: React.MouseEvent) => {
     e.stopPropagation();
     onChange([]);
+    setIsOpen(false);
   };
 
   const getDisplayText = () => {
@@ -111,14 +112,14 @@ export function MultiSelectDropdown({
       {isOpen && createPortal(
         <div
           ref={dropdownRef}
-          className="fixed w-72 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-96 overflow-y-auto transition-colors duration-200"
+          className="fixed w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-80 overflow-y-auto"
           style={{
             zIndex: 999999,
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
           }}
         >
-          <div className="p-3 space-y-1">
+          <div className="p-2 space-y-0.5">
             {options.length === 0 ? (
               <div className="px-3 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">
                 Nenhuma opção disponível
@@ -131,22 +132,22 @@ export function MultiSelectDropdown({
                     key={option.id}
                     type="button"
                     onClick={() => toggleOption(option.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium ${
                       isSelected
-                        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-400 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/50 dark:hover:to-indigo-900/50 shadow-sm'
+                        ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                     }`}
                   >
-                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all flex-shrink-0 ${
+                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
                       isSelected
-                        ? 'bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 border-blue-500 dark:border-blue-600 shadow-sm'
-                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                        ? 'bg-blue-600 dark:bg-blue-500 border-blue-600 dark:border-blue-500'
+                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900'
                     }`}>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-white font-bold" strokeWidth={3} />}
+                      {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                     </div>
                     {option.color && (
                       <div
-                        className="w-3 h-3 rounded-full ring-2 ring-white dark:ring-gray-800 shadow-sm flex-shrink-0"
+                        className="w-3 h-3 rounded-full flex-shrink-0"
                         style={{ backgroundColor: option.color }}
                       />
                     )}

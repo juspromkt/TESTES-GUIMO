@@ -2572,7 +2572,7 @@ export default function ContactSidebarV2({
       {showAgentChangeConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={cancelAgentChange}>
           <div
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6"
+            className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full mx-4 p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-4">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ChatList } from '../components/chat/ChatList';
 import { MessageView } from '../components/chat/MessageView';
@@ -11,6 +11,7 @@ import { Chat as ChatType } from '../components/chat/utils/api';
 import { MessageCircle, Search, Filter, Plus, Users, GitBranch, Tag as TagIcon, Calendar, X, Volume2, VolumeX } from 'lucide-react';
 import { setChatListLoaded } from '../utils/chatCache';
 import type { Tag } from '../types/tag';
+import GuimooIcon from '../components/GuimooIcon';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { registerLocale } from 'react-datepicker';
@@ -59,6 +60,27 @@ const ChatProprio = () => {
   const [filteredChatCount, setFilteredChatCount] = useState(0);
   const [selectedAgentIds, setSelectedAgentIds] = useState<number[]>([]);
   const [availableAgents, setAvailableAgents] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
+  // Sistema de reset por filtro - apenas reseta quando limpa filtros
+  const [resetKey, setResetKey] = useState(0);
+  const prevAgentIds = useRef<number[]>([]);
+  const prevResponsibleIds = useRef<number[]>([]);
+  const prevTagIds = useRef<number[]>([]);
+
+  useEffect(() => {
+    const agentCleared = prevAgentIds.current.length > 0 && selectedAgentIds.length === 0;
+    const responsibleCleared = prevResponsibleIds.current.length > 0 && selectedResponsibleIds.length === 0;
+    const tagCleared = prevTagIds.current.length > 0 && selectedTagIds.length === 0;
+
+    // Se algum filtro foi limpo, reseta o ChatList
+    if (agentCleared || responsibleCleared || tagCleared) {
+      setResetKey(prev => prev + 1);
+    }
+
+    prevAgentIds.current = selectedAgentIds;
+    prevResponsibleIds.current = selectedResponsibleIds;
+    prevTagIds.current = selectedTagIds;
+  }, [selectedAgentIds, selectedResponsibleIds, selectedTagIds]);
 
   // Contadores separados para cada filtro
   const [iaCount, setIaCount] = useState(0);
@@ -142,26 +164,60 @@ const ChatProprio = () => {
     window.dispatchEvent(new Event('chat_sound_changed'));
   };
 
-  // Carregar agentes disponíveis
+  // Carregar agentes e sessions
   useEffect(() => {
     if (!token) return;
 
-    const loadAgents = async () => {
+    const loadData = async () => {
       try {
-        const response = await fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/get', {
-          headers: { token }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setAvailableAgents(Array.isArray(data) ? data : []);
+        const [agentsResponse, sessionsResponse] = await Promise.all([
+          fetch('https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/get', {
+            headers: { token }
+          }),
+          fetch('https://n8n.lumendigital.com.br/webhook/prospecta/whatsapp/sesssoes/get', {
+            headers: { token }
+          })
+        ]);
+
+        let allAgents: any[] = [];
+        let allSessions: any[] = [];
+
+        if (agentsResponse.ok) {
+          const data = await agentsResponse.json();
+          allAgents = Array.isArray(data) ? data : [];
         }
+
+        if (sessionsResponse.ok) {
+          const data = await sessionsResponse.json();
+          allSessions = Array.isArray(data) ? data : [];
+          setSessions(allSessions);
+        }
+
+        // Criar mapa de telefone -> id_agente
+        const phoneToAgent: Record<string, number> = {};
+        allSessions.forEach((session: any) => {
+          if (session?.telefone && session?.id_agente) {
+            const digits = String(session.telefone).replace(/\D/g, '');
+            phoneToAgent[`${digits}@s.whatsapp.net`] = Number(session.id_agente);
+            phoneToAgent[`${digits}@lid`] = Number(session.id_agente);
+          }
+        });
+
+        // Pegar agentes únicos que aparecem no mapa
+        const agentIdsInUse = new Set(Object.values(phoneToAgent));
+
+        // Filtrar agentes que estão em uso
+        const agentsInUse = allAgents.filter(a => agentIdsInUse.has(Number(a.Id)));
+
+        setAvailableAgents(agentsInUse);
       } catch (error) {
-        console.error('Erro ao carregar agentes:', error);
+        console.error('Erro ao carregar dados:', error);
         setAvailableAgents([]);
+        setSessions([]);
       }
     };
 
-    loadAgents();
+    loadData();
   }, [token]);
 
   // Força reload sempre que entrar na página - executado no mount
@@ -480,6 +536,15 @@ const ChatProprio = () => {
 
               {/* Filtros */}
               <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Agentes (multi-select) */}
+                <MultiSelectDropdown
+                  options={availableAgents.map(a => ({ id: a.Id, label: a.nome }))}
+                  selectedIds={selectedAgentIds}
+                  onChange={setSelectedAgentIds}
+                  placeholder="Agentes"
+                  icon={<GuimooIcon className="w-4 h-4" />}
+                />
+
                 {/* Responsáveis (multi-select) */}
                 <MultiSelectDropdown
                   options={usuariosPorContato.map(u => ({ id: u.Id, label: u.nome }))}
@@ -650,26 +715,37 @@ const ChatProprio = () => {
                     maxHeight: 'calc(100vh - 120px)',
                   }}
                 >
-                  <ChatList
-                    onChatSelect={handleChatSelect}
-                    selectedChatId={selectedChat?.id}
-                    whatsappType={whatsappType || undefined}
-                    externalSearchTerm={debouncedSearchTerm}
-                    externalUsuarioFiltroIds={selectedResponsibleIds}
-                    externalAgenteFiltroIds={selectedAgentIds}
-                    externalTagFiltroIds={selectedTagIds}
-                    externalFunilId={selectedFunnelId}
-                    externalStageFiltroIds={selectedStageIds}
-                    externalStartDate={startDate}
-                    externalEndDate={endDate}
-                    externalIaStatusFilter={iaStatusFilter}
-                    externalShowOnlyUnread={showOnlyUnread}
-                    externalShowUnanswered={showUnanswered}
-                    externalActiveTab={chatListActiveTab}
-                    externalHandleTabChange={handleTabChange}
-                    onFilteredCountChange={handleFilteredCountChange}
-                    onCategoryCountsChange={handleCategoryCountsChange}
-                  />
+                  {/* Renderiza todas as abas mas mostra apenas a ativa */}
+                  {(['all', 'ia', 'transfers', 'unread', 'unanswered'] as const).map((tab) => (
+                    <div
+                      key={`${tab}-${resetKey}`}
+                      style={{
+                        display: chatListActiveTab === tab ? 'block' : 'none',
+                        height: '100%'
+                      }}
+                    >
+                      <ChatList
+                        onChatSelect={handleChatSelect}
+                        selectedChatId={selectedChat?.id}
+                        whatsappType={whatsappType || undefined}
+                        externalSearchTerm={debouncedSearchTerm}
+                        externalUsuarioFiltroIds={selectedResponsibleIds}
+                        externalAgenteFiltroIds={selectedAgentIds}
+                        externalTagFiltroIds={selectedTagIds}
+                        externalFunilId={selectedFunnelId}
+                        externalStageFiltroIds={selectedStageIds}
+                        externalStartDate={startDate}
+                        externalEndDate={endDate}
+                        externalIaStatusFilter={iaStatusFilter}
+                        externalShowOnlyUnread={showOnlyUnread}
+                        externalShowUnanswered={showUnanswered}
+                        externalActiveTab={tab}
+                        externalHandleTabChange={handleTabChange}
+                        onFilteredCountChange={chatListActiveTab === tab ? handleFilteredCountChange : undefined}
+                        onCategoryCountsChange={chatListActiveTab === tab ? handleCategoryCountsChange : undefined}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
             </>
