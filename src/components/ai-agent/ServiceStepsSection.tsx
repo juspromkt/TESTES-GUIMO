@@ -650,15 +650,12 @@ export default function ServiceStepsSection({
         const funnels = Array.isArray(funnelsRes) ? funnelsRes : [];
         const products = Array.isArray(productsRes) ? productsRes : [];
 
-        // Busca notificações do agente principal
-        const principalAgent = agents.find((a: any) => a.isAgentePrincipal);
+        // Busca notificações/funções gerais
         let notifications: any[] = [];
-        if (principalAgent) {
-          notifications = await fetch(`https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/funcao/geral?id_agente=${principalAgent.Id}`, { headers: { token } })
-            .then(r => r.json())
-            .then(data => Array.isArray(data) ? data.filter(f => f.tipo === 'NOTIFICACAO') : [])
-            .catch(() => []);
-        }
+        notifications = await fetch(`https://n8n.lumendigital.com.br/webhook/prospecta/multiagente/funcao/geral`, { headers: { token } })
+          .then(r => r.json())
+          .then(data => Array.isArray(data) ? data.filter(f => f.tipo === 'NOTIFICACAO') : [])
+          .catch(() => []);
 
         // Valida cada roteiro
         for (const step of serviceSteps) {
@@ -688,9 +685,15 @@ export default function ServiceStepsSection({
             } else if (type === 'assign_source' && id) {
               isValid = sources.some((s: any) => s.Id === id);
             } else if (type === 'transfer_stage' && id) {
-              isValid = funnels.some((f: any) => f.estagios?.some((s: any) => s.Id === id));
+              isValid = funnels.some((f: any) => f.estagios?.some((s: any) => {
+                const match = s.Id === id || String(s.Id) === String(id) || Number(s.Id) === Number(id);
+                return match;
+              }));
             } else if (type === 'notify' && id) {
-              isValid = notifications.some((n: any) => n.id === id);
+              isValid = notifications.some((n: any) => {
+                const match = n.id === id || String(n.id) === String(id) || Number(n.id) === Number(id);
+                return match;
+              });
             } else if (type === 'assign_product' && id) {
               isValid = products.some((p: any) => p.Id === id);
             } else if (type === 'stop_agent') {
@@ -723,9 +726,15 @@ export default function ServiceStepsSection({
                 } else if (type === 'assign_source' && id) {
                   isValid = sources.some((s: any) => s.Id === id);
                 } else if (type === 'transfer_stage' && id) {
-                  isValid = funnels.some((f: any) => f.estagios?.some((s: any) => s.Id === id));
+                  isValid = funnels.some((f: any) => f.estagios?.some((s: any) => {
+                    const match = s.Id === id || String(s.Id) === String(id) || Number(s.Id) === Number(id);
+                    return match;
+                  }));
                 } else if (type === 'notify' && id) {
-                  isValid = notifications.some((n: any) => n.id === id);
+                  isValid = notifications.some((n: any) => {
+                    const match = n.id === id || String(n.id) === String(id) || Number(n.id) === Number(id);
+                    return match;
+                  });
                 } else if (type === 'assign_product' && id) {
                   isValid = products.some((p: any) => p.Id === id);
                 }
